@@ -246,7 +246,7 @@ TrafficHelper::NotifyConstructionCompleted ()
 
   // Configure the helpers and install the applications.
   ConfigureHelpers ();
-  InstallApplications ();
+  ConfigureApplications ();
 
   Object::NotifyConstructionCompleted ();
 }
@@ -259,21 +259,31 @@ TrafficHelper::ConfigureHelpers ()
   // -------------------------------------------------------------------------
   // Configuring HTC application helpers.
   //
-  // BufferedVideo, HTTP, and LiveVideo applications have their own custom
-  // implementation with internal attributes already configured. We just
-  // instantiate their helpers here.
+
+  // BufferedVideo and LiveVideo applications are based on MPEG-4 video traces
+  // from http://www-tkn.ee.tu-berlin.de/publications/papers/TKN0006.pdf.
+  // We just instantiate their helpers here.
   m_bufVideoHelper = ApplicationHelper (
       BufferedVideoClient::GetTypeId (),
       BufferedVideoServer::GetTypeId ());
-  m_httpPageHelper = ApplicationHelper (
-      HttpClient::GetTypeId (),
-      HttpServer::GetTypeId ());
   m_livVideoHelper = ApplicationHelper (
       LiveVideoClient::GetTypeId (),
       LiveVideoServer::GetTypeId ());
 
 
+  // The HTTP model is based on the distributions indicated in the paper 'An
+  // HTTP Web Traffic Model Based on the Top One Million Visited Web Pages' by
+  // Rastin Pries et. al. Each client will send a get request to the server and
+  // will get the page content back including inline content. These requests
+  // repeats after a reading time period, until MaxPages are loaded or
+  // MaxReadingTime is reached. We just instantiate its helper here.
+  m_httpPageHelper = ApplicationHelper (
+      HttpClient::GetTypeId (),
+      HttpServer::GetTypeId ());
+
+
   // The VoIP application simulating the G.729 codec (~8.0 kbps for payload).
+  // Check http://goo.gl/iChPGQ for bandwidth calculation and discussion.
   m_voipCallHelper = ApplicationHelper (
       SvelteUdpClient::GetTypeId (),
       SvelteUdpServer::GetTypeId ());
@@ -362,6 +372,10 @@ TrafficHelper::ConfigureHelpers ()
   // -------------------------------------------------------------------------
   // Configuring MTC application helpers.
   //
+  // The following applications were adapted from the MTC models presented on
+  // the "Machine-to-Machine Communications: Architectures, Technology,
+  // Standards, and Applications" book, chapter 3: "M2M traffic and models".
+
   // The auto-pilot includes both vehicle collision detection and avoidance on
   // highways. Clients sending data on position, in time intervals depending on
   // vehicle speed, while server performs calculations, collision detection
@@ -459,7 +473,7 @@ TrafficHelper::ConfigureHelpers ()
 }
 
 void
-TrafficHelper::InstallApplications ()
+TrafficHelper::ConfigureApplications ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -488,82 +502,209 @@ TrafficHelper::InstallApplications ()
         "/NodeList/*/ApplicationList/*/$ns3::SliceController/SessionCreated",
         MakeCallback (&TrafficManager::NotifySessionCreated, m_ueManager));
 
-      // Install enabled applications into UEs.
+      // Install enabled applications into this UE.
+      //
+      // Auto-pilot traffic over dedicated GBR EPS bearer.
       if (m_gbrAutPilot)
         {
-          // UDP uplink auto-pilot traffic over dedicated GBR EPS bearer.
-          // This QCI 3 is typically associated with an operator controlled
-          // service, i.e., a service where the data flow aggregates
-          // uplink/downlink packet filters are known at the point in time.
           GbrQosInformation qos;
           qos.gbrDl = 12000;   //  12 Kbps
           qos.gbrUl = 150000;  // 150 Kbps
-          EpsBearer bearer (EpsBearer::GBR_GAMING, qos);
-          InstallAutoPilot (bearer);
+
+          // QCI 2 is typically associated with conversational live video
+          // streaming. This is not the best QCI for this application, but it
+          // will work and will priorize this traffic in the network.
+          EpsBearer bearer (EpsBearer::GBR_CONV_VIDEO, qos);
+
+          // Bidirectional UDP traffic.
+          EpcTft::PacketFilter filter;
+          filter.direction = EpcTft::BIDIRECTIONAL;
+          filter.protocol = UdpL4Protocol::PROT_NUMBER;
+
+          InstallAppDedicated (m_autPilotHelper, bearer, filter);
         }
 
+      // Open Arena game over dedicated GBR EPS bearer.
+      if (m_gbrGameOpen)
+        {
+          GbrQosInformation qos;
+          qos.gbrDl = 45000;  // 45 Kbps
+          qos.gbrUl = 12000;  // 12 Kbps
+
+          // QCI 3 is typically associated with real-time gaming.
+          EpsBearer bearer (EpsBearer::GBR_GAMING, qos);
+
+          // Bidirectional UDP traffic.
+          EpcTft::PacketFilter filter;
+          filter.direction = EpcTft::BIDIRECTIONAL;
+          filter.protocol = UdpL4Protocol::PROT_NUMBER;
+
+          InstallAppDedicated (m_gameOpenHelper, bearer, filter);
+        }
+
+      // Team Fortress game over dedicated GBR EPS bearer.
+      if (m_gbrGameTeam)
+        {
+          GbrQosInformation qos;
+          qos.gbrDl = 60000;  // 60 Kbps
+          qos.gbrUl = 30000;  // 30 Kbps
+
+          // QCI 3 is typically associated with real-time gaming.
+          EpsBearer bearer (EpsBearer::GBR_GAMING, qos);
+
+          // Bidirectional UDP traffic.
+          EpcTft::PacketFilter filter;
+          filter.direction = EpcTft::BIDIRECTIONAL;
+          filter.protocol = UdpL4Protocol::PROT_NUMBER;
+
+          InstallAppDedicated (m_gameTeamHelper, bearer, filter);
+        }
+
+      // Live video streaming over dedicated GBR EPS bearer.
       if (m_gbrLivVideo)
         {
-          // UDP downlink live video streaming over dedicated GBR EPS bearer.
-          // This QCI 4 is typically associated with non-conversational video
-          // and live streaming.
+          int videoIdx = m_gbrVidRng->GetInteger ();
+          m_livVideoHelper.SetServerAttribute (
+            "TraceFilename", StringValue (GetVideoFilename (videoIdx)));
+
           GbrQosInformation qos;
-          int videoIdx = m_videoRng->GetInteger ();
           qos.gbrDl = GetVideoGbr (videoIdx).GetBitRate ();
           qos.mbrDl = GetVideoMbr (videoIdx).GetBitRate ();
+
+          // QCI 4 is typically associated with non-conversational video
+          // streaming.
           EpsBearer bearer (EpsBearer::GBR_NON_CONV_VIDEO, qos);
-          InstallLiveVideo (bearer, GetVideoFilename (videoIdx));
+
+          // Downlink UDP traffic.
+          EpcTft::PacketFilter filter;
+          filter.direction = EpcTft::DOWNLINK;
+          filter.protocol = UdpL4Protocol::PROT_NUMBER;
+
+          InstallAppDedicated (m_livVideoHelper, bearer, filter);
         }
 
+      // VoIP call over dedicated GBR EPS bearer.
       if (m_gbrVoipCall)
         {
-          // UDP bidirectional VoIP traffic over dedicated GBR EPS bearer.
-          // This QCI 1 is typically associated with conversational voice.
           GbrQosInformation qos;
           qos.gbrDl = 45000;  // 45 Kbps
           qos.gbrUl = 45000;  // 45 Kbps
+
+          // QCI 1 is typically associated with conversational voice.
           EpsBearer bearer (EpsBearer::GBR_CONV_VOICE, qos);
-          InstallVoip (bearer);
+
+          // Bidirectional UDP traffic.
+          EpcTft::PacketFilter filter;
+          filter.direction = EpcTft::BIDIRECTIONAL;
+          filter.protocol = UdpL4Protocol::PROT_NUMBER;
+
+          InstallAppDedicated (m_voipCallHelper, bearer, filter);
         }
 
+      // Auto-pilot traffic over dedicated Non-GBR EPS bearer.
       if (m_nonAutPilot)
         {
-          // UDP uplink auto-pilot traffic over dedicated Non-GBR EPS bearer.
-          // This QCI 5 is typically associated with IMS signaling, but we are
-          // using it here as the last Non-GBR QCI available so we can uniquely
-          // identify this Non-GBR traffic on the network.
-          EpsBearer bearer (EpsBearer::NGBR_IMS);
-          InstallAutoPilot (bearer);
+          // QCI 8 is typically associated with buffered video streaming and
+          // TCP-based applications. It could be used for a dedicated 'premium
+          // bearer' for any subscriber, or could be used for the default
+          // bearer of a UE for 'premium subscribers'.
+          EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM);
+
+          // Bidirectional UDP traffic.
+          EpcTft::PacketFilter filter;
+          filter.direction = EpcTft::BIDIRECTIONAL;
+          filter.protocol = UdpL4Protocol::PROT_NUMBER;
+
+          InstallAppDedicated (m_autPilotHelper, bearer, filter);
         }
 
+      // Virtual bicycle race traffic over dedicated Non-GBR EPS bearer.
+      if (m_nonBikeRace)
+        {
+          // QCI 8 is typically associated with buffered video streaming and
+          // TCP-based applications. It could be used for a dedicated 'premium
+          // bearer' for any subscriber, or could be used for the default
+          // bearer of a UE for 'premium subscribers'.
+          EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM);
+
+          // Bidirectional UDP traffic.
+          EpcTft::PacketFilter filter;
+          filter.direction = EpcTft::BIDIRECTIONAL;
+          filter.protocol = UdpL4Protocol::PROT_NUMBER;
+
+          InstallAppDedicated (m_bikeRaceHelper, bearer, filter);
+        }
+
+      // Buffered video streaming over dedicated Non-GBR EPS bearer.
       if (m_nonBufVideo)
         {
-          // TCP bidirectional buffered video streaming over dedicated Non-GBR
-          // EPC bearer. This QCI 6 could be used for prioritization of non
-          // real-time data of MPS subscribers.
-          int videoIdx = m_videoRng->GetInteger ();
+          int videoIdx = m_nonVidRng->GetInteger ();
+          m_bufVideoHelper.SetServerAttribute (
+            "TraceFilename", StringValue (GetVideoFilename (videoIdx)));
+
+          // QCI 6 is typically associated with voice, buffered video streaming
+          // and TCP-based applications. It could be used for prioritization
+          // of non real-time data of MPS subscribers.
           EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_OPERATOR);
-          InstallBufferedVideo (bearer, GetVideoFilename (videoIdx));
+
+          // Bidirectional TCP traffic.
+          EpcTft::PacketFilter filter;
+          filter.direction = EpcTft::BIDIRECTIONAL;
+          filter.protocol = TcpL4Protocol::PROT_NUMBER;
+
+          InstallAppDedicated (m_bufVideoHelper, bearer, filter);
         }
 
+      // GPS Team Tracking traffic over dedicated Non-GBR EPS bearer.
+      if (m_nonGpsTrack)
+        {
+          // QCI 8 is typically associated with buffered video streaming and
+          // TCP-based applications. It could be used for a dedicated 'premium
+          // bearer' for any subscriber, or could be used for the default
+          // bearer of a UE for 'premium subscribers'.
+          EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM);
+
+          // Bidirectional UDP traffic.
+          EpcTft::PacketFilter filter;
+          filter.direction = EpcTft::BIDIRECTIONAL;
+          filter.protocol = UdpL4Protocol::PROT_NUMBER;
+
+          InstallAppDedicated (m_gpsTrackHelper, bearer, filter);
+        }
+
+      // HTTP webpage traffic over dedicated Non-GBR EPS bearer.
       if (m_nonHttpPage)
         {
-          // TCP bidirectional HTTP traffic over dedicated Non-GBR EPS bearer.
-          // This QCI 8 could be used for a dedicated 'premium bearer' for any
-          // subscriber, or could be used for the default bearer of a for
-          // 'premium subscribers'.
-          EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM);
-          InstallHttp (bearer);
+          // QCI 9 is typically associated with buffered video streaming and
+          // TCP-based applications. It is typically used for the default
+          // bearer of a UE for non privileged subscribers.
+          EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_DEFAULT);
+
+          // Bidirectional TCP traffic.
+          EpcTft::PacketFilter filter;
+          filter.direction = EpcTft::BIDIRECTIONAL;
+          filter.protocol = TcpL4Protocol::PROT_NUMBER;
+
+          InstallAppDedicated (m_httpPageHelper, bearer, filter);
         }
 
+      // Live video streaming over dedicated Non-GBR EPS bearer.
       if (m_nonLivVideo)
         {
-          // UDP downlink live video streaming over dedicated Non-GBR EPS
-          // bearer. This QCI 7 is typically associated with voice, live video
-          // streaming and interactive games.
-          int videoIdx = m_videoRng->GetInteger ();
+          int videoIdx = m_nonVidRng->GetInteger ();
+          m_livVideoHelper.SetServerAttribute (
+            "TraceFilename", StringValue (GetVideoFilename (videoIdx)));
+
+          // QCI 7 is typically associated with voice, live video streaming and
+          // interactive games.
           EpsBearer bearer (EpsBearer::NGBR_VOICE_VIDEO_GAMING);
-          InstallLiveVideo (bearer, GetVideoFilename (videoIdx));
+
+          // Downlink UDP traffic.
+          EpcTft::PacketFilter filter;
+          filter.direction = EpcTft::DOWNLINK;
+          filter.protocol = UdpL4Protocol::PROT_NUMBER;
+
+          InstallAppDedicated (m_livVideoHelper, bearer, filter);
         }
     }
 
@@ -598,150 +739,53 @@ TrafficHelper::GetVideoMbr (uint8_t idx)
 }
 
 void
-TrafficHelper::InstallAutoPilot (EpsBearer bearer)
+TrafficHelper::InstallAppDedicated (
+  ApplicationHelper& helper, EpsBearer& bearer, EpcTft::PacketFilter& filter)
 {
   NS_LOG_FUNCTION (this);
 
+  // Create the client and server applications.
   uint16_t port = GetNextPortNo ();
-  Ptr<SvelteClient> cApp = m_autPilotHelper.Install (
+  Ptr<SvelteClient> cApp = helper.Install (
       m_ueNode, m_webNode, m_ueAddr, m_webAddr, port, Qci2Dscp (bearer.qci));
   m_ueManager->AddSvelteClient (cApp);
 
-  Ptr<EpcTft> tft = CreateObject<EpcTft> ();
-  EpcTft::PacketFilter filter;
-  filter.direction = EpcTft::BIDIRECTIONAL;
-  filter.protocol = UdpL4Protocol::PROT_NUMBER;
-  filter.remoteAddress = m_webAddr;
-  filter.remoteMask = m_webMask;
+  // Setup common packet filter parameters.
+  filter.remoteAddress   = m_webAddr;
+  filter.remoteMask      = m_webMask;
   filter.remotePortStart = port;
-  filter.remotePortEnd = port;
-  filter.localAddress = m_ueAddr;
-  filter.localMask = m_ueMask;
-  filter.localPortStart = 0;
-  filter.localPortEnd = 65535;
+  filter.remotePortEnd   = port;
+  filter.localAddress    = m_ueAddr;
+  filter.localMask       = m_ueMask;
+  filter.localPortStart  = 0;
+  filter.localPortEnd    = 65535;
+
+  // Create the TFT for this bearer.
+  Ptr<EpcTft> tft = CreateObject<EpcTft> ();
   tft->Add (filter);
 
+  // Create the dedicated bearer for this traffic.
   uint8_t bid = m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
   cApp->SetEpsBearer (bearer);
   cApp->SetEpsBearerId (bid);
 }
 
 void
-TrafficHelper::InstallBufferedVideo (EpsBearer bearer, std::string name)
+TrafficHelper::InstallAppDefault (ApplicationHelper& helper)
 {
   NS_LOG_FUNCTION (this);
 
-  uint16_t port = GetNextPortNo ();
-  m_bufVideoHelper.SetServerAttribute ("TraceFilename", StringValue (name));
-  Ptr<SvelteClient> cApp = m_bufVideoHelper.Install (
-      m_ueNode, m_webNode, m_ueAddr, m_webAddr, port, Qci2Dscp (bearer.qci));
-  m_ueManager->AddSvelteClient (cApp);
+  // FIXME
+  // EpsBearer bearer = ;
+  // uint8_t bid = ;
 
-  Ptr<EpcTft> tft = CreateObject<EpcTft> ();
-  EpcTft::PacketFilter filter;
-  filter.direction = EpcTft::BIDIRECTIONAL;
-  filter.protocol = TcpL4Protocol::PROT_NUMBER;
-  filter.remoteAddress = m_webAddr;
-  filter.remoteMask = m_webMask;
-  filter.remotePortStart = port;
-  filter.remotePortEnd = port;
-  filter.localAddress = m_ueAddr;
-  filter.localMask = m_ueMask;
-  filter.localPortStart = 0;
-  filter.localPortEnd = 65535;
-  tft->Add (filter);
-
-  uint8_t bid = m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
-  cApp->SetEpsBearer (bearer);
-  cApp->SetEpsBearerId (bid);
-}
-
-void
-TrafficHelper::InstallHttp (EpsBearer bearer)
-{
-  NS_LOG_FUNCTION (this);
-
-  uint16_t port = GetNextPortNo ();
-  Ptr<SvelteClient> cApp = m_httpPageHelper.Install (
-      m_ueNode, m_webNode, m_ueAddr, m_webAddr, port, Qci2Dscp (bearer.qci));
-  m_ueManager->AddSvelteClient (cApp);
-
-  Ptr<EpcTft> tft = CreateObject<EpcTft> ();
-  EpcTft::PacketFilter filter;
-  filter.direction = EpcTft::BIDIRECTIONAL;
-  filter.protocol = TcpL4Protocol::PROT_NUMBER;
-  filter.remoteAddress = m_webAddr;
-  filter.remoteMask = m_webMask;
-  filter.remotePortStart = port;
-  filter.remotePortEnd = port;
-  filter.localAddress = m_ueAddr;
-  filter.localMask = m_ueMask;
-  filter.localPortStart = 0;
-  filter.localPortEnd = 65535;
-  tft->Add (filter);
-
-  uint8_t bid = m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
-  cApp->SetEpsBearer (bearer);
-  cApp->SetEpsBearerId (bid);
-}
-
-void
-TrafficHelper::InstallLiveVideo (EpsBearer bearer, std::string name)
-{
-  NS_LOG_FUNCTION (this);
-
-  uint16_t port = GetNextPortNo ();
-  m_livVideoHelper.SetServerAttribute ("TraceFilename", StringValue (name));
-  Ptr<SvelteClient> cApp = m_livVideoHelper.Install (
-      m_ueNode, m_webNode, m_ueAddr, m_webAddr, port, Qci2Dscp (bearer.qci));
-  m_ueManager->AddSvelteClient (cApp);
-
-  Ptr<EpcTft> tft = CreateObject<EpcTft> ();
-  EpcTft::PacketFilter filter;
-  filter.direction = EpcTft::DOWNLINK;
-  filter.protocol = UdpL4Protocol::PROT_NUMBER;
-  filter.remoteAddress = m_webAddr;
-  filter.remoteMask = m_webMask;
-  filter.remotePortStart = port;
-  filter.remotePortEnd = port;
-  filter.localAddress = m_ueAddr;
-  filter.localMask = m_ueMask;
-  filter.localPortStart = 0;
-  filter.localPortEnd = 65535;
-  tft->Add (filter);
-
-  uint8_t bid = m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
-  cApp->SetEpsBearer (bearer);
-  cApp->SetEpsBearerId (bid);
-}
-
-void
-TrafficHelper::InstallVoip (EpsBearer bearer)
-{
-  NS_LOG_FUNCTION (this);
-
-  uint16_t port = GetNextPortNo ();
-  Ptr<SvelteClient> cApp = m_voipCallHelper.Install (
-      m_ueNode, m_webNode, m_ueAddr, m_webAddr, port, Qci2Dscp (bearer.qci));
-  m_ueManager->AddSvelteClient (cApp);
-
-  Ptr<EpcTft> tft = CreateObject<EpcTft> ();
-  EpcTft::PacketFilter filter;
-  filter.direction = EpcTft::BIDIRECTIONAL;
-  filter.protocol = UdpL4Protocol::PROT_NUMBER;
-  filter.remoteAddress = m_webAddr;
-  filter.remoteMask = m_webMask;
-  filter.remotePortStart = port;
-  filter.remotePortEnd = port;
-  filter.localAddress = m_ueAddr;
-  filter.localMask = m_ueMask;
-  filter.localPortStart = 0;
-  filter.localPortEnd = 65535;
-  tft->Add (filter);
-
-  uint8_t bid = m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
-  cApp->SetEpsBearer (bearer);
-  cApp->SetEpsBearerId (bid);
+  // // Create the client and server applications.
+  // uint16_t port = GetNextPortNo ();
+  // Ptr<SvelteClient> cApp = helper.Install (
+  //     m_ueNode, m_webNode, m_ueAddr, m_webAddr, port, Qci2Dscp (bearer.qci));
+  // m_ueManager->AddSvelteClient (cApp);
+  // cApp->SetEpsBearer (bearer);
+  // cApp->SetEpsBearerId (bid);
 }
 
 } // namespace ns3

@@ -60,14 +60,8 @@ protected:
 
 private:
   /**
-   * Configure helpers for all applications.
-   */
-  void ConfigureHelpers ();
-
-  /**
-   * Install applications and traffic manager into each UE. It creates
-   * the client/server application pair, and install them in the respective
-   * nodes. It also configure the TFT and EPS bearers.
+   * Install a traffic manager into each UE and configure the EPS bearers and
+   * TFT packet filters for enable applications
    * \attention The QCIs used here for each application are strongly related to
    *     the DSCP mapping, which will reflect on the priority queues used by
    *     both OpenFlow switches and traffic control module. Be careful if you
@@ -79,7 +73,12 @@ private:
    * \li The Guaranteed Bit Rate field is used by the controller to reserve the
    *     requested bandwidth in OpenFlow EPC network (only for GBR beares).
    */
-  void InstallApplications ();
+  void ConfigureApplications ();
+
+  /**
+   * Configure application helpers for different traffic patterns.
+   */
+  void ConfigureHelpers ();
 
   /**
    * Get the next port number available for use.
@@ -109,51 +108,22 @@ private:
   static const DataRate GetVideoMbr (uint8_t idx);
 
   /**
-   * UDP bidirectional auto-pilot traffic.
-   * This auto-pilot model is adapted from the MTC application model indicate
-   * on the "Machine-to-Machine Communications: Architectures, Technology,
-   * Standards, and Applications" book, chapter 3: "M2M traffic and models".
-   * \param bearer The configured EPS bearer for this application.
+   * Create the pair of client/server applications and install them into UE,
+   * configuring a dedicated EPS bearer for this traffic according to bearer
+   * and packet filter parameters.
+   * \param helper The reference to the application helper.
+   * \param bearer The reference to the EPS bearer.
+   * \param filter The reference to the packet filter.
    */
-  void InstallAutoPilot (EpsBearer bearer);
+  void InstallAppDedicated (ApplicationHelper& helper, EpsBearer& bearer,
+                            EpcTft::PacketFilter& filter);
 
   /**
-   * TCP bidirectional buffered video streaming.
-   * This video traffic is based on MPEG-4 video traces from
-   * http://www-tkn.ee.tu-berlin.de/publications/papers/TKN0006.pdf.
-   * \param bearer The configured EPS bearer for this application.
-   * \param name The video filename for this application.
+   * Create the pair of client/server applications and install them into UE,
+   * using the default EPS bearer for this traffic.
+   * \param helper The reference to the application helper.
    */
-  void InstallBufferedVideo (EpsBearer bearer, std::string name);
-
-  /**
-   * TCP bidirectional HTTP traffic.
-   * This HTTP model is based on the distributions indicated in
-   * the paper 'An HTTP Web Traffic Model Based on the Top One Million Visited
-   * Web Pages' by Rastin Pries et. al. Each client will send a get request to
-   * the server and will get the page content back including inline content.
-   * These requests repeats after a reading time period, until MaxPages are
-   * loaded or MaxReadingTime is reached.
-   * \param bearer The configured EPS bearer for this application.
-   */
-  void InstallHttp (EpsBearer bearer);
-
-  /**
-   * UDP downlink live video streaming.
-   * This video traffic is based on MPEG-4 video traces from
-   * http://www-tkn.ee.tu-berlin.de/publications/papers/TKN0006.pdf.
-   * \param bearer The configured EPS bearer for this application.
-   * \param name The video filename for this application.
-   */
-  void InstallLiveVideo (EpsBearer bearer, std::string name);
-
-  /**
-   * UDP bidirectional VoIP traffic.
-   * This VoIP traffic simulates the G.729 codec (~8.0 kbps for payload).
-   * Check http://goo.gl/iChPGQ for bandwidth calculation and discussion.
-   * \param bearer The configured EPS bearer for this application.
-   */
-  void InstallVoip (EpsBearer bearer);
+  void InstallAppDefault (ApplicationHelper& helper);
 
   // Traffic helper.
   Ptr<RadioNetwork>           m_radio;            //!< LTE radio network.
