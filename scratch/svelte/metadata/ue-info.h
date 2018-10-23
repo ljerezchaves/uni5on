@@ -87,6 +87,7 @@ public:
    */
   //\{
   Ipv4Address           GetAddr         (void) const;
+  uint8_t               GetDefaultBid   (void) const;
   uint32_t              GetDefaultTeid  (void) const;
   uint16_t              GetEnbCellId    (void) const;
   Ptr<EnbInfo>          GetEnbInfo      (void) const;
@@ -109,6 +110,7 @@ public:
    */
   //\{
   BearerInfo            GetBearerInfo   (uint8_t bearerId) const;
+  EpsBearer             GetEpsBearer    (uint8_t bearerId) const;
   Ptr<RoutingInfo>      GetRoutingInfo  (uint8_t bearerId) const;
   uint32_t              GetTeid         (uint8_t bearerId) const;
   //\}

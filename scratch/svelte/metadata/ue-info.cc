@@ -76,14 +76,22 @@ UeInfo::GetAddr (void) const
   return m_addr;
 }
 
+uint8_t
+UeInfo::GetDefaultBid (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  BearerInfo bInfo = GetBearerInfo (1);
+  NS_ASSERT_MSG (bInfo.tft->IsDefaultTft (), "Invalid default BID.");
+  return bInfo.bearerId;
+}
+
 uint32_t
 UeInfo::GetDefaultTeid (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  Ptr<const RoutingInfo> rInfo = GetRoutingInfo (1);
-  NS_ASSERT_MSG (rInfo->IsDefault (), "Inconsistent BID for default bearer.");
-  return rInfo->GetTeid ();
+  return GetRoutingInfo (GetDefaultBid ())->GetTeid ();
 }
 
 uint16_t
@@ -191,6 +199,14 @@ UeInfo::GetBearerInfo (uint8_t bearerId) const
 
   NS_ASSERT_MSG (bearerId >= 1 && bearerId <= GetNBearers (), "Invalid BID.");
   return m_bearersList.at (bearerId - 1);
+}
+
+EpsBearer
+UeInfo::GetEpsBearer (uint8_t bearerId) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return GetBearerInfo (bearerId).bearer;
 }
 
 Ptr<RoutingInfo>
