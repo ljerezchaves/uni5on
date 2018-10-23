@@ -171,6 +171,7 @@ private:
   Ptr<NetDevice>              m_ueDev;            //!< Client dev.
   Ptr<Node>                   m_ueNode;           //!< Client node.
   Ipv4Address                 m_ueAddr;           //!< Client address.
+  uint64_t                    m_ueImsi;           //!< Client IMSI.
   Ipv4Mask                    m_ueMask;           //!< Client address mask.
 
   // Video traces.

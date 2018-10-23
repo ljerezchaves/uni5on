@@ -32,6 +32,7 @@
 #include "../logical/slice-controller.h"
 #include "../logical/slice-network.h"
 #include "../logical/traffic-manager.h"
+#include "../metadata/ue-info.h"
 
 namespace ns3 {
 
@@ -492,7 +493,7 @@ TrafficHelper::ConfigureApplications ()
       m_ueNode = ueNodes.Get (u);
       m_ueDev = ueDevices.Get (u);
       NS_ASSERT (m_ueDev->GetNode () == m_ueNode);
-      uint64_t ueImsi = DynamicCast<LteUeNetDevice> (m_ueDev)->GetImsi ();
+      m_ueImsi = DynamicCast<LteUeNetDevice> (m_ueDev)->GetImsi ();
 
       Ptr<Ipv4> clientIpv4 = m_ueNode->GetObject<Ipv4> ();
       m_ueAddr = clientIpv4->GetAddress (1, 0).GetLocal ();
@@ -500,7 +501,7 @@ TrafficHelper::ConfigureApplications ()
 
       // Each UE gets one traffic manager.
       m_ueManager = m_managerFac.Create<TrafficManager> ();
-      m_ueManager->SetImsi (ueImsi);
+      m_ueManager->SetImsi (m_ueImsi);
       m_ueNode->AggregateObject (m_ueManager);
 
       // Connect the manager to the controller session created trace source.
@@ -787,17 +788,18 @@ TrafficHelper::InstallAppDefault (ApplicationHelper& helper)
 {
   NS_LOG_FUNCTION (this);
 
-  // FIXME
-  // EpsBearer bearer = ;
-  // uint8_t bid = ;
+  // Get default EPS bearer information for this UE.
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (m_ueImsi);
+  uint8_t bid = ueInfo->GetDefaultBid ();
+  EpsBearer bearer = ueInfo->GetEpsBearer (bid);
 
-  // // Create the client and server applications.
-  // uint16_t port = GetNextPortNo ();
-  // Ptr<SvelteClient> cApp = helper.Install (
-  //     m_ueNode, m_webNode, m_ueAddr, m_webAddr, port, Qci2Dscp (bearer.qci));
-  // m_ueManager->AddSvelteClient (cApp);
-  // cApp->SetEpsBearer (bearer);
-  // cApp->SetEpsBearerId (bid);
+  // Create the client and server applications.
+  uint16_t port = GetNextPortNo ();
+  Ptr<SvelteClient> cApp = helper.Install (
+      m_ueNode, m_webNode, m_ueAddr, m_webAddr, port, Qci2Dscp (bearer.qci));
+  m_ueManager->AddSvelteClient (cApp);
+  cApp->SetEpsBearer (bearer);
+  cApp->SetEpsBearerId (bid);
 }
 
 } // namespace ns3
