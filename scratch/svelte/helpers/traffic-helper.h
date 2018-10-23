@@ -129,6 +129,7 @@ private:
   Ptr<RadioNetwork>           m_radio;            //!< LTE radio network.
   Ptr<SliceNetwork>           m_slice;            //!< LTE slice network.
   static uint16_t             m_port;             //!< Port numbers for apps.
+  bool                        m_useOnlyDefault;   //!< Use only default bearer.
 
   // Traffic manager.
   ObjectFactory               m_managerFac;       //!< Traffic manager factory.

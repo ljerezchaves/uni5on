@@ -96,6 +96,12 @@ TrafficHelper::GetTypeId (void)
                    PointerValue (),
                    MakePointerAccessor (&TrafficHelper::m_slice),
                    MakePointerChecker<SliceNetwork> ())
+    .AddAttribute ("UseOnlyDefaultBearer",
+                   "Use only the default EPS bearer for all traffic.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&TrafficHelper::m_useOnlyDefault),
+                   MakeBooleanChecker ())
 
     // Traffic manager attributes.
     .AddAttribute ("PoissonInterArrival",
@@ -756,6 +762,13 @@ TrafficHelper::InstallAppDedicated (
   ApplicationHelper& helper, EpsBearer& bearer, EpcTft::PacketFilter& filter)
 {
   NS_LOG_FUNCTION (this);
+
+  // When enable, install all applications over the default UE EPS bearer.
+  if (m_useOnlyDefault)
+    {
+      InstallAppDefault (helper);
+      return;
+    }
 
   // Create the client and server applications.
   uint16_t port = GetNextPortNo ();
