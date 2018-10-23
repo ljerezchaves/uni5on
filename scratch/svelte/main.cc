@@ -55,7 +55,7 @@ static ns3::GlobalValue
 // Dump timeout for logging statistics
 static ns3::GlobalValue
   g_dumpTimeout ("DumpStatsTimeout", "Periodic statistics dump interval.",
-                 TimeValue (Seconds (1)),
+                 ns3::TimeValue (Seconds (1)),
                  ns3::MakeTimeChecker ());
 
 int
