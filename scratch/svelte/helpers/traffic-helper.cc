@@ -46,8 +46,8 @@ const std::string TrafficHelper::m_videoDir = "./movies/";
 
 // Trace files are sorted in increasing gbr bit rate
 const std::string TrafficHelper::m_videoTrace [] = {
-  "office-cam-low.txt", "office-cam-medium.txt", "first-contact.txt",
-  "office-cam-high.txt", "star-wars-iv.txt", "ard-talk.txt", "mr-bean.txt",
+  "office-cam-low.txt", "office-cam-medium.txt", "office-cam-high.txt",
+  "first-contact.txt", "star-wars-iv.txt", "ard-talk.txt", "mr-bean.txt",
   "n3-talk.txt", "the-firm.txt", "ard-news.txt", "jurassic-park.txt",
   "from-dusk-till-dawn.txt", "formula1.txt", "soccer.txt",
   "silence-of-the-lambs.txt"
@@ -55,13 +55,13 @@ const std::string TrafficHelper::m_videoTrace [] = {
 
 // These values were obtained from observing the first 180 seconds of video
 const uint64_t TrafficHelper::m_gbrBitRate [] = {
-  120000, 128000, 400000, 450000, 500000, 500000, 600000, 650000, 700000,
+  120000, 128000, 450000, 400000, 500000, 500000, 600000, 650000, 700000,
   750000, 770000, 800000, 1100000, 1300000, 1500000
 };
 
 // These values were obtained from observing the first 180 seconds of video
 const uint64_t TrafficHelper::m_mbrBitRate [] = {
-  128000, 600000, 650000, 500000, 600000, 700000, 800000, 750000, 800000,
+  128000, 600000, 500000, 650000, 600000, 700000, 800000, 750000, 800000,
   1250000, 1000000, 1000000, 1200000, 1500000, 2000000
 };
 
