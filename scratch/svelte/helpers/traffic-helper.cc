@@ -759,9 +759,9 @@ TrafficHelper::InstallAppDedicated (
 
   // Create the client and server applications.
   uint16_t port = GetNextPortNo ();
-  Ptr<SvelteClient> cApp = helper.Install (
+  Ptr<SvelteClient> clientApp = helper.Install (
       m_ueNode, m_webNode, m_ueAddr, m_webAddr, port, Qci2Dscp (bearer.qci));
-  m_ueManager->AddSvelteClient (cApp);
+  m_ueManager->AddSvelteClient (clientApp);
 
   // Setup common packet filter parameters.
   filter.remoteAddress   = m_webAddr;
@@ -779,8 +779,8 @@ TrafficHelper::InstallAppDedicated (
 
   // Create the dedicated bearer for this traffic.
   uint8_t bid = m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
-  cApp->SetEpsBearer (bearer);
-  cApp->SetEpsBearerId (bid);
+  clientApp->SetEpsBearer (bearer);
+  clientApp->SetEpsBearerId (bid);
 }
 
 void
@@ -795,11 +795,11 @@ TrafficHelper::InstallAppDefault (ApplicationHelper& helper)
 
   // Create the client and server applications.
   uint16_t port = GetNextPortNo ();
-  Ptr<SvelteClient> cApp = helper.Install (
+  Ptr<SvelteClient> clientApp = helper.Install (
       m_ueNode, m_webNode, m_ueAddr, m_webAddr, port, Qci2Dscp (bearer.qci));
-  m_ueManager->AddSvelteClient (cApp);
-  cApp->SetEpsBearer (bearer);
-  cApp->SetEpsBearerId (bid);
+  m_ueManager->AddSvelteClient (clientApp);
+  clientApp->SetEpsBearer (bearer);
+  clientApp->SetEpsBearerId (bid);
 }
 
 } // namespace ns3
