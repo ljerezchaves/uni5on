@@ -138,6 +138,7 @@ private:
   Time                        m_stopRestartAppsAt; //!< Stop restart apps time.
 
   // Enabled applications.
+  bool                        m_dftHttpPage;      //!< Non-GBR default HTTP.
   bool                        m_gbrAutPilot;      //!< GBR auto-pilot.
   bool                        m_gbrGameOpen;      //!< GBR game open.
   bool                        m_gbrGameTeam;      //!< GBR game team.

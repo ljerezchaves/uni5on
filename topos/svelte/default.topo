@@ -78,6 +78,7 @@ default ns3::TrafficHelper::PoissonInterArrival "ns3::ExponentialRandomVariable[
 default ns3::TrafficHelper::RestartApps "true"
 default ns3::TrafficHelper::StartAppsAfter "1s"
 default ns3::TrafficHelper::StopRestartAppsAt "0s"
+default ns3::TrafficHelper::EnableDftHttpPage "true" 
 default ns3::TrafficHelper::EnableGbrAutPilot "true" 
 default ns3::TrafficHelper::EnableGbrGameOpen "true"
 default ns3::TrafficHelper::EnableGbrGameTeam "true"

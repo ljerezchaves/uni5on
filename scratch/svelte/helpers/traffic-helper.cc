@@ -122,6 +122,12 @@ TrafficHelper::GetTypeId (void)
                    MakeTimeChecker ())
 
     // Applications to be installed.
+    .AddAttribute ("EnableDftHttpPage",
+                   "Enable Non-GBR HTTP webpage traffic over default bearer.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   BooleanValue (true),
+                   MakeBooleanAccessor (&TrafficHelper::m_dftHttpPage),
+                   MakeBooleanChecker ())
     .AddAttribute ("EnableGbrAutPilot",
                    "Enable GBR auto-pilot traffic.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -504,6 +510,12 @@ TrafficHelper::ConfigureApplications ()
 
       // Install enabled applications into this UE.
       //
+      // HTTP webpage traffic over default Non-GBR EPS bearer.
+      if (m_dftHttpPage)
+        {
+          InstallAppDefault (m_httpPageHelper);
+        }
+
       // Auto-pilot traffic over dedicated GBR EPS bearer.
       if (m_gbrAutPilot)
         {
