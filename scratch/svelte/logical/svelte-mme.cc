@@ -99,7 +99,7 @@ SvelteMme::DoInitialUeMessage (
   msg.uli.gci = ecgi;
   msg.teid = 0;
 
-  for (auto const &bit : ueInfo->GetBearerList ())
+  for (auto const &bit : ueInfo->GetBearerInfoList ())
     {
       EpcS11SapSgw::BearerContextToBeCreated bearerContext;
       bearerContext.epsBearerId = bit.bearerId;

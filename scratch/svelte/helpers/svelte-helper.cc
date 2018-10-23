@@ -178,7 +178,7 @@ SvelteHelper::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi,
   UeInfo::BearerInfo bearerInfo;
   bearerInfo.tft = tft;
   bearerInfo.bearer = bearer;
-  uint8_t bearerId = ueInfo->AddBearer (bearerInfo);
+  uint8_t bearerId = ueInfo->AddBearerInfo (bearerInfo);
 
   // Activate the EPS bearer.
   NS_LOG_DEBUG ("Activating bearer id " << static_cast<uint16_t> (bearerId) <<

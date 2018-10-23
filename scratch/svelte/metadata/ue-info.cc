@@ -184,8 +184,8 @@ UeInfo::GetSliceCtrl (void) const
   return m_sliceCtrl;
 }
 
-const UeInfo::BearerInfo&
-UeInfo::GetBearer (uint8_t bearerId) const
+UeInfo::BearerInfo
+UeInfo::GetBearerInfo (uint8_t bearerId) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -213,7 +213,7 @@ UeInfo::GetTeid (uint8_t bearerId) const
 }
 
 const std::vector<UeInfo::BearerInfo>&
-UeInfo::GetBearerList (void) const
+UeInfo::GetBearerInfoList (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -321,7 +321,7 @@ UeInfo::SetSgwInfo (Ptr<SgwInfo> value)
 }
 
 uint8_t
-UeInfo::AddBearer (BearerInfo bearer)
+UeInfo::AddBearerInfo (BearerInfo bearer)
 {
   NS_LOG_FUNCTION (this << bearer.bearerId);
 
@@ -336,7 +336,7 @@ UeInfo::AddRoutingInfo (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo);
 
-  NS_ASSERT_MSG (GetBearer (rInfo->GetBearerId ()).tft == rInfo->GetTft (),
+  NS_ASSERT_MSG (GetBearerInfo (rInfo->GetBearerId ()).tft == rInfo->GetTft (),
                  "Inconsistent bearer TFTs for this bearer ID.");
 
   // Save routing info.

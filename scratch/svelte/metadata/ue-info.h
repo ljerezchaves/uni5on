@@ -108,7 +108,7 @@ public:
    * \return The requested information.
    */
   //\{
-  const BearerInfo&     GetBearer       (uint8_t bearerId) const;
+  BearerInfo            GetBearerInfo   (uint8_t bearerId) const;
   Ptr<RoutingInfo>      GetRoutingInfo  (uint8_t bearerId) const;
   uint32_t              GetTeid         (uint8_t bearerId) const;
   //\}
@@ -117,7 +117,7 @@ public:
    * Get the list of bearers for this UE.
    * \return The const reference to the list of bearers.
    */
-  const std::vector<BearerInfo>& GetBearerList (void) const;
+  const std::vector<BearerInfo>& GetBearerInfoList (void) const;
 
   /**
    * Get the map of routing information for this UE.
@@ -177,7 +177,7 @@ private:
    * \param bearer The bearer info.
    * \return The bearer ID.
    */
-  uint8_t AddBearer (BearerInfo bearer);
+  uint8_t AddBearerInfo (BearerInfo bearer);
 
   /**
    * Add an EPS routing metadata to the list of routing contexts for this UE.
