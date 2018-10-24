@@ -8,6 +8,7 @@ reset=$(tput sgr0)
 bold=$(tput bold)
 normal=$(tput sgr0)
 
+BACKGROUND=0
 PROGNAME="svelte"
 BASEDIR="/local1/luciano"
 SIMDIR="svelte-simulator"
@@ -84,11 +85,13 @@ case "${WHERE}" in
 
       compile-lib)
         cd ${SIMDIR}/${LIBDIR}
-        # git clean -fxd
-        # ./boot.sh
-        # ./configure --enable-ns3-lib
+        git clean -fxd
+        ./boot.sh
+        ./configure --enable-ns3-lib
         make
-        cd ../../
+        cd ../
+        rm build/libns3.28-ofswitch13-*.so
+        cd ../
       ;;
 
       *)
@@ -110,8 +113,12 @@ case "${WHERE}" in
         ssh -q ${MACHINE} exit
         if [ $? -eq 0 ];
         then
-          # ssh ${MACHINE} $0 --local ${COMMAND} $3
-          ssh ${MACHINE} $0 --local ${COMMAND} $3 &>> /dev/null &
+          if [ ${BACKGROUND} -eq 0 ];
+          then
+            ssh ${MACHINE} $0 --local ${COMMAND} $3
+          else
+            ssh ${MACHINE} $0 --local ${COMMAND} $3 &>> /dev/null &
+          fi;
           sleep 0.5
         fi;
       done
