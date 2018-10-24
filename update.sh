@@ -38,6 +38,9 @@ function PrintHelp () {
   echo "  ${bold}pull-sim${normal}:"
   echo "    Pull changes for the ${BASEDIR}/${SIMDIR} git repository."
   echo
+  echo "  ${bold}repo-status${normal}:"
+  echo "    Show status for the ${BASEDIR}/${SIMDIR} git repository."
+  echo
   echo "  ${bold}compile-lib${normal}:"
   echo "    Compile the ${BASEDIR}/${LIBDIR} library."
   echo
@@ -69,6 +72,19 @@ case "${WHERE}" in
         cd ${SIMDIR}
         git pull --recurse-submodules && git submodule update --recursive
         cd ../
+      ;;
+
+      repo-status)
+        cd ${SIMDIR}
+        echo "${red}"svelte:"${normal}"
+        git log HEAD^..HEAD
+        cd src/ofswitch13
+        echo "${red}"ofswitch13:"${normal}"
+        git log HEAD^..HEAD      
+        cd ../../${LIBDIR}
+        echo "${red}"ofsoftswitch13-gtp:"${normal}"
+        git log HEAD^..HEAD
+        cd ../../
       ;;
 
       compile-sim)
@@ -115,9 +131,9 @@ case "${WHERE}" in
         then
           if [ ${BACKGROUND} -eq 0 ];
           then
-            ssh ${MACHINE} $0 --local ${COMMAND} $3
+            ssh -t ${MACHINE} $0 --local ${COMMAND} $3
           else
-            ssh ${MACHINE} $0 --local ${COMMAND} $3 &>> /dev/null &
+            ssh -t ${MACHINE} $0 --local ${COMMAND} $3 &>> /dev/null &
           fi;
           sleep 0.5
         fi;
