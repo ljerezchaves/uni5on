@@ -86,7 +86,7 @@ case "${ACTION}" in
     echo "${COMMAND}" > ${OUTFILE}
 
     echo "${green}[Start]${normal} ${COMMAND}"
-    # eval ${COMMAND} &>> ${OUTFILE}
+    eval ${COMMAND} &>> ${OUTFILE}
 
     # Check for success
     if [ $? -ne 0 ];
