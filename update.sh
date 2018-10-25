@@ -8,150 +8,172 @@ reset=$(tput sgr0)
 bold=$(tput bold)
 normal=$(tput sgr0)
 
-BACKGROUND=0
-PROGNAME="svelte"
+SIMNAME="svelte"
 BASEDIR="/local1/luciano"
-SIMDIR="svelte-simulator"
-LIBDIR="ofsoftswitch13-gtp"
-MACHINE_LIST="atlas castor clio demeter esculapio heracles hercules hestia hydra kratos morfeu pollux satiros tetis"
+SIMDIR="${BASEDIR}/svelte-simulator"
+LIBDIR="${SIMDIR}/ofsoftswitch13-gtp"
+LOGDIR="${SIMDIR}/logs"
+MACHINELIST="atlas castor clio demeter esculapio heracles hercules hestia hydra kratos morfeu pollux satiros tetis"
 
 function PrintHelp () {
-  echo "Usage: $0 <action> [command [options]]"
+  echo "Usage: $0 <action>"
   echo
   echo "Available ${bold}actions${normal}:"
-  echo "  ${bold}--all [command [options]]${normal}:"
-  echo "    Silently execute the command on all LRC machines."
-  echo
-  echo "  ${bold}--local [command [options]]${normal}:"
-  echo "    Execute the command on this local machine."
-  echo
-  echo "  ${bold}--info${normal}:"
-  echo "    List current configured information."
+  echo "  ${bold}--all <-b|-i> <command>${normal}:"
+  echo "    Execute the command on all remote machines in -b (background) or -i (interactive) mode."
   echo
   echo "  ${bold}--help${normal}:"
   echo "    Print this help message and exit."
   echo
-  echo "Available ${bold}command${normal}:"
-  echo "  ${bold}pull-logs${normal}:"
-  echo "    Pull changes for the ${BASEDIR}/${PROGNAME}-logs git repository."
+  echo "  ${bold}--info${normal}:"
+  echo "    List current configured information."
+  echo
+  echo "  ${bold}--local <command>${normal}:"
+  echo "    Execute the command on this local machine."
+  echo
+  echo "Available ${bold}commands${normal}:"
+  echo "  ${bold}build-lib${normal}:"
+  echo "    Compile the switch library [${LIBDIR}]."
+  echo
+  echo "  ${bold}build-sim [waf args]${normal}:"
+  echo "    Compile the ${SIMNAME} simulator with optional waf arguments [${SIMDIR}]."
+  echo
+  echo "  ${bold}pull-log${normal}:"
+  echo "    Pull changes for the log output git repository [${LOGDIR}]."
   echo
   echo "  ${bold}pull-sim${normal}:"
-  echo "    Pull changes for the ${BASEDIR}/${SIMDIR} git repository."
+  echo "    Pull changes for the simulator git repository [${SIMDIR}]."
   echo
-  echo "  ${bold}repo-status${normal}:"
-  echo "    Show status for the ${BASEDIR}/${SIMDIR} git repository."
-  echo
-  echo "  ${bold}compile-lib${normal}:"
-  echo "    Compile the ${BASEDIR}/${LIBDIR} library."
-  echo
-  echo "  ${bold}compile-sim <threads>${normal}:"
-  echo "    Compile the ${BASEDIR}/${SIMDIR} simulator with a custom number of threads."
+  echo "  ${bold}stats-sim${normal}:"
+  echo "    Show the status for the simulator git repository [${SIMDIR}]."
   exit 1
 }
 
-# Test for action argument
+# Parsing positional arguments
 if [ $# -lt 1 ];
 then
+  echo "Missing <action> argument"
   PrintHelp
 fi;
+ACTION=$1
+shift
 
-WHERE=$1
-COMMAND=$2
-case "${WHERE}" in
+case "${ACTION}" in
+  --help)
+    PrintHelp
+  ;;
+
+  --info)
+    echo "${green}Simulator name:  ${normal}${SIMNAME}"
+    echo "${green}Simulator path:  ${normal}${SIMDIR}"
+    echo "${green}Switch lib path: ${normal}${LIBDIR}"
+    echo "${green}Log output path: ${normal}${LOGDIR}"
+    echo "${green}LRC machines:    ${normal}${MACHINELIST}"
+  ;;
+
+  --all)
+    # Parsing positional arguments
+    if [ $# -lt 1 ];
+    then
+      echo "Missing <-b|-i> argument"
+      PrintHelp
+    fi;
+    if [ "$1" != "-b" ] && [ "$1" != "-i" ];
+    then
+      echo "Invalid <-b|-i> argument"
+      PrintHelp
+    fi;
+    MODE=$1
+    shift
+
+    for MACHINE in ${MACHINELIST};
+      do
+        echo "${green}Connecting to ${MACHINE}:${normal}"
+        ssh -q ${MACHINE} exit
+        if [ $? -eq 0 ];
+        then
+          EXECMD="ssh -t ${MACHINE} $0 --local $@"
+          if [ "${MODE}" == "-b" ];
+          then
+            EXECMD+=" &>> /dev/null &"
+          fi;
+          echo "Executing command: ${EXECMD}"
+          eval ${EXECMD}
+          sleep 0.5
+        else
+          echo "${red}Connection to ${MACHINE} failed${normal}"
+        fi;
+        echo
+      done
+  ;;
+
   --local)
+    # Parsing positional arguments
+    if [ $# -lt 1 ];
+    then
+      echo "Missing <command> argument"
+      PrintHelp
+    fi;
+    COMMAND=$1
+    shift
+
     OLDPWD=$(pwd)
-    cd ${BASEDIR}
     case "${COMMAND}" in
-      pull-logs)
-        cd ${PROGNAME}-logs/
+
+      build-lib)
+        cd ${LIBDIR}
+        git clean -fxd
+        ./boot.sh
+        ./configure --enable-ns3-lib
+        make
+
+        cd ${SIMDIR}
+        rm build/lib/libns3*-ofswitch13-*.so
+      ;;
+
+      build-sim)
+        cd ${SIMDIR}
+        ./waf $@
+      ;;
+
+      pull-log)
+        cd ${LOGDIR}
         git pull
-        cd ../
       ;;
 
       pull-sim)
         cd ${SIMDIR}
         git pull --recurse-submodules && git submodule update --recursive
-        cd ../
       ;;
 
-      repo-status)
+      stats-sim)
         cd ${SIMDIR}
-        echo "${red}"svelte:"${normal}"
+        echo "${yellow}** Simulator${normal}"
         git log HEAD^..HEAD
+        echo
+
         cd src/ofswitch13
-        echo "${red}"ofswitch13:"${normal}"
-        git log HEAD^..HEAD      
-        cd ../../${LIBDIR}
-        echo "${red}"ofsoftswitch13-gtp:"${normal}"
+        echo "${yellow}** Switch module:${normal}"
         git log HEAD^..HEAD
-        cd ../../
-      ;;
+        echo
 
-      compile-sim)
-        if [ $# -lt 3 ];
-        then
-          echo "Number of threads missing."
-          PrintHelp
-        fi;
-        THREADS=$3
-        cd ${SIMDIR}
-        ./waf -j${THREADS}
-        cd ../
-      ;;
-
-      compile-lib)
-        cd ${SIMDIR}/${LIBDIR}
-        git clean -fxd
-        ./boot.sh
-        ./configure --enable-ns3-lib
-        make
-        cd ../
-        rm build/libns3.28-ofswitch13-*.so
-        cd ../
+        cd ${LIBDIR}
+        echo "${yellow}** Switch library::${normal}"
+        git log HEAD^..HEAD
+        echo
+        echo
       ;;
 
       *)
-        echo "Invalid command"
+        echo "Invalid <command> argument"
         PrintHelp
       ;;
     esac
     cd ${OLDPWD}
   ;;
 
-  --all)
-    if [ $# -lt 2 ];
-    then
-      PrintHelp
-    fi;
-    for MACHINE in ${MACHINE_LIST};
-      do
-        echo "${green}${MACHINE}${normal}"
-        ssh -q ${MACHINE} exit
-        if [ $? -eq 0 ];
-        then
-          if [ ${BACKGROUND} -eq 0 ];
-          then
-            ssh -t ${MACHINE} $0 --local ${COMMAND} $3
-          else
-            ssh -t ${MACHINE} $0 --local ${COMMAND} $3 &>> /dev/null &
-          fi;
-          sleep 0.5
-        fi;
-      done
-  ;;
-
-  --help)
-    PrintHelp
-  ;;
-
-  --info)
-    echo "Program name: ${PROGNAME}"
-    echo "Simulation path: ${BASEDIR}/${SIMDIR}"
-    echo "Machine list: ${MACHINE_LIST}"
-  ;;
-
   *)
-    echo "Invalid action"
+    echo "Invalid <action> argument"
     PrintHelp
   ;;
 esac
