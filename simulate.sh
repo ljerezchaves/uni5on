@@ -4,200 +4,182 @@
 red=$(tput setaf 1)
 green=$(tput setaf 2)
 yellow=$(tput setaf 3)
-reset=$(tput sgr0)
 bold=$(tput bold)
 normal=$(tput sgr0)
 
-PROGNAME="svelte"
-
 function PrintHelp () {
-  echo "Usage: $0 --action [ARGS]"
+  echo "Usage: $0 <progname> <action>"
   echo
-  echo "Available actions:"
-  echo "  ${bold}--single seed prefix [\"args\"]${normal}:"
+  echo "Available ${bold}actions${normal}:"
+  echo "  ${bold}--single <seed> <prefix> [arg_list]${normal}:"
   echo "    Starts a single simulation with specific prefix and seed number."
-  echo "    Arguments: seed     is the seed number to use."
-  echo "               prefix   is the topology simulation prefix."
-  echo "               [\"args\"] any ${PROGNAME} command line argument (optional)."
+  echo "    Arguments: seed     the seed number to use."
+  echo "               prefix   the topology simulation prefix."
+  echo "               arg_list the list of ns3 command line arguments (optional)."
   echo
-  echo "  ${bold}--sequentialSeed firstSeed lastSeed prefix [\"args\"]${normal}:"
+  echo "  ${bold}--sequentialSeed <first_seed> <last_seed> <prefix> [arg_list]${normal}:"
   echo "    Starts sequential simulations with specific prefix, one for each seed in"
   echo "    given closed interval."
-  echo "  ${bold}--parallelSeed firstSeed lastSeed prefix [\"args\"]${normal}:"
+  echo "  ${bold}--parallelSeed   <first_seed> <last_seed> <prefix> [arg_list]${normal}:"
   echo "    Starts parallel background simulations with specific prefix, one for each"
   echo "    seed in given closed interval."
-  echo "    Arguments: firstSeed is the first seed number to use."
-  echo "               lastSeed  is the last seed number to use."
-  echo "               prefix    is the topology simulation prefix."
-  echo "               [\"args\"]  any ${PROGNAME} command line argument (optional)."
+  echo "    Arguments: first_seed  the first seed number to use."
+  echo "               last_seed   the last seed number to use."
+  echo "               prefix      the topology simulation prefix."
+  echo "               arg_list    the list of ns3 command line arguments (optional)."
   echo
-  echo "  ${bold}--sequentialPrefix seed \"prefixes\" [\"args\"]${normal}"
+  echo "  ${bold}--sequentialPrefix <seed> \"<prefix_list>\" [arg_list]${normal}"
   echo "    Starts sequential simulations with specific seed number, one for each prefix"
   echo "    in given list."
-  echo "  ${bold}--parallelPrefix seed \"prefixes\" [\"args\"]${normal}"
+  echo "  ${bold}--parallelPrefix   <seed> \"<prefix_list>\" [arg_list]${normal}"
   echo "    Starts parallel background simulations with specific seed number, one for"
   echo "    each prefix in given list."
-  echo "    Arguments: seed       is the seed number to use."
-  echo "               \"prefixes\" is the list of topology simulation prefixes."
-  echo "               [\"args\"]   any ${PROGNAME} command line argument (optional)."
+  echo "    Arguments: seed          the seed number to use."
+  echo "               \"prefix_list\" the list of topology simulation prefixes."
+  echo "               arg_list      the list of ns3 command line arguments (optional)."
   echo
-  echo "  ${bold}--parallelSeedPrefix firstSeed lastSeed \"prefixes\" [\"args\"]${normal}"
+  echo "  ${bold}--parallelSeedPrefix <first_seed> <last_seed> \"<prefix_list>\" [arg_list]${normal}"
   echo "    For each seed in given closed interval, starts parallel background"
   echo "    sequential simulations for the prefix in given list."
-  echo "    Arguments: firstSeed  is the first seed number to use."
-  echo "               lastSeed   is the last seed number to use."
-  echo "               \"prefixes\" is the list of topology simulation prefixes."
-  echo "               [\"args\"]   any ${PROGNAME} command line argument (optional)."
+  echo "    Arguments: first_seed     the first seed number to use."
+  echo "               last_seed      the last seed number to use."
+  echo "               \"prefix_list\"  the list of topology simulation prefixes."
+  echo "               arg_list       the list of ns3 command line arguments (optional)."
   echo
   echo "  ${bold}--abort${normal}"
   echo "    Abort all running simulations."
   exit 1
 }
 
-# Test for action argument
+# Parsing positional arguments
 if [ $# -lt 1 ];
 then
+  echo "Missing <progname> argument"
   PrintHelp
 fi;
+PROGNAME=$1
+shift
 
+if [ $# -lt 1 ];
+then
+  echo "Missing <action> argument"
+  PrintHelp
+fi;
 ACTION=$1
+shift
+
 case "${ACTION}" in
   --single)
-    # Test for arguments
-    if [ $# -lt 3 ] || [ $# -gt 4 ];
+    # Parsing positional arguments
+    if [ $# -lt 2 ];
     then
+      echo "Missing required argument"
       PrintHelp
     fi;
+    SEED=$1
+    PREFIX=$2
+    shift 2
 
-    SEED=$2
-    PREFIX=$3
-    ARGS=$4
-
-    COMMAND="./waf --run=\"${PROGNAME} --RngRun=${SEED} --Prefix=${PREFIX} ${ARGS}\""
+    COMMAND="./waf --run=\"${PROGNAME} --RngRun=${SEED} --Prefix=${PREFIX} $@\""
     PREFIXBASENAME=$(basename ${PREFIX})
-    OUTFILE=$(mktemp -p /tmp ${PROGNAME}-${PREFIXBASENAME}-${SEED}-tmpXXX-${PROGNAME})
+    OUTFILE=$(mktemp -p /tmp ${PROGNAME}-${PREFIXBASENAME}-${SEED}-tmpXXX)
     echo "${COMMAND}" > ${OUTFILE}
 
-    echo "${green}[Start]${reset} ${COMMAND}"
-    eval ${COMMAND} &>> ${OUTFILE}
+    echo "${green}[Start]${normal} ${COMMAND}"
+    # eval ${COMMAND} &>> ${OUTFILE}
 
     # Check for success
     if [ $? -ne 0 ];
     then
       echo "ERROR" >> ${OUTFILE}
-      echo "${red}[Error]${reset} ${COMMAND}"
-      echo "${yellow}===== Output file content =====${reset}"
+      echo "${red}[Error]${normal} ${COMMAND}"
+      echo "${yellow}===== Output file content =====${normal}"
       cat ${OUTFILE}
-      echo "${yellow}===== Output file content =====${reset}"
+      echo "${yellow}===== Output file content =====${normal}"
     fi
   ;;
 
-  --parallelSeed)
-    # Test for arguments
-    if [ $# -lt 4 ] || [ $# -gt 5 ];
+  --parallelSeed | --sequentialSeed)
+    # Parsing positional arguments
+    if [ $# -lt 3 ];
     then
+      echo "Missing required argument"
       PrintHelp
     fi;
+    FIRSTSEED=$1
+    LASTSEED=$2
+    PREFIX=$3
+    shift 3
 
-    FIRST=$2
-    LAST=$3
-    PREFIX=$4
-    ARGS=$5
-    for ((SEED=${FIRST}; ${SEED} <= ${LAST}; SEED++))
+    for ((SEED=${FIRSTSEED}; ${SEED} <= ${LASTSEED}; SEED++))
     do
-      $0 --single ${SEED} ${PREFIX} "${ARGS}" &
+      if [ "${ACTION}" == "--parallelSeed" ];
+      then
+        $0 ${PROGNAME} --single ${SEED} ${PREFIX} "$@" &
+      else
+        $0 ${PROGNAME} --single ${SEED} ${PREFIX} "$@"
+      fi;
       sleep 0.5
     done
   ;;
 
-  --sequentialSeed)
-    # Test for arguments
-    if [ $# -lt 4 ] || [ $# -gt 5 ];
+  --parallelPrefix | --sequentialPrefix)
+    # Parsing positional arguments
+    if [ $# -lt 2 ];
     then
+      echo "Missing required argument"
       PrintHelp
     fi;
+    SEED=$1
+    PREFIXLIST=$2
+    shift 2
 
-    FIRST=$2
-    LAST=$3
-    PREFIX=$4
-    ARGS=$5
-    for ((SEED=${FIRST}; ${SEED} <= ${LAST}; SEED++))
+    for PREFIX in ${PREFIXLIST};
     do
-      $0 --single ${SEED} ${PREFIX} "${ARGS}"
-    done
-  ;;
-
-  --parallelPrefix)
-    # Test for arguments
-    if [ $# -lt 3 ] || [ $# -gt 4 ];
-    then
-      PrintHelp
-    fi;
-
-    SEED=$2
-    PREFIX_LIST=$3
-    ARGS=$4
-    for PREFIX in ${PREFIX_LIST};
-    do
-      $0 --single ${SEED} ${PREFIX} "${ARGS}" &
+      if [ "${ACTION}" == "--parallelPrefix" ];
+      then
+        $0 ${PROGNAME} --single ${SEED} ${PREFIX} "$@" &
+      else
+        $0 ${PROGNAME} --single ${SEED} ${PREFIX} "$@"
+      fi;
       sleep 0.5
-    done
-  ;;
-
-  --sequentialPrefix)
-    # Test for arguments
-    if [ $# -lt 3 ] || [ $# -gt 4 ];
-    then
-      PrintHelp
-    fi;
-
-    SEED=$2
-    PREFIX_LIST=$3
-    ARGS=$4
-    for PREFIX in ${PREFIX_LIST};
-    do
-      $0 --single ${SEED} ${PREFIX} "${ARGS}"
     done
   ;;
 
   --parallelSeedPrefix)
-    # Test for arguments
-    if [ $# -lt 4 ] || [ $# -gt 5 ];
+    # Parsing positional arguments
+    if [ $# -lt 3 ];
     then
+      echo "Missing required argument"
       PrintHelp
     fi;
+    FIRSTSEED=$1
+    LASTSEED=$2
+    PREFIXLIST=$3
+    shift 3
 
-    FIRST=$2
-    LAST=$3
-    PREFIX_LIST=$4
-    ARGS=$5
-    for ((SEED=${FIRST}; ${SEED} <= ${LAST}; SEED++))
+    for ((SEED=${FIRSTSEED}; ${SEED} <= ${LASTSEED}; SEED++))
     do
-      $0 --sequentialPrefix ${SEED} "${PREFIX_LIST}" "${ARGS}" &
+      $0 ${PROGNAME} --sequentialPrefix ${SEED} "${PREFIXLIST}" "$@" &
       sleep 0.5
     done
   ;;
 
-  --abort)
-    # Test for arguments
-    if [ $# -ne 1 ];
-    then
-      PrintHelp
-    fi;
-
-    echo "You are about to abort all running simulations in this machine."
+  --stop)
+    echo "${red}You are about to stop all ns3 simulations in this machine.${normal}"
     echo -n "Are you sure you want to continue? (y/N) "
     read ANSWER
     if [ "${ANSWER}" == "y" ];
     then
+      echo "Stopping..."
       killall $0 ${PROGNAME}
     else
-      echo "Invalid answer."
+      echo "Aborted."
     fi
   ;;
 
   *)
-    echo "Invalid action"
+    echo "Invalid <action> argument"
     PrintHelp
   ;;
 esac
