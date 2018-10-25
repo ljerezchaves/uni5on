@@ -13,15 +13,17 @@ then
   PrintHelp
 fi;
 PATHTOCHECK=$1
+shift
 
-if [ $# -ge 2 ] && [ "$2" != "--in-place" ];
+if [ $# -gt 0 ] && [ "$1" != "--in-place" ];
 then
   echo "Invalid optional [--in-place] argument"
   PrintHelp
 fi;
-INPLACE=$2
+INPLACE=$1
+shift
 
-if [ $# -ge 3 ];
+if [ $# -gt 0 ];
 then
   echo "Invalid extra argument"
   PrintHelp
