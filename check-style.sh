@@ -6,31 +6,35 @@ function PrintHelp () {
   exit 1
 }
 
-# Check for valid arguments
-if [ $# -lt 1 ] || [ $# -gt 2 ];
+# Parsing positional arguments
+if [ $# -lt 1 ];
 then
-  echo "Invalid number of arguments"
+  echo "Missing <path_to_check> argument"
   PrintHelp
 fi;
-if [ $# -eq 2 ] && [ "$2" != "--in-place" ];
+PATHTOCHECK=$1
+
+if [ $# -ge 2 ] && [ "$2" != "--in-place" ];
 then
-  echo "Invalid optional argument"
+  echo "Invalid optional [--in-place] argument"
+  PrintHelp
+fi;
+INPLACE=$2
+
+if [ $# -ge 3 ];
+then
+  echo "Invalid extra argument"
   PrintHelp
 fi;
 
-BASEDIR=$1
-ACTION=$2
-FILELIST=$(find ${BASEDIR} -name '*.cc' -o -name '*.h')
-for I in ${FILELIST}
+FILELIST=$(find ${PATHTOCHECK} -name '*.cc' -o -name '*.h')
+for FILE in ${FILELIST}
 do
-    echo $I
-    case "${ACTION}" in
-      --in-place)
-        ./utils/check-style.py -l3 --in-place --check-file=$I
-      ;;
-
-      *)
-        ./utils/check-style.py -l3 --diff --check-file=$I
-      ;;
-    esac
+    echo ${FILE}
+    if [ ! -z ${INPLACE} ];
+    then
+      ./utils/check-style.py -l3 --in-place --check-file=${FILE}
+    else
+      ./utils/check-style.py -l3 --diff --check-file=${FILE}
+    fi;
 done
