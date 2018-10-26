@@ -40,7 +40,10 @@ function PrintHelp () {
   echo
   echo "  ${bold}--parallelSeedPrefix <first_seed> <last_seed> \"<prefix_list>\" [arg_list]${normal}"
   echo "    For each seed in given closed interval, starts parallel background"
-  echo "    sequential simulations for the prefix in given list."
+  echo "    sequential simulations for each prefix in given list."
+  echo "  ${bold}--parallelPrefixSeed <first_seed> <last_seed> \"<prefix_list>\" [arg_list]${normal}"
+  echo "    For each prefix in given list, starts parallel background"
+  echo "    sequential simulations for each seed in given closed interval."
   echo "    Arguments: first_seed     the first seed number to use."
   echo "               last_seed      the last seed number to use."
   echo "               \"prefix_list\"  the list of topology simulation prefixes."
@@ -146,7 +149,7 @@ case "${ACTION}" in
     done
   ;;
 
-  --parallelSeedPrefix)
+  --parallelSeedPrefix | --parallelPrefixSeed)
     # Parsing positional arguments
     if [ $# -lt 3 ];
     then
@@ -158,11 +161,20 @@ case "${ACTION}" in
     PREFIXLIST=$3
     shift 3
 
-    for ((SEED=${FIRSTSEED}; ${SEED} <= ${LASTSEED}; SEED++))
-    do
-      $0 ${PROGNAME} --sequentialPrefix ${SEED} "${PREFIXLIST}" "$@" &
-      sleep 0.5
-    done
+    if [ "${ACTION}" == "--parallelSeedPrefix" ];
+    then
+      for ((SEED=${FIRSTSEED}; ${SEED} <= ${LASTSEED}; SEED++))
+      do
+        $0 ${PROGNAME} --sequentialPrefix ${SEED} "${PREFIXLIST}" "$@" &
+        sleep 0.5
+      done
+    else
+      for PREFIX in ${PREFIXLIST};
+      do
+        $0 ${PROGNAME} --sequentialSeed ${FIRSTSEED} ${LASTSEED} ${PREFIX} "$@" &
+        sleep 0.5
+      done
+    fi;
   ;;
 
   --stop)
