@@ -482,7 +482,6 @@ TrafficHelper::ConfigureHelpers ()
   m_gpsTrackHelper.SetServerAttribute (
     "PktInterval",
     StringValue ("ns3::UniformRandomVariable[Min=1.0|Max=25.0]"));
-
 }
 
 void
