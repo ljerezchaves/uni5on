@@ -576,7 +576,7 @@ SliceNetwork::CreateSgw (void)
     "PipelineTables", UintegerValue (3));
 
   // Configure the S-GW node as an OpenFlow switch.
-  m_sgwDevice = m_switchHelper->InstallSwitch (m_sgwNode).Get (0);
+  m_sgwDevice = m_switchHelper->InstallSwitch (m_sgwNode);
   uint64_t sgwDpId = m_sgwDevice->GetDatapathId ();
 
   // Connect the S-GW node to the OpenFlow backhaul node.

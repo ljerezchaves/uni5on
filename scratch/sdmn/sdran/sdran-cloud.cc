@@ -325,7 +325,7 @@ SdranCloud::NotifyConstructionCompleted ()
   Names::Add (sgwName.str (), m_sgwNode);
 
   Ptr<OFSwitch13Device> sgwSwitchDev;
-  sgwSwitchDev = (m_ofSwitchHelper->InstallSwitch (m_sgwNode)).Get (0);
+  sgwSwitchDev = m_ofSwitchHelper->InstallSwitch (m_sgwNode);
 
   // Create the controller node and install the SDRAN controller app on it.
   m_sdranCtrlNode = CreateObject<Node> ();
