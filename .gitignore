@@ -48,3 +48,5 @@ logs
 .DS_Store
 *radio-map.pdf
 *radio-map.gpi
+topos/traffic
+topos/tccsi
