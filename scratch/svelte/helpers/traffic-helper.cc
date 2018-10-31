@@ -221,9 +221,9 @@ TrafficHelper::DoDispose ()
   m_poissonRng = 0;
   m_lteHelper = 0;
   m_webNode = 0;
-  m_ueManager = 0;
-  m_ueDev = 0;
-  m_ueNode = 0;
+  t_ueManager = 0;
+  t_ueDev = 0;
+  t_ueNode = 0;
   m_gbrVidRng = 0;
   m_nonVidRng = 0;
   Object::DoDispose ();
@@ -502,25 +502,25 @@ TrafficHelper::ConfigureApplications ()
   // Install traffic manager and applications into UE nodes.
   for (uint32_t u = 0; u < ueNodes.GetN (); u++)
     {
-      m_ueNode = ueNodes.Get (u);
-      m_ueDev = ueDevices.Get (u);
-      NS_ASSERT (m_ueDev->GetNode () == m_ueNode);
-      m_ueImsi = DynamicCast<LteUeNetDevice> (m_ueDev)->GetImsi ();
+      t_ueNode = ueNodes.Get (u);
+      t_ueDev = ueDevices.Get (u);
+      NS_ASSERT (t_ueDev->GetNode () == t_ueNode);
+      t_ueImsi = DynamicCast<LteUeNetDevice> (t_ueDev)->GetImsi ();
 
-      Ptr<Ipv4> clientIpv4 = m_ueNode->GetObject<Ipv4> ();
-      m_ueAddr = clientIpv4->GetAddress (1, 0).GetLocal ();
-      m_ueMask = clientIpv4->GetAddress (1, 0).GetMask ();
+      Ptr<Ipv4> clientIpv4 = t_ueNode->GetObject<Ipv4> ();
+      t_ueAddr = clientIpv4->GetAddress (1, 0).GetLocal ();
+      t_ueMask = clientIpv4->GetAddress (1, 0).GetMask ();
 
       // Each UE gets one traffic manager.
-      m_ueManager = m_managerFac.Create<TrafficManager> ();
-      m_ueManager->SetController (m_controller);
-      m_ueManager->SetImsi (m_ueImsi);
-      m_ueNode->AggregateObject (m_ueManager);
+      t_ueManager = m_managerFac.Create<TrafficManager> ();
+      t_ueManager->SetController (m_controller);
+      t_ueManager->SetImsi (t_ueImsi);
+      t_ueNode->AggregateObject (t_ueManager);
 
       // Connect the manager to the controller session created trace source.
       Config::ConnectWithoutContext (
         "/NodeList/*/ApplicationList/*/$ns3::SliceController/SessionCreated",
-        MakeCallback (&TrafficManager::NotifySessionCreated, m_ueManager));
+        MakeCallback (&TrafficManager::NotifySessionCreated, t_ueManager));
 
       // Install enabled applications into this UE.
       //
@@ -734,9 +734,9 @@ TrafficHelper::ConfigureApplications ()
         }
     }
 
-  m_ueManager = 0;
-  m_ueNode = 0;
-  m_ueDev = 0;
+  t_ueManager = 0;
+  t_ueNode = 0;
+  t_ueDev = 0;
 }
 
 uint16_t
@@ -780,16 +780,16 @@ TrafficHelper::InstallAppDedicated (
   // Create the client and server applications.
   uint16_t port = GetNextPortNo ();
   Ptr<SvelteClient> clientApp = helper.Install (
-      m_ueNode, m_webNode, m_ueAddr, m_webAddr, port, Qci2Dscp (bearer.qci));
-  m_ueManager->AddSvelteClient (clientApp);
+      t_ueNode, m_webNode, t_ueAddr, m_webAddr, port, Qci2Dscp (bearer.qci));
+  t_ueManager->AddSvelteClient (clientApp);
 
   // Setup common packet filter parameters.
   filter.remoteAddress   = m_webAddr;
   filter.remoteMask      = m_webMask;
   filter.remotePortStart = port;
   filter.remotePortEnd   = port;
-  filter.localAddress    = m_ueAddr;
-  filter.localMask       = m_ueMask;
+  filter.localAddress    = t_ueAddr;
+  filter.localMask       = t_ueMask;
   filter.localPortStart  = 0;
   filter.localPortEnd    = 65535;
 
@@ -798,7 +798,7 @@ TrafficHelper::InstallAppDedicated (
   tft->Add (filter);
 
   // Create the dedicated bearer for this traffic.
-  uint8_t bid = m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
+  uint8_t bid = m_lteHelper->ActivateDedicatedEpsBearer (t_ueDev, bearer, tft);
   clientApp->SetEpsBearer (bearer);
   clientApp->SetEpsBearerId (bid);
 }
@@ -809,15 +809,15 @@ TrafficHelper::InstallAppDefault (ApplicationHelper& helper)
   NS_LOG_FUNCTION (this);
 
   // Get default EPS bearer information for this UE.
-  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (m_ueImsi);
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (t_ueImsi);
   uint8_t bid = ueInfo->GetDefaultBid ();
   EpsBearer bearer = ueInfo->GetEpsBearer (bid);
 
   // Create the client and server applications.
   uint16_t port = GetNextPortNo ();
   Ptr<SvelteClient> clientApp = helper.Install (
-      m_ueNode, m_webNode, m_ueAddr, m_webAddr, port, Qci2Dscp (bearer.qci));
-  m_ueManager->AddSvelteClient (clientApp);
+      t_ueNode, m_webNode, t_ueAddr, m_webAddr, port, Qci2Dscp (bearer.qci));
+  t_ueManager->AddSvelteClient (clientApp);
   clientApp->SetEpsBearer (bearer);
   clientApp->SetEpsBearerId (bid);
 }

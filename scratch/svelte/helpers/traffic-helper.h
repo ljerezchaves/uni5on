@@ -170,12 +170,12 @@ private:
   Ptr<Node>                   m_webNode;          //!< Server node.
   Ipv4Address                 m_webAddr;          //!< Server address.
   Ipv4Mask                    m_webMask;          //!< Server address mask.
-  Ptr<TrafficManager>         m_ueManager;        //!< Traffic manager obj.
-  Ptr<NetDevice>              m_ueDev;            //!< Client dev.
-  Ptr<Node>                   m_ueNode;           //!< Client node.
-  Ipv4Address                 m_ueAddr;           //!< Client address.
-  uint64_t                    m_ueImsi;           //!< Client IMSI.
-  Ipv4Mask                    m_ueMask;           //!< Client address mask.
+  Ptr<TrafficManager>         t_ueManager;        //!< Traffic manager.
+  Ptr<NetDevice>              t_ueDev;            //!< Client dev.
+  Ptr<Node>                   t_ueNode;           //!< Client node.
+  Ipv4Address                 t_ueAddr;           //!< Client address.
+  uint64_t                    t_ueImsi;           //!< Client IMSI.
+  Ipv4Mask                    t_ueMask;           //!< Client address mask.
 
   // Video traces.
   Ptr<UniformRandomVariable>  m_gbrVidRng;        //!< GBR random live video.
