@@ -66,9 +66,9 @@ public:
 
   /**
    * Set the IMSI attribute.
-   * \param value The ISMI value.
+   * \param imsi The ISMI value.
    */
-  void SetImsi (uint64_t value);
+  void SetImsi (uint64_t imsi);
 
 protected:
   /** Destructor implementation. */

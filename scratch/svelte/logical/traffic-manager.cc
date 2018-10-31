@@ -130,11 +130,11 @@ TrafficManager::NotifySessionCreated (
 }
 
 void
-TrafficManager::SetImsi (uint64_t value)
+TrafficManager::SetImsi (uint64_t imsi)
 {
-  NS_LOG_FUNCTION (this << value);
+  NS_LOG_FUNCTION (this << imsi);
 
-  m_imsi = value;
+  m_imsi = imsi;
 }
 
 void
