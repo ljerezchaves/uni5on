@@ -513,6 +513,7 @@ TrafficHelper::ConfigureApplications ()
 
       // Each UE gets one traffic manager.
       m_ueManager = m_managerFac.Create<TrafficManager> ();
+      m_ueManager->SetController (m_controller);
       m_ueManager->SetImsi (m_ueImsi);
       m_ueNode->AggregateObject (m_ueManager);
 

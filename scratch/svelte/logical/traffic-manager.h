@@ -65,6 +65,12 @@ public:
   void NotifySessionCreated (uint64_t imsi, BearerCreatedList_t bearerList);
 
   /**
+   * Set the OpenFlow slice controller.
+   * \param controller The slice controller.
+   */
+  void SetController (Ptr<SliceController> controller);
+
+  /**
    * Set the IMSI attribute.
    * \param imsi The ISMI value.
    */

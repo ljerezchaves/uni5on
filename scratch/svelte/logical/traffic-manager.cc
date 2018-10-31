@@ -116,8 +116,8 @@ TrafficManager::NotifySessionCreated (
       return;
     }
 
+  // Set the default TEID.
   Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
-  m_ctrlApp = ueInfo->GetSliceCtrl ();
   m_defaultTeid = ueInfo->GetDefaultTeid ();
 
   // For each application, set the corresponding TEID.
@@ -127,6 +127,14 @@ TrafficManager::NotifySessionCreated (
       app->SetTeid (ueInfo->GetTeid (app->GetEpsBearerId ()));
       NS_LOG_INFO ("App " << app->GetNameTeid ());
     }
+}
+
+void
+TrafficManager::SetController (Ptr<SliceController> controller)
+{
+  NS_LOG_FUNCTION (this << controller);
+
+  m_ctrlApp = controller;
 }
 
 void
