@@ -96,6 +96,11 @@ TrafficHelper::GetTypeId (void)
                    PointerValue (),
                    MakePointerAccessor (&TrafficHelper::m_slice),
                    MakePointerChecker<SliceNetwork> ())
+    .AddAttribute ("SliceCtrl", "The logical slice controller pointer.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   PointerValue (),
+                   MakePointerAccessor (&TrafficHelper::m_controller),
+                   MakePointerChecker<SliceController> ())
     .AddAttribute ("UseOnlyDefaultBearer",
                    "Use only the default EPS bearer for all traffic.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -212,6 +217,7 @@ TrafficHelper::DoDispose ()
 
   m_radio = 0;
   m_slice = 0;
+  m_controller = 0;
   m_poissonRng = 0;
   m_lteHelper = 0;
   m_webNode = 0;
@@ -230,6 +236,7 @@ TrafficHelper::NotifyConstructionCompleted ()
 
   NS_ABORT_MSG_IF (!m_radio, "No radio network.");
   NS_ABORT_MSG_IF (!m_slice, "No slice network.");
+  NS_ABORT_MSG_IF (!m_controller, "No slice controller.");
 
   // Saving pointers.
   m_lteHelper = m_radio->GetLteHelper ();
