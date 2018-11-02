@@ -42,11 +42,10 @@ topos/*.log
 topos/*.dat
 topos/*.gpi
 topos/*.pdf
+topos/tccsi
 
 logs
 
 .DS_Store
 *radio-map.pdf
 *radio-map.gpi
-topos/traffic
-topos/tccsi
