@@ -83,10 +83,7 @@ TrafficManager::AddSvelteClient (Ptr<SvelteClient> app)
   // Save the application pointer.
   std::pair<Ptr<SvelteClient>, Time> entry (app, Time ());
   auto ret = m_timeByApp.insert (entry);
-  if (ret.second == false)
-    {
-      NS_FATAL_ERROR ("Can't save application pointer " << app);
-    }
+  NS_ABORT_MSG_IF (ret.second == false, "Error when saving application.");
 
   // Connect to AppStop and AppError trace sources.
   app->TraceConnectWithoutContext (

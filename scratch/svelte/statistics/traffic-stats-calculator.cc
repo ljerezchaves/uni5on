@@ -472,10 +472,8 @@ TrafficStatsCalculator::GetEpcStats (uint32_t teid,
       pair.stats [Direction::ULINK] = CreateObject<EpcStatsCalculator> ();
       std::pair<uint32_t, EpcStatsPair> entry (teid, pair);
       auto ret = m_qosByTeid.insert (entry);
-      if (ret.second == false)
-        {
-          NS_FATAL_ERROR ("Existing QoS entry for teid " << teid);
-        }
+      NS_ABORT_MSG_IF (ret.second == false, "Error when saving QoS entry.");
+
       epcStats = pair.stats [dir];
     }
   return epcStats;
