@@ -130,7 +130,7 @@ TrafficManager::NotifyConstructionCompleted ()
 {
   NS_LOG_FUNCTION (this);
 
-  // Schedule the stop time for applications.
+  // Schedule the stop time for restarting applications.
   if (!m_stopAppsAt.IsZero ())
     {
       Simulator::Schedule (m_stopAppsAt, &TrafficManager::SetAttribute, this,
@@ -147,6 +147,13 @@ TrafficManager::AppStartTry (Ptr<SvelteClient> app)
 
   NS_ASSERT_MSG (!app->IsActive (), "Can't start an active application.");
   NS_LOG_INFO ("Attempt to start app " << app->GetNameTeid ());
+
+  // Check the stop time before starting the application.
+  if (!m_stopAppsAt.IsZero () && Simulator::Now () > m_stopAppsAt)
+    {
+      NS_LOG_INFO ("Application start try aborted by the stop time.");
+      return;
+    }
 
   // Before requesting for resources and starting the application, let's set
   // the next start attempt for this same application. Depending on the next
@@ -168,7 +175,7 @@ TrafficManager::AppStartTry (Ptr<SvelteClient> app)
       // Schedule the application start for +1 second.
       Simulator::Schedule (Seconds (1), &SvelteClient::Start, app);
       NS_LOG_INFO ("App " << app->GetNameTeid () << " will start in +1 sec.");
-      if (app->GetMaxOnTime ().IsZero () == false)
+      if (!app->GetMaxOnTime ().IsZero ())
         {
           NS_LOG_INFO ("App maximum duration set to " <<
                        app->GetMaxOnTime ().GetSeconds () << "s.");
