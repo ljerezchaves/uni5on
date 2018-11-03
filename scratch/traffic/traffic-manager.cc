@@ -61,16 +61,16 @@ TrafficManager::GetTypeId (void)
                    BooleanValue (true),
                    MakeBooleanAccessor (&TrafficManager::m_restartApps),
                    MakeBooleanChecker ())
-    .AddAttribute ("StartAppsAfter",
-                   "The time before starting the applications.",
+    .AddAttribute ("StartAppsAt",
+                   "The time to start the applications.",
                    TimeValue (Seconds (1)),
-                   MakeTimeAccessor (&TrafficManager::m_startAppsAfter),
-                   MakeTimeChecker ())
-    .AddAttribute ("StopRestartAppsAt",
-                   "The time to disable the RestartApps attribute.",
-                   TimeValue (Seconds (0)),
-                   MakeTimeAccessor (&TrafficManager::m_stopRestartAppsAt),
-                   MakeTimeChecker ())
+                   MakeTimeAccessor (&TrafficManager::m_startAppsAt),
+                   MakeTimeChecker (Time (0)))
+    .AddAttribute ("StopAppsAt",
+                   "The time to stop the applications.",
+                   TimeValue (Time (0)),
+                   MakeTimeAccessor (&TrafficManager::m_stopAppsAt),
+                   MakeTimeChecker (Time (0)))
   ;
   return tid;
 }
@@ -95,7 +95,7 @@ TrafficManager::AddSvelteClient (Ptr<SvelteClient> app)
     "AppError", MakeCallback (&TrafficManager::NotifyAppStop, this));
 
   // Schedule the first start attempt for this application.
-  Time firstTry = m_startAppsAfter;
+  Time firstTry = m_startAppsAt;
   firstTry += Seconds (std::abs (m_poissonRng->GetValue ()));
   Simulator::Schedule (firstTry, &TrafficManager::AppStartTry, this, app);
   NS_LOG_INFO ("First start attempt for app " << app->GetAppName () <<
@@ -133,12 +133,11 @@ TrafficManager::NotifyConstructionCompleted ()
 {
   NS_LOG_FUNCTION (this);
 
-  // Schedule the stopTime for applications.
-  if (!m_stopRestartAppsAt.IsZero ())
+  // Schedule the stop time for applications.
+  if (!m_stopAppsAt.IsZero ())
     {
-      Simulator::Schedule (
-        m_stopRestartAppsAt, &TrafficManager::SetAttribute, this,
-        "RestartApps", BooleanValue (false));
+      Simulator::Schedule (m_stopAppsAt, &TrafficManager::SetAttribute, this,
+                           "RestartApps", BooleanValue (false));
     }
 
   Object::NotifyConstructionCompleted ();
