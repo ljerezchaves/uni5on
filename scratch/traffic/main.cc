@@ -163,10 +163,10 @@ main (int argc, char *argv[])
   Ipv4AddressHelper ipv4helpr;
   ipv4helpr.SetBase ("10.0.0.0", "255.0.0.0");
 
-  // Configure the CsmaHelper to connect OpenFlow switches (4KM Fiber cable)
+  // Configure the CsmaHelper to connect OpenFlow switches (2KM Fiber cable)
   CsmaHelper csmaHelper;
-  csmaHelper.SetChannelAttribute ("DataRate", DataRateValue (DataRate ("100Mbps")));
-  csmaHelper.SetChannelAttribute ("Delay", TimeValue (MicroSeconds (20)));
+  csmaHelper.SetChannelAttribute ("DataRate", DataRateValue (DataRate ("10Gbps")));
+  csmaHelper.SetChannelAttribute ("Delay", TimeValue (MicroSeconds (10)));
 
   // Connect the single server node to the OpenFlow switch.
   NetDeviceContainer sw2svLink = csmaHelper.Install (switchNode, serverNode);
