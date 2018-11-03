@@ -49,8 +49,8 @@ function PrintHelp () {
   echo "               \"prefix_list\"  the list of topology simulation prefixes."
   echo "               arg_list       the list of ns3 command line arguments (optional)."
   echo
-  echo "  ${bold}--abort${normal}"
-  echo "    Abort all running simulations."
+  echo "  ${bold}--stop${normal}"
+  echo "    Stop all running simulations."
   exit 1
 }
 
