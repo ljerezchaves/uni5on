@@ -66,7 +66,7 @@ main (int argc, char *argv[])
   bool        ofsLog   = false;
   bool        lteRem   = false;
   uint32_t    progress = 0;
-  uint32_t    simTime  = 250;
+  uint32_t    simTime  = 300;
   std::string prefix   = "";
 
   // Configure some default attribute values. These values can be overridden by
