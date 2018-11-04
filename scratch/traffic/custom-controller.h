@@ -19,7 +19,8 @@
  *         Luciano J. Chaves <ljerezchaves@gmail.com>
  */
 
-#pragma once
+#ifndef CUSTOM_CONTROLLER_H
+#define CUSTOM_CONTROLLER_H
 
 #include <ns3/ofswitch13-module.h>
 #include <ns3/internet-module.h>
@@ -98,9 +99,10 @@ protected:
   virtual void DoDispose ();
 
 private:
-  Ptr<OFSwitch13Device>          m_switchDevice;  //!< UL switch device.
+  Ptr<OFSwitch13Device>          m_switchDevice;  //!< Switch device.
   TracedCallback<uint32_t, bool> m_requestTrace;  //!< Request trace source.
   TracedCallback<uint32_t>       m_releaseTrace;  //!< Release trace source.
 };
 
 } // namespace ns3
+#endif  // CUSTOM_CONTROLLER_H
