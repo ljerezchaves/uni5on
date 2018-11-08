@@ -325,7 +325,7 @@ void ForceDefaults ()
   // Enable detailed OpenFlow datapath statistics.
   //
   Config::SetDefault (
-    "ns3::OFSwitch13StatsCalculator::PipelineDetails", BooleanValue (true));
+    "ns3::OFSwitch13StatsCalculator::FlowTableDetails", BooleanValue (true));
 }
 
 void
