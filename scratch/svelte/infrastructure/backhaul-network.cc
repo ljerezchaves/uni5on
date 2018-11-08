@@ -77,6 +77,12 @@ BackhaulNetwork::GetTypeId (void)
                    MakeUintegerChecker<uint16_t> ())
 
     // Backhaul switches.
+    .AddAttribute ("CpuCapacity",
+                   "Processing capacity for the backhaul switches.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   DataRateValue (DataRate ("100Gb/s")),
+                   MakeDataRateAccessor (&BackhaulNetwork::m_cpuCapacity),
+                   MakeDataRateChecker ())
     .AddAttribute ("FlowTableSize",
                    "Flow table size for the backhaul switches.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -95,12 +101,6 @@ BackhaulNetwork::GetTypeId (void)
                    UintegerValue (65535),
                    MakeUintegerAccessor (&BackhaulNetwork::m_meterTableSize),
                    MakeUintegerChecker<uint16_t> (0, 65535))
-    .AddAttribute ("ProcCapacity",
-                   "Processing capacity for the backhaul switches.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   DataRateValue (DataRate ("100Gb/s")),
-                   MakeDataRateAccessor (&BackhaulNetwork::m_procCapacity),
-                   MakeDataRateChecker ())
   ;
   return tid;
 }
@@ -218,7 +218,7 @@ BackhaulNetwork::NotifyConstructionCompleted (void)
   // 5 pipeline tables (input, classification, routing, bandwidth, and output)
   // plus one extra table for each logical network slice.
   m_switchHelper->SetDeviceAttribute (
-    "CpuCapacity", DataRateValue (m_procCapacity));
+    "CpuCapacity", DataRateValue (m_cpuCapacity));
   m_switchHelper->SetDeviceAttribute (
     "FlowTableSize", UintegerValue (m_flowTableSize));
   m_switchHelper->SetDeviceAttribute (

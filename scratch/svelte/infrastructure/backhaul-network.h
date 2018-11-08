@@ -128,10 +128,10 @@ private:
   Time                          m_linkDelay;      //!< EPC link delay.
 
   // Switch datapath configuration.
+  DataRate                      m_cpuCapacity;    //!< CPU capacity.
   uint32_t                      m_flowTableSize;  //!< Flow table size.
   uint32_t                      m_groupTableSize; //!< Group table size.
   uint32_t                      m_meterTableSize; //!< Meter table size.
-  DataRate                      m_procCapacity;   //!< Processing capacity.
 
   // IPv4 address helpers for EPC interfaces.
   Ipv4AddressHelper             m_s1uAddrHelper;  //!< S1-U address helper.

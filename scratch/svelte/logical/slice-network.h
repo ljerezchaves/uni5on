@@ -162,21 +162,21 @@ private:
   DataRate                      m_pgwLinkRate;      //!< P-GW link data rate.
   Time                          m_pgwLinkDelay;     //!< P-GW link delay.
   uint16_t                      m_pgwInfraSwIdx;    //!< Backhaul switch index.
+  DataRate                      m_mainCpuCapacity;  //!< Main CPU capacity.
   uint32_t                      m_mainFlowSize;     //!< Main flow table size.
-  DataRate                      m_mainProcCapy;     //!< Main proc capacity.
   uint16_t                      m_nTfts;            //!< Number of TFT nodes.
+  DataRate                      m_tftCpuCapacity;   //!< TFT CPU capacity.
   uint32_t                      m_tftFlowSize;      //!< TFT flow table size.
   uint32_t                      m_tftMeterSize;     //!< TFT meter table size.
-  DataRate                      m_tftProcCapy;      //!< TFT proc capacity.
 
   // S-GW user planes.
   Ptr<SgwInfo>                  m_sgwInfo;          //!< S-GW metadata.
   Ptr<Node>                     m_sgwNode;          //!< S-GW switch node.
   Ptr<OFSwitch13Device>         m_sgwDevice;        //!< S-GW switch device.
   uint16_t                      m_sgwInfraSwIdx;    //!< Backhaul switch idx.
+  DataRate                      m_sgwCpuCapacity;   //!< S-GW CPU capacity.
   uint32_t                      m_sgwFlowSize;      //!< S-GW flow table size.
   uint32_t                      m_sgwMeterSize;     //!< S-GW meter table size.
-  DataRate                      m_sgwProcCapy;      //!< S-GW proc capacity.
 
   // Helper and attributes for CSMA interface.
   CsmaHelper                    m_csmaHelper;       //!< Connection helper.

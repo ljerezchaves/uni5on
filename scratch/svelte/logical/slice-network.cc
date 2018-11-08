@@ -165,17 +165,23 @@ SliceNetwork::GetTypeId (void)
                    UintegerValue (0),
                    MakeUintegerAccessor (&SliceNetwork::m_pgwInfraSwIdx),
                    MakeUintegerChecker<uint16_t> ())
+    .AddAttribute ("PgwMainCpuCapacity",
+                   "CPU capacity for the P-GW main switch.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   DataRateValue (DataRate ("100Gb/s")),
+                   MakeDataRateAccessor (&SliceNetwork::m_mainCpuCapacity),
+                   MakeDataRateChecker ())
     .AddAttribute ("PgwMainFlowTableSize",
                    "Flow table size for the P-GW main switch.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    UintegerValue (65535),
                    MakeUintegerAccessor (&SliceNetwork::m_mainFlowSize),
                    MakeUintegerChecker<uint16_t> (0, 65535))
-    .AddAttribute ("PgwMainProcCapacity",
-                   "Pipeline capacity for the P-GW main switch.",
+    .AddAttribute ("PgwTftCpuCapacity",
+                   "CPU capacity for the P-GW TFT switches.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    DataRateValue (DataRate ("100Gb/s")),
-                   MakeDataRateAccessor (&SliceNetwork::m_mainProcCapy),
+                   MakeDataRateAccessor (&SliceNetwork::m_tftCpuCapacity),
                    MakeDataRateChecker ())
     .AddAttribute ("PgwTftFlowTableSize",
                    "Flow table size for the P-GW TFT switches.",
@@ -189,12 +195,6 @@ SliceNetwork::GetTypeId (void)
                    UintegerValue (65535),
                    MakeUintegerAccessor (&SliceNetwork::m_tftMeterSize),
                    MakeUintegerChecker<uint16_t> (0, 65535))
-    .AddAttribute ("PgwTftProcCapacity",
-                   "Pipeline capacity for the P-GW TFT switches.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   DataRateValue (DataRate ("100Gb/s")),
-                   MakeDataRateAccessor (&SliceNetwork::m_tftProcCapy),
-                   MakeDataRateChecker ())
     .AddAttribute ("PgwLinkDataRate",
                    "The data rate for the internal P-GW links.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -215,6 +215,12 @@ SliceNetwork::GetTypeId (void)
                    UintegerValue (0),
                    MakeUintegerAccessor (&SliceNetwork::m_sgwInfraSwIdx),
                    MakeUintegerChecker<uint16_t> ())
+    .AddAttribute ("SgwCpuCapacity",
+                   "Pipeline capacity for the S-GW switches.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   DataRateValue (DataRate ("100Gb/s")),
+                   MakeDataRateAccessor (&SliceNetwork::m_sgwCpuCapacity),
+                   MakeDataRateChecker ())
     .AddAttribute ("SgwFlowTableSize",
                    "Flow table size for the S-GW switches.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -227,12 +233,6 @@ SliceNetwork::GetTypeId (void)
                    UintegerValue (65535),
                    MakeUintegerAccessor (&SliceNetwork::m_sgwMeterSize),
                    MakeUintegerChecker<uint16_t> (0, 65535))
-    .AddAttribute ("SgwProcCapacity",
-                   "Pipeline capacity for the S-GW switches.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   DataRateValue (DataRate ("100Gb/s")),
-                   MakeDataRateAccessor (&SliceNetwork::m_sgwProcCapy),
-                   MakeDataRateChecker ())
 
     .AddAttribute ("LinkMtu",
                    "The MTU for CSMA OpenFlow links. "
@@ -405,7 +405,7 @@ SliceNetwork::CreatePgw (void)
   // No meter/group entries and 7 pipeline table (1 + the maximum number of TFT
   // adaptive levels considering the maximum of 32 TFT switches).
   m_switchHelper->SetDeviceAttribute (
-    "CpuCapacity", DataRateValue (m_mainProcCapy));
+    "CpuCapacity", DataRateValue (m_mainCpuCapacity));
   m_switchHelper->SetDeviceAttribute (
     "FlowTableSize", UintegerValue (m_mainFlowSize));
   m_switchHelper->SetDeviceAttribute (
@@ -491,7 +491,7 @@ SliceNetwork::CreatePgw (void)
   // Configuring OpenFlow helper for P-GW TFT switches.
   // No group entries and 1 pipeline table.
   m_switchHelper->SetDeviceAttribute (
-    "CpuCapacity", DataRateValue (m_tftProcCapy));
+    "CpuCapacity", DataRateValue (m_tftCpuCapacity));
   m_switchHelper->SetDeviceAttribute (
     "FlowTableSize", UintegerValue (m_tftFlowSize));
   m_switchHelper->SetDeviceAttribute (
@@ -565,7 +565,7 @@ SliceNetwork::CreateSgw (void)
   // Configuring OpenFlow helper for S-GW switches.
   // No group entries and 3 pipeline tables.
   m_switchHelper->SetDeviceAttribute (
-    "CpuCapacity", DataRateValue (m_sgwProcCapy));
+    "CpuCapacity", DataRateValue (m_sgwCpuCapacity));
   m_switchHelper->SetDeviceAttribute (
     "FlowTableSize", UintegerValue (m_sgwFlowSize));
   m_switchHelper->SetDeviceAttribute (
