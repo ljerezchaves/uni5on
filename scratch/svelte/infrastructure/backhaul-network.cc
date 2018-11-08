@@ -218,13 +218,13 @@ BackhaulNetwork::NotifyConstructionCompleted (void)
   // 5 pipeline tables (input, classification, routing, bandwidth, and output)
   // plus one extra table for each logical network slice.
   m_switchHelper->SetDeviceAttribute (
+    "CpuCapacity", DataRateValue (m_procCapacity));
+  m_switchHelper->SetDeviceAttribute (
     "FlowTableSize", UintegerValue (m_flowTableSize));
   m_switchHelper->SetDeviceAttribute (
     "GroupTableSize", UintegerValue (m_groupTableSize));
   m_switchHelper->SetDeviceAttribute (
     "MeterTableSize", UintegerValue (m_meterTableSize));
-  m_switchHelper->SetDeviceAttribute (
-    "ProcessingCapacity", DataRateValue (m_procCapacity));
   m_switchHelper->SetDeviceAttribute (
     "PipelineTables", UintegerValue (5 + static_cast<int> (SliceId::ALL)));
 

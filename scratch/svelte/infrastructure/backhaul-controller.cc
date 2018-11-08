@@ -203,8 +203,8 @@ BackhaulController::GetEwmaProcUse (uint16_t idx) const
   stats = device->GetObject<OFSwitch13StatsCalculator> ();
   NS_ABORT_MSG_IF (!stats, "Enable OFSwitch13 datapath stats.");
 
-  return static_cast<double> (stats->GetEwmaProcessingLoad ().GetBitRate ()) /
-         static_cast<double> (device->GetProcessingCapacity ().GetBitRate ());
+  return static_cast<double> (stats->GetEwmaCpuLoad ().GetBitRate ()) /
+         static_cast<double> (device->GetCpuCapacity ().GetBitRate ());
 }
 
 Ptr<SliceController>

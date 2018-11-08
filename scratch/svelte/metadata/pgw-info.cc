@@ -144,7 +144,7 @@ PgwInfo::GetEwmaProcCur (uint16_t idx) const
   NS_LOG_FUNCTION (this << idx);
 
   NS_ASSERT_MSG (idx < m_devices.size (), "Invalid index.");
-  return GetStats (idx)->GetEwmaProcessingLoad ();
+  return GetStats (idx)->GetEwmaCpuLoad ();
 }
 
 DataRate
@@ -153,7 +153,7 @@ PgwInfo::GetProcessingMax (uint16_t idx) const
   NS_LOG_FUNCTION (this << idx);
 
   NS_ASSERT_MSG (idx < m_devices.size (), "Invalid index.");
-  return m_devices.at (idx)->GetProcessingCapacity ();
+  return m_devices.at (idx)->GetCpuCapacity ();
 }
 
 double

@@ -405,13 +405,13 @@ SliceNetwork::CreatePgw (void)
   // No meter/group entries and 7 pipeline table (1 + the maximum number of TFT
   // adaptive levels considering the maximum of 32 TFT switches).
   m_switchHelper->SetDeviceAttribute (
+    "CpuCapacity", DataRateValue (m_mainProcCapy));
+  m_switchHelper->SetDeviceAttribute (
     "FlowTableSize", UintegerValue (m_mainFlowSize));
   m_switchHelper->SetDeviceAttribute (
     "GroupTableSize", UintegerValue (0));
   m_switchHelper->SetDeviceAttribute (
     "MeterTableSize", UintegerValue (0));
-  m_switchHelper->SetDeviceAttribute (
-    "ProcessingCapacity", DataRateValue (m_mainProcCapy));
   m_switchHelper->SetDeviceAttribute (
     "PipelineTables", UintegerValue (7));
 
@@ -491,13 +491,13 @@ SliceNetwork::CreatePgw (void)
   // Configuring OpenFlow helper for P-GW TFT switches.
   // No group entries and 1 pipeline table.
   m_switchHelper->SetDeviceAttribute (
+    "CpuCapacity", DataRateValue (m_tftProcCapy));
+  m_switchHelper->SetDeviceAttribute (
     "FlowTableSize", UintegerValue (m_tftFlowSize));
   m_switchHelper->SetDeviceAttribute (
     "GroupTableSize", UintegerValue (0));
   m_switchHelper->SetDeviceAttribute (
     "MeterTableSize", UintegerValue (m_tftMeterSize));
-  m_switchHelper->SetDeviceAttribute (
-    "ProcessingCapacity", DataRateValue (m_tftProcCapy));
   m_switchHelper->SetDeviceAttribute (
     "PipelineTables", UintegerValue (1));
 
@@ -565,13 +565,13 @@ SliceNetwork::CreateSgw (void)
   // Configuring OpenFlow helper for S-GW switches.
   // No group entries and 3 pipeline tables.
   m_switchHelper->SetDeviceAttribute (
+    "CpuCapacity", DataRateValue (m_sgwProcCapy));
+  m_switchHelper->SetDeviceAttribute (
     "FlowTableSize", UintegerValue (m_sgwFlowSize));
   m_switchHelper->SetDeviceAttribute (
     "GroupTableSize", UintegerValue (0));
   m_switchHelper->SetDeviceAttribute (
     "MeterTableSize", UintegerValue (m_sgwMeterSize));
-  m_switchHelper->SetDeviceAttribute (
-    "ProcessingCapacity", DataRateValue (m_sgwProcCapy));
   m_switchHelper->SetDeviceAttribute (
     "PipelineTables", UintegerValue (3));
 

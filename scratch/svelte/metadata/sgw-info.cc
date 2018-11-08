@@ -172,7 +172,7 @@ SgwInfo::GetEwmaProcCur (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return GetStats ()->GetEwmaProcessingLoad ();
+  return GetStats ()->GetEwmaCpuLoad ();
 }
 
 DataRate
@@ -180,7 +180,7 @@ SgwInfo::GetProcessingMax (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_device->GetProcessingCapacity ();
+  return m_device->GetCpuCapacity ();
 }
 
 double
