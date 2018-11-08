@@ -139,7 +139,7 @@ PgwInfo::GetFlowTableUse (uint16_t idx, uint8_t tableId) const
 }
 
 DataRate
-PgwInfo::GetEwmaProcCur (uint16_t idx) const
+PgwInfo::GetEwmaCpuCur (uint16_t idx) const
 {
   NS_LOG_FUNCTION (this << idx);
 
@@ -148,7 +148,7 @@ PgwInfo::GetEwmaProcCur (uint16_t idx) const
 }
 
 DataRate
-PgwInfo::GetProcessingMax (uint16_t idx) const
+PgwInfo::GetCpuMax (uint16_t idx) const
 {
   NS_LOG_FUNCTION (this << idx);
 
@@ -157,12 +157,12 @@ PgwInfo::GetProcessingMax (uint16_t idx) const
 }
 
 double
-PgwInfo::GetEwmaProcUse (uint16_t idx) const
+PgwInfo::GetEwmaCpuUse (uint16_t idx) const
 {
   NS_LOG_FUNCTION (this << idx);
 
-  return static_cast<double> (GetEwmaProcCur (idx).GetBitRate ()) /
-         static_cast<double> (GetProcessingMax (idx).GetBitRate ());
+  return static_cast<double> (GetEwmaCpuCur (idx).GetBitRate ()) /
+         static_cast<double> (GetCpuMax (idx).GetBitRate ());
 }
 
 uint64_t
@@ -309,40 +309,40 @@ PgwInfo::GetTftAvgFlowTableUse (uint8_t tableId) const
 }
 
 DataRate
-PgwInfo::GetTftAvgEwmaProcCur (void) const
+PgwInfo::GetTftAvgEwmaCpuCur (void) const
 {
   NS_LOG_FUNCTION (this);
 
   uint64_t value = 0;
   for (uint16_t idx = 1; idx <= GetCurTfts (); idx++)
     {
-      value += GetEwmaProcCur (idx).GetBitRate ();
+      value += GetEwmaCpuCur (idx).GetBitRate ();
     }
   return DataRate (value / GetCurTfts ());
 }
 
 DataRate
-PgwInfo::GetTftAvgProcessingMax (void) const
+PgwInfo::GetTftAvgCpuMax (void) const
 {
   NS_LOG_FUNCTION (this);
 
   uint64_t value = 0;
   for (uint16_t idx = 1; idx <= GetCurTfts (); idx++)
     {
-      value += GetProcessingMax (idx).GetBitRate ();
+      value += GetCpuMax (idx).GetBitRate ();
     }
   return DataRate (value / GetCurTfts ());
 }
 
 double
-PgwInfo::GetTftAvgEwmaProcUse (void) const
+PgwInfo::GetTftAvgEwmaCpuUse (void) const
 {
   NS_LOG_FUNCTION (this);
 
   double value = 0.0;
   for (uint16_t idx = 1; idx <= GetCurTfts (); idx++)
     {
-      value += GetEwmaProcUse (idx);
+      value += GetEwmaCpuUse (idx);
     }
   return value / GetCurTfts ();
 }
@@ -387,40 +387,40 @@ PgwInfo::GetTftMaxFlowTableUse (uint8_t tableId) const
 }
 
 DataRate
-PgwInfo::GetTftMaxEwmaProcCur (void) const
+PgwInfo::GetTftMaxEwmaCpuCur (void) const
 {
   NS_LOG_FUNCTION (this);
 
   uint64_t value = 0;
   for (uint16_t idx = 1; idx <= GetCurTfts (); idx++)
     {
-      value = std::max (value, GetEwmaProcCur (idx).GetBitRate ());
+      value = std::max (value, GetEwmaCpuCur (idx).GetBitRate ());
     }
   return DataRate (value);
 }
 
 DataRate
-PgwInfo::GetTftMaxProcessingMax (void) const
+PgwInfo::GetTftMaxCpuMax (void) const
 {
   NS_LOG_FUNCTION (this);
 
   uint64_t value = 0;
   for (uint16_t idx = 1; idx <= GetCurTfts (); idx++)
     {
-      value = std::max (value, GetProcessingMax (idx).GetBitRate ());
+      value = std::max (value, GetCpuMax (idx).GetBitRate ());
     }
   return DataRate (value);
 }
 
 double
-PgwInfo::GetTftMaxEwmaProcUse () const
+PgwInfo::GetTftMaxEwmaCpuUse () const
 {
   NS_LOG_FUNCTION (this);
 
   double value = 0.0;
   for (uint16_t idx = 1; idx <= GetCurTfts (); idx++)
     {
-      value = std::max (value, GetEwmaProcUse (idx));
+      value = std::max (value, GetEwmaCpuUse (idx));
     }
   return value;
 }

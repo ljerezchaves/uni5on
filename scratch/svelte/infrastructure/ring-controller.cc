@@ -732,7 +732,7 @@ RingController::HasAvailableResources (Ptr<RingInfo> ringInfo)
       downPath = ringInfo->GetDlPath (LteIface::S5);
       while (success && curr != rInfo->GetSgwInfraSwIdx ())
         {
-          success &= (GetEwmaProcUse (curr) < GetBlockThreshold ());
+          success &= (GetEwmaCpuUse (curr) < GetBlockThreshold ());
           curr = NextSwitchIndex (curr, downPath);
         }
 
@@ -740,12 +740,12 @@ RingController::HasAvailableResources (Ptr<RingInfo> ringInfo)
       downPath = ringInfo->GetDlPath (LteIface::S1U);
       while (success && curr != rInfo->GetEnbInfraSwIdx ())
         {
-          success &= (GetEwmaProcUse (curr) < GetBlockThreshold ());
+          success &= (GetEwmaCpuUse (curr) < GetBlockThreshold ());
           curr = NextSwitchIndex (curr, downPath);
         }
 
       // The last switch (eNB).
-      success &= (GetEwmaProcUse (curr) < GetBlockThreshold ());
+      success &= (GetEwmaCpuUse (curr) < GetBlockThreshold ());
 
       if (!success)
         {

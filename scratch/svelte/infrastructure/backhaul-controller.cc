@@ -192,7 +192,7 @@ BackhaulController::GetLinkInfo (uint16_t idx1, uint16_t idx2) const
 }
 
 double
-BackhaulController::GetEwmaProcUse (uint16_t idx) const
+BackhaulController::GetEwmaCpuUse (uint16_t idx) const
 {
   NS_LOG_FUNCTION (this << idx);
 

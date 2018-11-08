@@ -146,12 +146,12 @@ PgwTftStatsCalculator::NotifyPgwTftStats (
     << " " << setw (7)  << pgwInfo->GetTftMaxFlowTableCur ()
     << " " << setw (9)  << pgwInfo->GetTftAvgFlowTableUse () * 100
     << " " << setw (9)  << pgwInfo->GetTftMaxFlowTableUse () * 100
-    << " " << setw (13) << Bps2Kbps (pgwInfo->GetTftAvgProcessingMax ())
-    << " " << setw (13) << Bps2Kbps (pgwInfo->GetTftMaxProcessingMax ())
-    << " " << setw (13) << Bps2Kbps (pgwInfo->GetTftAvgEwmaProcCur ())
-    << " " << setw (13) << Bps2Kbps (pgwInfo->GetTftMaxEwmaProcCur ())
-    << " " << setw (9)  << pgwInfo->GetTftAvgEwmaProcUse () * 100
-    << " " << setw (9)  << pgwInfo->GetTftMaxEwmaProcUse () * 100
+    << " " << setw (13) << Bps2Kbps (pgwInfo->GetTftAvgCpuMax ())
+    << " " << setw (13) << Bps2Kbps (pgwInfo->GetTftMaxCpuMax ())
+    << " " << setw (13) << Bps2Kbps (pgwInfo->GetTftAvgEwmaCpuCur ())
+    << " " << setw (13) << Bps2Kbps (pgwInfo->GetTftMaxEwmaCpuCur ())
+    << " " << setw (9)  << pgwInfo->GetTftAvgEwmaCpuUse () * 100
+    << " " << setw (9)  << pgwInfo->GetTftMaxEwmaCpuUse () * 100
     << std::endl;
 }
 

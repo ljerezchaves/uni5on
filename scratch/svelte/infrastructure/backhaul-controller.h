@@ -142,7 +142,7 @@ protected:
    * \param idx The switch index.
    * \return The pipeline capacity usage.
    */
-  double GetEwmaProcUse (uint16_t idx) const;
+  double GetEwmaCpuUse (uint16_t idx) const;
 
   /**
    * Get the slice controller application for a given slice ID.

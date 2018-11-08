@@ -824,11 +824,11 @@ SliceController::PgwAdaptiveMechanism (void)
   if (GetPgwTftAdaptiveMode () == OpMode::AUTO)
     {
       double maxTabUse = m_pgwInfo->GetTftMaxFlowTableUse ();
-      double maxPrcUse = m_pgwInfo->GetTftMaxEwmaProcUse ();
+      double maxCpuUse = m_pgwInfo->GetTftMaxEwmaCpuUse ();
 
       // We may increase the level when we hit the split threshold.
       if ((m_pgwInfo->GetCurLevel () < m_pgwInfo->GetMaxLevel ())
-          && (maxTabUse >= m_tftSplitThs || maxPrcUse >= m_tftSplitThs))
+          && (maxTabUse >= m_tftSplitThs || maxCpuUse >= m_tftSplitThs))
         {
           NS_LOG_INFO ("Increasing the adaptive mechanism level.");
           nextLevel++;
@@ -836,7 +836,7 @@ SliceController::PgwAdaptiveMechanism (void)
 
       // We may decrease the level when we hit the join threshold.
       else if ((m_pgwInfo->GetCurLevel () > 0)
-               && (maxTabUse < m_tftJoinThs) && (maxPrcUse < m_tftJoinThs))
+               && (maxTabUse < m_tftJoinThs) && (maxCpuUse < m_tftJoinThs))
         {
           NS_LOG_INFO ("Decreasing the adaptive mechanism level.");
           nextLevel--;
@@ -913,8 +913,8 @@ SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo)
       return false;
     }
 
-  // Second check: OpenFlow switch processing load.
-  // Block the bearer if the P-GW TFT switch processing load is exceeding
+  // Second check: OpenFlow switch CPU load.
+  // Block the bearer if the P-GW TFT switch CPU load is exceeding
   // the block threshold, respecting the PgwBlockPolicy attribute:
   // - If OFF (none): don't block the request.
   // - If ON (all)  : block the request.
@@ -922,8 +922,8 @@ SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo)
   if (m_pgwBlockPolicy == OpMode::ON
       || (m_pgwBlockPolicy == OpMode::AUTO && rInfo->IsGbr ()))
     {
-      double prcUse = m_pgwInfo->GetEwmaProcUse (rInfo->GetPgwTftIdx ());
-      if (prcUse >= m_pgwBlockThs)
+      double cpuUse = m_pgwInfo->GetEwmaCpuUse (rInfo->GetPgwTftIdx ());
+      if (cpuUse >= m_pgwBlockThs)
         {
           rInfo->SetBlocked (true, RoutingInfo::PGWLOAD);
           NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
@@ -1083,8 +1083,8 @@ SliceController::SgwBearerRequest (Ptr<RoutingInfo> rInfo)
       return false;
     }
 
-  // Second check: OpenFlow switch processing load.
-  // Block the bearer if the S-GW switch processing load is exceeding
+  // Second check: OpenFlow switch CPU load.
+  // Block the bearer if the S-GW switch CPU load is exceeding
   // the block threshold, respecting the SgwBlockPolicy attribute:
   // - If OFF (none): don't block the request.
   // - If ON (all)  : block the request.
@@ -1092,8 +1092,8 @@ SliceController::SgwBearerRequest (Ptr<RoutingInfo> rInfo)
   if (m_sgwBlockPolicy == OpMode::ON
       || (m_sgwBlockPolicy == OpMode::AUTO && rInfo->IsGbr ()))
     {
-      double prcUse = sgwInfo->GetEwmaProcUse ();
-      if (prcUse >= m_sgwBlockThs)
+      double cpuUse = sgwInfo->GetEwmaCpuUse ();
+      if (cpuUse >= m_sgwBlockThs)
         {
           rInfo->SetBlocked (true, RoutingInfo::SGWLOAD);
           NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<

@@ -168,7 +168,7 @@ SgwInfo::GetFlowTableUse (uint8_t tableId) const
 }
 
 DataRate
-SgwInfo::GetEwmaProcCur (void) const
+SgwInfo::GetEwmaCpuCur (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -176,7 +176,7 @@ SgwInfo::GetEwmaProcCur (void) const
 }
 
 DataRate
-SgwInfo::GetProcessingMax (void) const
+SgwInfo::GetCpuMax (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -184,12 +184,12 @@ SgwInfo::GetProcessingMax (void) const
 }
 
 double
-SgwInfo::GetEwmaProcUse (void) const
+SgwInfo::GetEwmaCpuUse (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return static_cast<double> (GetEwmaProcCur ().GetBitRate ()) /
-         static_cast<double> (GetProcessingMax ().GetBitRate ());
+  return static_cast<double> (GetEwmaCpuCur ().GetBitRate ()) /
+         static_cast<double> (GetCpuMax ().GetBitRate ());
 }
 
 std::ostream &

@@ -91,9 +91,9 @@ public:
   uint32_t              GetFlowTableCur     (uint8_t tableId) const;
   uint32_t              GetFlowTableMax     (uint8_t tableId) const;
   double                GetFlowTableUse     (uint8_t tableId) const;
-  DataRate              GetEwmaProcCur      (void) const;
-  double                GetEwmaProcUse      (void) const;
-  DataRate              GetProcessingMax    (void) const;
+  DataRate              GetEwmaCpuCur       (void) const;
+  double                GetEwmaCpuUse       (void) const;
+  DataRate              GetCpuMax           (void) const;
   //\}
 
   /**
