@@ -275,7 +275,7 @@ TrafficHelper::NotifyConstructionCompleted ()
 
   // Configure the helpers and install the applications.
   ConfigureHelpers ();
-  ConfigureApplications ();
+  InstallApplications ();
 
   Object::NotifyConstructionCompleted ();
 }
@@ -530,8 +530,33 @@ TrafficHelper::ConfigureHelpers ()
     StringValue ("ns3::UniformRandomVariable[Min=1.0|Max=25.0]"));
 }
 
+uint16_t
+TrafficHelper::GetNextPortNo ()
+{
+  NS_ABORT_MSG_IF (m_port == 0xFFFF, "No more ports available for use.");
+  return m_port++;
+}
+
+const std::string
+TrafficHelper::GetVideoFilename (uint8_t idx)
+{
+  return m_videoDir + m_videoTrace [idx];
+}
+
+const DataRate
+TrafficHelper::GetVideoGbr (uint8_t idx)
+{
+  return DataRate (m_gbrBitRate [idx]);
+}
+
+const DataRate
+TrafficHelper::GetVideoMbr (uint8_t idx)
+{
+  return DataRate (m_mbrBitRate [idx]);
+}
+
 void
-TrafficHelper::ConfigureApplications ()
+TrafficHelper::InstallApplications ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -776,31 +801,6 @@ TrafficHelper::ConfigureApplications ()
   t_ueManager = 0;
   t_ueNode = 0;
   t_ueDev = 0;
-}
-
-uint16_t
-TrafficHelper::GetNextPortNo ()
-{
-  NS_ABORT_MSG_IF (m_port == 0xFFFF, "No more ports available for use.");
-  return m_port++;
-}
-
-const std::string
-TrafficHelper::GetVideoFilename (uint8_t idx)
-{
-  return m_videoDir + m_videoTrace [idx];
-}
-
-const DataRate
-TrafficHelper::GetVideoGbr (uint8_t idx)
-{
-  return DataRate (m_gbrBitRate [idx]);
-}
-
-const DataRate
-TrafficHelper::GetVideoMbr (uint8_t idx)
-{
-  return DataRate (m_mbrBitRate [idx]);
 }
 
 void

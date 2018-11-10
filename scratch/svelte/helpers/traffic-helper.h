@@ -62,22 +62,6 @@ protected:
 
 private:
   /**
-   * Install a traffic manager into each UE and configure the EPS bearers and
-   * TFT packet filters for enable applications
-   * \attention The QCIs used here for each application are strongly related to
-   *     the DSCP mapping, which will reflect on the priority queues used by
-   *     both OpenFlow switches and traffic control module. Be careful if you
-   *     intend to change it.
-   * \internal Some notes about internal GbrQosInformation usage:
-   * \li The Maximum Bit Rate field is used by controller to install meter
-   *     rules for this traffic. When this value is left to 0, no meter rules
-   *     will be installed.
-   * \li The Guaranteed Bit Rate field is used by the controller to reserve the
-   *     requested bandwidth in OpenFlow EPC network (only for GBR beares).
-   */
-  void ConfigureApplications ();
-
-  /**
    * Configure application helpers for different traffic patterns.
    */
   void ConfigureHelpers ();
@@ -108,6 +92,22 @@ private:
    * \return The mbr video data rate.
    */
   static const DataRate GetVideoMbr (uint8_t idx);
+
+  /**
+   * Install a traffic manager into each UE and configure the EPS bearers and
+   * TFT packet filters for enable applications
+   * \attention The QCIs used here for each application are strongly related to
+   *     the DSCP mapping, which will reflect on the priority queues used by
+   *     both OpenFlow switches and traffic control module. Be careful if you
+   *     intend to change it.
+   * \internal Some notes about internal GbrQosInformation usage:
+   * \li The Maximum Bit Rate field is used by controller to install meter
+   *     rules for this traffic. When this value is left to 0, no meter rules
+   *     will be installed.
+   * \li The Guaranteed Bit Rate field is used by the controller to reserve the
+   *     requested bandwidth in OpenFlow EPC network (only for GBR beares).
+   */
+  void InstallApplications ();
 
   /**
    * Create the pair of client/server applications and install them into UE,
