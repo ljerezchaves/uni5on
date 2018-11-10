@@ -428,9 +428,10 @@ SvelteHelper::NotifyConstructionCompleted (void)
       m_mtcNetworkFac.Set ("WebMask", Ipv4MaskValue ("255.255.0.0"));
       m_mtcNetwork = m_mtcNetworkFac.Create<SliceNetwork> ();
 
-      m_mtcTrafficFac.Set ("RadioNet", PointerValue (m_radio));
-      m_mtcTrafficFac.Set ("SliceNet", PointerValue (m_mtcNetwork));
+      m_mtcTrafficFac.Set ("SliceId", EnumValue (SliceId::MTC));
       m_mtcTrafficFac.Set ("SliceCtrl", PointerValue (m_mtcController));
+      m_mtcTrafficFac.Set ("SliceNet", PointerValue (m_mtcNetwork));
+      m_mtcTrafficFac.Set ("RadioNet", PointerValue (m_radio));
       m_mtcTraffic = m_mtcTrafficFac.Create<TrafficHelper> ();
     }
   else
@@ -460,9 +461,10 @@ SvelteHelper::NotifyConstructionCompleted (void)
       m_htcNetworkFac.Set ("WebMask", Ipv4MaskValue ("255.255.0.0"));
       m_htcNetwork = m_htcNetworkFac.Create<SliceNetwork> ();
 
-      m_htcTrafficFac.Set ("RadioNet", PointerValue (m_radio));
-      m_htcTrafficFac.Set ("SliceNet", PointerValue (m_htcNetwork));
+      m_htcTrafficFac.Set ("SliceId", EnumValue (SliceId::HTC));
       m_htcTrafficFac.Set ("SliceCtrl", PointerValue (m_htcController));
+      m_htcTrafficFac.Set ("SliceNet", PointerValue (m_htcNetwork));
+      m_htcTrafficFac.Set ("RadioNet", PointerValue (m_radio));
       m_htcTraffic = m_htcTrafficFac.Create<TrafficHelper> ();
     }
   else
@@ -492,9 +494,10 @@ SvelteHelper::NotifyConstructionCompleted (void)
       m_tmpNetworkFac.Set ("WebMask", Ipv4MaskValue ("255.255.0.0"));
       m_tmpNetwork = m_tmpNetworkFac.Create<SliceNetwork> ();
 
-      m_tmpTrafficFac.Set ("RadioNet", PointerValue (m_radio));
-      m_tmpTrafficFac.Set ("SliceNet", PointerValue (m_tmpNetwork));
+      m_tmpTrafficFac.Set ("SliceId", EnumValue (SliceId::TMP));
       m_tmpTrafficFac.Set ("SliceCtrl", PointerValue (m_tmpController));
+      m_tmpTrafficFac.Set ("SliceNet", PointerValue (m_tmpNetwork));
+      m_tmpTrafficFac.Set ("RadioNet", PointerValue (m_radio));
       m_tmpTraffic = m_tmpTrafficFac.Create<TrafficHelper> ();
     }
   else

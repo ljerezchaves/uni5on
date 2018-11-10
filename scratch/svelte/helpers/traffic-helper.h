@@ -26,6 +26,7 @@
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
 #include "application-helper.h"
+#include "../svelte-common.h"
 
 namespace ns3 {
 
@@ -127,6 +128,7 @@ private:
   void InstallAppDefault (ApplicationHelper& helper);
 
   // Traffic helper.
+  SliceId                     m_sliceId;          //!< Logical slice ID.
   Ptr<RadioNetwork>           m_radio;            //!< LTE radio network.
   Ptr<SliceNetwork>           m_slice;            //!< LTE slice network.
   Ptr<SliceController>        m_controller;       //!< LTE slice controller.

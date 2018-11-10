@@ -85,28 +85,31 @@ TrafficHelper::GetTypeId (void)
     .SetParent<Object> ()
     .AddConstructor<TrafficHelper> ()
 
-    // Traffic helper attributes.
-    .AddAttribute ("RadioNet", "The LTE RAN network pointer.",
+    // Slice.
+    .AddAttribute ("SliceId", "The LTE logical slice identification.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   EnumValue (SliceId::NONE),
+                   MakeEnumAccessor (&TrafficHelper::m_sliceId),
+                   MakeEnumChecker (SliceId::MTC, "mtc",
+                                    SliceId::HTC, "htc",
+                                    SliceId::TMP, "tmp"))
+    .AddAttribute ("SliceCtrl", "The LTE logical slice controller pointer.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    PointerValue (),
-                   MakePointerAccessor (&TrafficHelper::m_radio),
-                   MakePointerChecker<RadioNetwork> ())
+                   MakePointerAccessor (&TrafficHelper::m_controller),
+                   MakePointerChecker<SliceController> ())
     .AddAttribute ("SliceNet", "The logical slice network pointer.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    PointerValue (),
                    MakePointerAccessor (&TrafficHelper::m_slice),
                    MakePointerChecker<SliceNetwork> ())
-    .AddAttribute ("SliceCtrl", "The logical slice controller pointer.",
+
+    // Infrastructure.
+    .AddAttribute ("RadioNet", "The LTE RAN network pointer.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    PointerValue (),
-                   MakePointerAccessor (&TrafficHelper::m_controller),
-                   MakePointerChecker<SliceController> ())
-    .AddAttribute ("UseOnlyDefaultBearer",
-                   "Use only the default EPS bearer for all traffic.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   BooleanValue (false),
-                   MakeBooleanAccessor (&TrafficHelper::m_useOnlyDefault),
-                   MakeBooleanChecker ())
+                   MakePointerAccessor (&TrafficHelper::m_radio),
+                   MakePointerChecker<RadioNetwork> ())
 
     // Traffic manager attributes.
     .AddAttribute ("PoissonInterArrival",
@@ -133,7 +136,13 @@ TrafficHelper::GetTypeId (void)
                    MakeTimeAccessor (&TrafficHelper::m_stopAppsAt),
                    MakeTimeChecker (Time (0)))
 
-    // Applications to be installed.
+    // Traffic configuration.
+    .AddAttribute ("UseOnlyDefaultBearer",
+                   "Use only the default EPS bearer for all traffic.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&TrafficHelper::m_useOnlyDefault),
+                   MakeBooleanChecker ())
     .AddAttribute ("EnableDftHttpPage",
                    "Enable Non-GBR HTTP webpage traffic over default bearer.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,

@@ -65,7 +65,7 @@ SliceNetwork::GetTypeId (void)
                    MakeEnumChecker (SliceId::MTC, "mtc",
                                     SliceId::HTC, "htc",
                                     SliceId::TMP, "tmp"))
-    .AddAttribute ("SliceCtrl", "The slice controller application pointer.",
+    .AddAttribute ("SliceCtrl", "The LTE logical slice controller pointer.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    PointerValue (),
                    MakePointerAccessor (&SliceNetwork::m_controllerApp),

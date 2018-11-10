@@ -78,7 +78,7 @@ SliceController::GetTypeId (void)
                    MakeUintegerChecker<uint16_t> (0, 100))
 
     // Infrastructure.
-    .AddAttribute ("BackhaulCtrl", "The OpenFlow backhaul network controller.",
+    .AddAttribute ("BackhaulCtrl", "The OpenFlow backhaul controller pointer.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    PointerValue (),
                    MakePointerAccessor (&SliceController::m_backhaulCtrl),
