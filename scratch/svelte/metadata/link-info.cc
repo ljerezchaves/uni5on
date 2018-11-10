@@ -85,7 +85,7 @@ LinkInfo::GetTypeId (void)
     .AddAttribute ("AdjustmentStep",
                    "Default meter bit rate adjustment step.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   DataRateValue (DataRate ("5Mb/s")),
+                   DataRateValue (DataRate ("5Mbps")),
                    MakeDataRateAccessor (&LinkInfo::m_adjustmentStep),
                    MakeDataRateChecker ())
     .AddAttribute ("EwmaAlpha",

@@ -140,7 +140,7 @@ SliceNetwork::GetTypeId (void)
                    "The data rate for the link connecting the P-GW "
                    "to the Internet web server.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   DataRateValue (DataRate ("10Gb/s")),
+                   DataRateValue (DataRate ("10Gbps")),
                    MakeDataRateAccessor (&SliceNetwork::m_webLinkRate),
                    MakeDataRateChecker ())
     .AddAttribute ("WebLinkDelay",
@@ -168,7 +168,7 @@ SliceNetwork::GetTypeId (void)
     .AddAttribute ("PgwMainCpuCapacity",
                    "CPU capacity for the P-GW main switch.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   DataRateValue (DataRate ("100Gb/s")),
+                   DataRateValue (DataRate ("100Gbps")),
                    MakeDataRateAccessor (&SliceNetwork::m_mainCpuCapacity),
                    MakeDataRateChecker ())
     .AddAttribute ("PgwMainFlowTableSize",
@@ -180,7 +180,7 @@ SliceNetwork::GetTypeId (void)
     .AddAttribute ("PgwTftCpuCapacity",
                    "CPU capacity for the P-GW TFT switches.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   DataRateValue (DataRate ("100Gb/s")),
+                   DataRateValue (DataRate ("100Gbps")),
                    MakeDataRateAccessor (&SliceNetwork::m_tftCpuCapacity),
                    MakeDataRateChecker ())
     .AddAttribute ("PgwTftFlowTableSize",
@@ -198,7 +198,7 @@ SliceNetwork::GetTypeId (void)
     .AddAttribute ("PgwLinkDataRate",
                    "The data rate for the internal P-GW links.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   DataRateValue (DataRate ("10Gb/s")),
+                   DataRateValue (DataRate ("10Gbps")),
                    MakeDataRateAccessor (&SliceNetwork::m_pgwLinkRate),
                    MakeDataRateChecker ())
     .AddAttribute ("PgwLinkDelay",
@@ -218,7 +218,7 @@ SliceNetwork::GetTypeId (void)
     .AddAttribute ("SgwCpuCapacity",
                    "Pipeline capacity for the S-GW switches.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   DataRateValue (DataRate ("100Gb/s")),
+                   DataRateValue (DataRate ("100Gbps")),
                    MakeDataRateAccessor (&SliceNetwork::m_sgwCpuCapacity),
                    MakeDataRateChecker ())
     .AddAttribute ("SgwFlowTableSize",

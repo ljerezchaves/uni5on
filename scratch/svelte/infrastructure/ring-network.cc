@@ -52,7 +52,7 @@ RingNetwork::GetTypeId (void)
     .AddAttribute ("RingLinkDataRate",
                    "The data rate for the links between OpenFlow switches.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   DataRateValue (DataRate ("100Mb/s")),
+                   DataRateValue (DataRate ("100Mbps")),
                    MakeDataRateAccessor (&RingNetwork::m_linkRate),
                    MakeDataRateChecker ())
     .AddAttribute ("RingLinkDelay",
