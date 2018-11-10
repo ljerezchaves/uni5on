@@ -69,6 +69,18 @@ const uint64_t TrafficHelper::m_mbrBitRate [] = {
 
 // ------------------------------------------------------------------------ //
 TrafficHelper::TrafficHelper ()
+  : m_dftHttpPage (false),
+  m_gbrAutPilot (false),
+  m_gbrGameOpen (false),
+  m_gbrGameTeam (false),
+  m_gbrLivVideo (false),
+  m_gbrVoipCall (false),
+  m_nonAutPilot (false),
+  m_nonBikeRace (false),
+  m_nonBufVideo (false),
+  m_nonGpsTrack (false),
+  m_nonHttpPage (false),
+  m_nonLivVideo (false)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -111,6 +123,14 @@ TrafficHelper::GetTypeId (void)
                    MakePointerAccessor (&TrafficHelper::m_radio),
                    MakePointerChecker<RadioNetwork> ())
 
+    // Traffic helper attributes.
+    .AddAttribute ("UseOnlyDefaultBearer",
+                   "Use only the default EPS bearer for all traffic.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&TrafficHelper::m_useOnlyDefault),
+                   MakeBooleanChecker ())
+
     // Traffic manager attributes.
     .AddAttribute ("PoissonInterArrival",
                    "An exponential random variable used to get "
@@ -135,86 +155,6 @@ TrafficHelper::GetTypeId (void)
                    TimeValue (Time (0)),
                    MakeTimeAccessor (&TrafficHelper::m_stopAppsAt),
                    MakeTimeChecker (Time (0)))
-
-    // Traffic configuration.
-    .AddAttribute ("UseOnlyDefaultBearer",
-                   "Use only the default EPS bearer for all traffic.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   BooleanValue (false),
-                   MakeBooleanAccessor (&TrafficHelper::m_useOnlyDefault),
-                   MakeBooleanChecker ())
-    .AddAttribute ("EnableDftHttpPage",
-                   "Enable Non-GBR HTTP webpage traffic over default bearer.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   BooleanValue (false),
-                   MakeBooleanAccessor (&TrafficHelper::m_dftHttpPage),
-                   MakeBooleanChecker ())
-    .AddAttribute ("EnableGbrAutPilot",
-                   "Enable GBR auto-pilot traffic.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   BooleanValue (false),
-                   MakeBooleanAccessor (&TrafficHelper::m_gbrAutPilot),
-                   MakeBooleanChecker ())
-    .AddAttribute ("EnableGbrGameOpen",
-                   "Enable GBR game Open Arena traffic.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   BooleanValue (false),
-                   MakeBooleanAccessor (&TrafficHelper::m_gbrGameOpen),
-                   MakeBooleanChecker ())
-    .AddAttribute ("EnableGbrGameTeam",
-                   "Enable GBR game Team Fortress traffic.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   BooleanValue (false),
-                   MakeBooleanAccessor (&TrafficHelper::m_gbrGameTeam),
-                   MakeBooleanChecker ())
-    .AddAttribute ("EnableGbrLivVideo",
-                   "Enable GBR live video streaming traffic.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   BooleanValue (false),
-                   MakeBooleanAccessor (&TrafficHelper::m_gbrLivVideo),
-                   MakeBooleanChecker ())
-    .AddAttribute ("EnableGbrVoipCall",
-                   "Enable GBR VoIP call traffic.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   BooleanValue (false),
-                   MakeBooleanAccessor (&TrafficHelper::m_gbrVoipCall),
-                   MakeBooleanChecker ())
-    .AddAttribute ("EnableNonAutPilot",
-                   "Enable Non-GBR auto-pilot traffic.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   BooleanValue (false),
-                   MakeBooleanAccessor (&TrafficHelper::m_nonAutPilot),
-                   MakeBooleanChecker ())
-    .AddAttribute ("EnableNonBikeRace",
-                   "Enable Non-GBR bicycle race traffic.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   BooleanValue (false),
-                   MakeBooleanAccessor (&TrafficHelper::m_nonBikeRace),
-                   MakeBooleanChecker ())
-    .AddAttribute ("EnableNonBufVideo",
-                   "Enable Non-GBR buffered video traffic.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   BooleanValue (false),
-                   MakeBooleanAccessor (&TrafficHelper::m_nonBufVideo),
-                   MakeBooleanChecker ())
-    .AddAttribute ("EnableNonGpsTrack",
-                   "Enable Non-GBR GPS team tracking traffic.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   BooleanValue (false),
-                   MakeBooleanAccessor (&TrafficHelper::m_nonGpsTrack),
-                   MakeBooleanChecker ())
-    .AddAttribute ("EnableNonHttpPage",
-                   "Enable Non-GBR HTTP webpage traffic.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   BooleanValue (false),
-                   MakeBooleanAccessor (&TrafficHelper::m_nonHttpPage),
-                   MakeBooleanChecker ())
-    .AddAttribute ("EnableNonLivVideo",
-                   "Enable Non-GBR live video streaming traffic.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   BooleanValue (false),
-                   MakeBooleanAccessor (&TrafficHelper::m_nonLivVideo),
-                   MakeBooleanChecker ())
   ;
   return tid;
 }
@@ -243,6 +183,7 @@ TrafficHelper::NotifyConstructionCompleted ()
 {
   NS_LOG_FUNCTION (this);
 
+  NS_ABORT_MSG_IF (m_sliceId == SliceId::NONE, "Undefined slice ID.");
   NS_ABORT_MSG_IF (!m_radio, "No radio network.");
   NS_ABORT_MSG_IF (!m_slice, "No slice network.");
   NS_ABORT_MSG_IF (!m_controller, "No slice controller.");
@@ -272,6 +213,33 @@ TrafficHelper::NotifyConstructionCompleted ()
   m_nonVidRng = CreateObject<UniformRandomVariable> ();
   m_nonVidRng->SetAttribute ("Min", DoubleValue (3));
   m_nonVidRng->SetAttribute ("Max", DoubleValue (14));
+
+  // Configure applications to be installed for this slice.
+  if (m_sliceId == SliceId::MTC)
+    {
+      m_gbrAutPilot = true;
+      m_nonAutPilot = true;
+      m_nonBikeRace = true;
+      m_nonGpsTrack = true;
+    }
+  else if (m_sliceId == SliceId::HTC)
+    {
+      m_dftHttpPage = true;
+      m_gbrGameOpen = true;
+      m_gbrGameTeam = true;
+      m_gbrLivVideo = true;
+      m_gbrVoipCall = true;
+      m_nonBufVideo = true;
+      m_nonHttpPage = true;
+      m_nonLivVideo = true;
+    }
+  else if (m_sliceId == SliceId::TMP)
+    {
+      m_dftHttpPage = true;
+      m_gbrVoipCall = true;
+      m_nonHttpPage = true;
+      m_nonLivVideo = true;
+    }
 
   // Configure the helpers and install the applications.
   ConfigureHelpers ();
