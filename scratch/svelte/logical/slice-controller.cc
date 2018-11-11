@@ -870,7 +870,9 @@ SliceController::PgwAdaptiveMechanism (void)
               if (destIdx != currIdx)
                 {
                   NS_LOG_INFO ("Move bearer teid " << (rInfo)->GetTeidHex ());
-                  PgwRulesRemove (rInfo, currIdx, true);
+                  Simulator::Schedule (MilliSeconds (250),
+                                       &SliceController::PgwRulesRemove,
+                                       this, rInfo, currIdx, true);
                   PgwRulesInstall (rInfo, destIdx, true);
                   rInfo->SetPgwTftIdx (destIdx);
                   moved++;
