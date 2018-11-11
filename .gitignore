@@ -38,10 +38,11 @@ build/
 /.cproject
 /.project
 
-topos/*.log
-topos/*.dat
-topos/*.gpi
-topos/*.pdf
+topos/**/*.log
+topos/**/*.dat
+topos/**/*.gpi
+topos/**/*.pdf
+topos/**/*.topo
 topos/tccsi
 
 logs
