@@ -1,4 +1,5 @@
 global DumpStatsTimeout "1s"
+global SimTime "300s"
 
 default ns3::BackhaulController::BlockPolicy "all"
 default ns3::BackhaulController::BlockThs "0.9"

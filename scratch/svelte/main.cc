@@ -52,11 +52,17 @@ static ns3::GlobalValue
                   ns3::StringValue (""),
                   ns3::MakeStringChecker ());
 
-// Dump timeout for logging statistics
+// Dump timeout for logging statistics.
 static ns3::GlobalValue
   g_dumpTimeout ("DumpStatsTimeout", "Periodic statistics dump interval.",
                  ns3::TimeValue (Seconds (1)),
                  ns3::MakeTimeChecker ());
+
+// Simulation lenght.
+static ns3::GlobalValue
+  g_simTime ("SimTime", "Simulation stop time.",
+             ns3::TimeValue (Seconds (0)),
+             ns3::MakeTimeChecker ());
 
 int
 main (int argc, char *argv[])
@@ -66,7 +72,6 @@ main (int argc, char *argv[])
   bool        ofsLog   = false;
   bool        lteRem   = false;
   uint32_t    progress = 0;
-  uint32_t    simTime  = 0;
   std::string prefix   = "";
 
   // Configure some default attribute values. These values can be overridden by
@@ -80,7 +85,6 @@ main (int argc, char *argv[])
   cmd.AddValue ("OfsLog",   "Enable ofsoftswitch13 logs.", ofsLog);
   cmd.AddValue ("LteRem",   "Print LTE radio environment map.", lteRem);
   cmd.AddValue ("Progress", "Simulation progress interval (sec).", progress);
-  cmd.AddValue ("SimTime",  "Simulation stop time (sec).", simTime);
   cmd.AddValue ("Prefix",   "Common prefix for filenames.", prefix);
   cmd.Parse (argc, argv);
 
@@ -144,10 +148,15 @@ main (int argc, char *argv[])
       svelteHelper->EnablePcap (outputPrefix.str (), true);
     }
 
-  // Run the simulation.
+  // Set stop time and run the simulation.
   std::cout << "Simulating..." << std::endl;
   EnableProgress (progress);
-  Simulator::Stop (Seconds (simTime + 1));
+
+  TimeValue timeValue;
+  GlobalValue::GetValueByName ("SimTime", timeValue);
+  Time stopAt = timeValue.Get () + MilliSeconds (100);
+
+  Simulator::Stop (stopAt);
   Simulator::Run ();
 
   // Finish the simulation.
