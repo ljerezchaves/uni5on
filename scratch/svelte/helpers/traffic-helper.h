@@ -142,20 +142,6 @@ private:
   Time                        m_startAppsAt;      //!< Time to start apps.
   Time                        m_stopAppsAt;       //!< Time to stop apps.
 
-  // Enabled applications.
-  bool                        m_dftHttpPage;      //!< Non-GBR default HTTP.
-  bool                        m_gbrAutPilot;      //!< GBR auto-pilot.
-  bool                        m_gbrGameOpen;      //!< GBR game open.
-  bool                        m_gbrGameTeam;      //!< GBR game team.
-  bool                        m_gbrLivVideo;      //!< GBR live video.
-  bool                        m_gbrVoipCall;      //!< GBR VoIP call.
-  bool                        m_nonAutPilot;      //!< Non-GBR auto-pilot.
-  bool                        m_nonBikeRace;      //!< Non-GBR bicycle race.
-  bool                        m_nonBufVideo;      //!< Non-GBR buffered video.
-  bool                        m_nonGpsTrack;      //!< Non-GBR GPS team track.
-  bool                        m_nonHttpPage;      //!< Non-GBR HTTP.
-  bool                        m_nonLivVideo;      //!< Non-GBR live video.
-
   // Application helpers.
   ApplicationHelper           m_autPilotHelper;   //!< Auto-pilot helper.
   ApplicationHelper           m_bikeRaceHelper;   //!< Bicycle race helper.
