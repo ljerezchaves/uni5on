@@ -26,4 +26,3 @@ default ns3::SvelteHelper::HtcTraffic "ns3::TrafficHelper[PoissonInterArrival=ns
 default ns3::SvelteHelper::TmpController "ns3::SliceController[Priority=1|Quota=34|PgwTftAdaptiveMode=auto]"
 default ns3::SvelteHelper::TmpSlice "ns3::SliceNetwork[NumUes=1|UeMobility=false|UeCellSiteCoverage=0|NumPgwTftSwitches=2|PgwBackhaulSwitch=0|PgwMainCpuCapacity=1Gbps|PgwMainFlowTableSize=1024|PgwTftCpuCapacity=512Mbps|PgwTftFlowTableSize=512|PgwTftMeterTableSize=512|SgwBackhaulSwitch=0|SgwCpuCapacity=1Gbps|SgwFlowTableSize=1024|SgwMeterTableSize=1024]"
 default ns3::SvelteHelper::TmpTraffic "ns3::TrafficHelper[PoissonInterArrival=ns3::ExponentialRandomVariable[Mean=80.0]|StartAppsAt=1s|StopAppsAt=200s|UseOnlyDefaultBearer=false]"
-
