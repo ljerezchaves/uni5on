@@ -345,9 +345,16 @@ BackhaulController::HandleError (
 {
   NS_LOG_FUNCTION (this << swtch << xid);
 
-  // Chain up for logging and abort.
-  OFSwitch13Controller::HandleError (msg, swtch, xid);
-  NS_ABORT_MSG ("Should not get here.");
+  // Print the message.
+  char *cStr = ofl_msg_to_string ((struct ofl_msg_header*)msg, 0);
+  std::string msgStr (cStr);
+  free (cStr);
+
+  // All handlers must free the message when everything is ok.
+  ofl_msg_free ((struct ofl_msg_header*)msg, 0);
+
+  NS_ABORT_MSG ("OpenFlow error message: " << msgStr);
+  return 0;
 }
 
 ofl_err
@@ -360,13 +367,15 @@ BackhaulController::HandleFlowRemoved (
   uint32_t teid = msg->stats->cookie;
   uint16_t prio = msg->stats->priority;
 
-  char *msgStr = ofl_msg_to_string ((struct ofl_msg_header*)msg, 0);
-  NS_LOG_DEBUG ("Flow removed: " << msgStr);
-  free (msgStr);
+  // Print the message.
+  char *cStr = ofl_msg_to_string ((struct ofl_msg_header*)msg, 0);
+  std::string msgStr (cStr);
+  free (cStr);
 
-  // Since handlers must free the message when everything is ok,
-  // let's remove it now, as we already got the necessary information.
+  // All handlers must free the message when everything is ok.
   ofl_msg_free_flow_removed (msg, true, 0);
+
+  NS_LOG_DEBUG ("Flow removed: " << msgStr);
 
   // Check for existing routing information for this bearer.
   Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
@@ -396,7 +405,9 @@ BackhaulController::HandleFlowRemoved (
   // critical situation. For some reason, the traffic absence lead to flow
   // expiration, and we are going to abort the program to avoid wrong results.
   NS_ASSERT_MSG (rInfo->GetPriority () == prio, "Invalid flow priority.");
-  NS_ABORT_MSG ("Rule removed for active bearer.");
+  NS_ABORT_MSG ("Rule removed for active bearer. " <<
+                "OpenFlow flow removed message: " << msgStr);
+  return 0;
 }
 
 ofl_err
@@ -407,14 +418,14 @@ BackhaulController::HandlePacketIn (
   NS_LOG_FUNCTION (this << swtch << xid);
 
   // Print the message.
-  char *msgStr = ofl_structs_match_to_string (msg->match, 0);
-  NS_LOG_DEBUG ("Packet in match: " << msgStr);
-  free (msgStr);
+  char *cStr = ofl_structs_match_to_string (msg->match, 0);
+  std::string msgStr (cStr);
+  free (cStr);
 
   // All handlers must free the message when everything is ok.
   ofl_msg_free ((struct ofl_msg_header*)msg, 0);
 
-  NS_ABORT_MSG ("Should not get here.");
+  NS_ABORT_MSG ("OpenFlow packet in message: " << msgStr);
   return 0;
 }
 
