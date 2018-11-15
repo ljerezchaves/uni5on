@@ -46,7 +46,7 @@ RingController::GetTypeId (void)
     .SetParent<BackhaulController> ()
     .AddConstructor<RingController> ()
     .AddAttribute ("Strategy", "The ring routing strategy.",
-                   EnumValue (RingController::SPF),
+                   EnumValue (RingController::SPO),
                    MakeEnumAccessor (&RingController::m_strategy),
                    MakeEnumChecker (RingController::SPO, "spo",
                                     RingController::SPF, "spf"))
