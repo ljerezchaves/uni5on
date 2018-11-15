@@ -1,0 +1,24 @@
+global SimTime "400s"
+
+default ns3::RingNetwork::NumRingSwitches "6"
+default ns3::RadioNetwork::NumCellSites "5"
+
+default ns3::LinkInfo::AdjustmentStep "5Mbps"
+default ns3::RingNetwork::RingLinkDataRate "100Mbps"
+
+default ns3::BackhaulNetwork::CpuCapacity "1Gbps"
+default ns3::BackhaulNetwork::FlowTableSize "2048"
+default ns3::BackhaulNetwork::GroupTableSize "2048"
+default ns3::BackhaulNetwork::MeterTableSize "2048"
+
+default ns3::BackhaulController::PriorityQueues "on"
+default ns3::BackhaulController::LinkSlicing "on"
+default ns3::RingController::Strategy "spo"
+
+default ns3::SvelteHelper::MtcController "ns3::SliceController[Priority=1|Quota=33|PgwTftAdaptiveMode=on]"
+default ns3::SvelteHelper::MtcSlice "ns3::SliceNetwork[NumUes=1|UeMobility=false|UeCellSiteCoverage=0|NumPgwTftSwitches=1|PgwBackhaulSwitch=0|PgwMainCpuCapacity=1Gbps|PgwMainFlowTableSize=1024|PgwTftCpuCapacity=512Mbps|PgwTftFlowTableSize=512|PgwTftMeterTableSize=512|SgwBackhaulSwitch=0|SgwCpuCapacity=1Gbps|SgwFlowTableSize=1024|SgwMeterTableSize=1024]"
+default ns3::SvelteHelper::MtcTraffic "ns3::TrafficHelper[PoissonInterArrival=ns3::ExponentialRandomVariable[Mean=100.0]|StartAppsAt=1s|StopAppsAt=250s|UseOnlyDefaultBearer=false]"
+
+default ns3::SvelteHelper::HtcController "ns3::SliceController[Priority=1|Quota=33|PgwTftAdaptiveMode=on]"
+default ns3::SvelteHelper::HtcSlice "ns3::SliceNetwork[NumUes=1|UeMobility=false|UeCellSiteCoverage=0|NumPgwTftSwitches=1|PgwBackhaulSwitch=0|PgwMainCpuCapacity=1Gbps|PgwMainFlowTableSize=1024|PgwTftCpuCapacity=512Mbps|PgwTftFlowTableSize=512|PgwTftMeterTableSize=512|SgwBackhaulSwitch=0|SgwCpuCapacity=1Gbps|SgwFlowTableSize=1024|SgwMeterTableSize=1024]"
+default ns3::SvelteHelper::HtcTraffic "ns3::TrafficHelper[PoissonInterArrival=ns3::ExponentialRandomVariable[Mean=120.0]|StartAppsAt=1s|StopAppsAt=250s|UseOnlyDefaultBearer=false]"
