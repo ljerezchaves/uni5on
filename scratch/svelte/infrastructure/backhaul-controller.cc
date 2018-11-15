@@ -80,7 +80,7 @@ BackhaulController::GetTypeId (void)
     .AddAttribute ("LinkSlicing",
                    "Link slicing mechanism operation mode.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   EnumValue (OpMode::AUTO),
+                   EnumValue (OpMode::ON),
                    MakeEnumAccessor (&BackhaulController::m_slicing),
                    MakeEnumChecker (OpMode::OFF,  "off",
                                     OpMode::ON,   "on",

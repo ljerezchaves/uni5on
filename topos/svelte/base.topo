@@ -12,7 +12,7 @@ default ns3::BackhaulNetwork::GroupTableSize "2048"
 default ns3::BackhaulNetwork::MeterTableSize "2048"
 
 default ns3::BackhaulController::PriorityQueues "on"
-default ns3::BackhaulController::LinkSlicing "auto"
+default ns3::BackhaulController::LinkSlicing "on"
 default ns3::RingController::Strategy "spf"
 
 default ns3::SvelteHelper::MtcController "ns3::SliceController[Priority=1|Quota=33|PgwTftAdaptiveMode=auto]"
