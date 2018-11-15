@@ -1,4 +1,4 @@
-global SimTime "300s"
+global SimTime "400s"
 
 default ns3::RingNetwork::NumRingSwitches "6"
 default ns3::RadioNetwork::NumCellSites "5"
