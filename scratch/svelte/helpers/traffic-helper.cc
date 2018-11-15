@@ -124,7 +124,7 @@ TrafficHelper::GetTypeId (void)
                    "An exponential random variable used to get "
                    "application inter-arrival start times.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   StringValue ("ns3::ExponentialRandomVariable[Mean=180.0]"),
+                   StringValue ("ns3::ExponentialRandomVariable[Mean=120.0]"),
                    MakePointerAccessor (&TrafficHelper::m_poissonRng),
                    MakePointerChecker <RandomVariableStream> ())
     .AddAttribute ("RestartApps",

@@ -55,7 +55,7 @@ TrafficManager::GetTypeId (void)
     .AddAttribute ("PoissonInterArrival",
                    "An exponential random variable used to get application "
                    "inter-arrival start times.",
-                   StringValue ("ns3::ExponentialRandomVariable[Mean=180.0]"),
+                   StringValue ("ns3::ExponentialRandomVariable[Mean=120.0]"),
                    MakePointerAccessor (&TrafficManager::m_poissonRng),
                    MakePointerChecker <RandomVariableStream> ())
     .AddAttribute ("RestartApps",
