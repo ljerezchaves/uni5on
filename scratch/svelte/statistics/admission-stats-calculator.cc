@@ -191,15 +191,15 @@ AdmissionStatsCalculator::NotifyConstructionCompleted (void)
       // Print the header in output file.
       *stats.admWrapper->GetStream ()
         << boolalpha << right << fixed << setprecision (3)
-        << " " << setw (8) << "Time:s"
-        << " " << setw (6) << "Relea"
-        << " " << setw (6) << "Reque"
-        << " " << setw (6) << "Accep"
-        << " " << setw (6) << "Block"
-        << " " << setw (6) << "Aggre"
-        << " " << setw (6) << "#Actv"
-        << " " << setw (6) << "#Inst"
-        << " " << setw (6) << "#Aggr"
+        << " " << setw (8) << "TimeSec"
+        << " " << setw (7) << "Release"
+        << " " << setw (7) << "Request"
+        << " " << setw (7) << "Accept"
+        << " " << setw (7) << "Block"
+        << " " << setw (7) << "Aggreg"
+        << " " << setw (7) << "ActNum"
+        << " " << setw (7) << "InsNum"
+        << " " << setw (7) << "AggNum"
         << std::endl;
     }
 
@@ -210,7 +210,7 @@ AdmissionStatsCalculator::NotifyConstructionCompleted (void)
   // Print the header in output file.
   *m_brqWrapper->GetStream ()
     << boolalpha << right << fixed << setprecision (3)
-    << " " << setw (8) << "Time:s";
+    << " " << setw (8) << "TimeSec";
   RoutingInfo::PrintHeader (*m_brqWrapper->GetStream ());
   UeInfo::PrintHeader (*m_brqWrapper->GetStream ());
   EnbInfo::PrintHeader (*m_brqWrapper->GetStream ());
@@ -239,14 +239,14 @@ AdmissionStatsCalculator::DumpStatistics (Time nextDump)
       SliceStats &stats = m_slices [s];
       *stats.admWrapper->GetStream ()
         << " " << setw (8) << Simulator::Now ().GetSeconds ()
-        << " " << setw (6) << stats.releases
-        << " " << setw (6) << stats.requests
-        << " " << setw (6) << stats.accepted
-        << " " << setw (6) << stats.blocked
-        << " " << setw (6) << stats.aggregated
-        << " " << setw (6) << stats.activeBearers
-        << " " << setw (6) << stats.instalBearers
-        << " " << setw (6) << stats.aggregBearers
+        << " " << setw (7) << stats.releases
+        << " " << setw (7) << stats.requests
+        << " " << setw (7) << stats.accepted
+        << " " << setw (7) << stats.blocked
+        << " " << setw (7) << stats.aggregated
+        << " " << setw (7) << stats.activeBearers
+        << " " << setw (7) << stats.instalBearers
+        << " " << setw (7) << stats.aggregBearers
         << std::endl;
       ResetCounters (stats);
     }

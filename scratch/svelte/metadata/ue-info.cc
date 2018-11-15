@@ -275,8 +275,8 @@ UeInfo::GetPointer (Ipv4Address addr)
 std::ostream &
 UeInfo::PrintHeader (std::ostream &os)
 {
-  os << " " << setw (6)  << "IMSI"
-     << " " << setw (6)  << "Slice"
+  os << " " << setw (6)  << "UeImsi"
+     << " " << setw (7)  << "UeSlice"
      << " " << setw (11) << "UeAddr";
   return os;
 }
@@ -285,7 +285,7 @@ std::ostream &
 UeInfo::PrintNull (std::ostream &os)
 {
   os << " " << setw (6)  << "-"
-     << " " << setw (6)  << "-"
+     << " " << setw (7)  << "-"
      << " " << setw (11) << "-";
   return os;
 }
@@ -400,7 +400,7 @@ std::ostream & operator << (std::ostream &os, const UeInfo &ueInfo)
   ueInfo.GetAddr ().Print (ipStr);
 
   os << " " << setw (6)  << ueInfo.GetImsi ()
-     << " " << setw (6)  << SliceIdStr (ueInfo.GetSliceId ())
+     << " " << setw (7)  << SliceIdStr (ueInfo.GetSliceId ())
      << " " << setw (11) << ipStr.str ();
   return os;
 }

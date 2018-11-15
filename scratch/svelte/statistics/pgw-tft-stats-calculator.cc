@@ -95,27 +95,27 @@ PgwTftStatsCalculator::NotifyConstructionCompleted (void)
       // Print the header in output file.
       *stats.tftWrapper->GetStream ()
         << boolalpha << right << fixed << setprecision (3)
-        << " " << setw (8)  << "Time:s"
+        << " " << setw (8)  << "TimeSec"
         << " " << setw (7)  << "CurLev"
         << " " << setw (7)  << "NexLev"
         << " " << setw (7)  << "MaxLev"
-        << " " << setw (7)  << "NumTFT"
+        << " " << setw (7)  << "NumTft"
         << " " << setw (7)  << "BeaMov"
         << " " << setw (7)  << "BloThs"
         << " " << setw (7)  << "SplThs"
         << " " << setw (7)  << "JoiThs"
-        << " " << setw (7)  << "AvgSiz"
-        << " " << setw (7)  << "MaxSiz"
-        << " " << setw (7)  << "AvgEnt"
-        << " " << setw (7)  << "MaxEnt"
-        << " " << setw (9)  << "AvgUse:%"
-        << " " << setw (9)  << "MaxUse:%"
-        << " " << setw (13) << "AvgCap:kbps"
-        << " " << setw (13) << "MaxCap:kbps"
-        << " " << setw (13) << "AvgLoa:kbps"
-        << " " << setw (13) << "MaxLoa:kbps"
-        << " " << setw (9)  << "AvgUse:%"
-        << " " << setw (9)  << "MaxUse:%"
+        << " " << setw (9)  << "AvgTabSiz"
+        << " " << setw (9)  << "MaxTabSiz"
+        << " " << setw (9)  << "AvgTabEnt"
+        << " " << setw (9)  << "MaxTabEnt"
+        << " " << setw (9)  << "AvgTabUse"
+        << " " << setw (9)  << "MaxTabUse"
+        << " " << setw (13) << "AvgCpuMax"
+        << " " << setw (13) << "MaxCpuMax"
+        << " " << setw (13) << "AvgCpuLoa"
+        << " " << setw (13) << "MaxCpuLoa"
+        << " " << setw (9)  << "AvgCpuUse"
+        << " " << setw (9)  << "MaxCpuUse"
         << std::endl;
     }
 
@@ -140,10 +140,10 @@ PgwTftStatsCalculator::NotifyPgwTftStats (
     << " " << setw (7)  << pgwInfo->GetSliceCtrl ()->GetPgwBlockThs ()
     << " " << setw (7)  << pgwInfo->GetSliceCtrl ()->GetPgwTftSplitThs ()
     << " " << setw (7)  << pgwInfo->GetSliceCtrl ()->GetPgwTftJoinThs ()
-    << " " << setw (7)  << pgwInfo->GetTftAvgFlowTableMax ()
-    << " " << setw (7)  << pgwInfo->GetTftMaxFlowTableMax ()
-    << " " << setw (7)  << pgwInfo->GetTftAvgFlowTableCur ()
-    << " " << setw (7)  << pgwInfo->GetTftMaxFlowTableCur ()
+    << " " << setw (9)  << pgwInfo->GetTftAvgFlowTableMax ()
+    << " " << setw (9)  << pgwInfo->GetTftMaxFlowTableMax ()
+    << " " << setw (9)  << pgwInfo->GetTftAvgFlowTableCur ()
+    << " " << setw (9)  << pgwInfo->GetTftMaxFlowTableCur ()
     << " " << setw (9)  << pgwInfo->GetTftAvgFlowTableUse () * 100
     << " " << setw (9)  << pgwInfo->GetTftMaxFlowTableUse () * 100
     << " " << setw (13) << Bps2Kbps (pgwInfo->GetTftAvgCpuMax ())

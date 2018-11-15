@@ -242,9 +242,9 @@ TrafficStatsCalculator::NotifyConstructionCompleted (void)
   // Print the header in output file.
   *m_appWrapper->GetStream ()
     << boolalpha << right << fixed << setprecision (3)
-    << " " << setw (8) << "Time:s"
+    << " " << setw (8) << "TimeSec"
     << " " << setw (9) << "AppName"
-    << " " << setw (6) << "Ul/Dl";
+    << " " << setw (7) << "TrafDir";
   RoutingInfo::PrintHeader (*m_appWrapper->GetStream ());
   AppStatsCalculator::PrintHeader (*m_appWrapper->GetStream ());
   *m_appWrapper->GetStream () << std::endl;
@@ -256,9 +256,9 @@ TrafficStatsCalculator::NotifyConstructionCompleted (void)
   // Print the header in output file.
   *m_epcWrapper->GetStream ()
     << boolalpha << right << fixed << setprecision (3)
-    << " " << setw (8) << "Time:s"
+    << " " << setw (8) << "TimeSec"
     << " " << setw (9) << "AppName"
-    << " " << setw (6) << "Ul/Dl";
+    << " " << setw (7) << "TrafDir";
   RoutingInfo::PrintHeader (*m_epcWrapper->GetStream ());
   EpcStatsCalculator::PrintHeader (*m_epcWrapper->GetStream ());
   *m_epcWrapper->GetStream () << std::endl;
@@ -283,7 +283,7 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
       *m_epcWrapper->GetStream ()
         << " " << setw (8) << Simulator::Now ().GetSeconds ()
         << " " << setw (9) << app->GetAppName ()
-        << " " << setw (6) << DirectionStr (Direction::ULINK)
+        << " " << setw (7) << DirectionStr (Direction::ULINK)
         << *rInfo
         << *epcStats
         << std::endl;
@@ -291,7 +291,7 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
       *m_appWrapper->GetStream ()
         << " " << setw (8) << Simulator::Now ().GetSeconds ()
         << " " << setw (9) << app->GetAppName ()
-        << " " << setw (6) << DirectionStr (Direction::ULINK)
+        << " " << setw (7) << DirectionStr (Direction::ULINK)
         << *rInfo
         << *app->GetServerAppStats ()
         << std::endl;
@@ -304,7 +304,7 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
       *m_epcWrapper->GetStream ()
         << " " << setw (8) << Simulator::Now ().GetSeconds ()
         << " " << setw (9) << app->GetAppName ()
-        << " " << setw (6) << DirectionStr (Direction::DLINK)
+        << " " << setw (7) << DirectionStr (Direction::DLINK)
         << *rInfo
         << *epcStats
         << std::endl;
@@ -312,7 +312,7 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
       *m_appWrapper->GetStream ()
         << " " << setw (8) << Simulator::Now ().GetSeconds ()
         << " " << setw (9) << app->GetAppName ()
-        << " " << setw (6) << DirectionStr (Direction::DLINK)
+        << " " << setw (7) << DirectionStr (Direction::DLINK)
         << *rInfo
         << *app->GetAppStats ()
         << std::endl;

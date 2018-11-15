@@ -168,10 +168,10 @@ LteRrcStatsCalculator::NotifyConstructionCompleted (void)
       m_hvoFilename + ".log", std::ios::out);
   *m_hvoWrapper->GetStream ()
     << boolalpha << right << fixed << setprecision (3)
-    << " " << setw (8)  << "Time:s"
+    << " " << setw (8)  << "TimeSec"
     << " " << setw (5)  << "Node"
     << " " << setw (7)  << "Event"
-    << " " << setw (5)  << "RNTI";
+    << " " << setw (5)  << "Rnti";
   UeInfo::PrintHeader (*m_hvoWrapper->GetStream ());
   *m_hvoWrapper->GetStream ()
     << " " << setw (9)  << "SrcEnbId"
@@ -186,7 +186,7 @@ LteRrcStatsCalculator::NotifyConstructionCompleted (void)
       m_mobFilename + ".log", std::ios::out);
   *m_mobWrapper->GetStream ()
     << boolalpha << right << fixed << setprecision (3)
-    << " " << setw (8)  << "Time:s"
+    << " " << setw (8)  << "TimeSec"
     << " " << setw (8)  << "NodeId"
     << " " << setw (11) << "NodeName"
     << " " << setw (9)  << "PosX"
@@ -201,10 +201,10 @@ LteRrcStatsCalculator::NotifyConstructionCompleted (void)
       m_rrcFilename + ".log", std::ios::out);
   *m_rrcWrapper->GetStream ()
     << boolalpha << right << fixed << setprecision (3)
-    << " " << setw (8)  << "Time:s"
+    << " " << setw (8)  << "TimeSec"
     << " " << setw (5)  << "Node"
     << " " << setw (10) << "RrcEvent"
-    << " " << setw (5)  << "RNTI";
+    << " " << setw (5)  << "Rnti";
   UeInfo::PrintHeader (*m_rrcWrapper->GetStream ());
   EnbInfo::PrintHeader (*m_rrcWrapper->GetStream ());
   SgwInfo::PrintHeader (*m_rrcWrapper->GetStream ());

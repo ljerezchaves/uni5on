@@ -125,7 +125,7 @@ EnbInfo::GetPointer (uint16_t cellId)
 std::ostream &
 EnbInfo::PrintHeader (std::ostream &os)
 {
-  os << " " << setw (6)  << "EnbID"
+  os << " " << setw (6)  << "EnbId"
      << " " << setw (6)  << "EnbSw"
      << " " << setw (11) << "EnbS1Addr";
   return os;

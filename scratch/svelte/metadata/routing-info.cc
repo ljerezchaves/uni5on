@@ -595,7 +595,7 @@ RoutingInfo::GetSliceId (uint32_t teid)
 std::ostream &
 RoutingInfo::PrintHeader (std::ostream &os)
 {
-  os << " " << setw (11) << "TEID"
+  os << " " << setw (11) << "Teid"
      << " " << setw (6)  << "Slice"
      << " " << setw (6)  << "IsDft"
      << " " << setw (6)  << "IsAct"
@@ -603,21 +603,21 @@ RoutingInfo::PrintHeader (std::ostream &os)
      << " " << setw (6)  << "IsAgg"
      << " " << setw (6)  << "IsBlk"
      << " " << setw (9)  << "BlkReas"
-     << " " << setw (4)  << "QCI"
+     << " " << setw (4)  << "Qci"
      << " " << setw (6)  << "IsGbr"
      << " " << setw (5)  << "Dscp"
      << " " << setw (6)  << "Dlink"
-     << " " << setw (11) << "DlGbr:kbps"
-     << " " << setw (11) << "DlMbr:kbps"
+     << " " << setw (11) << "DlGbrKbps"
+     << " " << setw (11) << "DlMbrKbps"
      << " " << setw (6)  << "Ulink"
-     << " " << setw (11) << "UlGbr:kbps"
-     << " " << setw (11) << "UlMbr:kbps"
+     << " " << setw (11) << "UlGbrKbps"
+     << " " << setw (11) << "UlMbrKbps"
      << " " << setw (6)  << "GbrRes"
      << " " << setw (6)  << "DMbIns"
      << " " << setw (6)  << "UMbIns"
-     << " " << setw (4)  << "TFT"
+     << " " << setw (6)  << "TtfIdx"
      << " " << setw (7)  << "Prio"
-     << " " << setw (6)  << "Tmo:s";
+     << " " << setw (6)  << "TmoSec";
   return os;
 }
 
@@ -788,7 +788,7 @@ std::ostream & operator << (std::ostream &os, const RoutingInfo &rInfo)
      << " " << setw (6)  << rInfo.IsGbrReserved ()
      << " " << setw (6)  << rInfo.IsMbrDlInstalled ()
      << " " << setw (6)  << rInfo.IsMbrUlInstalled ()
-     << " " << setw (4)  << rInfo.GetPgwTftIdx ()
+     << " " << setw (6)  << rInfo.GetPgwTftIdx ()
      << " " << setw (7)  << prioStr
      << " " << setw (6)  << rInfo.GetTimeout ();
   return os;

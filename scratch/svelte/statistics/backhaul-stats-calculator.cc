@@ -106,11 +106,11 @@ BackhaulStatsCalculator::NotifyConstructionCompleted (void)
       // Print the header in output file.
       *stats.linWrapper->GetStream ()
         << boolalpha << right << fixed << setprecision (3)
-        << " " << setw (8) << "Time:s";
+        << " " << setw (8) << "TimeSec";
       LinkInfo::PrintHeader (*stats.linWrapper->GetStream ());
       *stats.linWrapper->GetStream ()
-        << " " << setw (14) << "AvgThpFw:kbps"
-        << " " << setw (14) << "AvgThpBw:kbps"
+        << " " << setw (14) << "AvgThpFwKbps"
+        << " " << setw (14) << "AvgThpBwKbps"
         << std::endl;
     }
 

@@ -237,14 +237,14 @@ AppStatsCalculator::GetRxThroughput (void) const
 std::ostream &
 AppStatsCalculator::PrintHeader (std::ostream &os)
 {
-  os << " " << setw (8) << "Activ:s"
-     << " " << setw (7) << "Dly:ms"
-     << " " << setw (7) << "Jit:ms"
+  os << " " << setw (8) << "ActvSec"
+     << " " << setw (7) << "DlyMsec"
+     << " " << setw (7) << "JitMsec"
      << " " << setw (7) << "TxPkts"
      << " " << setw (7) << "RxPkts"
-     << " " << setw (7) << "Loss:%"
+     << " " << setw (7) << "LossRat"
      << " " << setw (8) << "RxBytes"
-     << " " << setw (9) << "Thp:kbps";
+     << " " << setw (9) << "ThpKbps";
   return os;
 }
 
