@@ -155,7 +155,7 @@ SliceNetwork::GetTypeId (void)
     .AddAttribute ("NumPgwTftSwitches",
                    "The number of P-GW TFT user-plane OpenFlow switches.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   UintegerValue (2),
+                   UintegerValue (1),
                    MakeUintegerAccessor (&SliceNetwork::GetPgwTftNumNodes,
                                          &SliceNetwork::SetPgwTftNumNodes),
                    MakeUintegerChecker<uint16_t> (1, 32))
