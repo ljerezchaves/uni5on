@@ -698,16 +698,8 @@ BackhaulController::StaticInitialize ()
       // DSCP_AF21 --> OpenFlow queue 1 (normal priority)
       // DSCP_AF11 --> OpenFlow queue 1 (normal priority)
       // DSCP_BE   --> OpenFlow queue 0 (low priority)
-      //
-      // Mapping default and aggregated traffic to low priority queues.
-      BackhaulController::m_queueByDscp.insert (
-        std::make_pair (Ipv4Header::DscpDefault, 0));
-
-      // Mapping HTC VoIP and MTC auto pilot traffic to high priority queues.
       BackhaulController::m_queueByDscp.insert (
         std::make_pair (Ipv4Header::DSCP_EF, 2));
-
-      // Mapping other traffics to normal priority queues.
       BackhaulController::m_queueByDscp.insert (
         std::make_pair (Ipv4Header::DSCP_AF41, 1));
       BackhaulController::m_queueByDscp.insert (
@@ -718,6 +710,8 @@ BackhaulController::StaticInitialize ()
         std::make_pair (Ipv4Header::DSCP_AF21, 1));
       BackhaulController::m_queueByDscp.insert (
         std::make_pair (Ipv4Header::DSCP_AF11, 1));
+      BackhaulController::m_queueByDscp.insert (
+        std::make_pair (Ipv4Header::DscpDefault, 0));
     }
 }
 
