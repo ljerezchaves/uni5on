@@ -73,10 +73,10 @@ SliceIdStr (SliceId slice)
 {
   switch (slice)
     {
-    case SliceId::MTC:
-      return "mtc";
     case SliceId::HTC:
       return "htc";
+    case SliceId::MTC:
+      return "mtc";
     case SliceId::TMP:
       return "tmp";
     case SliceId::ALL:

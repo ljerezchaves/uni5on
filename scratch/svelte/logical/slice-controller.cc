@@ -61,8 +61,8 @@ SliceController::GetTypeId (void)
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    EnumValue (SliceId::NONE),
                    MakeEnumAccessor (&SliceController::m_sliceId),
-                   MakeEnumChecker (SliceId::MTC, "mtc",
-                                    SliceId::HTC, "htc",
+                   MakeEnumChecker (SliceId::HTC, "htc",
+                                    SliceId::MTC, "mtc",
                                     SliceId::TMP, "tmp"))
     .AddAttribute ("Priority",
                    "Priority for this slice.",

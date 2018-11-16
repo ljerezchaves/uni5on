@@ -90,8 +90,8 @@ TrafficHelper::GetTypeId (void)
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    EnumValue (SliceId::NONE),
                    MakeEnumAccessor (&TrafficHelper::m_sliceId),
-                   MakeEnumChecker (SliceId::MTC, "mtc",
-                                    SliceId::HTC, "htc",
+                   MakeEnumChecker (SliceId::HTC, "htc",
+                                    SliceId::MTC, "mtc",
                                     SliceId::TMP, "tmp"))
     .AddAttribute ("SliceCtrl", "The LTE logical slice controller pointer.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -516,75 +516,6 @@ TrafficHelper::InstallApplications ()
         MakeCallback (&TrafficManager::NotifySessionCreated, t_ueManager));
 
       // Install applications into this UE according to network slice.
-      if (m_sliceId == SliceId::MTC)
-        {
-          {
-            // Auto-pilot traffic over dedicated GBR EPS bearer.
-            // QCI 2 is typically associated with conversational live video
-            // streaming. This is not the best QCI for this application, but it
-            // will work and will priorize this traffic in the network.
-            GbrQosInformation qos;
-            qos.gbrDl = 12000;   //  12 Kbps
-            qos.gbrUl = 150000;  // 150 Kbps
-            EpsBearer bearer (EpsBearer::GBR_CONV_VIDEO, qos);
-
-            // Bidirectional UDP traffic.
-            EpcTft::PacketFilter filter;
-            filter.direction = EpcTft::BIDIRECTIONAL;
-            filter.protocol = UdpL4Protocol::PROT_NUMBER;
-            InstallAppDedicated (m_autPilotHelper, bearer, filter);
-            InstallAppDedicated (m_autPilotHelper, bearer, filter);
-          }
-          {
-            // Auto-pilot traffic over dedicated Non-GBR EPS bearer.
-            // QCI 8 is typically associated with buffered video streaming and
-            // TCP-based applications. It could be used for a dedicated
-            // 'premium bearer' for any subscriber, or could be used for the
-            // default bearer of a UE for 'premium subscribers'.
-            EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM);
-
-            // Bidirectional UDP traffic.
-            EpcTft::PacketFilter filter;
-            filter.direction = EpcTft::BIDIRECTIONAL;
-            filter.protocol = UdpL4Protocol::PROT_NUMBER;
-            InstallAppDedicated (m_autPilotHelper, bearer, filter);
-            InstallAppDedicated (m_autPilotHelper, bearer, filter);
-          }
-          {
-            // Virtual bicycle race traffic over dedicated Non-GBR EPS bearer.
-            // QCI 8 is typically associated with buffered video streaming and
-            // TCP-based applications. It could be used for a dedicated
-            // 'premium bearer' for any subscriber, or could be used for the
-            // default bearer of a UE for 'premium subscribers'.
-            EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM);
-
-            // Bidirectional UDP traffic.
-            EpcTft::PacketFilter filter;
-            filter.direction = EpcTft::BIDIRECTIONAL;
-            filter.protocol = UdpL4Protocol::PROT_NUMBER;
-            InstallAppDedicated (m_bikeRaceHelper, bearer, filter);
-            InstallAppDedicated (m_bikeRaceHelper, bearer, filter);
-            InstallAppDedicated (m_bikeRaceHelper, bearer, filter);
-          }
-          {
-            // GPS Team Tracking traffic over dedicated Non-GBR EPS bearer.
-            // QCI 8 is typically associated with buffered video streaming and
-            // TCP-based applications. It could be used for a dedicated
-            // 'premium bearer' for any subscriber, or could be used for the
-            // default bearer of a UE for 'premium subscribers'.
-            EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM);
-
-            // Bidirectional UDP traffic.
-            EpcTft::PacketFilter filter;
-            filter.direction = EpcTft::BIDIRECTIONAL;
-            filter.protocol = UdpL4Protocol::PROT_NUMBER;
-            InstallAppDedicated (m_gpsTrackHelper, bearer, filter);
-            InstallAppDedicated (m_gpsTrackHelper, bearer, filter);
-            InstallAppDedicated (m_gpsTrackHelper, bearer, filter);
-          }
-          continue;
-        }
-
       if (m_sliceId == SliceId::HTC)
         {
           {
@@ -694,6 +625,75 @@ TrafficHelper::InstallApplications ()
             filter.direction = EpcTft::DOWNLINK;
             filter.protocol = UdpL4Protocol::PROT_NUMBER;
             InstallAppDedicated (m_livVideoHelper, bearer, filter);
+          }
+          continue;
+        }
+
+      if (m_sliceId == SliceId::MTC)
+        {
+          {
+            // Auto-pilot traffic over dedicated GBR EPS bearer.
+            // QCI 2 is typically associated with conversational live video
+            // streaming. This is not the best QCI for this application, but it
+            // will work and will priorize this traffic in the network.
+            GbrQosInformation qos;
+            qos.gbrDl = 12000;   //  12 Kbps
+            qos.gbrUl = 150000;  // 150 Kbps
+            EpsBearer bearer (EpsBearer::GBR_CONV_VIDEO, qos);
+
+            // Bidirectional UDP traffic.
+            EpcTft::PacketFilter filter;
+            filter.direction = EpcTft::BIDIRECTIONAL;
+            filter.protocol = UdpL4Protocol::PROT_NUMBER;
+            InstallAppDedicated (m_autPilotHelper, bearer, filter);
+            InstallAppDedicated (m_autPilotHelper, bearer, filter);
+          }
+          {
+            // Auto-pilot traffic over dedicated Non-GBR EPS bearer.
+            // QCI 8 is typically associated with buffered video streaming and
+            // TCP-based applications. It could be used for a dedicated
+            // 'premium bearer' for any subscriber, or could be used for the
+            // default bearer of a UE for 'premium subscribers'.
+            EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM);
+
+            // Bidirectional UDP traffic.
+            EpcTft::PacketFilter filter;
+            filter.direction = EpcTft::BIDIRECTIONAL;
+            filter.protocol = UdpL4Protocol::PROT_NUMBER;
+            InstallAppDedicated (m_autPilotHelper, bearer, filter);
+            InstallAppDedicated (m_autPilotHelper, bearer, filter);
+          }
+          {
+            // Virtual bicycle race traffic over dedicated Non-GBR EPS bearer.
+            // QCI 8 is typically associated with buffered video streaming and
+            // TCP-based applications. It could be used for a dedicated
+            // 'premium bearer' for any subscriber, or could be used for the
+            // default bearer of a UE for 'premium subscribers'.
+            EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM);
+
+            // Bidirectional UDP traffic.
+            EpcTft::PacketFilter filter;
+            filter.direction = EpcTft::BIDIRECTIONAL;
+            filter.protocol = UdpL4Protocol::PROT_NUMBER;
+            InstallAppDedicated (m_bikeRaceHelper, bearer, filter);
+            InstallAppDedicated (m_bikeRaceHelper, bearer, filter);
+            InstallAppDedicated (m_bikeRaceHelper, bearer, filter);
+          }
+          {
+            // GPS Team Tracking traffic over dedicated Non-GBR EPS bearer.
+            // QCI 8 is typically associated with buffered video streaming and
+            // TCP-based applications. It could be used for a dedicated
+            // 'premium bearer' for any subscriber, or could be used for the
+            // default bearer of a UE for 'premium subscribers'.
+            EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM);
+
+            // Bidirectional UDP traffic.
+            EpcTft::PacketFilter filter;
+            filter.direction = EpcTft::BIDIRECTIONAL;
+            filter.protocol = UdpL4Protocol::PROT_NUMBER;
+            InstallAppDedicated (m_gpsTrackHelper, bearer, filter);
+            InstallAppDedicated (m_gpsTrackHelper, bearer, filter);
+            InstallAppDedicated (m_gpsTrackHelper, bearer, filter);
           }
           continue;
         }
