@@ -20,7 +20,7 @@ default ns3::RadioNetwork::EnbMargin "0.5"
 default ns3::RadioNetwork::LteTrace "false"
 default ns3::RadioNetwork::RemFilename "radio-map"
 
-default ns3::RingController::Strategy "spo"
+default ns3::RingController::Routing "spo"
 default ns3::RingNetwork::NumRingSwitches "3"
 default ns3::RingNetwork::RingLinkDataRate "100Mbps"
 default ns3::RingNetwork::RingLinkDelay "200us"

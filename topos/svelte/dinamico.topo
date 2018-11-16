@@ -13,7 +13,7 @@ default ns3::BackhaulNetwork::MeterTableSize "2048"
 
 default ns3::BackhaulController::PriorityQueues "on"
 default ns3::BackhaulController::LinkSlicing "on"
-default ns3::RingController::Strategy "spo"
+default ns3::RingController::Routing "spo"
 
 default ns3::SvelteHelper::HtcController "ns3::SliceController[Priority=1|Quota=33|PgwTftAdaptiveMode=on]"
 default ns3::SvelteHelper::HtcSlice "ns3::SliceNetwork[NumUes=1|UeMobility=false|UeCellSiteCoverage=0|NumPgwTftSwitches=1|PgwBackhaulSwitch=0|PgwMainCpuCapacity=1Gbps|PgwMainFlowTableSize=1024|PgwTftCpuCapacity=512Mbps|PgwTftFlowTableSize=512|PgwTftMeterTableSize=512|SgwBackhaulSwitch=0|SgwCpuCapacity=1Gbps|SgwFlowTableSize=1024|SgwMeterTableSize=1024]"
