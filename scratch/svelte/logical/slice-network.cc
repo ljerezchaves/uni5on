@@ -198,7 +198,7 @@ SliceNetwork::GetTypeId (void)
     .AddAttribute ("PgwLinkDataRate",
                    "The data rate for the internal P-GW links.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   DataRateValue (DataRate ("10Gbps")),
+                   DataRateValue (DataRate ("1Gbps")),
                    MakeDataRateAccessor (&SliceNetwork::m_pgwLinkRate),
                    MakeDataRateChecker ())
     .AddAttribute ("PgwLinkDelay",

@@ -57,7 +57,7 @@ BackhaulNetwork::GetTypeId (void)
                    "The data rate for the link connecting any EPC entity to "
                    "the OpenFlow backhaul network.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   DataRateValue (DataRate ("10Gbps")),
+                   DataRateValue (DataRate ("1Gbps")),
                    MakeDataRateAccessor (&BackhaulNetwork::m_linkRate),
                    MakeDataRateChecker ())
     .AddAttribute ("EpcLinkDelay",
