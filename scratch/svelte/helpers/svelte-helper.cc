@@ -40,12 +40,12 @@ SvelteHelper::SvelteHelper ()
   : m_backhaul (0),
   m_radio (0),
   m_mme (0),
-  m_mtcController (0),
-  m_mtcNetwork (0),
-  m_mtcTraffic (0),
   m_htcController (0),
   m_htcNetwork (0),
   m_htcTraffic (0),
+  m_mtcController (0),
+  m_mtcNetwork (0),
+  m_mtcTraffic (0),
   m_tmpController (0),
   m_tmpNetwork (0),
   m_tmpTraffic (0),
@@ -68,21 +68,6 @@ SvelteHelper::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::SvelteHelper")
     .SetParent<EpcHelper> ()
-    .AddAttribute ("MtcController", "The MTC slice controller configuration.",
-                   ObjectFactoryValue (ObjectFactory ()),
-                   MakeObjectFactoryAccessor (
-                     &SvelteHelper::m_mtcControllerFac),
-                   MakeObjectFactoryChecker ())
-    .AddAttribute ("MtcSlice", "The MTC slice network configuration.",
-                   ObjectFactoryValue (ObjectFactory ()),
-                   MakeObjectFactoryAccessor (
-                     &SvelteHelper::m_mtcNetworkFac),
-                   MakeObjectFactoryChecker ())
-    .AddAttribute ("MtcTraffic", "The MTC slice traffic configuration.",
-                   ObjectFactoryValue (ObjectFactory ()),
-                   MakeObjectFactoryAccessor (
-                     &SvelteHelper::m_mtcTrafficFac),
-                   MakeObjectFactoryChecker ())
     .AddAttribute ("HtcController", "The HTC slice controller configuration.",
                    ObjectFactoryValue (ObjectFactory ()),
                    MakeObjectFactoryAccessor (
@@ -97,6 +82,21 @@ SvelteHelper::GetTypeId (void)
                    ObjectFactoryValue (ObjectFactory ()),
                    MakeObjectFactoryAccessor (
                      &SvelteHelper::m_htcTrafficFac),
+                   MakeObjectFactoryChecker ())
+    .AddAttribute ("MtcController", "The MTC slice controller configuration.",
+                   ObjectFactoryValue (ObjectFactory ()),
+                   MakeObjectFactoryAccessor (
+                     &SvelteHelper::m_mtcControllerFac),
+                   MakeObjectFactoryChecker ())
+    .AddAttribute ("MtcSlice", "The MTC slice network configuration.",
+                   ObjectFactoryValue (ObjectFactory ()),
+                   MakeObjectFactoryAccessor (
+                     &SvelteHelper::m_mtcNetworkFac),
+                   MakeObjectFactoryChecker ())
+    .AddAttribute ("MtcTraffic", "The MTC slice traffic configuration.",
+                   ObjectFactoryValue (ObjectFactory ()),
+                   MakeObjectFactoryAccessor (
+                     &SvelteHelper::m_mtcTrafficFac),
                    MakeObjectFactoryChecker ())
     .AddAttribute ("TmpController", "The TMP slice controller configuration.",
                    ObjectFactoryValue (ObjectFactory ()),
@@ -124,13 +124,13 @@ SvelteHelper::EnablePcap (std::string prefix, bool promiscuous)
 
   // Enable pcap on the infrastructure and logical networks.
   m_backhaul->EnablePcap (prefix, promiscuous);
-  if (m_mtcNetwork)
-    {
-      m_mtcNetwork->EnablePcap (prefix, promiscuous);
-    }
   if (m_htcNetwork)
     {
       m_htcNetwork->EnablePcap (prefix, promiscuous);
+    }
+  if (m_mtcNetwork)
+    {
+      m_mtcNetwork->EnablePcap (prefix, promiscuous);
     }
   if (m_tmpNetwork)
     {
@@ -372,12 +372,12 @@ SvelteHelper::DoDispose (void)
   m_backhaul = 0;
   m_radio = 0;
 
-  m_mtcController = 0;
-  m_mtcNetwork = 0;
-  m_mtcTraffic = 0;
   m_htcController = 0;
   m_htcNetwork = 0;
   m_htcTraffic = 0;
+  m_mtcController = 0;
+  m_mtcNetwork = 0;
+  m_mtcTraffic = 0;
   m_tmpController = 0;
   m_tmpNetwork = 0;
   m_tmpTraffic = 0;
@@ -405,39 +405,6 @@ SvelteHelper::NotifyConstructionCompleted (void)
   ApplicationContainer sliceControllers;
   UintegerValue quotaValue;
   uint16_t sumQuota = 0;
-
-  // Create the MTC logical slice controller, network, and traffic helper.
-  if (AreFactoriesOk (m_mtcControllerFac, m_mtcNetworkFac, m_mtcTrafficFac))
-    {
-      m_mtcControllerFac.Set ("SliceId", EnumValue (SliceId::MTC));
-      m_mtcControllerFac.Set ("Mme", PointerValue (m_mme));
-      m_mtcControllerFac.Set ("BackhaulCtrl", PointerValue (backahulCtrl));
-      m_mtcController = m_mtcControllerFac.Create<SliceController> ();
-
-      sliceControllers.Add (m_mtcController);
-      m_mtcController->GetAttribute ("Quota", quotaValue);
-      sumQuota += quotaValue.Get ();
-
-      m_mtcNetworkFac.Set ("SliceId", EnumValue (SliceId::MTC));
-      m_mtcNetworkFac.Set ("SliceCtrl", PointerValue (m_mtcController));
-      m_mtcNetworkFac.Set ("BackhaulNet", PointerValue (m_backhaul));
-      m_mtcNetworkFac.Set ("RadioNet", PointerValue (m_radio));
-      m_mtcNetworkFac.Set ("UeAddress", Ipv4AddressValue ("7.1.0.0"));
-      m_mtcNetworkFac.Set ("UeMask", Ipv4MaskValue ("255.255.0.0"));
-      m_mtcNetworkFac.Set ("WebAddress", Ipv4AddressValue ("8.1.0.0"));
-      m_mtcNetworkFac.Set ("WebMask", Ipv4MaskValue ("255.255.0.0"));
-      m_mtcNetwork = m_mtcNetworkFac.Create<SliceNetwork> ();
-
-      m_mtcTrafficFac.Set ("SliceId", EnumValue (SliceId::MTC));
-      m_mtcTrafficFac.Set ("SliceCtrl", PointerValue (m_mtcController));
-      m_mtcTrafficFac.Set ("SliceNet", PointerValue (m_mtcNetwork));
-      m_mtcTrafficFac.Set ("RadioNet", PointerValue (m_radio));
-      m_mtcTraffic = m_mtcTrafficFac.Create<TrafficHelper> ();
-    }
-  else
-    {
-      NS_LOG_WARN ("MTC slice being ignored by now.");
-    }
 
   // Create the HTC logical slice controller, network, and traffic helper.
   if (AreFactoriesOk (m_htcControllerFac, m_htcNetworkFac, m_htcTrafficFac))
@@ -470,6 +437,39 @@ SvelteHelper::NotifyConstructionCompleted (void)
   else
     {
       NS_LOG_WARN ("HTC slice being ignored by now.");
+    }
+
+  // Create the MTC logical slice controller, network, and traffic helper.
+  if (AreFactoriesOk (m_mtcControllerFac, m_mtcNetworkFac, m_mtcTrafficFac))
+    {
+      m_mtcControllerFac.Set ("SliceId", EnumValue (SliceId::MTC));
+      m_mtcControllerFac.Set ("Mme", PointerValue (m_mme));
+      m_mtcControllerFac.Set ("BackhaulCtrl", PointerValue (backahulCtrl));
+      m_mtcController = m_mtcControllerFac.Create<SliceController> ();
+
+      sliceControllers.Add (m_mtcController);
+      m_mtcController->GetAttribute ("Quota", quotaValue);
+      sumQuota += quotaValue.Get ();
+
+      m_mtcNetworkFac.Set ("SliceId", EnumValue (SliceId::MTC));
+      m_mtcNetworkFac.Set ("SliceCtrl", PointerValue (m_mtcController));
+      m_mtcNetworkFac.Set ("BackhaulNet", PointerValue (m_backhaul));
+      m_mtcNetworkFac.Set ("RadioNet", PointerValue (m_radio));
+      m_mtcNetworkFac.Set ("UeAddress", Ipv4AddressValue ("7.1.0.0"));
+      m_mtcNetworkFac.Set ("UeMask", Ipv4MaskValue ("255.255.0.0"));
+      m_mtcNetworkFac.Set ("WebAddress", Ipv4AddressValue ("8.1.0.0"));
+      m_mtcNetworkFac.Set ("WebMask", Ipv4MaskValue ("255.255.0.0"));
+      m_mtcNetwork = m_mtcNetworkFac.Create<SliceNetwork> ();
+
+      m_mtcTrafficFac.Set ("SliceId", EnumValue (SliceId::MTC));
+      m_mtcTrafficFac.Set ("SliceCtrl", PointerValue (m_mtcController));
+      m_mtcTrafficFac.Set ("SliceNet", PointerValue (m_mtcNetwork));
+      m_mtcTrafficFac.Set ("RadioNet", PointerValue (m_radio));
+      m_mtcTraffic = m_mtcTrafficFac.Create<TrafficHelper> ();
+    }
+  else
+    {
+      NS_LOG_WARN ("MTC slice being ignored by now.");
     }
 
   // Create the TMP logical slice controller, network, and traffic helper.

@@ -113,14 +113,6 @@ private:
   Ptr<RadioNetwork>         m_radio;            //!< The LTE RAN network.
   Ptr<SvelteMme>            m_mme;              //!< SVELTE MME entity.
 
-  // MTC network slice.
-  ObjectFactory             m_mtcControllerFac; //!< MTC controller factory.
-  ObjectFactory             m_mtcNetworkFac;    //!< MTC network factory.
-  ObjectFactory             m_mtcTrafficFac;    //!< MTC traffic factory.
-  Ptr<SliceController>      m_mtcController;    //!< MTC slice controller.
-  Ptr<SliceNetwork>         m_mtcNetwork;       //!< MTC slice network.
-  Ptr<TrafficHelper>        m_mtcTraffic;       //!< MTC slice traffic.
-
   // HTC network slice.
   ObjectFactory             m_htcControllerFac; //!< HTC controller factory.
   ObjectFactory             m_htcNetworkFac;    //!< HTC network factory.
@@ -128,6 +120,14 @@ private:
   Ptr<SliceController>      m_htcController;    //!< HTC slice controller.
   Ptr<SliceNetwork>         m_htcNetwork;       //!< HTC slice network.
   Ptr<TrafficHelper>        m_htcTraffic;       //!< HTC slice traffic.
+
+  // MTC network slice.
+  ObjectFactory             m_mtcControllerFac; //!< MTC controller factory.
+  ObjectFactory             m_mtcNetworkFac;    //!< MTC network factory.
+  ObjectFactory             m_mtcTrafficFac;    //!< MTC traffic factory.
+  Ptr<SliceController>      m_mtcController;    //!< MTC slice controller.
+  Ptr<SliceNetwork>         m_mtcNetwork;       //!< MTC slice network.
+  Ptr<TrafficHelper>        m_mtcTraffic;       //!< MTC slice traffic.
 
   // TMP network slice.
   ObjectFactory             m_tmpControllerFac; //!< TMP controller factory.
