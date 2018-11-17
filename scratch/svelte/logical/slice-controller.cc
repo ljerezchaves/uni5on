@@ -858,6 +858,11 @@ SliceController::PgwAdaptiveMechanism (void)
   uint32_t moved = 0;
   if (m_pgwInfo->GetCurLevel () != nextLevel)
     {
+      // Random variable to avoid simultaneously moving all bearers.
+      Ptr<RandomVariableStream> rand = CreateObject<UniformRandomVariable> ();
+      rand->SetAttribute ("Min", DoubleValue (0));
+      rand->SetAttribute ("Max", DoubleValue (250));
+
       // Identify and move bearers to the correct P-GW TFT switches.
       uint16_t futureTfts = 1 << nextLevel;
       for (uint16_t currIdx = 1; currIdx <= m_pgwInfo->GetCurTfts (); currIdx++)
@@ -870,10 +875,12 @@ SliceController::PgwAdaptiveMechanism (void)
               if (destIdx != currIdx)
                 {
                   NS_LOG_INFO ("Move bearer teid " << (rInfo)->GetTeidHex ());
-                  Simulator::Schedule (MilliSeconds (250),
+                  Simulator::Schedule (MilliSeconds (rand->GetInteger ()),
+                                       &SliceController::PgwRulesInstall,
+                                       this, rInfo, destIdx, true);
+                  Simulator::Schedule (MilliSeconds (750 + rand->GetInteger ()),
                                        &SliceController::PgwRulesRemove,
                                        this, rInfo, currIdx, true);
-                  PgwRulesInstall (rInfo, destIdx, true);
                   rInfo->SetPgwTftIdx (destIdx);
                   moved++;
                 }
@@ -889,7 +896,11 @@ SliceController::PgwAdaptiveMechanism (void)
           << ",ip_dst="   << m_ueAddr
           << "/"          << m_ueMask.GetPrefixLength ()
           << " goto:"     << nextLevel + 1;
-      DpctlExecute (m_pgwInfo->GetMainDpId (), cmd.str ());
+      Simulator::Schedule (
+        MilliSeconds (500),
+        static_cast<int (SliceController::*)(uint64_t, const std::string)> (
+          &SliceController::DpctlExecute),
+        this, m_pgwInfo->GetMainDpId (), cmd.str ());
     }
 
   // Fire the P-GW TFT adaptation trace source.
