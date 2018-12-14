@@ -323,7 +323,7 @@ EpcController::NotifyPgwTftAttach (
   m_pgwDpIds.push_back (pgwSwDev->GetDatapathId ());
   m_pgwS5PortsNo.push_back (pgwS5PortNo);
 
-  uint32_t tableSize = pgwSwDev->GetFlowTableSize ();
+  uint32_t tableSize = pgwSwDev->GetDftFlowTableSize ();
   DataRate plCapacity = pgwSwDev->GetCpuCapacity ();
   m_tftTableSize = std::min (m_tftTableSize, tableSize);
   m_tftMaxLoad = std::min (m_tftMaxLoad, plCapacity);
