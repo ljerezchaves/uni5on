@@ -80,13 +80,13 @@ BackhaulNetwork::GetTypeId (void)
     .AddAttribute ("CpuCapacity",
                    "Processing capacity for the backhaul switches.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   DataRateValue (DataRate ("1Gbps")),
+                   DataRateValue (DataRate ("2Gbps")),
                    MakeDataRateAccessor (&BackhaulNetwork::m_cpuCapacity),
                    MakeDataRateChecker ())
     .AddAttribute ("FlowTableSize",
                    "Flow table size for the backhaul switches.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   UintegerValue (2048),
+                   UintegerValue (4096),
                    MakeUintegerAccessor (&BackhaulNetwork::m_flowTableSize),
                    MakeUintegerChecker<uint16_t> (0, 65535))
     .AddAttribute ("GroupTableSize",

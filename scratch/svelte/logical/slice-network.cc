@@ -168,7 +168,7 @@ SliceNetwork::GetTypeId (void)
     .AddAttribute ("PgwMainCpuCapacity",
                    "CPU capacity for the P-GW main switch.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   DataRateValue (DataRate ("1Gbps")),
+                   DataRateValue (DataRate ("2Gbps")),
                    MakeDataRateAccessor (&SliceNetwork::m_mainCpuCapacity),
                    MakeDataRateChecker ())
     .AddAttribute ("PgwMainFlowTableSize",
@@ -218,13 +218,13 @@ SliceNetwork::GetTypeId (void)
     .AddAttribute ("SgwCpuCapacity",
                    "Pipeline capacity for the S-GW switches.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   DataRateValue (DataRate ("1Gbps")),
+                   DataRateValue (DataRate ("2Gbps")),
                    MakeDataRateAccessor (&SliceNetwork::m_sgwCpuCapacity),
                    MakeDataRateChecker ())
     .AddAttribute ("SgwFlowTableSize",
                    "Flow table size for the S-GW switches.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   UintegerValue (2048),
+                   UintegerValue (4098),
                    MakeUintegerAccessor (&SliceNetwork::m_sgwFlowSize),
                    MakeUintegerChecker<uint16_t> (0, 65535))
     .AddAttribute ("SgwMeterTableSize",
