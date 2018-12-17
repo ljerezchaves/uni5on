@@ -56,7 +56,7 @@ public:
     SGWTABLE  = 3,  //!< P-GW flow table is full.
     SGWLOAD   = 4,  //!< P-GW pipeline load is full.
     BACKTABLE = 5,  //!< At least one backhaul flow table is full.
-    BACKLOAD  = 6,   //!< At least one backhaul pipeline load is full.
+    BACKLOAD  = 6,  //!< At least one backhaul pipeline load is full.
     BACKBAND  = 7   //!< At least one backahul link has no available bandwidth.
   };
 
