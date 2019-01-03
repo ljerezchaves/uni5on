@@ -35,10 +35,13 @@ function PrintHelp () {
   echo "    Compile the switch library [${LIBDIR}]."
   echo
   echo "  ${bold}build-sim [waf args]${normal}:"
-  echo "    Compile the ${SIMNAME} simulator with optional waf arguments [${SIMDIR}]."
+  echo "    Compile the simulator with optional waf arguments [${SIMDIR}]."
   echo
-  echo "  ${bold}pull-log${normal}:"
-  echo "    Pull changes for the log output git repository [${LOGDIR}]."
+  echo "  ${bold}checkout-sim <ref>${normal}:"
+  echo "    Checkout the simulator repository using the git reference [${SIMDIR}]."
+  echo
+  echo "  ${bold}pull-logs${normal}:"
+  echo "    Pull changes for the logs output git repository [${LOGDIR}]."
   echo
   echo "  ${bold}pull-sim${normal}:"
   echo "    Pull changes for the simulator git repository [${SIMDIR}]."
@@ -135,7 +138,12 @@ case "${ACTION}" in
         ./waf $@
       ;;
 
-      pull-log)
+      checkout-sim)
+        cd ${SIMDIR}
+        git checkout $@ && git submodule update --recursive
+      ;;
+
+      pull-logs)
         cd ${LOGDIR}
         git pull
       ;;
