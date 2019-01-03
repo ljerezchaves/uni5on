@@ -156,17 +156,17 @@ case "${ACTION}" in
       stats-sim)
         cd ${SIMDIR}
         echo "${yellow}** Simulator${normal}"
-        git log HEAD^..HEAD
+        git log -n1
         echo
 
         cd src/ofswitch13
         echo "${yellow}** Switch module:${normal}"
-        git log HEAD^..HEAD
+        git log -n1
         echo
 
         cd ${LIBDIR}
         echo "${yellow}** Switch library::${normal}"
-        git log HEAD^..HEAD
+        git log -n1
         echo
         echo
       ;;
