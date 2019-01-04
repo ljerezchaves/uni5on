@@ -12,7 +12,7 @@ BASEDIR="/local1/luciano"
 SIMDIR="${BASEDIR}/svelte-simulator"
 LIBDIR="${SIMDIR}/ofsoftswitch13-gtp"
 LOGDIR="${SIMDIR}/logs"
-MACHINELIST="atlas castor clio demeter esculapio heracles hercules hestia hydra kratos morfeu pollux satiros tetis zeus"
+MACHINELIST="atlas castor clio demeter eco esculapio heracles hercules hestia hydra kratos morfeu pollux satiros tetis zeus"
 
 function PrintHelp () {
   echo "Usage: $0 <action>"
