@@ -3,6 +3,7 @@ global SimTime "0s"
 
 default ns3::BackhaulController::BlockPolicy "all"
 default ns3::BackhaulController::BlockThs "0.9"
+default ns3::BackhaulController::PriorityQueues "on"
 default ns3::BackhaulController::PriorityQueues "off"
 default ns3::BackhaulController::LinkSlicing "off"
 default ns3::BackhaulNetwork::EpcLinkDataRate "1Gbps"

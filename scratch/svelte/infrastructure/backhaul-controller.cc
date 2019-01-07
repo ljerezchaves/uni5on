@@ -73,7 +73,7 @@ BackhaulController::GetTypeId (void)
     .AddAttribute ("PriorityQueues",
                    "Priority output queues mechanism operation mode.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   EnumValue (OpMode::OFF),
+                   EnumValue (OpMode::ON),
                    MakeEnumAccessor (&BackhaulController::m_priorityQueues),
                    MakeEnumChecker (OpMode::OFF, "off",
                                     OpMode::ON,  "on"))
