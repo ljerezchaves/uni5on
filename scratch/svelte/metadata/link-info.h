@@ -175,7 +175,7 @@ public:
    * \param slice The network slice.
    * \return The slice quota.
    */
-  double GetSliceQuota (
+  uint16_t GetSliceQuota (
     Direction dir, SliceId slice = SliceId::ALL) const;
 
   /**

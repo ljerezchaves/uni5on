@@ -237,12 +237,12 @@ LinkInfo::GetResSliceRatio (Direction dir, SliceId slice) const
     }
 }
 
-double
+uint16_t
 LinkInfo::GetSliceQuota (Direction dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
-  return static_cast<double> (m_slices [slice][dir].quota) / 100;
+  return m_slices [slice][dir].quota;
 }
 
 DpIdPair_t
@@ -319,9 +319,9 @@ LinkInfo::PrintSliceValues (std::ostream &os, SliceId slice) const
   os << " " << setw (9)  << linkDescStr
      << " " << setw (12) << Bps2Kbps (GetLinkBitRate ())
      << " " << setw (12) << Bps2Kbps (GetMaxBitRate (LinkInfo::FWD, slice))
-     << " " << setw (8)  << GetSliceQuota (LinkInfo::FWD, slice) * 100
+     << " " << setw (8)  << GetSliceQuota (LinkInfo::FWD, slice)
      << " " << setw (12) << Bps2Kbps (GetMaxBitRate (LinkInfo::BWD, slice))
-     << " " << setw (8)  << GetSliceQuota (LinkInfo::BWD, slice) * 100
+     << " " << setw (8)  << GetSliceQuota (LinkInfo::BWD, slice)
      << " " << setw (12) << Bps2Kbps (GetResBitRate (LinkInfo::FWD, slice))
      << " " << setw (8)  << GetResSliceRatio (LinkInfo::FWD, slice) * 100
      << " " << setw (12) << Bps2Kbps (GetResBitRate (LinkInfo::BWD, slice))
@@ -555,7 +555,7 @@ LinkInfo::SetSliceQuotas (
       NS_LOG_DEBUG (SliceIdStr (slice) << " slice quota: " << quota);
 
       // Only update and fire adjusted trace source if the quota changes.
-      if (quota != m_slices [slice][dir].quota)
+      if (quota != GetSliceQuota (dir, slice))
         {
           m_slices [slice][dir].quota = quota;
           m_slices [slice][dir].maxRate = (GetLinkBitRate () * quota) / 100;
