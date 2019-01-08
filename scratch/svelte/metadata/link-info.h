@@ -293,7 +293,6 @@ private:
   struct SliceStats
   {
     uint16_t quota;             //!< Slice quota.
-    uint64_t maxRate;           //!< Maximum bit rate.
     uint64_t resRate;           //!< Reserved bit rate.
     uint64_t ewmaThp;           //!< EWMA throughput bit rate.
     uint64_t txBytes;           //!< Total TX bytes.

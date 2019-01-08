@@ -209,7 +209,7 @@ LinkInfo::GetMaxBitRate (Direction dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
-  return m_slices [slice][dir].maxRate;
+  return GetLinkBitRate () * GetSliceQuota (dir, slice) / 100;
 }
 
 uint64_t
@@ -418,8 +418,6 @@ LinkInfo::NotifyConstructionCompleted (void)
   Simulator::Schedule (m_ewmaTimeout, &LinkInfo::UpdateEwmaThp, this);
 
   // Set the maximum bit rate and slice quota for the fake shared slice.
-  m_slices [SliceId::ALL][0].maxRate = GetLinkBitRate ();
-  m_slices [SliceId::ALL][1].maxRate = GetLinkBitRate ();
   m_slices [SliceId::ALL][0].quota = 100;
   m_slices [SliceId::ALL][1].quota = 100;
 
@@ -558,7 +556,6 @@ LinkInfo::SetSliceQuotas (
       if (quota != GetSliceQuota (dir, slice))
         {
           m_slices [slice][dir].quota = quota;
-          m_slices [slice][dir].maxRate = (GetLinkBitRate () * quota) / 100;
 
           NS_LOG_DEBUG ("Fire meter adjustment and clear meter diff.");
           m_meterAdjustedTrace (Ptr<LinkInfo> (this), dir, slice);
@@ -568,7 +565,7 @@ LinkInfo::SetSliceQuotas (
 
   // There's no need to fire the adjusment trace source for the fake shared
   // slice, as we are updating only the maximum bit rate for each slice,
-  // respecing the already reserved bit rate. So,  the aggregated free bit rate
+  // respecing the already reserved bit rate. So, the aggregated free bit rate
   // will remain the same.
   return true;
 }
