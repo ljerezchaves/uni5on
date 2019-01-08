@@ -137,14 +137,14 @@ public:
   uint64_t GetLinkBitRate (void) const;
 
   /**
-   * Get the maximum bit rate for this link on the given direction, optionally
+   * Get the quota bit rate for this link on the given direction, optionally
    * filtered by the network slice. If no slice is given, the this method will
    * return the GetLinkBitRate ();
    * \param dir The link direction.
    * \param slice The network slice.
    * \return The maximum bit rate.
    */
-  uint64_t GetMaxBitRate (
+  uint64_t GetQuoBitRate (
     Direction dir, SliceId slice = SliceId::ALL) const;
 
   /**

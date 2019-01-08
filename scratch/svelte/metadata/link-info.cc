@@ -176,7 +176,7 @@ LinkInfo::GetFreeBitRate (Direction dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
-  return GetMaxBitRate (dir, slice) - GetResBitRate (dir, slice);
+  return GetQuoBitRate (dir, slice) - GetResBitRate (dir, slice);
 }
 
 double
@@ -184,7 +184,7 @@ LinkInfo::GetFreeSliceRatio (Direction dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
-  if (GetMaxBitRate (dir, slice) == 0)
+  if (GetQuoBitRate (dir, slice) == 0)
     {
       NS_ASSERT_MSG (GetFreeBitRate (dir, slice) == 0, "Invalid slice usage.");
       return 0.0;
@@ -192,7 +192,7 @@ LinkInfo::GetFreeSliceRatio (Direction dir, SliceId slice) const
   else
     {
       return static_cast<double> (GetFreeBitRate (dir, slice))
-             / GetMaxBitRate (dir, slice);
+             / GetQuoBitRate (dir, slice);
     }
 }
 
@@ -205,7 +205,7 @@ LinkInfo::GetLinkBitRate (void) const
 }
 
 uint64_t
-LinkInfo::GetMaxBitRate (Direction dir, SliceId slice) const
+LinkInfo::GetQuoBitRate (Direction dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
@@ -225,7 +225,7 @@ LinkInfo::GetResSliceRatio (Direction dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
-  if (GetMaxBitRate (dir, slice) == 0)
+  if (GetQuoBitRate (dir, slice) == 0)
     {
       NS_ASSERT_MSG (GetResBitRate (dir, slice) == 0, "Invalid slice usage.");
       return 0.0;
@@ -233,7 +233,7 @@ LinkInfo::GetResSliceRatio (Direction dir, SliceId slice) const
   else
     {
       return static_cast<double> (GetResBitRate (dir, slice))
-             / GetMaxBitRate (dir, slice);
+             / GetQuoBitRate (dir, slice);
     }
 }
 
@@ -266,7 +266,7 @@ LinkInfo::GetThpSliceRatio (Direction dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
-  if (GetMaxBitRate (dir, slice) == 0)
+  if (GetQuoBitRate (dir, slice) == 0)
     {
       NS_ASSERT_MSG (GetThpBitRate (dir, slice) == 0, "Invalid slice usage.");
       return 0.0;
@@ -274,7 +274,7 @@ LinkInfo::GetThpSliceRatio (Direction dir, SliceId slice) const
   else
     {
       return static_cast<double> (GetThpBitRate (dir, slice))
-             / GetMaxBitRate (dir, slice);
+             / GetQuoBitRate (dir, slice);
     }
 }
 
@@ -319,9 +319,9 @@ LinkInfo::PrintSliceValues (std::ostream &os, SliceId slice) const
   os << " " << setw (9)  << linkDescStr
      << " " << setw (12) << Bps2Kbps (GetLinkBitRate ())
      << " " << setw (8)  << GetSliceQuota (LinkInfo::FWD, slice)
-     << " " << setw (12) << Bps2Kbps (GetMaxBitRate (LinkInfo::FWD, slice))
+     << " " << setw (12) << Bps2Kbps (GetQuoBitRate (LinkInfo::FWD, slice))
      << " " << setw (8)  << GetSliceQuota (LinkInfo::BWD, slice)
-     << " " << setw (12) << Bps2Kbps (GetMaxBitRate (LinkInfo::BWD, slice))
+     << " " << setw (12) << Bps2Kbps (GetQuoBitRate (LinkInfo::BWD, slice))
      << " " << setw (12) << Bps2Kbps (GetResBitRate (LinkInfo::FWD, slice))
      << " " << setw (8)  << GetResSliceRatio (LinkInfo::FWD, slice) * 100
      << " " << setw (12) << Bps2Kbps (GetResBitRate (LinkInfo::BWD, slice))
@@ -379,9 +379,9 @@ LinkInfo::PrintHeader (std::ostream &os)
   os << " " << setw (9)  << "DpIdFw"
      << " " << setw (12) << "LinkKbps"
      << " " << setw (8)  << "QuoFw"
-     << " " << setw (12) << "MaxFwKbps"
+     << " " << setw (12) << "QuoFwKbps"
      << " " << setw (8)  << "QuoBw"
-     << " " << setw (12) << "MaxBwKbps"
+     << " " << setw (12) << "QuoBwKbps"
      << " " << setw (12) << "ResFwKbps"
      << " " << setw (8)  << "ResFwUse"
      << " " << setw (12) << "ResBwKbps"
