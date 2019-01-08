@@ -258,7 +258,9 @@ LinkInfo::GetThpBitRate (Direction dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
-  return m_slices [slice][dir].ewmaThp;
+  // TODO Estou somando os dois mas preciso permitir busca separado.
+  return m_slices [slice][dir].ewmaThp [LinkInfo::GBR] +
+         m_slices [slice][dir].ewmaThp [LinkInfo::NON];
 }
 
 double
@@ -584,17 +586,14 @@ LinkInfo::UpdateEwmaThp (void)
     {
       for (int d = 0; d <= LinkInfo::BWD; d++)
         {
-          bytes = 0;
           SliceStats &stats = m_slices [s][d];
           for (int t = 0; t <= LinkInfo::GBR; t++)
             {
-              bytes += stats.txBytes [t][now] - stats.txBytes [t][old];
+              bytes = stats.txBytes [t][now] - stats.txBytes [t][old];
               stats.txBytes [t][old] = stats.txBytes [t][now];
+              stats.ewmaThp [t] = (m_ewmaAlpha * 8 * bytes) / elapSecs +
+                (1 - m_ewmaAlpha) * stats.ewmaThp [t];
             }
-
-          // FIXME levar pro for de cima e calcular por tipo.
-          stats.ewmaThp = (m_ewmaAlpha * 8 * bytes) / elapSecs +
-            (1 - m_ewmaAlpha) * stats.ewmaThp;
         }
     }
 
