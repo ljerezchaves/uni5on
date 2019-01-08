@@ -436,7 +436,8 @@ LinkInfo::NotifyTxPacket (std::string context, Ptr<const Packet> packet)
   EpcGtpuTag gtpuTag;
   if (packet->PeekPacketTag (gtpuTag))
     {
-      SliceId slice = RoutingInfo::GetSliceId (gtpuTag.GetTeid ());
+      Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (gtpuTag.GetTeid ());
+      SliceId slice = rInfo->GetSliceId ();
       m_slices [slice][dir].txBytes += packet->GetSize ();
     }
   else
