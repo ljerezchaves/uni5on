@@ -567,7 +567,7 @@ RoutingInfo::GetEpsBearer (uint32_t teid)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
-  return GetPointer (teid)->GetEpsBearer ();
+  return RoutingInfo::GetPointer (teid)->GetEpsBearer ();
 }
 
 Ptr<RoutingInfo>
