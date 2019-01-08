@@ -289,14 +289,21 @@ protected:
   void NotifyConstructionCompleted (void);
 
 private:
+  /** TX bytes type acessor. */
+  enum TxType
+  {
+    NON = 0,  //!< Non-GBR traffic.
+    GBR = 1,  //!< GBR traffic.
+    ALL = 2
+  };
+
   /** Metadata associated to a network slice. */
   struct SliceStats
   {
     uint16_t quota;             //!< Slice quota.
     uint64_t resRate;           //!< Reserved bit rate.
     uint64_t ewmaThp;           //!< EWMA throughput bit rate.
-    uint64_t txBytes;           //!< Total TX bytes.
-    uint64_t lastTxBytes;       //!< Last timeout TX bytes.
+    uint64_t txBytes [2][2];    //!< TX bytes counters.
     int64_t  meterDiff;         //!< Current meter bit rate diff.
   };
 

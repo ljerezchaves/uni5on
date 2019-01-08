@@ -283,7 +283,9 @@ LinkInfo::GetTxBytes (Direction dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
-  return m_slices [slice][dir].txBytes;
+  // TODO Estou somando os dois mas preciso permitir busca separado.
+  return m_slices [slice][dir].txBytes [LinkInfo::GBR][0] +
+         m_slices [slice][dir].txBytes [LinkInfo::NON][0];
 }
 
 bool
@@ -438,15 +440,16 @@ LinkInfo::NotifyTxPacket (std::string context, Ptr<const Packet> packet)
     {
       Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (gtpuTag.GetTeid ());
       SliceId slice = rInfo->GetSliceId ();
-      m_slices [slice][dir].txBytes += packet->GetSize ();
+      LinkInfo::TxType type = rInfo->IsGbr () ? LinkInfo::GBR : LinkInfo::NON;
+
+      // Update TX packets for the traffic slice and  fake shared slice.
+      m_slices [slice][dir].txBytes [type][0] += packet->GetSize ();
+      m_slices [SliceId::ALL][dir].txBytes [type][0] += packet->GetSize ();
     }
   else
     {
       NS_LOG_WARN ("GTPU packet tag not found for packet " << packet);
     }
-
-  // Update TX packets also for fake shared slice.
-  m_slices [SliceId::ALL][dir].txBytes += packet->GetSize ();
 }
 
 bool
@@ -574,17 +577,24 @@ LinkInfo::SetSliceQuotas (
 void
 LinkInfo::UpdateEwmaThp (void)
 {
+  const uint16_t now = 0, old = 1;
   double elapSecs = (Simulator::Now () - m_ewmaLastTime).GetSeconds ();
   uint64_t bytes = 0;
   for (int s = 0; s <= SliceId::ALL; s++)
     {
       for (int d = 0; d <= LinkInfo::BWD; d++)
         {
-          bytes = m_slices [s][d].txBytes - m_slices [s][d].lastTxBytes;
-          m_slices [s][d].lastTxBytes = m_slices [s][d].txBytes;
+          bytes = 0;
+          SliceStats &stats = m_slices [s][d];
+          for (int t = 0; t <= LinkInfo::GBR; t++)
+            {
+              bytes += stats.txBytes [t][now] - stats.txBytes [t][old];
+              stats.txBytes [t][old] = stats.txBytes [t][now];
+            }
 
-          m_slices [s][d].ewmaThp = (m_ewmaAlpha * 8 * bytes) / elapSecs +
-            (1 - m_ewmaAlpha) * m_slices [s][d].ewmaThp;
+          // FIXME levar pro for de cima e calcular por tipo.
+          stats.ewmaThp = (m_ewmaAlpha * 8 * bytes) / elapSecs +
+            (1 - m_ewmaAlpha) * stats.ewmaThp;
         }
     }
 
