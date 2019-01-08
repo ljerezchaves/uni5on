@@ -28,10 +28,10 @@ using namespace std;
 
 #undef NS_LOG_APPEND_CONTEXT
 #define NS_LOG_APPEND_CONTEXT                                                 \
-  if (m_switches [0].swDev != 0 && m_switches [1].swDev != 0)                 \
+  if (GetSwPort (0) && GetSwPort (1))                                         \
     {                                                                         \
-      std::clog << "[LInfo " << m_switches [0].swDev->GetDatapathId ()        \
-                << " to " << m_switches [1].swDev->GetDatapathId () << "] ";  \
+      std::clog << "[LInfo " << GetSwDpId (0)                                 \
+                << " to " << GetSwDpId (1) << "] ";                           \
     }
 
 namespace ns3 {
@@ -43,17 +43,18 @@ NS_OBJECT_ENSURE_REGISTERED (LinkInfo);
 LinkInfo::LinkInfoMap_t LinkInfo::m_linkInfoByDpIds;
 LinkInfoList_t LinkInfo::m_linkInfoList;
 
-LinkInfo::LinkInfo (SwitchData sw1, SwitchData sw2, Ptr<CsmaChannel> channel)
+LinkInfo::LinkInfo (Ptr<OFSwitch13Port> port1, Ptr<OFSwitch13Port> port2,
+                    Ptr<CsmaChannel> channel)
   : m_channel (channel)
 {
-  NS_LOG_FUNCTION (this << sw1.swDev << sw2.swDev << channel);
+  NS_LOG_FUNCTION (this << port1 << port2 << channel);
 
-  m_switches [0] = sw1;
-  m_switches [1] = sw2;
+  m_ports [0] = port1;
+  m_ports [1] = port2;
 
   // Asserting internal device order to ensure FWD and BWD indices order.
-  NS_ASSERT_MSG (channel->GetCsmaDevice (0) == m_switches [0].portDev
-                 && channel->GetCsmaDevice (1) == m_switches [1].portDev,
+  NS_ASSERT_MSG (channel->GetCsmaDevice (0) == GetPortDev (0)
+                 && channel->GetCsmaDevice (1) == GetPortDev (1),
                  "Invalid device order in csma channel.");
 
   // Asserting full-duplex csma channel.
@@ -61,9 +62,9 @@ LinkInfo::LinkInfo (SwitchData sw1, SwitchData sw2, Ptr<CsmaChannel> channel)
 
   // Connecting trace source to CsmaNetDevice PhyTxEnd trace source, used to
   // monitor data transmitted over this connection.
-  m_switches [0].portDev->TraceConnect (
+  GetPortDev (0)->TraceConnect (
     "PhyTxEnd", "Forward", MakeCallback (&LinkInfo::NotifyTxPacket, this));
-  m_switches [1].portDev->TraceConnect (
+  GetPortDev (1)->TraceConnect (
     "PhyTxEnd", "Backward", MakeCallback (&LinkInfo::NotifyTxPacket, this));
 
   // Clear slice metadata.
@@ -108,31 +109,47 @@ LinkInfo::GetTypeId (void)
   return tid;
 }
 
+Mac48Address
+LinkInfo::GetPortAddr (uint8_t idx) const
+{
+  return Mac48Address::ConvertFrom (GetPortDev (idx)->GetAddress ());
+}
+
+Ptr<CsmaNetDevice>
+LinkInfo::GetPortDev (uint8_t idx) const
+{
+  return DynamicCast<CsmaNetDevice> (GetSwPort (idx)->GetPortDevice ());
+}
+
 uint32_t
 LinkInfo::GetPortNo (uint8_t idx) const
 {
-  NS_LOG_FUNCTION (this << idx);
+  return GetSwPort (idx)->GetPortNo ();
+}
 
-  NS_ASSERT_MSG (idx == 0 || idx == 1, "Invalid switch index.");
-  return m_switches [idx].portNo;
+Ptr<OFSwitch13Queue>
+LinkInfo::GetPortQueue (uint8_t idx) const
+{
+  return GetSwPort (idx)->GetPortQueue ();
+}
+
+Ptr<OFSwitch13Device>
+LinkInfo::GetSwDev (uint8_t idx) const
+{
+  return GetSwPort (idx)->GetSwitchDevice ();
 }
 
 uint64_t
 LinkInfo::GetSwDpId (uint8_t idx) const
 {
-  NS_LOG_FUNCTION (this << idx);
-
-  NS_ASSERT_MSG (idx == 0 || idx == 1, "Invalid switch index.");
-  return m_switches [idx].swDev->GetDatapathId ();
+  return GetSwDev (idx)->GetDatapathId ();
 }
 
-Mac48Address
-LinkInfo::GetPortMacAddr (uint8_t idx) const
+Ptr<OFSwitch13Port>
+LinkInfo::GetSwPort (uint8_t idx) const
 {
-  NS_LOG_FUNCTION (this << idx);
-
   NS_ASSERT_MSG (idx == 0 || idx == 1, "Invalid switch index.");
-  return Mac48Address::ConvertFrom (m_switches [idx].portDev->GetAddress ());
+  return m_ports [idx];
 }
 
 LinkInfo::Direction
@@ -385,10 +402,8 @@ LinkInfo::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
-  m_switches [0].swDev = 0;
-  m_switches [1].swDev = 0;
-  m_switches [0].portDev = 0;
-  m_switches [1].portDev = 0;
+  m_ports [0] = 0;
+  m_ports [1] = 0;
   m_channel = 0;
   Object::DoDispose ();
 }

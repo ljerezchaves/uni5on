@@ -64,24 +64,17 @@ public:
     BWD = 1   //!< Backward direction (from second to first switch).
   };
 
-  /** Metadata associated to a switch. */
-  struct SwitchData
-  {
-    Ptr<OFSwitch13Device> swDev;    //!< OpenFlow switch device.
-    Ptr<CsmaNetDevice>    portDev;  //!< OpenFlow CSMA port device.
-    uint32_t              portNo;   //!< OpenFlow port number.
-  };
-
   /**
    * Complete constructor.
-   * \param sw1 First switch metadata.
-   * \param sw2 Second switch metadata.
-   * \param channel The CsmaChannel physical link connecting these switches.
-   * \attention The switch order must be the same as created by the CsmaHelper.
+   * \param port1 First switch port.
+   * \param port2 Second switch port.
+   * \param channel The CsmaChannel physical link connecting these ports.
+   * \attention The port order must be the same as created by the CsmaHelper.
    * Internal channel handling is based on this order to get correct
    * full-duplex links.
    */
-  LinkInfo (SwitchData sw1, SwitchData sw2, Ptr<CsmaChannel> channel);
+  LinkInfo (Ptr<OFSwitch13Port> port1, Ptr<OFSwitch13Port> port2,
+            Ptr<CsmaChannel> channel);
   virtual ~LinkInfo ();   //!< Dummy destructor, see DoDispose.
 
   /**
@@ -96,9 +89,13 @@ public:
    * \return The requested field.
    */
   //\{
-  uint32_t GetPortNo (uint8_t idx) const;
-  uint64_t GetSwDpId (uint8_t idx) const;
-  Mac48Address GetPortMacAddr (uint8_t idx) const;
+  Mac48Address          GetPortAddr   (uint8_t idx) const;
+  Ptr<CsmaNetDevice>    GetPortDev    (uint8_t idx) const;
+  uint32_t              GetPortNo     (uint8_t idx) const;
+  Ptr<OFSwitch13Queue>  GetPortQueue  (uint8_t idx) const;
+  Ptr<OFSwitch13Device> GetSwDev      (uint8_t idx) const;
+  uint64_t              GetSwDpId     (uint8_t idx) const;
+  Ptr<OFSwitch13Port>   GetSwPort     (uint8_t idx) const;
   //\}
 
   /**
@@ -372,8 +369,8 @@ private:
 
   /** Metadata for each network slice. */
   SliceStats            m_slices [N_SLICES_ALL][2];
-  SwitchData            m_switches [2];         //!< Metadata for switches.
   Ptr<CsmaChannel>      m_channel;              //!< The CSMA link channel.
+  Ptr<OFSwitch13Port>   m_ports [2];            //!< OpenFlow ports.
   DataRate              m_adjustmentStep;       //!< Meter adjustment step.
 
   // EWMA throughput calculation.

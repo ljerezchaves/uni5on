@@ -965,7 +965,7 @@ RingController::CreateSpanningTree (void)
     std::ostringstream cmd;
     cmd << "port-mod"
         << " port=" << lInfo->GetPortNo (0)
-        << ",addr=" << lInfo->GetPortMacAddr (0)
+        << ",addr=" << lInfo->GetPortAddr (0)
         << ",conf=0x00000020,mask=0x00000020";
     DpctlSchedule (lInfo->GetSwDpId (0), cmd.str ());
   }
@@ -973,7 +973,7 @@ RingController::CreateSpanningTree (void)
     std::ostringstream cmd;
     cmd << "port-mod"
         << " port=" << lInfo->GetPortNo (1)
-        << ",addr=" << lInfo->GetPortMacAddr (1)
+        << ",addr=" << lInfo->GetPortAddr (1)
         << ",conf=0x00000020,mask=0x00000020";
     DpctlSchedule (lInfo->GetSwDpId (1), cmd.str ());
   }
