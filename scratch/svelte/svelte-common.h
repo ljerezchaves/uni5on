@@ -123,6 +123,9 @@ typedef enum
   BOTH = 2   //!< Both GBR and Non-GBR traffic.
 } QosType;
 
+// Total number of types + 1 for aggregated metadata.
+#define N_TYPES_ALL (static_cast<uint8_t> (QosType::BOTH) + 1)
+
 /**
  * \ingroup svelte
  * Get the LTE interface name.

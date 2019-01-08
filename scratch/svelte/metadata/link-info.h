@@ -187,13 +187,15 @@ public:
 
   /**
    * Get the EWMA throughput bit rate for this link on the given direction,
-   * optionally filtered by the network slice.
+   * optionally filtered by the network slice and QoS traffic type.
    * \param dir The link direction.
    * \param slice The network slice.
+   * \param type Traffic QoS type.
    * \return The EWMA throughput.
    */
   uint64_t GetThpBitRate (
-    Direction dir, SliceId slice = SliceId::ALL) const;
+    Direction dir, SliceId slice = SliceId::ALL,
+    QosType type = QosType::BOTH) const;
 
   /**
    * Get the EWMA throughput ratio for this link on the given direction,
@@ -207,13 +209,15 @@ public:
 
   /**
    * Get the total number of transmitted bytes over this link on the given
-   * direction, optionally filtered by the network slice.
+   * direction, optionally filtered by the network slice and QoS traffic type.
    * \param dir The link direction.
    * \param slice The network slice.
+   * \param type Traffic QoS type.
    * \return The TX bytes.
    */
   uint64_t GetTxBytes (
-    Direction dir, SliceId slice = SliceId::ALL) const;
+    Direction dir, SliceId slice = SliceId::ALL,
+    QosType type = QosType::BOTH) const;
 
   /**
    * Check for available bit rate between these two switches that can be
@@ -289,22 +293,14 @@ protected:
   void NotifyConstructionCompleted (void);
 
 private:
-  /** TX bytes type acessor. */
-  enum TxType
-  {
-    NON = 0,  //!< Non-GBR traffic.
-    GBR = 1,  //!< GBR traffic.
-    ALL = 2
-  };
-
   /** Metadata associated to a network slice. */
   struct SliceStats
   {
-    uint16_t quota;             //!< Slice quota.
-    uint64_t resRate;           //!< Reserved bit rate.
-    uint64_t ewmaThp [2];       //!< EWMA throughput bit rate.
-    uint64_t txBytes [2][2];    //!< TX bytes counters.
-    int64_t  meterDiff;         //!< Current meter bit rate diff.
+    uint16_t quota;                     //!< Slice quota.
+    uint64_t resRate;                   //!< Reserved bit rate.
+    uint64_t ewmaThp [N_TYPES_ALL];     //!< EWMA throughput bit rate.
+    uint64_t txBytes [N_TYPES_ALL][2];  //!< TX bytes counters.
+    int64_t  meterDiff;                 //!< Current meter bit rate diff.
   };
 
   /**

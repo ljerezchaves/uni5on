@@ -254,13 +254,11 @@ LinkInfo::GetSwitchDpIdPair (void) const
 }
 
 uint64_t
-LinkInfo::GetThpBitRate (Direction dir, SliceId slice) const
+LinkInfo::GetThpBitRate (Direction dir, SliceId slice, QosType type) const
 {
-  NS_LOG_FUNCTION (this << dir << slice);
+  NS_LOG_FUNCTION (this << dir << slice << type);
 
-  // TODO Estou somando os dois mas preciso permitir busca separado.
-  return m_slices [slice][dir].ewmaThp [LinkInfo::GBR] +
-         m_slices [slice][dir].ewmaThp [LinkInfo::NON];
+  return m_slices [slice][dir].ewmaThp [type];
 }
 
 double
@@ -281,13 +279,11 @@ LinkInfo::GetThpSliceRatio (Direction dir, SliceId slice) const
 }
 
 uint64_t
-LinkInfo::GetTxBytes (Direction dir, SliceId slice) const
+LinkInfo::GetTxBytes (Direction dir, SliceId slice, QosType type) const
 {
-  NS_LOG_FUNCTION (this << dir << slice);
+  NS_LOG_FUNCTION (this << dir << slice << type);
 
-  // TODO Estou somando os dois mas preciso permitir busca separado.
-  return m_slices [slice][dir].txBytes [LinkInfo::GBR][0] +
-         m_slices [slice][dir].txBytes [LinkInfo::NON][0];
+  return m_slices [slice][dir].txBytes [type][0];
 }
 
 bool
@@ -442,11 +438,16 @@ LinkInfo::NotifyTxPacket (std::string context, Ptr<const Packet> packet)
     {
       Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (gtpuTag.GetTeid ());
       SliceId slice = rInfo->GetSliceId ();
-      LinkInfo::TxType type = rInfo->IsGbr () ? LinkInfo::GBR : LinkInfo::NON;
+      QosType type = rInfo->IsGbr () ? QosType::GBR : QosType::NON;
+      uint32_t size = packet->GetSize ();
 
-      // Update TX packets for the traffic slice and  fake shared slice.
-      m_slices [slice][dir].txBytes [type][0] += packet->GetSize ();
-      m_slices [SliceId::ALL][dir].txBytes [type][0] += packet->GetSize ();
+      // Update TX packets for the traffic slice and for fake shared slice,
+      // considering both the traffic type and the fake both type.
+      m_slices [slice][dir].txBytes [type][0] += size;
+      m_slices [slice][dir].txBytes [QosType::BOTH][0] += size;
+
+      m_slices [SliceId::ALL][dir].txBytes [type][0] += size;
+      m_slices [SliceId::ALL][dir].txBytes [QosType::BOTH][0] += size;
     }
   else
     {
@@ -587,7 +588,7 @@ LinkInfo::UpdateEwmaThp (void)
       for (int d = 0; d <= LinkInfo::BWD; d++)
         {
           SliceStats &stats = m_slices [s][d];
-          for (int t = 0; t <= LinkInfo::GBR; t++)
+          for (int t = 0; t <= QosType::BOTH; t++)
             {
               bytes = stats.txBytes [t][now] - stats.txBytes [t][old];
               stats.txBytes [t][old] = stats.txBytes [t][now];
