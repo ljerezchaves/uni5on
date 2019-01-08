@@ -318,10 +318,10 @@ LinkInfo::PrintSliceValues (std::ostream &os, SliceId slice) const
 
   os << " " << setw (9)  << linkDescStr
      << " " << setw (12) << Bps2Kbps (GetLinkBitRate ())
+     << " " << setw (5)  << GetSliceQuota (LinkInfo::FWD, slice)
      << " " << setw (12) << Bps2Kbps (GetMaxBitRate (LinkInfo::FWD, slice))
-     << " " << setw (8)  << GetSliceQuota (LinkInfo::FWD, slice)
+     << " " << setw (5)  << GetSliceQuota (LinkInfo::BWD, slice)
      << " " << setw (12) << Bps2Kbps (GetMaxBitRate (LinkInfo::BWD, slice))
-     << " " << setw (8)  << GetSliceQuota (LinkInfo::BWD, slice)
      << " " << setw (12) << Bps2Kbps (GetResBitRate (LinkInfo::FWD, slice))
      << " " << setw (8)  << GetResSliceRatio (LinkInfo::FWD, slice) * 100
      << " " << setw (12) << Bps2Kbps (GetResBitRate (LinkInfo::BWD, slice))
@@ -378,10 +378,10 @@ LinkInfo::PrintHeader (std::ostream &os)
 {
   os << " " << setw (9)  << "DpIdFw"
      << " " << setw (12) << "LinkKbps"
+     << " " << setw (5)  << "QuoFw"
      << " " << setw (12) << "MaxFwKbps"
-     << " " << setw (8)  << "QuoFwUse"
+     << " " << setw (5)  << "QuoBw"
      << " " << setw (12) << "MaxBwKbps"
-     << " " << setw (8)  << "QuoBwUse"
      << " " << setw (12) << "ResFwKbps"
      << " " << setw (8)  << "ResFwUse"
      << " " << setw (12) << "ResBwKbps"
