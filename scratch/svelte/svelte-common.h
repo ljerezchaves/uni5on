@@ -114,6 +114,17 @@ typedef enum
 
 /**
  * \ingroup svelte
+ * Enumeration of available LTE QoS traffic types.
+ */
+typedef enum
+{
+  NON  = 0,  //!< Non-GBR traffic.
+  GBR  = 1,  //!< GBR traffic.
+  BOTH = 2   //!< Both GBR and Non-GBR traffic.
+} QosType;
+
+/**
+ * \ingroup svelte
  * Get the LTE interface name.
  * \param iface The LTE interface.
  * \return The string with the LTE interface name.
