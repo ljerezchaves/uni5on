@@ -179,7 +179,8 @@ public:
 
   /**
    * Get the EWMA throughput ratio for this link on the given direction,
-   * optionally filtered by the network slice.
+   * considering all traffic types (GBR and Non-GBR) and optionally filtered
+   * by the network slice.
    * \param dir The link direction.
    * \param slice The network slice.
    * \return The bandwidth usage ratio.

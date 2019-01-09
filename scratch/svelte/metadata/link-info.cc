@@ -234,12 +234,13 @@ LinkInfo::GetThpSliceRatio (Direction dir, SliceId slice) const
 
   if (GetQuotaBitRate (dir, slice) == 0)
     {
-      NS_ASSERT_MSG (GetThpBitRate (dir, slice) == 0, "Invalid slice usage.");
+      NS_ASSERT_MSG (GetThpBitRate (dir, slice, QosType::BOTH) == 0,
+                     "Invalid slice usage.");
       return 0.0;
     }
   else
     {
-      return static_cast<double> (GetThpBitRate (dir, slice))
+      return static_cast<double> (GetThpBitRate (dir, slice, QosType::BOTH))
              / GetQuotaBitRate (dir, slice);
     }
 }
@@ -294,20 +295,12 @@ LinkInfo::PrintSliceValues (std::ostream &os, SliceId slice) const
      << " " << setw (12) << Bps2Kbps (GetFreeBitRate  (LinkInfo::BWD, slice))
      << " " << setw (14)
      << Bps2Kbps (GetThpBitRate (LinkInfo::FWD, slice, QosType::GBR))
-     << " " << setw (11)
-     << GetThpSliceRatio (LinkInfo::FWD, slice, QosType::GBR) * 100
      << " " << setw (14)
      << Bps2Kbps (GetThpBitRate (LinkInfo::FWD, slice, QosType::NON))
-     << " " << setw (11)
-     << GetThpSliceRatio (LinkInfo::FWD, slice, QosType::NON) * 100
      << " " << setw (14)
      << Bps2Kbps (GetThpBitRate (LinkInfo::BWD, slice, QosType::GBR))
-     << " " << setw (11)
-     << GetThpSliceRatio (LinkInfo::BWD, slice, QosType::GBR) * 100
      << " " << setw (14)
-     << Bps2Kbps (GetThpBitRate (LinkInfo::BWD, slice, QosType::NON))
-     << " " << setw (11)
-     << GetThpSliceRatio (LinkInfo::BWD, slice, QosType::NON) * 100;
+     << Bps2Kbps (GetThpBitRate (LinkInfo::BWD, slice, QosType::NON));
   return os;
 }
 
@@ -361,13 +354,9 @@ LinkInfo::PrintHeader (std::ostream &os)
      << " " << setw (12) << "FreFwKbps"
      << " " << setw (12) << "FreBwKbps"
      << " " << setw (14) << "ThpGbrFwKbps"
-     << " " << setw (11) << "ThpGbrFwUse"
      << " " << setw (14) << "ThpNonFwKbps"
-     << " " << setw (11) << "ThpNonFwUse"
      << " " << setw (14) << "ThpGbrBwKbps"
-     << " " << setw (11) << "ThpGbrBwUse"
-     << " " << setw (14) << "ThpNonBwKbps"
-     << " " << setw (11) << "ThpNonBwUse";
+     << " " << setw (14) << "ThpNonBwKbps";
   return os;
 }
 
