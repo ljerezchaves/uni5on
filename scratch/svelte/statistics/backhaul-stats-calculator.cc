@@ -30,7 +30,6 @@ NS_LOG_COMPONENT_DEFINE ("BackhaulStatsCalculator");
 NS_OBJECT_ENSURE_REGISTERED (BackhaulStatsCalculator);
 
 BackhaulStatsCalculator::BackhaulStatsCalculator ()
-  : m_lastUpdate (Simulator::Now ())
 {
   NS_LOG_FUNCTION (this);
 
@@ -66,10 +65,7 @@ BackhaulStatsCalculator::DoDispose ()
 
   for (int s = 0; s <= SliceId::ALL; s++)
     {
-      SliceStats &stats = m_slices [s];
-      stats.linWrapper = 0;
-      delete stats.fwdBytes;
-      delete stats.bwdBytes;
+      m_slices [s].linWrapper = 0;
     }
   Object::DoDispose ();
 }
@@ -84,20 +80,10 @@ BackhaulStatsCalculator::NotifyConstructionCompleted (void)
   std::string prefix = stringValue.Get ();
   SetAttribute ("LinStatsFilename", StringValue (prefix + m_linFilename));
 
-  m_numLinks = LinkInfo::GetList ().size ();
   for (int s = 0; s <= SliceId::ALL; s++)
     {
       std::string sliceStr = SliceIdStr (static_cast<SliceId> (s));
       SliceStats &stats = m_slices [s];
-
-      // Initialize byte counters for all links.
-      stats.fwdBytes = new uint64_t [m_numLinks];
-      stats.bwdBytes = new uint64_t [m_numLinks];
-      for (uint16_t i = 0; i < m_numLinks; i++)
-        {
-          stats.fwdBytes [i] = 0;
-          stats.bwdBytes [i] = 0;
-        }
 
       // Create the output file for this slice.
       stats.linWrapper = Create<OutputStreamWrapper> (
@@ -108,11 +94,7 @@ BackhaulStatsCalculator::NotifyConstructionCompleted (void)
         << boolalpha << right << fixed << setprecision (3)
         << " " << setw (8) << "TimeSec";
       LinkInfo::PrintHeader (*stats.linWrapper->GetStream ());
-      *stats.linWrapper->GetStream ()
-      // Disabling absolute throughput stats.
-      // << " " << setw (14) << "AvgThpFwKbps"
-      // << " " << setw (14) << "AvgThpBwKbps"
-        << std::endl;
+      *stats.linWrapper->GetStream () << std::endl;
     }
 
   TimeValue timeValue;
@@ -128,43 +110,22 @@ BackhaulStatsCalculator::DumpStatistics (Time nextDump)
 {
   NS_LOG_FUNCTION (this);
 
-  // Disabling absolute throughput stats.
-  // double elapSecs = (Simulator::Now () - m_lastUpdate).GetSeconds ();
-
   // For each network slice, iterate over all links dumping statistics.
   for (int s = 0; s <= SliceId::ALL; s++)
     {
       SliceId slice = static_cast<SliceId> (s);
       SliceStats &stats = m_slices [s];
 
-      uint16_t linkIdx = 0;
       for (auto const &lInfo : LinkInfo::GetList ())
         {
-          // Update byte counters for absolute throughout in last interval.
-          uint64_t fwdBytes = lInfo->GetTxBytes (LinkInfo::FWD, slice);
-          uint64_t bwdBytes = lInfo->GetTxBytes (LinkInfo::BWD, slice);
-          // Disabling absolute throughput stats.
-          // double fwdKbits = static_cast<double> (
-          //     fwdBytes - stats.fwdBytes [linkIdx]) * 8 / 1000;
-          // double bwdKbits = static_cast<double> (
-          //     bwdBytes - stats.bwdBytes [linkIdx]) * 8 / 1000;
-          stats.fwdBytes [linkIdx] = fwdBytes;
-          stats.bwdBytes [linkIdx] = bwdBytes;
-          linkIdx++;
-
           *stats.linWrapper->GetStream ()
             << " " << setw (8) << Simulator::Now ().GetSeconds ();
           lInfo->PrintSliceValues (*stats.linWrapper->GetStream (), slice);
-          *stats.linWrapper->GetStream ()
-          // Disabling absolute throughput stats.
-          // << " " << setw (14) << fwdKbits / elapSecs
-          // << " " << setw (14) << bwdKbits / elapSecs
-            << std::endl;
+          *stats.linWrapper->GetStream () << std::endl;
         }
       *stats.linWrapper->GetStream () << std::endl;
     }
 
-  m_lastUpdate = Simulator::Now ();
   Simulator::Schedule (nextDump, &BackhaulStatsCalculator::DumpStatistics,
                        this, nextDump);
 }

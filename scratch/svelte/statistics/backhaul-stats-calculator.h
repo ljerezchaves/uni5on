@@ -56,9 +56,6 @@ private:
   /** Metadata associated to a network slice. */
   struct SliceStats
   {
-    uint64_t                  *fwdBytes;    //!< FWD TX bytes per connetion.
-    uint64_t                  *bwdBytes;    //!< BWD TX bytes per connetion.
-
     Ptr<OutputStreamWrapper>  linWrapper;   //!< LinStats file wrapper.
   };
 
@@ -71,9 +68,6 @@ private:
   /** Metadata for each network slice. */
   SliceStats                m_slices [N_SLICES_ALL];
   std::string               m_linFilename;  //!< LinStats filename.
-
-  uint16_t                  m_numLinks;     //!< Number of links in backahul.
-  Time                      m_lastUpdate;   //!< Last update time.
 };
 
 } // namespace ns3
