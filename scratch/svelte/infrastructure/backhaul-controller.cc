@@ -138,25 +138,6 @@ BackhaulController::GetPriorityQueuesMode (void) const
   return m_priorityQueues;
 }
 
-double
-BackhaulController::GetSliceUsage (SliceId slice) const
-{
-  NS_LOG_FUNCTION (this << slice);
-
-  double sliceUsage = 0;
-  uint16_t count = 0;
-  for (auto const &lInfo : LinkInfo::GetList ())
-    {
-      // We always have full-fuplex links in SVELTE backhaul.
-      sliceUsage += lInfo->GetThpSliceRatio (LinkInfo::FWD, slice);
-      sliceUsage += lInfo->GetThpSliceRatio (LinkInfo::BWD, slice);
-      count += 2;
-    }
-
-  NS_ASSERT_MSG (count, "Invalid slice usage for empty topology.");
-  return sliceUsage / static_cast<double> (count);
-}
-
 void
 BackhaulController::DoDispose ()
 {

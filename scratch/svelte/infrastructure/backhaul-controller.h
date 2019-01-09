@@ -90,13 +90,6 @@ public:
   OpMode GetPriorityQueuesMode  (void) const;
   //\}
 
-  /**
-   * Get the average slice usage considering all links in the backhaul network.
-   * \param slice The network slice.
-   * \return The average slice usage.
-   */
-  double GetSliceUsage (SliceId slice) const;
-
 protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
