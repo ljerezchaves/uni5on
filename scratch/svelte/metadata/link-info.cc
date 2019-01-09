@@ -293,10 +293,14 @@ LinkInfo::PrintSliceValues (std::ostream &os, SliceId slice) const
      << " " << setw (12) << Bps2Kbps (GetResBitRate (LinkInfo::BWD, slice))
      << " " << setw (12) << Bps2Kbps (GetFreeBitRate (LinkInfo::FWD, slice))
      << " " << setw (12) << Bps2Kbps (GetFreeBitRate (LinkInfo::BWD, slice))
-     << " " << setw (14) << Bps2Kbps (GetThpBitRate (LinkInfo::FWD, slice))
-     << " " << setw (8)  << GetThpSliceRatio (LinkInfo::FWD, slice) * 100
-     << " " << setw (14) << Bps2Kbps (GetThpBitRate (LinkInfo::BWD, slice))
-     << " " << setw (8)  << GetThpSliceRatio (LinkInfo::BWD, slice) * 100;
+     << " " << setw (14) << Bps2Kbps (GetThpBitRate (LinkInfo::FWD, slice, QosType::GBR))
+     << " " << setw (11) << GetThpSliceRatio (LinkInfo::FWD, slice, QosType::GBR) * 100
+     << " " << setw (14) << Bps2Kbps (GetThpBitRate (LinkInfo::FWD, slice, QosType::NON))
+     << " " << setw (11) << GetThpSliceRatio (LinkInfo::FWD, slice, QosType::NON) * 100
+     << " " << setw (14) << Bps2Kbps (GetThpBitRate (LinkInfo::BWD, slice, QosType::GBR))
+     << " " << setw (11) << GetThpSliceRatio (LinkInfo::BWD, slice, QosType::GBR) * 100
+     << " " << setw (14) << Bps2Kbps (GetThpBitRate (LinkInfo::BWD, slice, QosType::NON))
+     << " " << setw (11) << GetThpSliceRatio (LinkInfo::BWD, slice, QosType::NON) * 100;
   return os;
 }
 
@@ -349,10 +353,14 @@ LinkInfo::PrintHeader (std::ostream &os)
      << " " << setw (12) << "ResBwKbps"
      << " " << setw (12) << "FreFwKbps"
      << " " << setw (12) << "FreBwKbps"
-     << " " << setw (14) << "EmaThpFwKbps"
-     << " " << setw (8)  << "ThpFwUse"
-     << " " << setw (14) << "EmaThpBwKbps"
-     << " " << setw (8)  << "ThpBwUse";
+     << " " << setw (14) << "ThpGbrFwKbps"
+     << " " << setw (11) << "ThpGbrFwUse"
+     << " " << setw (14) << "ThpNonFwKbps"
+     << " " << setw (11) << "ThpNonFwUse"
+     << " " << setw (14) << "ThpGbrBwKbps"
+     << " " << setw (11) << "ThpGbrBwUse"
+     << " " << setw (14) << "ThpNonBwKbps"
+     << " " << setw (11) << "ThpNonBwUse";
   return os;
 }
 
