@@ -582,7 +582,6 @@ LinkInfo::UpdateEwmaThp (void)
 {
   const uint16_t now = 0, old = 1;
   double elapSecs = (Simulator::Now () - m_ewmaLastTime).GetSeconds ();
-  uint64_t bytes = 0;
   for (int s = 0; s <= SliceId::ALL; s++)
     {
       for (int d = 0; d <= LinkInfo::BWD; d++)
@@ -590,7 +589,7 @@ LinkInfo::UpdateEwmaThp (void)
           SliceStats &stats = m_slices [s][d];
           for (int t = 0; t <= QosType::BOTH; t++)
             {
-              bytes = stats.txBytes [t][now] - stats.txBytes [t][old];
+              uint64_t bytes = stats.txBytes [t][now] - stats.txBytes [t][old];
               stats.txBytes [t][old] = stats.txBytes [t][now];
               stats.ewmaThp [t] = (m_ewmaAlpha * 8 * bytes) / elapSecs +
                 (1 - m_ewmaAlpha) * stats.ewmaThp [t];

@@ -298,9 +298,11 @@ private:
   {
     uint16_t quota;                     //!< Slice quota.
     uint64_t resRate;                   //!< Reserved bit rate.
-    uint64_t ewmaThp [N_TYPES_ALL];     //!< EWMA throughput bit rate.
-    uint64_t txBytes [N_TYPES_ALL][2];  //!< TX bytes counters.
     int64_t  meterDiff;                 //!< Current meter bit rate diff.
+
+    // Throughput measurement.
+    uint64_t ewmaThp [N_TYPES_ALL];     //!< EWMA throughput bit rate.
+    uint64_t txBytes [N_TYPES_ALL][2];  //!< TX bytes counters [curr and old].
   };
 
   /**
@@ -369,11 +371,12 @@ private:
   /** Default meter bit rate adjusted trace source. */
   TracedCallback<Ptr<const LinkInfo>, Direction, SliceId> m_meterAdjustedTrace;
 
-  /** Metadata for each network slice. */
-  SliceStats            m_slices [N_SLICES_ALL][2];
+  DataRate              m_adjustmentStep;       //!< Meter adjustment step.
   Ptr<CsmaChannel>      m_channel;              //!< The CSMA link channel.
   Ptr<OFSwitch13Port>   m_ports [2];            //!< OpenFlow ports.
-  DataRate              m_adjustmentStep;       //!< Meter adjustment step.
+
+  /** Metadata for each network slice. */
+  SliceStats            m_slices [N_SLICES_ALL][2];
 
   // EWMA throughput calculation.
   double                m_ewmaAlpha;            //!< EWMA alpha parameter.
