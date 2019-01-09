@@ -60,7 +60,7 @@ SliceNetwork::GetTypeId (void)
     // Slice.
     .AddAttribute ("SliceId", "The LTE logical slice identification.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   EnumValue (SliceId::NONE),
+                   EnumValue (SliceId::UNKN),
                    MakeEnumAccessor (&SliceNetwork::m_sliceId),
                    MakeEnumChecker (SliceId::HTC, "htc",
                                     SliceId::MTC, "mtc",
@@ -306,7 +306,7 @@ SliceNetwork::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
-  NS_ABORT_MSG_IF (m_sliceId == SliceId::NONE, "Undefined slice ID.");
+  NS_ABORT_MSG_IF (m_sliceId == SliceId::UNKN, "Unknown slice ID.");
   NS_ABORT_MSG_IF (!m_controllerApp, "No slice controller application.");
   NS_ABORT_MSG_IF (!m_backhaul, "No backhaul network.");
   NS_ABORT_MSG_IF (!m_radio, "No LTE RAN network.");

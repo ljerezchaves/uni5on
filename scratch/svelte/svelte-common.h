@@ -106,7 +106,7 @@ typedef enum
   MTC  = 1,  //!< Slice for MTC UEs.
   TMP  = 2,  //!< Slice for TMP UEs.
   ALL  = 3,  //!< ALL previous slices.
-  NONE = 15  //!< Undefined slice.
+  UNKN = 15  //!< Unknown slice.
 } SliceId;
 
 // Total number of slices + 1 for aggregated metadata.

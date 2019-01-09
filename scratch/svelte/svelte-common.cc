@@ -81,8 +81,8 @@ SliceIdStr (SliceId slice)
       return "tmp";
     case SliceId::ALL:
       return "all";
-    case SliceId::NONE:
-      return "none";
+    case SliceId::UNKN:
+      return "unknown";
     default:
       NS_LOG_ERROR ("Invalid slice ID.");
       return "";

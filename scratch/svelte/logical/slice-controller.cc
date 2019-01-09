@@ -59,7 +59,7 @@ SliceController::GetTypeId (void)
     // Slice.
     .AddAttribute ("SliceId", "The LTE logical slice identification.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   EnumValue (SliceId::NONE),
+                   EnumValue (SliceId::UNKN),
                    MakeEnumAccessor (&SliceController::m_sliceId),
                    MakeEnumChecker (SliceId::HTC, "htc",
                                     SliceId::MTC, "mtc",
@@ -478,7 +478,7 @@ SliceController::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
-  NS_ABORT_MSG_IF (m_sliceId == SliceId::NONE, "Undefined slice ID.");
+  NS_ABORT_MSG_IF (m_sliceId == SliceId::UNKN, "Unknown slice ID.");
   NS_ABORT_MSG_IF (!m_backhaulCtrl, "No backhaul controller application.");
   NS_ABORT_MSG_IF (!m_mme, "No SVELTE MME.");
 
