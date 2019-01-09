@@ -176,7 +176,7 @@ LinkInfo::GetFreeBitRate (Direction dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
-  return GetQuoBitRate (dir, slice) - GetResBitRate (dir, slice);
+  return GetQuotaBitRate (dir, slice) - GetResBitRate (dir, slice);
 }
 
 uint64_t
@@ -188,7 +188,7 @@ LinkInfo::GetLinkBitRate (void) const
 }
 
 uint64_t
-LinkInfo::GetQuoBitRate (Direction dir, SliceId slice) const
+LinkInfo::GetQuotaBitRate (Direction dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
@@ -232,7 +232,7 @@ LinkInfo::GetThpSliceRatio (Direction dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
-  if (GetQuoBitRate (dir, slice) == 0)
+  if (GetQuotaBitRate (dir, slice) == 0)
     {
       NS_ASSERT_MSG (GetThpBitRate (dir, slice) == 0, "Invalid slice usage.");
       return 0.0;
@@ -240,7 +240,7 @@ LinkInfo::GetThpSliceRatio (Direction dir, SliceId slice) const
   else
     {
       return static_cast<double> (GetThpBitRate (dir, slice))
-             / GetQuoBitRate (dir, slice);
+             / GetQuotaBitRate (dir, slice);
     }
 }
 
@@ -285,9 +285,9 @@ LinkInfo::PrintSliceValues (std::ostream &os, SliceId slice) const
   os << " " << setw (9)  << linkDescStr
      << " " << setw (12) << Bps2Kbps (GetLinkBitRate ())
      << " " << setw (8)  << GetQuota (LinkInfo::FWD, slice)
-     << " " << setw (12) << Bps2Kbps (GetQuoBitRate (LinkInfo::FWD, slice))
+     << " " << setw (12) << Bps2Kbps (GetQuotaBitRate (LinkInfo::FWD, slice))
      << " " << setw (8)  << GetQuota (LinkInfo::BWD, slice)
-     << " " << setw (12) << Bps2Kbps (GetQuoBitRate (LinkInfo::BWD, slice))
+     << " " << setw (12) << Bps2Kbps (GetQuotaBitRate (LinkInfo::BWD, slice))
      << " " << setw (12) << Bps2Kbps (GetResBitRate (LinkInfo::FWD, slice))
      << " " << setw (12) << Bps2Kbps (GetResBitRate (LinkInfo::BWD, slice))
      << " " << setw (12) << Bps2Kbps (GetFreeBitRate (LinkInfo::FWD, slice))

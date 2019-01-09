@@ -134,7 +134,7 @@ public:
    * \param slice The network slice.
    * \return The maximum bit rate.
    */
-  uint64_t GetQuoBitRate (
+  uint64_t GetQuotaBitRate (
     Direction dir, SliceId slice = SliceId::ALL) const;
 
   /**
