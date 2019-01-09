@@ -723,9 +723,7 @@ RingController::HasAvailableResources (Ptr<RingInfo> ringInfo)
   // the BlockPolicy attribute:
   // - If OFF : don't block the request.
   // - If ON  : block the request.
-  // - If AUTO (gbr): block only if GBR request.
-  if (GetBlockPolicy () == OpMode::ON
-      || (GetBlockPolicy () == OpMode::AUTO && rInfo->IsGbr ()))
+  if (GetBlockPolicy () == OpMode::ON)
     {
       // S5 interface (from P-GW to S-GW).
       curr = rInfo->GetPgwInfraSwIdx ();

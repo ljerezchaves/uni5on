@@ -96,9 +96,8 @@ SliceController::GetTypeId (void)
                    "P-GW overloaded block policy.",
                    EnumValue (OpMode::ON),
                    MakeEnumAccessor (&SliceController::m_pgwBlockPolicy),
-                   MakeEnumChecker (OpMode::OFF,  "off",
-                                    OpMode::ON,   "on",
-                                    OpMode::AUTO, "gbr"))
+                   MakeEnumChecker (OpMode::OFF, "off",
+                                    OpMode::ON,  "on"))
     .AddAttribute ("PgwBlockThs",
                    "The P-GW block threshold.",
                    DoubleValue (0.9),
@@ -133,9 +132,8 @@ SliceController::GetTypeId (void)
                    "S-GW overloaded block policy.",
                    EnumValue (OpMode::ON),
                    MakeEnumAccessor (&SliceController::m_sgwBlockPolicy),
-                   MakeEnumChecker (OpMode::OFF,  "off",
-                                    OpMode::ON,   "on",
-                                    OpMode::AUTO, "gbr"))
+                   MakeEnumChecker (OpMode::OFF, "off",
+                                    OpMode::ON,  "on"))
     .AddAttribute ("SgwBlockThs",
                    "The S-GW block threshold.",
                    DoubleValue (0.9),
@@ -941,9 +939,7 @@ SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo)
   // the block threshold, respecting the PgwBlockPolicy attribute:
   // - If OFF : don't block the request.
   // - If ON  : block the request.
-  // - If AUTO (gbr): block only if GBR request.
-  if (m_pgwBlockPolicy == OpMode::ON
-      || (m_pgwBlockPolicy == OpMode::AUTO && rInfo->IsGbr ()))
+  if (m_pgwBlockPolicy == OpMode::ON)
     {
       double cpuUse = m_pgwInfo->GetEwmaCpuUse (rInfo->GetPgwTftIdx ());
       if (cpuUse >= m_pgwBlockThs)
@@ -1111,9 +1107,7 @@ SliceController::SgwBearerRequest (Ptr<RoutingInfo> rInfo)
   // the block threshold, respecting the SgwBlockPolicy attribute:
   // - If OFF : don't block the request.
   // - If ON  : block the request.
-  // - If AUTO (gbr): block only if GBR request.
-  if (m_sgwBlockPolicy == OpMode::ON
-      || (m_sgwBlockPolicy == OpMode::AUTO && rInfo->IsGbr ()))
+  if (m_sgwBlockPolicy == OpMode::ON)
     {
       double cpuUse = sgwInfo->GetEwmaCpuUse ();
       if (cpuUse >= m_sgwBlockThs)
