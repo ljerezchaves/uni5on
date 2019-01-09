@@ -84,10 +84,10 @@ public:
    * \return The requested information.
    */
   //\{
-  OpMode GetBlockPolicy         (void) const;
-  double GetBlockThreshold      (void) const;
-  OpMode GetLinkSlicingMode     (void) const;
-  OpMode GetPriorityQueuesMode  (void) const;
+  OpMode    GetBlockPolicy        (void) const;
+  double    GetBlockThreshold     (void) const;
+  SliceMode GetInterSliceMode     (void) const;
+  OpMode    GetPriorityQueuesMode (void) const;
   //\}
 
 protected:
@@ -256,7 +256,7 @@ private:
   OpMode                m_blockPolicy;    //!< Switch overload block policy.
   double                m_blockThs;       //!< Switch block threshold.
   OpMode                m_priorityQueues; //!< DSCP priority queues mechanism.
-  OpMode                m_slicing;        //!< Network slicing mechanism.
+  SliceMode             m_slicing;        //!< Network inter-slicing mechanism.
 
   /** Map saving Slice ID / Slice controller application. */
   typedef std::map<SliceId, Ptr<SliceController> > SliceIdCtrlAppMap_t;

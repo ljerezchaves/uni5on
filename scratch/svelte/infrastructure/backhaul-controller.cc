@@ -69,6 +69,15 @@ BackhaulController::GetTypeId (void)
                    DoubleValue (0.9),
                    MakeDoubleAccessor (&BackhaulController::m_blockThs),
                    MakeDoubleChecker<double> (0.8, 1.0))
+    .AddAttribute ("InterSliceMode",
+                   "Inter-slice operation mode.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   EnumValue (SliceMode::NONE),
+                   MakeEnumAccessor (&BackhaulController::m_slicing),
+                   MakeEnumChecker (SliceMode::NONE, "none",
+                                    SliceMode::SHAR, "shared",
+                                    SliceMode::STAT, "static",
+                                    SliceMode::DYNA, "dynamic"))
     .AddAttribute ("PriorityQueues",
                    "Priority output queues mechanism operation mode.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -76,14 +85,6 @@ BackhaulController::GetTypeId (void)
                    MakeEnumAccessor (&BackhaulController::m_priorityQueues),
                    MakeEnumChecker (OpMode::OFF, "off",
                                     OpMode::ON,  "on"))
-    .AddAttribute ("LinkSlicing",
-                   "Link slicing mechanism operation mode.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   EnumValue (OpMode::OFF),
-                   MakeEnumAccessor (&BackhaulController::m_slicing),
-                   MakeEnumChecker (OpMode::OFF,  "off",
-                                    OpMode::ON,   "on",
-                                    OpMode::AUTO, "auto"))
   ;
   return tid;
 }
@@ -121,8 +122,8 @@ BackhaulController::GetBlockThreshold (void) const
   return m_blockThs;
 }
 
-OpMode
-BackhaulController::GetLinkSlicingMode (void) const
+SliceMode
+BackhaulController::GetInterSliceMode (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -296,8 +297,8 @@ BackhaulController::NotifySlicesBuilt (ApplicationContainer &controllers)
   // ---------------------------------------------------------------------
   // Meter table
   //
-  // Install slice meters only if the link slicing mechanism is enabled.
-  if (GetLinkSlicingMode () != OpMode::OFF)
+  // Install slice meters only if the slicing mechanism is enabled.
+  if (GetInterSliceMode () != SliceMode::NONE)
     {
       for (auto const &lInfo : LinkInfo::GetList ())
         {
@@ -557,16 +558,17 @@ BackhaulController::SlicingMeterAdjusted (
 {
   NS_LOG_FUNCTION (this << lInfo << dir << slice);
 
-  NS_ASSERT_MSG (GetLinkSlicingMode () != OpMode::OFF, "Not supposed to "
-                 "adjust slicing meters when network slicing mode is OFF.");
+  NS_ASSERT_MSG (GetInterSliceMode () != SliceMode::NONE, "Not supposed to "
+                 "adjust slicing meters when inter-slice mode is disabled.");
 
-  // Identify the meter ID based on slicing operation mode. When the slicing
-  // operation mode is ON, the traffic of each slice will be independently
-  // monitored by slicing meters, so we ignore the fake shared slice. When the
-  // slicing operation mode is AUTO, the traffic of all slices are monitored
-  // together by the slicing meters, so we ignore individual slices.
-  if ((GetLinkSlicingMode () == OpMode::ON && slice != SliceId::ALL)
-      || (GetLinkSlicingMode () == OpMode::AUTO && slice == SliceId::ALL))
+  // Identify the meter ID based on inter-slice operation mode. When using the
+  // static inter-slicing, the traffic of each slice will be independently
+  // monitored by slicing meters, so we ignore the fake shared slice. When
+  // using the Non-GBR shared inter-slicing, the Non-GBR traffic of all slices
+  // are monitored together by the slicing meters, so we ignore individual
+  // slices.
+  if ((GetInterSliceMode () == SliceMode::STAT && slice != SliceId::ALL)
+      || (GetInterSliceMode () == SliceMode::SHAR && slice == SliceId::ALL))
     {
       uint32_t meterId = GetSvelteMeterId (slice, static_cast<uint32_t> (dir));
       NS_LOG_INFO ("Updating slicing meter ID " << GetUint32Hex (meterId) <<
@@ -595,10 +597,10 @@ BackhaulController::SlicingMeterInstall (Ptr<const LinkInfo> lInfo)
 {
   NS_LOG_FUNCTION (this << lInfo);
 
-  if (GetLinkSlicingMode () == OpMode::ON)
+  if (GetInterSliceMode () == SliceMode::STAT)
     {
-      // When the link slicing is ON, install individual Non-GBR meter entries
-      // for each slice on each port direction (FWD and BWD).
+      // When using the static inter-slicing, install individual Non-GBR
+      // meter entries for each slice on each port direction (FWD and BWD).
       for (int s = 0; s < SliceId::ALL; s++)
         {
           SliceId slice = static_cast<SliceId> (s);
@@ -628,10 +630,10 @@ BackhaulController::SlicingMeterInstall (Ptr<const LinkInfo> lInfo)
             }
         }
     }
-  else if (GetLinkSlicingMode () == OpMode::AUTO)
+  else if (GetInterSliceMode () == SliceMode::SHAR)
     {
-      // When the link slicing is AUTO, install shared Non-GBR meter entries
-      // among all slice on each port direction (FWD and BWD).
+      // When using the Non-GBR shared inter-slicing, install shared Non-GBR
+      // meter entries among all slice on each port direction (FWD and BWD).
       SliceId slice = SliceId::ALL;
       for (int d = 0; d <= LinkInfo::BWD; d++)
         {

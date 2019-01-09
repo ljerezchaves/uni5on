@@ -619,10 +619,10 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // We are using the IP DSCP field to identify Non-GBR traffic.
   // Apply Non-GBR meter band.
   // Send the packet to the output table.
-  if (GetLinkSlicingMode () == OpMode::ON)
+  if (GetInterSliceMode () == SliceMode::STAT)
     {
-      // When the link slicing is ON, apply individual Non-GBR meter rules
-      // for each slice on each port direction (FWD and BWD).
+      // When using the static inter-slicing, apply individual Non-GBR meter
+      // entries for each slice on each port direction (FWD and BWD).
       for (int s = 0; s < SliceId::ALL; s++)
         {
           SliceId slice = static_cast<SliceId> (s);
@@ -656,10 +656,10 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
             }
         }
     }
-  else if (GetLinkSlicingMode () == OpMode::AUTO)
+  else if (GetInterSliceMode () == SliceMode::SHAR)
     {
-      // When the link slicing is AUTO, apply shared Non-GBR meter entries
-      // for all slices on each port direction (FWD and BWD).
+      // When using the Non-GBR shared inter-slicing, apply shared Non-GBR
+      // meter entries for all slice on each port direction (FWD and BWD).
       SliceId slice = SliceId::ALL;
       for (int d = 0; d <= LinkInfo::BWD; d++)
         {

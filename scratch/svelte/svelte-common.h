@@ -114,6 +114,18 @@ typedef enum
 
 /**
  * \ingroup svelte
+ * Enumeration of available inter-slicing operation modes.
+ */
+typedef enum
+{
+  NONE = 0,   //!< No inter-slicing.
+  SHAR = 1,   //!< Partial Non-GBR shared inter-slicing.
+  STAT = 2,   //!< Full static inter-slicing.
+  DYNA = 3    //!< Full dinaymic inter-slicing.
+} SliceMode;
+
+/**
+ * \ingroup svelte
  * Enumeration of available LTE QoS traffic types.
  */
 typedef enum
