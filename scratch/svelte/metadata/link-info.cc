@@ -228,19 +228,18 @@ LinkInfo::GetThpBitRate (Direction dir, SliceId slice, QosType type) const
 }
 
 double
-LinkInfo::GetThpSliceRatio (Direction dir, SliceId slice, QosType type) const
+LinkInfo::GetThpSliceRatio (Direction dir, SliceId slice) const
 {
-  NS_LOG_FUNCTION (this << dir << slice << type);
+  NS_LOG_FUNCTION (this << dir << slice);
 
   if (GetQuotaBitRate (dir, slice) == 0)
     {
-      NS_ASSERT_MSG (GetThpBitRate (dir, slice, type) == 0,
-                     "Invalid slice usage.");
+      NS_ASSERT_MSG (GetThpBitRate (dir, slice) == 0, "Invalid slice usage.");
       return 0.0;
     }
   else
     {
-      return static_cast<double> (GetThpBitRate (dir, slice, type))
+      return static_cast<double> (GetThpBitRate (dir, slice))
              / GetQuotaBitRate (dir, slice);
     }
 }

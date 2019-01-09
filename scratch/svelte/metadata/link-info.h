@@ -179,15 +179,13 @@ public:
 
   /**
    * Get the EWMA throughput ratio for this link on the given direction,
-   * optionally filtered by the network slice and QoS traffic type.
+   * optionally filtered by the network slice.
    * \param dir The link direction.
    * \param slice The network slice.
-   * \param type Traffic QoS type.
    * \return The bandwidth usage ratio.
    */
   double GetThpSliceRatio (
-    Direction dir, SliceId slice = SliceId::ALL,
-    QosType type = QosType::BOTH) const;
+    Direction dir, SliceId slice = SliceId::ALL) const;
 
   /**
    * Get the total number of transmitted bytes over this link on the given
