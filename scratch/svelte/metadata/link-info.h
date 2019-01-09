@@ -120,16 +120,6 @@ public:
     Direction dir, SliceId slice = SliceId::ALL) const;
 
   /**
-   * Get the available bit rate ratio for traffic over this link on the given
-   * direction, optionally filtered by the network slice.
-   * \param dir The link direction.
-   * \param slice The network slice.
-   * \return The available slice ratio.
-   */
-  double GetFreeSliceRatio (
-    Direction dir, SliceId slice = SliceId::ALL) const;
-
-  /**
    * Inspect physical channel for the assigned bit rate, which is the same for
    * both directions in full-duplex links.
    * \return The channel maximum nominal bit rate (bps).
@@ -155,16 +145,6 @@ public:
    * \return The reserved bit rate.
    */
   uint64_t GetResBitRate (
-    Direction dir, SliceId slice = SliceId::ALL) const;
-
-  /**
-   * Get the reserved bit rate ratio for traffic over this link on the given
-   * direction, optionally filtered by the network slice.
-   * \param dir The link direction.
-   * \param slice The network slice.
-   * \return The reserved slice ratio.
-   */
-  double GetResSliceRatio (
     Direction dir, SliceId slice = SliceId::ALL) const;
 
   /**
