@@ -286,21 +286,29 @@ LinkInfo::PrintSliceValues (std::ostream &os, SliceId slice) const
   os << " " << setw (9)  << linkDescStr
      << " " << setw (12) << Bps2Kbps (GetLinkBitRate ())
      << " " << setw (8)  << GetQuota (LinkInfo::FWD, slice)
-     << " " << setw (12) << Bps2Kbps (GetQuotaBitRate (LinkInfo::FWD, slice))
      << " " << setw (8)  << GetQuota (LinkInfo::BWD, slice)
+     << " " << setw (12) << Bps2Kbps (GetQuotaBitRate (LinkInfo::FWD, slice))
      << " " << setw (12) << Bps2Kbps (GetQuotaBitRate (LinkInfo::BWD, slice))
-     << " " << setw (12) << Bps2Kbps (GetResBitRate (LinkInfo::FWD, slice))
-     << " " << setw (12) << Bps2Kbps (GetResBitRate (LinkInfo::BWD, slice))
-     << " " << setw (12) << Bps2Kbps (GetFreeBitRate (LinkInfo::FWD, slice))
-     << " " << setw (12) << Bps2Kbps (GetFreeBitRate (LinkInfo::BWD, slice))
-     << " " << setw (14) << Bps2Kbps (GetThpBitRate (LinkInfo::FWD, slice, QosType::GBR))
-     << " " << setw (11) << GetThpSliceRatio (LinkInfo::FWD, slice, QosType::GBR) * 100
-     << " " << setw (14) << Bps2Kbps (GetThpBitRate (LinkInfo::FWD, slice, QosType::NON))
-     << " " << setw (11) << GetThpSliceRatio (LinkInfo::FWD, slice, QosType::NON) * 100
-     << " " << setw (14) << Bps2Kbps (GetThpBitRate (LinkInfo::BWD, slice, QosType::GBR))
-     << " " << setw (11) << GetThpSliceRatio (LinkInfo::BWD, slice, QosType::GBR) * 100
-     << " " << setw (14) << Bps2Kbps (GetThpBitRate (LinkInfo::BWD, slice, QosType::NON))
-     << " " << setw (11) << GetThpSliceRatio (LinkInfo::BWD, slice, QosType::NON) * 100;
+     << " " << setw (12) << Bps2Kbps (GetResBitRate   (LinkInfo::FWD, slice))
+     << " " << setw (12) << Bps2Kbps (GetResBitRate   (LinkInfo::BWD, slice))
+     << " " << setw (12) << Bps2Kbps (GetFreeBitRate  (LinkInfo::FWD, slice))
+     << " " << setw (12) << Bps2Kbps (GetFreeBitRate  (LinkInfo::BWD, slice))
+     << " " << setw (14)
+     << Bps2Kbps (GetThpBitRate (LinkInfo::FWD, slice, QosType::GBR))
+     << " " << setw (11)
+     << GetThpSliceRatio (LinkInfo::FWD, slice, QosType::GBR) * 100
+     << " " << setw (14)
+     << Bps2Kbps (GetThpBitRate (LinkInfo::FWD, slice, QosType::NON))
+     << " " << setw (11)
+     << GetThpSliceRatio (LinkInfo::FWD, slice, QosType::NON) * 100
+     << " " << setw (14)
+     << Bps2Kbps (GetThpBitRate (LinkInfo::BWD, slice, QosType::GBR))
+     << " " << setw (11)
+     << GetThpSliceRatio (LinkInfo::BWD, slice, QosType::GBR) * 100
+     << " " << setw (14)
+     << Bps2Kbps (GetThpBitRate (LinkInfo::BWD, slice, QosType::NON))
+     << " " << setw (11)
+     << GetThpSliceRatio (LinkInfo::BWD, slice, QosType::NON) * 100;
   return os;
 }
 
@@ -346,8 +354,8 @@ LinkInfo::PrintHeader (std::ostream &os)
   os << " " << setw (9)  << "DpIdFw"
      << " " << setw (12) << "LinkKbps"
      << " " << setw (8)  << "QuoFw"
-     << " " << setw (12) << "QuoFwKbps"
      << " " << setw (8)  << "QuoBw"
+     << " " << setw (12) << "QuoFwKbps"
      << " " << setw (12) << "QuoBwKbps"
      << " " << setw (12) << "ResFwKbps"
      << " " << setw (12) << "ResBwKbps"
