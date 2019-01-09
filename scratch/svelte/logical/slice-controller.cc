@@ -96,8 +96,8 @@ SliceController::GetTypeId (void)
                    "P-GW overloaded block policy.",
                    EnumValue (OpMode::ON),
                    MakeEnumAccessor (&SliceController::m_pgwBlockPolicy),
-                   MakeEnumChecker (OpMode::OFF,  "none",
-                                    OpMode::ON,   "all",
+                   MakeEnumChecker (OpMode::OFF,  "off",
+                                    OpMode::ON,   "on",
                                     OpMode::AUTO, "gbr"))
     .AddAttribute ("PgwBlockThs",
                    "The P-GW block threshold.",
@@ -133,8 +133,8 @@ SliceController::GetTypeId (void)
                    "S-GW overloaded block policy.",
                    EnumValue (OpMode::ON),
                    MakeEnumAccessor (&SliceController::m_sgwBlockPolicy),
-                   MakeEnumChecker (OpMode::OFF,  "none",
-                                    OpMode::ON,   "all",
+                   MakeEnumChecker (OpMode::OFF,  "off",
+                                    OpMode::ON,   "on",
                                     OpMode::AUTO, "gbr"))
     .AddAttribute ("SgwBlockThs",
                    "The S-GW block threshold.",
@@ -939,8 +939,8 @@ SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo)
   // Second check: OpenFlow switch CPU load.
   // Block the bearer if the P-GW TFT switch CPU load is exceeding
   // the block threshold, respecting the PgwBlockPolicy attribute:
-  // - If OFF (none): don't block the request.
-  // - If ON (all)  : block the request.
+  // - If OFF : don't block the request.
+  // - If ON  : block the request.
   // - If AUTO (gbr): block only if GBR request.
   if (m_pgwBlockPolicy == OpMode::ON
       || (m_pgwBlockPolicy == OpMode::AUTO && rInfo->IsGbr ()))
@@ -1109,8 +1109,8 @@ SliceController::SgwBearerRequest (Ptr<RoutingInfo> rInfo)
   // Second check: OpenFlow switch CPU load.
   // Block the bearer if the S-GW switch CPU load is exceeding
   // the block threshold, respecting the SgwBlockPolicy attribute:
-  // - If OFF (none): don't block the request.
-  // - If ON (all)  : block the request.
+  // - If OFF : don't block the request.
+  // - If ON  : block the request.
   // - If AUTO (gbr): block only if GBR request.
   if (m_sgwBlockPolicy == OpMode::ON
       || (m_sgwBlockPolicy == OpMode::AUTO && rInfo->IsGbr ()))

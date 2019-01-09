@@ -62,8 +62,8 @@ BackhaulController::GetTypeId (void)
                    "Switch overloaded block policy.",
                    EnumValue (OpMode::ON),
                    MakeEnumAccessor (&BackhaulController::m_blockPolicy),
-                   MakeEnumChecker (OpMode::OFF,  "none",
-                                    OpMode::ON,   "all",
+                   MakeEnumChecker (OpMode::OFF,  "off",
+                                    OpMode::ON,   "on",
                                     OpMode::AUTO, "gbr"))
     .AddAttribute ("BlockThs",
                    "Switch overloaded block threshold.",

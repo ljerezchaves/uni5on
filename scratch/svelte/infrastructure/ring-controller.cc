@@ -721,8 +721,8 @@ RingController::HasAvailableResources (Ptr<RingInfo> ringInfo)
   // Block the bearer if the processing load is exceeding the block threshold
   // at any backhaul switch over the routing path for this bearer, respecting
   // the BlockPolicy attribute:
-  // - If OFF (none): don't block the request.
-  // - If ON (all)  : block the request.
+  // - If OFF : don't block the request.
+  // - If ON  : block the request.
   // - If AUTO (gbr): block only if GBR request.
   if (GetBlockPolicy () == OpMode::ON
       || (GetBlockPolicy () == OpMode::AUTO && rInfo->IsGbr ()))
