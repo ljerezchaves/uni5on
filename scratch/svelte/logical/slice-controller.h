@@ -106,7 +106,7 @@ public:
   //\{
   OpMode    GetPgwBlockPolicy         (void) const;
   double    GetPgwBlockThs            (void) const;
-  OpMode    GetPgwTftAdaptiveMode     (void) const;
+  OpMode    GetPgwTftLoadBal          (void) const;
   double    GetPgwTftJoinThs          (void) const;
   double    GetPgwTftSplitThs         (void) const;
   //\}
@@ -160,9 +160,9 @@ public:
                              Ipv4Address webAddr, Ipv4Mask webMask);
 
   /**
-   * TracedCallback signature for the P-GW adaptive mechanism trace source.
+   * TracedCallback signature for the P-GW TFT load balancing trace source.
    * \param pgwInfo The P-GW metadata.
-   * \param nextLevel The mechanism level for next cycle.
+   * \param nextLevel The load balacing level for next cycle.
    * \param bearersMoved The number of bearers moved.
    */
   typedef void (*PgwTftStatsTracedCallback)(
@@ -237,7 +237,7 @@ private:
    * \param rInfo The routing information to process.
    * \param activeTfts The number of active P-GW TFT switches. When set to 0,
    *        the number of P-GW TFTs will be calculated considering the current
-   *        adaptive mechanism level.
+   *        load balancing level.
    * \return The P-GW TFT index.
    */
   uint16_t GetTftIdx (Ptr<const RoutingInfo> rInfo,
@@ -245,9 +245,9 @@ private:
 
   /**
    * Periodically check for the P-GW TFT processing load and flow table usage
-   * to update the adaptive mechanism.
+   * to update the load balacing level.
    */
-  void PgwAdaptiveMechanism (void);
+  void PgwTftLoadBalancing (void);
 
   /**
    * Check for available resources on P-GW TFT switch for this bearer request.
@@ -330,8 +330,8 @@ private:
   /** The context modified trace source, fired at DoModifyBearerRequest. */
   TracedCallback<uint64_t, BearerModifiedList_t> m_sessionModifiedTrace;
 
-  /** The P-GW TFT adaptive trace source, fired at PgwAdaptiveMechanism. */
-  TracedCallback<Ptr<const PgwInfo>, uint32_t, uint32_t> m_pgwTftAdaptiveTrace;
+  /** The P-GW TFT load balacing trace source, fired at PgwTftLoadBalancing. */
+  TracedCallback<Ptr<const PgwInfo>, uint32_t, uint32_t> m_pgwTftLoadBalTrace;
 
   // Slice identification.
   SliceId                 m_sliceId;        //!< Logical slice ID.
@@ -353,14 +353,14 @@ private:
   Ipv4Address             m_webAddr;        //!< Web network address.
   Ipv4Mask                m_webMask;        //!< Web network mask.
 
-  // P-GW metadata and TFT adaptive mechanism.
+  // P-GW metadata and TFT load balancing mechanism.
   Ptr<PgwInfo>            m_pgwInfo;        //!< P-GW metadata for this slice.
   OpMode                  m_pgwBlockPolicy; //!< P-GW overload block policy.
   double                  m_pgwBlockThs;    //!< P-GW block threshold.
-  OpMode                  m_tftAdaptive;    //!< P-GW TFT adaptive mechanism.
+  OpMode                  m_tftLoadBal;     //!< P-GW TFT load balancing.
   double                  m_tftJoinThs;     //!< P-GW TFT join threshold.
   double                  m_tftSplitThs;    //!< P-GW TFT split threshold.
-  Time                    m_tftTimeout;     //!< P-GW adaptive timeout.
+  Time                    m_tftTimeout;     //!< P-GW TFT load bal timeout.
 
   // S-GW metadata.
   Ptr<SgwInfo>            m_sgwInfo;        //!< S-GW metadata for this slice.

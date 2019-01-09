@@ -37,7 +37,7 @@ PgwTftStatsCalculator::PgwTftStatsCalculator ()
 
   // Connect this stats calculator to required trace sources.
   Config::Connect (
-    "/NodeList/*/ApplicationList/*/$ns3::SliceController/PgwTftAdaptive",
+    "/NodeList/*/ApplicationList/*/$ns3::SliceController/PgwTftLoadBal",
     MakeCallback (&PgwTftStatsCalculator::NotifyPgwTftStats, this));
 }
 
@@ -54,7 +54,7 @@ PgwTftStatsCalculator::GetTypeId (void)
     .AddConstructor<PgwTftStatsCalculator> ()
     .AddAttribute ("LbmStatsFilename",
                    "Filename for EPC P-GW TFT statistics.",
-                   StringValue ("pgw-tft-adaptive"),
+                   StringValue ("pgw-tft-loadbal"),
                    MakeStringAccessor (&PgwTftStatsCalculator::m_tftFilename),
                    MakeStringChecker ())
   ;

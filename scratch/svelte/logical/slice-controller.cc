@@ -104,11 +104,11 @@ SliceController::GetTypeId (void)
                    DoubleValue (0.9),
                    MakeDoubleAccessor (&SliceController::m_pgwBlockThs),
                    MakeDoubleChecker<double> (0.8, 1.0))
-    .AddAttribute ("PgwTftAdaptiveMode",
-                   "P-GW TFT adaptive mechanism operation mode.",
+    .AddAttribute ("PgwTftLoadBal",
+                   "P-GW TFT load balancing operation mode.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    EnumValue (OpMode::OFF),
-                   MakeEnumAccessor (&SliceController::m_tftAdaptive),
+                   MakeEnumAccessor (&SliceController::m_tftLoadBal),
                    MakeEnumChecker (OpMode::OFF,  "off",
                                     OpMode::ON,   "on",
                                     OpMode::AUTO, "auto"))
@@ -123,7 +123,7 @@ SliceController::GetTypeId (void)
                    MakeDoubleAccessor (&SliceController::m_tftSplitThs),
                    MakeDoubleChecker<double> (0.5, 1.0))
     .AddAttribute ("PgwTftTimeout",
-                   "The interval between P-GW TFT adaptive operations.",
+                   "The interval between P-GW TFT load balancing operations.",
                    TimeValue (Seconds (5)),
                    MakeTimeAccessor (&SliceController::m_tftTimeout),
                    MakeTimeChecker ())
@@ -158,9 +158,9 @@ SliceController::GetTypeId (void)
                      MakeTraceSourceAccessor (
                        &SliceController::m_sessionModifiedTrace),
                      "ns3::SliceController::SessionModifiedTracedCallback")
-    .AddTraceSource ("PgwTftAdaptive", "The P-GW TFT adaptive trace source.",
+    .AddTraceSource ("PgwTftLoadBal", "P-GW TFT load balancing trace source.",
                      MakeTraceSourceAccessor (
-                       &SliceController::m_pgwTftAdaptiveTrace),
+                       &SliceController::m_pgwTftLoadBalTrace),
                      "ns3::SliceController::PgwTftStatsTracedCallback")
   ;
   return tid;
@@ -178,7 +178,7 @@ SliceController::DedicatedBearerRequest (
   NS_ASSERT_MSG (!rInfo->IsDefault (), "Can't request the default bearer.");
   NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should be inactive.");
 
-  // Update the P-GW TFT index (the adaptive mechanism level may have changed
+  // Update the P-GW TFT index (the load balancing level may have changed
   // since the last time this bearer was active) and the blocked flag.
   rInfo->SetPgwTftIdx (GetTftIdx (rInfo));
   rInfo->SetBlocked (false);
@@ -245,11 +245,11 @@ SliceController::GetPgwBlockThs (void) const
 }
 
 OpMode
-SliceController::GetPgwTftAdaptiveMode (void) const
+SliceController::GetPgwTftLoadBal (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_tftAdaptive;
+  return m_tftLoadBal;
 }
 
 double
@@ -311,9 +311,8 @@ SliceController::NotifyPgwAttach (
                  " already configured with this controller.");
   m_pgwInfo = pgwInfo;
 
-  // Set the number of P-GW TFT active switches and the
-  // adaptive mechanism initial level.
-  switch (GetPgwTftAdaptiveMode ())
+  // Set the P-GW TFT load balancing initial level.
+  switch (GetPgwTftLoadBal ())
     {
     case OpMode::ON:
     case OpMode::AUTO:
@@ -351,8 +350,8 @@ SliceController::NotifyPgwAttach (
   }
   {
     // IP packets coming from the Internet (P-GW SGi port) and addressed to the
-    // UE network are sent to the table corresponding to the current P-GW
-    // adaptive mechanism level. This is the only rule that is updated when the
+    // UE network are sent to the table corresponding to the current P-GW TFT
+    // load balancing level. This is the only rule that is updated when the
     // level changes, sending packets to a different pipeline table.
     std::ostringstream cmd;
     cmd << "flow-mod cmd=add,prio=64"
@@ -367,12 +366,12 @@ SliceController::NotifyPgwAttach (
   }
 
   // -------------------------------------------------------------------------
-  // Table 1..N -- P-GW MAIN adaptive level -- [from higher to lower priority]
+  // Table 1..N -- P-GW MAIN load balancing -- [from higher to lower priority]
   //
   for (uint16_t tftIdx = 1; tftIdx <= pgwInfo->GetMaxTfts (); tftIdx++)
     {
       // Configuring the P-GW main switch to forward traffic to different P-GW
-      // TFT switches considering all possible adaptive mechanism levels.
+      // TFT switches considering all possible load balancing levels.
       for (uint16_t tft = pgwInfo->GetMaxTfts (); tftIdx <= tft; tft /= 2)
         {
           uint16_t lbLevel = static_cast<uint16_t> (log2 (tft));
@@ -491,9 +490,9 @@ SliceController::NotifyConstructionCompleted (void)
   m_s11SapSgw = new MemberEpcS11SapSgw<SliceController> (this);
   m_s11SapMme = m_mme->GetS11SapMme ();
 
-  // Schedule the first adaptive operation.
+  // Schedule the first P-GW TFT load balancing operation.
   Simulator::Schedule (
-    m_tftTimeout, &SliceController::PgwAdaptiveMechanism, this);
+    m_tftTimeout, &SliceController::PgwTftLoadBalancing, this);
 
   OFSwitch13Controller::NotifyConstructionCompleted ();
 }
@@ -819,7 +818,7 @@ SliceController::GetTftIdx (
 }
 
 void
-SliceController::PgwAdaptiveMechanism (void)
+SliceController::PgwTftLoadBalancing (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -832,7 +831,7 @@ SliceController::PgwAdaptiveMechanism (void)
                  "threshold and two times larger than the join threshold.");
 
   uint16_t nextLevel = m_pgwInfo->GetCurLevel ();
-  if (GetPgwTftAdaptiveMode () == OpMode::AUTO)
+  if (GetPgwTftLoadBal () == OpMode::AUTO)
     {
       double maxTabUse = m_pgwInfo->GetTftMaxFlowTableUse ();
       double maxCpuUse = m_pgwInfo->GetTftMaxEwmaCpuUse ();
@@ -841,7 +840,7 @@ SliceController::PgwAdaptiveMechanism (void)
       if ((m_pgwInfo->GetCurLevel () < m_pgwInfo->GetMaxLevel ())
           && (maxTabUse >= m_tftSplitThs || maxCpuUse >= m_tftSplitThs))
         {
-          NS_LOG_INFO ("Increasing the adaptive mechanism level.");
+          NS_LOG_INFO ("Increasing the load balancing level.");
           nextLevel++;
         }
 
@@ -849,12 +848,12 @@ SliceController::PgwAdaptiveMechanism (void)
       else if ((m_pgwInfo->GetCurLevel () > 0)
                && (maxTabUse < m_tftJoinThs) && (maxCpuUse < m_tftJoinThs))
         {
-          NS_LOG_INFO ("Decreasing the adaptive mechanism level.");
+          NS_LOG_INFO ("Decreasing the load balancing level.");
           nextLevel--;
         }
     }
 
-  // Check if we need to update the adaptive mechanism level.
+  // Check if we need to update the load balancing level.
   uint32_t moved = 0;
   if (m_pgwInfo->GetCurLevel () != nextLevel)
     {
@@ -903,15 +902,15 @@ SliceController::PgwAdaptiveMechanism (void)
         this, m_pgwInfo->GetMainDpId (), cmd.str ());
     }
 
-  // Fire the P-GW TFT adaptation trace source.
-  m_pgwTftAdaptiveTrace (m_pgwInfo, nextLevel, moved);
+  // Fire the load balancing trace source.
+  m_pgwTftLoadBalTrace (m_pgwInfo, nextLevel, moved);
 
-  // Update the adaptive mechanism level.
+  // Update the load balancing level.
   m_pgwInfo->SetTftLevel (nextLevel);
 
-  // Schedule the next adaptive operation.
+  // Schedule the next load balancing operation.
   Simulator::Schedule (
-    m_tftTimeout, &SliceController::PgwAdaptiveMechanism, this);
+    m_tftTimeout, &SliceController::PgwTftLoadBalancing, this);
 }
 
 bool
