@@ -109,8 +109,9 @@ BackhaulStatsCalculator::NotifyConstructionCompleted (void)
         << " " << setw (8) << "TimeSec";
       LinkInfo::PrintHeader (*stats.linWrapper->GetStream ());
       *stats.linWrapper->GetStream ()
-        << " " << setw (14) << "AvgThpFwKbps"
-        << " " << setw (14) << "AvgThpBwKbps"
+      // Disabling absolute throughput stats.
+      // << " " << setw (14) << "AvgThpFwKbps"
+      // << " " << setw (14) << "AvgThpBwKbps"
         << std::endl;
     }
 
@@ -127,7 +128,8 @@ BackhaulStatsCalculator::DumpStatistics (Time nextDump)
 {
   NS_LOG_FUNCTION (this);
 
-  double elapSecs = (Simulator::Now () - m_lastUpdate).GetSeconds ();
+  // Disabling absolute throughput stats.
+  // double elapSecs = (Simulator::Now () - m_lastUpdate).GetSeconds ();
 
   // For each network slice, iterate over all links dumping statistics.
   for (int s = 0; s <= SliceId::ALL; s++)
@@ -141,10 +143,11 @@ BackhaulStatsCalculator::DumpStatistics (Time nextDump)
           // Update byte counters for absolute throughout in last interval.
           uint64_t fwdBytes = lInfo->GetTxBytes (LinkInfo::FWD, slice);
           uint64_t bwdBytes = lInfo->GetTxBytes (LinkInfo::BWD, slice);
-          double fwdKbits = static_cast<double> (
-              fwdBytes - stats.fwdBytes [linkIdx]) * 8 / 1000;
-          double bwdKbits = static_cast<double> (
-              bwdBytes - stats.bwdBytes [linkIdx]) * 8 / 1000;
+          // Disabling absolute throughput stats.
+          // double fwdKbits = static_cast<double> (
+          //     fwdBytes - stats.fwdBytes [linkIdx]) * 8 / 1000;
+          // double bwdKbits = static_cast<double> (
+          //     bwdBytes - stats.bwdBytes [linkIdx]) * 8 / 1000;
           stats.fwdBytes [linkIdx] = fwdBytes;
           stats.bwdBytes [linkIdx] = bwdBytes;
           linkIdx++;
@@ -153,8 +156,9 @@ BackhaulStatsCalculator::DumpStatistics (Time nextDump)
             << " " << setw (8) << Simulator::Now ().GetSeconds ();
           lInfo->PrintSliceValues (*stats.linWrapper->GetStream (), slice);
           *stats.linWrapper->GetStream ()
-            << " " << setw (14) << fwdKbits / elapSecs
-            << " " << setw (14) << bwdKbits / elapSecs
+          // Disabling absolute throughput stats.
+          // << " " << setw (14) << fwdKbits / elapSecs
+          // << " " << setw (14) << bwdKbits / elapSecs
             << std::endl;
         }
       *stats.linWrapper->GetStream () << std::endl;
