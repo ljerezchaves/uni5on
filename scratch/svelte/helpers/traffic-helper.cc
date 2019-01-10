@@ -526,8 +526,8 @@ TrafficHelper::InstallApplications ()
             // Open Arena game over dedicated GBR EPS bearer.
             // QCI 3 is typically associated with real-time gaming.
             GbrQosInformation qos;
-            qos.gbrDl = 45000;  // 45 Kbps
-            qos.gbrUl = 12000;  // 12 Kbps
+            qos.gbrDl = 60000;  // 60 Kbps
+            qos.gbrUl = 20000;  // 20 Kbps
             EpsBearer bearer (EpsBearer::GBR_GAMING, qos);
 
             // Bidirectional UDP traffic.
@@ -540,8 +540,8 @@ TrafficHelper::InstallApplications ()
             // Team Fortress game over dedicated GBR EPS bearer.
             // QCI 3 is typically associated with real-time gaming.
             GbrQosInformation qos;
-            qos.gbrDl = 60000;  // 60 Kbps
-            qos.gbrUl = 30000;  // 30 Kbps
+            qos.gbrDl = 75000;  // 75 Kbps
+            qos.gbrUl = 50000;  // 50 Kbps
             EpsBearer bearer (EpsBearer::GBR_GAMING, qos);
 
             // Bidirectional UDP traffic.
@@ -637,8 +637,8 @@ TrafficHelper::InstallApplications ()
             // streaming. This is not the best QCI for this application, but it
             // will work and will priorize this traffic in the network.
             GbrQosInformation qos;
-            qos.gbrDl = 12000;   //  12 Kbps
-            qos.gbrUl = 150000;  // 150 Kbps
+            qos.gbrDl = 15000;   //  15 Kbps
+            qos.gbrUl = 180000;  // 180 Kbps
             EpsBearer bearer (EpsBearer::GBR_CONV_VIDEO, qos);
 
             // Bidirectional UDP traffic.
