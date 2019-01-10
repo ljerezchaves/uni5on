@@ -338,10 +338,9 @@ private:
    * \param dir The link direction.
    * \param slice The network slice.
    * \param bitRate The bit rate.
-   * \param reserve True when reserving the bit rate, false when releasing.
    */
   void UpdateMeterDiff (
-    Direction dir, SliceId slice, uint64_t bitRate, bool reserve);
+    Direction dir, SliceId slice, int64_t bitRate);
 
   /**
    * Register the link information in global map for further usage.

@@ -441,11 +441,11 @@ LinkInfo::ReleaseBitRate (
                 " free bit rate: " << GetFreeBitRate (dir, slice));
 
   // Updating the meter bit rate.
-  UpdateMeterDiff (dir, slice, bitRate, false);
+  UpdateMeterDiff (dir, slice, bitRate);
 
   // Updating statistics for the fake shared slice.
   m_slices [SliceId::ALL][dir].resRate -= bitRate;
-  UpdateMeterDiff (dir, SliceId::ALL, bitRate, false);
+  UpdateMeterDiff (dir, SliceId::ALL, bitRate);
   return true;
 }
 
@@ -476,11 +476,11 @@ LinkInfo::ReserveBitRate (
                 " free bit rate: " << GetFreeBitRate (dir, slice));
 
   // Updating the meter bit rate.
-  UpdateMeterDiff (dir, slice, bitRate, true);
+  UpdateMeterDiff (dir, slice, -((int64_t)bitRate));
 
   // Updating statistics for the fake shared slice.
   m_slices [SliceId::ALL][dir].resRate += bitRate;
-  UpdateMeterDiff (dir, SliceId::ALL, bitRate, true);
+  UpdateMeterDiff (dir, SliceId::ALL, -((int64_t)bitRate));
   return true;
 }
 
@@ -567,19 +567,11 @@ LinkInfo::UpdateEwmaThp (void)
 
 void
 LinkInfo::UpdateMeterDiff (
-  Direction dir, SliceId slice, uint64_t bitRate, bool reserve)
+  Direction dir, SliceId slice, int64_t bitRate)
 {
-  NS_LOG_FUNCTION (this << dir << slice << bitRate << reserve);
+  NS_LOG_FUNCTION (this << dir << slice << bitRate);
 
-  if (reserve)
-    {
-      m_slices [slice][dir].meterDiff -= bitRate;
-    }
-  else // release
-    {
-      m_slices [slice][dir].meterDiff += bitRate;
-    }
-
+  m_slices [slice][dir].meterDiff += bitRate;
   NS_LOG_DEBUG ("Current " << SliceIdStr (slice) <<
                 " diff bit rate: " << m_slices [slice][dir].meterDiff);
 
