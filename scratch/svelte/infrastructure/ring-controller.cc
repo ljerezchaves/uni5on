@@ -619,7 +619,38 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // We are using the IP DSCP field to identify Non-GBR traffic.
   // Apply Non-GBR meter band.
   // Send the packet to the output table.
-  if (GetInterSliceMode () == SliceMode::STAT)
+  if (GetInterSliceMode () == SliceMode::SHAR)
+    {
+      // When using the Non-GBR shared inter-slicing, apply the shared Non-GBR
+      // meter entriy for all slices on each port direction (FWD and BWD).
+      SliceId slice = SliceId::ALL;
+      for (int d = 0; d <= LinkInfo::BWD; d++)
+        {
+          LinkInfo::Direction dir = static_cast<LinkInfo::Direction> (d);
+          RingInfo::RingPath ringPath = RingInfo::LinkDirToRingPath (dir);
+          uint32_t meterId = GetSvelteMeterId (slice, d);
+
+          // Non-GBR QCIs range is [5, 9].
+          for (int q = 5; q <= 9; q++)
+            {
+              EpsBearer::Qci qci = static_cast<EpsBearer::Qci> (q);
+              Ipv4Header::DscpType dscp = Qci2Dscp (qci);
+
+              // Apply this meter to the traffic of all slices.
+              std::ostringstream cmd;
+              cmd << "flow-mod cmd=add,prio=32"
+                  << ",table="      << BANDW_TAB
+                  << ",flags="      << FLAGS_REMOVED_OVERLAP_RESET
+                  << " eth_type="   << IPV4_PROT_NUM
+                  << ",meta="       << ringPath
+                  << ",ip_dscp="    << static_cast<uint16_t> (dscp)
+                  << " meter:"      << meterId
+                  << " goto:"       << OUTPT_TAB;
+              DpctlExecute (swtch, cmd.str ());
+            }
+        }
+    }
+  else if (GetInterSliceMode () == SliceMode::STAT)
     {
       // When using the static inter-slicing, apply individual Non-GBR meter
       // entries for each slice on each port direction (FWD and BWD).
@@ -653,37 +684,6 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
                       << " goto:"       << OUTPT_TAB;
                   DpctlExecute (swtch, cmd.str ());
                 }
-            }
-        }
-    }
-  else if (GetInterSliceMode () == SliceMode::SHAR)
-    {
-      // When using the Non-GBR shared inter-slicing, apply shared Non-GBR
-      // meter entries for all slice on each port direction (FWD and BWD).
-      SliceId slice = SliceId::ALL;
-      for (int d = 0; d <= LinkInfo::BWD; d++)
-        {
-          LinkInfo::Direction dir = static_cast<LinkInfo::Direction> (d);
-          RingInfo::RingPath ringPath = RingInfo::LinkDirToRingPath (dir);
-          uint32_t meterId = GetSvelteMeterId (slice, d);
-
-          // Non-GBR QCIs range is [5, 9].
-          for (int q = 5; q <= 9; q++)
-            {
-              EpsBearer::Qci qci = static_cast<EpsBearer::Qci> (q);
-              Ipv4Header::DscpType dscp = Qci2Dscp (qci);
-
-              // Apply this meter to the traffic of all slices.
-              std::ostringstream cmd;
-              cmd << "flow-mod cmd=add,prio=32"
-                  << ",table="      << BANDW_TAB
-                  << ",flags="      << FLAGS_REMOVED_OVERLAP_RESET
-                  << " eth_type="   << IPV4_PROT_NUM
-                  << ",meta="       << ringPath
-                  << ",ip_dscp="    << static_cast<uint16_t> (dscp)
-                  << " meter:"      << meterId
-                  << " goto:"       << OUTPT_TAB;
-              DpctlExecute (swtch, cmd.str ());
             }
         }
     }
