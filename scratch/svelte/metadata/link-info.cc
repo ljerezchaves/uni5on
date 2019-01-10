@@ -511,14 +511,14 @@ LinkInfo::SetSliceQuotas (
     }
   NS_ABORT_MSG_IF (sumQuotas > 100, "Inconsistent slice quotas.");
 
-  // Then, update slice maximum bit rates.
+  // Then, update slice bit rates.
   for (auto const &it : quotas)
     {
       SliceId slice = it.first;
       uint16_t quota = it.second;
       NS_LOG_DEBUG (SliceIdStr (slice) << " slice quota: " << quota);
 
-      // Only update and fire adjusted trace source if the quota changes.
+      // Only update and fire adjusted trace source if the quota has changed.
       if (quota != GetQuota (dir, slice))
         {
           m_slices [slice][dir].quota = quota;
@@ -529,14 +529,17 @@ LinkInfo::SetSliceQuotas (
         }
     }
 
-  // Set the quota for the fake shared slice.
-  m_slices [SliceId::ALL][0].quota = sumQuotas;
-  m_slices [SliceId::ALL][1].quota = sumQuotas;
+  // Only update and fire adjusted trace source for the fake shared slice if
+  // the sum of quotas has changed.
+  if (sumQuotas != GetQuota (dir, SliceId::ALL))
+    {
+      m_slices [SliceId::ALL][dir].quota = sumQuotas;
 
-  // There's no need to fire the adjusment trace source for the fake shared
-  // slice, as we are updating only the maximum bit rate for each slice,
-  // respecing the already reserved bit rate. So, the aggregated free bit rate
-  // will remain the same.
+      NS_LOG_DEBUG ("Fire meter adjustment and clear meter diff.");
+      m_meterAdjustedTrace (Ptr<LinkInfo> (this), dir, SliceId::ALL);
+      m_slices [SliceId::ALL][dir].meterDiff = 0;
+    }
+
   return true;
 }
 
