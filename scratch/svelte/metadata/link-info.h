@@ -278,7 +278,7 @@ private:
   struct SliceStats
   {
     uint16_t quota;                     //!< Slice quota.
-    uint64_t resRate;                   //!< Reserved bit rate.
+    uint64_t reserved;                  //!< Reserved bit rate.
     int64_t  meterDiff;                 //!< Current meter bit rate diff.
 
     // Throughput measurement.

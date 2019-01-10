@@ -208,7 +208,7 @@ LinkInfo::GetResBitRate (Direction dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
-  return m_slices [slice][dir].resRate;
+  return m_slices [slice][dir].reserved;
 }
 
 DpIdPair_t
@@ -431,7 +431,7 @@ LinkInfo::ReleaseBitRate (
     }
 
   // Releasing the bit rate.
-  m_slices [slice][dir].resRate -= bitRate;
+  m_slices [slice][dir].reserved -= bitRate;
   NS_LOG_DEBUG ("Releasing " << bitRate <<
                 " bit rate on slice " << SliceIdStr (slice) <<
                 " in " << DirectionStr (dir) << " direction.");
@@ -444,7 +444,7 @@ LinkInfo::ReleaseBitRate (
   UpdateMeterDiff (dir, slice, bitRate);
 
   // Updating statistics for the fake shared slice.
-  m_slices [SliceId::ALL][dir].resRate -= bitRate;
+  m_slices [SliceId::ALL][dir].reserved -= bitRate;
   UpdateMeterDiff (dir, SliceId::ALL, bitRate);
   return true;
 }
@@ -466,7 +466,7 @@ LinkInfo::ReserveBitRate (
     }
 
   // Reserving the bit rate.
-  m_slices [slice][dir].resRate += bitRate;
+  m_slices [slice][dir].reserved += bitRate;
   NS_LOG_DEBUG ("Reserving " << bitRate <<
                 " bit rate on slice " << SliceIdStr (slice) <<
                 " in " << DirectionStr (dir) << " direction.");
@@ -479,7 +479,7 @@ LinkInfo::ReserveBitRate (
   UpdateMeterDiff (dir, slice, -((int64_t)bitRate));
 
   // Updating statistics for the fake shared slice.
-  m_slices [SliceId::ALL][dir].resRate += bitRate;
+  m_slices [SliceId::ALL][dir].reserved += bitRate;
   UpdateMeterDiff (dir, SliceId::ALL, -((int64_t)bitRate));
   return true;
 }
