@@ -200,8 +200,7 @@ LinkInfo::GetMeterBitRate (Direction dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
-  // TODO Implement the correct logic here.
-  return GetQuotaBitRate (dir, slice) - GetResBitRate (dir, slice);
+  return GetFreeBitRate (dir, slice) + GetExtraBitRate (dir, slice);
 }
 
 uint16_t
