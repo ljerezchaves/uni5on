@@ -187,6 +187,14 @@ LinkInfo::GetLinkBitRate (void) const
   return m_channel->GetDataRate ().GetBitRate ();
 }
 
+uint16_t
+LinkInfo::GetQuota (Direction dir, SliceId slice) const
+{
+  NS_LOG_FUNCTION (this << dir << slice);
+
+  return m_slices [slice][dir].quota;
+}
+
 uint64_t
 LinkInfo::GetQuotaBitRate (Direction dir, SliceId slice) const
 {
@@ -201,14 +209,6 @@ LinkInfo::GetResBitRate (Direction dir, SliceId slice) const
   NS_LOG_FUNCTION (this << dir << slice);
 
   return m_slices [slice][dir].resRate;
-}
-
-uint16_t
-LinkInfo::GetQuota (Direction dir, SliceId slice) const
-{
-  NS_LOG_FUNCTION (this << dir << slice);
-
-  return m_slices [slice][dir].quota;
 }
 
 DpIdPair_t

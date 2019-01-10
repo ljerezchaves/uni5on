@@ -127,6 +127,17 @@ public:
   uint64_t GetLinkBitRate (void) const;
 
   /**
+   * Get the slice quota for this link on the given direction, optionally
+   * filtered by the network slice. If no slice is given, the this method will
+   * return the maximum quota of 1.0;
+   * \param dir The link direction.
+   * \param slice The network slice.
+   * \return The slice quota.
+   */
+  uint16_t GetQuota (
+    Direction dir, SliceId slice = SliceId::ALL) const;
+
+  /**
    * Get the quota bit rate for this link on the given direction, optionally
    * filtered by the network slice. If no slice is given, the this method will
    * return the GetLinkBitRate ();
@@ -145,17 +156,6 @@ public:
    * \return The reserved bit rate.
    */
   uint64_t GetResBitRate (
-    Direction dir, SliceId slice = SliceId::ALL) const;
-
-  /**
-   * Get the slice quota for this link on the given direction, optionally
-   * filtered by the network slice. If no slice is given, the this method will
-   * return the maximum quota of 1.0;
-   * \param dir The link direction.
-   * \param slice The network slice.
-   * \return The slice quota.
-   */
-  uint16_t GetQuota (
     Direction dir, SliceId slice = SliceId::ALL) const;
 
   /**
