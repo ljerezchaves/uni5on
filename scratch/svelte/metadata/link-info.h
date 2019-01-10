@@ -110,7 +110,17 @@ public:
     uint64_t src, uint64_t dst) const;
 
   /**
-   * Get the available (not reserved) bit rate for traffic over this link on
+   * Get the extra bit rate for traffic over this link on the given
+   * direction, optionally filtered by the network slice.
+   * \param dir The link direction.
+   * \param slice The network slice.
+   * \return The extra bit rate.
+   */
+  uint64_t GetExtraBitRate (
+    Direction dir, SliceId slice = SliceId::ALL) const;
+
+  /**
+   * Get the free (not reserved) bit rate for traffic over this link on
    * the given direction, optionally filtered by the network slice.
    * \param dir The link direction.
    * \param slice The network slice.
@@ -289,6 +299,7 @@ private:
   {
     uint16_t quota;                     //!< Slice quota.
     uint64_t reserved;                  //!< Reserved bit rate.
+    uint64_t extra;                     //!< Extra (overlapping) bit rate
     int64_t  meterDiff;                 //!< Current meter bit rate diff.
 
     // Throughput measurement.

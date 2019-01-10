@@ -172,6 +172,14 @@ LinkInfo::GetDirection (uint64_t src, uint64_t dst) const
 }
 
 uint64_t
+LinkInfo::GetExtraBitRate (Direction dir, SliceId slice) const
+{
+  NS_LOG_FUNCTION (this << dir << slice);
+
+  return m_slices [slice][dir].extra;
+}
+
+uint64_t
 LinkInfo::GetFreeBitRate (Direction dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
@@ -302,6 +310,8 @@ LinkInfo::PrintSliceValues (std::ostream &os, SliceId slice) const
      << " " << setw (12) << Bps2Kbps (GetResBitRate   (LinkInfo::BWD, slice))
      << " " << setw (12) << Bps2Kbps (GetFreeBitRate  (LinkInfo::FWD, slice))
      << " " << setw (12) << Bps2Kbps (GetFreeBitRate  (LinkInfo::BWD, slice))
+     << " " << setw (12) << Bps2Kbps (GetExtraBitRate (LinkInfo::FWD, slice))
+     << " " << setw (12) << Bps2Kbps (GetExtraBitRate (LinkInfo::BWD, slice))
      << " " << setw (14)
      << Bps2Kbps (GetThpBitRate (LinkInfo::FWD, slice, QosType::GBR))
      << " " << setw (14)
@@ -362,6 +372,8 @@ LinkInfo::PrintHeader (std::ostream &os)
      << " " << setw (12) << "ResBwKbps"
      << " " << setw (12) << "FreFwKbps"
      << " " << setw (12) << "FreBwKbps"
+     << " " << setw (12) << "ExtFwKbps"
+     << " " << setw (12) << "ExtBwKbps"
      << " " << setw (14) << "ThpGbrFwKbps"
      << " " << setw (14) << "ThpGbrBwKbps"
      << " " << setw (14) << "ThpNonFwKbps"
