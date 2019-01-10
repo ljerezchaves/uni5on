@@ -380,10 +380,6 @@ LinkInfo::NotifyConstructionCompleted (void)
   m_ewmaLastTime = Simulator::Now ();
   Simulator::Schedule (m_ewmaTimeout, &LinkInfo::UpdateEwmaThp, this);
 
-  // Set the maximum bit rate and slice quota for the fake shared slice.
-  m_slices [SliceId::ALL][0].quota = 100;
-  m_slices [SliceId::ALL][1].quota = 100;
-
   Object::NotifyConstructionCompleted ();
 }
 
@@ -513,7 +509,7 @@ LinkInfo::SetSliceQuotas (
           return false;
         }
     }
-  NS_ABORT_MSG_IF (sumQuotas != 100, "Inconsistent slice quotas.");
+  NS_ABORT_MSG_IF (sumQuotas > 100, "Inconsistent slice quotas.");
 
   // Then, update slice maximum bit rates.
   for (auto const &it : quotas)
@@ -532,6 +528,10 @@ LinkInfo::SetSliceQuotas (
           m_slices [slice][dir].meterDiff = 0;
         }
     }
+
+  // Set the quota for the fake shared slice.
+  m_slices [SliceId::ALL][0].quota = sumQuotas;
+  m_slices [SliceId::ALL][1].quota = sumQuotas;
 
   // There's no need to fire the adjusment trace source for the fake shared
   // slice, as we are updating only the maximum bit rate for each slice,

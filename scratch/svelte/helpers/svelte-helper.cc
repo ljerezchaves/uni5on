@@ -506,7 +506,7 @@ SvelteHelper::NotifyConstructionCompleted (void)
     }
 
   // Validate slice quotas.
-  NS_ABORT_MSG_IF (sumQuota != 100, "Inconsistent initial quotas.");
+  NS_ABORT_MSG_IF (sumQuota > 100, "Inconsistent initial quotas.");
 
   // Notify the backhaul controller of the slice controllers.
   backahulCtrl->NotifySlicesBuilt (sliceControllers);
