@@ -127,6 +127,16 @@ public:
   uint64_t GetLinkBitRate (void) const;
 
   /**
+   * Get the meter bit rate for Non-GBR traffic over this link on
+   * the given direction, optionally filtered by the network slice.
+   * \param dir The link direction.
+   * \param slice The network slice.
+   * \return The available bit rate.
+   */
+  uint64_t GetMeterBitRate (
+    Direction dir, SliceId slice = SliceId::ALL) const;
+
+  /**
    * Get the slice quota for this link on the given direction, optionally
    * filtered by the network slice. If no slice is given, the this method will
    * return the maximum quota of 1.0;

@@ -187,6 +187,15 @@ LinkInfo::GetLinkBitRate (void) const
   return m_channel->GetDataRate ().GetBitRate ();
 }
 
+uint64_t
+LinkInfo::GetMeterBitRate (Direction dir, SliceId slice) const
+{
+  NS_LOG_FUNCTION (this << dir << slice);
+
+  // TODO Implement the correct logic here.
+  return GetQuotaBitRate (dir, slice) - GetResBitRate (dir, slice);
+}
+
 uint16_t
 LinkInfo::GetQuota (Direction dir, SliceId slice) const
 {
