@@ -79,7 +79,6 @@ LiveVideoServer::StartApplication (void)
 {
   NS_LOG_FUNCTION (this);
 
-  NS_ABORT_MSG_IF (m_entries.empty (), "No trace file loaded.");
   NS_LOG_INFO ("Opening the UDP socket.");
   TypeId udpFactory = TypeId::LookupByName ("ns3::UdpSocketFactory");
   m_socket = Socket::CreateSocket (GetNode (), udpFactory);
@@ -169,6 +168,12 @@ LiveVideoServer::SendStream (void)
 {
   NS_LOG_FUNCTION (this);
   NS_ASSERT (m_sendEvent.IsExpired ());
+
+  if (m_entries.empty ())
+    {
+      NS_LOG_WARN ("No trace file defined.");
+      return;
+    }
 
   struct TraceEntry *entry = &m_entries[m_currentEntry];
   NS_LOG_DEBUG ("Frame no. " << m_currentEntry <<
