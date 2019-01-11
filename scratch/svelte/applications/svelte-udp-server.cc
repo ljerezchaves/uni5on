@@ -110,8 +110,10 @@ SvelteUdpServer::NotifyStart ()
 
   // Start traffic.
   m_sendEvent.Cancel ();
-  Time send = Seconds (std::abs (m_pktInterRng->GetValue ()));
-  m_sendEvent = Simulator::Schedule (send, &SvelteUdpServer::SendPacket, this);
+  Time sendTime = Seconds (std::abs (m_pktInterRng->GetValue ()));
+  uint32_t newSize = m_pktSizeRng->GetInteger ();
+  m_sendEvent = Simulator::Schedule (sendTime, &SvelteUdpServer::SendPacket,
+                                     this, newSize);
 }
 
 void
@@ -127,14 +129,18 @@ SvelteUdpServer::NotifyForceStop ()
 }
 
 void
-SvelteUdpServer::SendPacket ()
+SvelteUdpServer::SendPacket (uint32_t size)
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION (this << size);
 
-  Ptr<Packet> packet = Create<Packet> (m_pktSizeRng->GetInteger ());
+  static const uint32_t seqTsSize = 12;
+
+  // Create the packet and add the seq header without increasing packet size.
+  uint32_t packetSize = size > seqTsSize ? size - seqTsSize : 0;
+  Ptr<Packet> packet = Create<Packet> (packetSize);
 
   SeqTsHeader seqTs;
-  seqTs.SetSeq (NotifyTx (packet->GetSize () + seqTs.GetSerializedSize ()));
+  seqTs.SetSeq (NotifyTx (packetSize + seqTsSize));
   packet->AddHeader (seqTs);
 
   int bytes = m_socket->Send (packet);
@@ -149,8 +155,10 @@ SvelteUdpServer::SendPacket ()
     }
 
   // Schedule next packet transmission.
-  Time send = Seconds (std::abs (m_pktInterRng->GetValue ()));
-  m_sendEvent = Simulator::Schedule (send, &SvelteUdpServer::SendPacket, this);
+  Time sendTime = Seconds (std::abs (m_pktInterRng->GetValue ()));
+  uint32_t newSize = m_pktSizeRng->GetInteger ();
+  m_sendEvent = Simulator::Schedule (sendTime, &SvelteUdpServer::SendPacket,
+                                     this, newSize);
 }
 
 void

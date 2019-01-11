@@ -64,8 +64,9 @@ private:
 
   /**
    * \brief Handle a packet transmission.
+   * \param size The packet size.
    */
-  void SendPacket ();
+  void SendPacket (uint32_t size);
 
   Ptr<RandomVariableStream>   m_pktInterRng;  //!< Pkt inter-arrival time.
   Ptr<RandomVariableStream>   m_pktSizeRng;   //!< Pkt size.
