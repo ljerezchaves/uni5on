@@ -41,7 +41,7 @@ BufferedVideoServer::GetTypeId (void)
     .AddConstructor<BufferedVideoServer> ()
     .AddAttribute ("TraceFilename",
                    "Name of file to load a trace from.",
-                   StringValue (""),
+                   StringValue (std::string ()),
                    MakeStringAccessor (&BufferedVideoServer::SetTraceFile),
                    MakeStringChecker ())
   ;

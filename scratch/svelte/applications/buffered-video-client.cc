@@ -110,7 +110,7 @@ BufferedVideoClient::DataReceived (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 
-  static std::string contentTypeStr = "";
+  static std::string contentTypeStr = std::string ();
   static uint32_t httpPacketSize = 0;
 
   // Repeat while we have data to process.

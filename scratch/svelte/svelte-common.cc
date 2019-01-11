@@ -47,7 +47,7 @@ LteIfaceStr (LteIface iface)
       return "sgi";
     default:
       NS_LOG_ERROR ("Invalid LTE interface.");
-      return "";
+      return std::string ();
     }
 }
 
@@ -64,7 +64,7 @@ OpModeStr (OpMode mode)
       return "auto";
     default:
       NS_LOG_ERROR ("Invalid operation mode.");
-      return "";
+      return std::string ();
     }
 }
 
@@ -85,7 +85,7 @@ SliceIdStr (SliceId slice)
       return "unknown";
     default:
       NS_LOG_ERROR ("Invalid slice ID.");
-      return "";
+      return std::string ();
     }
 }
 
@@ -219,7 +219,7 @@ DscpTypeStr (Ipv4Header::DscpType dscp)
       return "CS7";
     default:
       NS_LOG_ERROR ("Invalid DSCP type.");
-      return "";
+      return std::string ();
     }
 }
 

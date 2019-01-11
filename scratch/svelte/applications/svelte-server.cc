@@ -66,7 +66,7 @@ std::string
 SvelteServer::GetAppName (void) const
 {
   // No log to avoid infinite recursion.
-  return m_clientApp ? m_clientApp->GetAppName () : "";
+  return m_clientApp ? m_clientApp->GetAppName () : std::string ();
 }
 
 bool

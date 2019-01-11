@@ -44,12 +44,12 @@ void EnableOfsLogs (bool);
 // Prefixes used by input and output filenames.
 static ns3::GlobalValue
   g_inputPrefix ("InputPrefix", "Common prefix for output filenames.",
-                 ns3::StringValue (""),
+                 ns3::StringValue (std::string ()),
                  ns3::MakeStringChecker ());
 
 static ns3::GlobalValue
   g_outputPrefix ("OutputPrefix", "Common prefix for input filenames.",
-                  ns3::StringValue (""),
+                  ns3::StringValue (std::string ()),
                   ns3::MakeStringChecker ());
 
 // Dump timeout for logging statistics.
@@ -72,7 +72,7 @@ main (int argc, char *argv[])
   bool        ofsLog   = false;
   bool        lteRem   = false;
   uint32_t    progress = 0;
-  std::string prefix   = "";
+  std::string prefix   = std::string ();
 
   // Configure some default attribute values. These values can be overridden by
   // users on the command line or in the configuration file.
@@ -89,7 +89,7 @@ main (int argc, char *argv[])
   cmd.Parse (argc, argv);
 
   // Update input and output prefixes from command line prefix parameter.
-  NS_ASSERT_MSG (prefix != "", "Unknown prefix.");
+  NS_ASSERT_MSG (!prefix.empty (), "Unknown prefix.");
   std::ostringstream inputPrefix, outputPrefix;
   inputPrefix << prefix;
   char lastChar = *prefix.rbegin ();

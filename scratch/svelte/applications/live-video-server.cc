@@ -46,7 +46,7 @@ LiveVideoServer::GetTypeId (void)
                    MakeUintegerChecker<uint32_t> ())
     .AddAttribute ("TraceFilename",
                    "Name of file to load a trace from.",
-                   StringValue (""),
+                   StringValue (std::string ()),
                    MakeStringAccessor (&LiveVideoServer::SetTraceFile),
                    MakeStringChecker ())
   ;
