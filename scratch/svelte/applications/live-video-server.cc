@@ -47,7 +47,7 @@ LiveVideoServer::GetTypeId (void)
     .AddAttribute ("TraceFilename",
                    "Name of file to load a trace from.",
                    StringValue (std::string ()),
-                   MakeStringAccessor (&LiveVideoServer::SetTraceFile),
+                   MakeStringAccessor (&LiveVideoServer::LoadTrace),
                    MakeStringChecker ())
   ;
   return tid;
@@ -62,17 +62,6 @@ LiveVideoServer::LiveVideoServer ()
 LiveVideoServer::~LiveVideoServer ()
 {
   NS_LOG_FUNCTION (this);
-}
-
-void
-LiveVideoServer::SetTraceFile (std::string traceFile)
-{
-  NS_LOG_FUNCTION (this << traceFile);
-
-  if (!traceFile.empty ())
-    {
-      LoadTrace (traceFile);
-    }
 }
 
 void
@@ -143,15 +132,19 @@ LiveVideoServer::LoadTrace (std::string filename)
 {
   NS_LOG_FUNCTION (this << filename);
 
-  uint32_t time, index, size, prevTime = 0;
-  char frameType;
-  TraceEntry entry;
   m_entries.clear ();
+  if (filename.empty ())
+    {
+      return;
+    }
 
   std::ifstream ifTraceFile;
   ifTraceFile.open (filename.c_str (), std::ifstream::in);
   NS_ABORT_MSG_IF (!ifTraceFile.good (), "Trace file not found.");
 
+  uint32_t time, index, size, prevTime = 0;
+  char frameType;
+  TraceEntry entry;
   while (ifTraceFile.good ())
     {
       ifTraceFile >> index >> frameType >> time >> size;

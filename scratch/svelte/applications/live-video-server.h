@@ -41,15 +41,6 @@ public:
   LiveVideoServer ();           //!< Default constructor.
   virtual ~LiveVideoServer ();  //!< Dummy destructor, see DoDispose.
 
-  /**
-   * \brief Set the trace file to be used by the application.
-   * \param filename a path to an MPEG4 trace file formatted as follows:
-   *  Frame No Frametype   Time[ms]    Length [byte]
-   *  Frame No Frametype   Time[ms]    Length [byte]
-   *  ...
-   */
-  void SetTraceFile (std::string filename);
-
 protected:
   // Inherited from Object.
   virtual void DoDispose (void);
@@ -64,8 +55,11 @@ private:
   void NotifyForceStop ();
 
   /**
-   * \brief Load a trace file.
-   * \param filename The trace file path.
+   * \brief Load the trace file to be used by the application.
+   * \param filename a path to an MPEG4 trace file formatted as follows:
+   *  Frame No Frametype   Time[ms]    Length [byte]
+   *  Frame No Frametype   Time[ms]    Length [byte]
+   *  ...
    */
   void LoadTrace (std::string filename);
 
