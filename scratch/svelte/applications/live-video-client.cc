@@ -68,14 +68,14 @@ LiveVideoClient::Start ()
   NS_LOG_FUNCTION (this);
 
   // Schedule the ForceStop method to stop traffic based on traffic length.
-  Time sTime = GetTrafficLength ();
-  m_stopEvent = Simulator::Schedule (sTime, &LiveVideoClient::ForceStop, this);
-  NS_LOG_INFO ("Set traffic length to " << sTime.GetSeconds () << "s.");
+  Time stop = GetTrafficLength ();
+  m_stopEvent = Simulator::Schedule (stop, &LiveVideoClient::ForceStop, this);
+  NS_LOG_INFO ("Set traffic length to " << stop.GetSeconds () << "s.");
 
   // Chain up to reset statistics, notify server, and fire start trace source.
   SvelteClient::Start ();
 
-  // Start streaming.
+  // Start traffic.
   m_sendEvent.Cancel ();
   m_currentEntry = 0;
   SendStream ();
@@ -109,7 +109,7 @@ LiveVideoClient::ForceStop ()
 }
 
 void
-LiveVideoClient::StartApplication ()
+LiveVideoClient::StartApplication (void)
 {
   NS_LOG_FUNCTION (this);
 

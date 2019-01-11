@@ -109,7 +109,7 @@ LiveVideoServer::NotifyStart ()
   // Chain up to reset statistics.
   SvelteServer::NotifyStart ();
 
-  // Start streaming.
+  // Start traffic.
   m_sendEvent.Cancel ();
   m_currentEntry = 0;
   SendStream ();
@@ -123,7 +123,7 @@ LiveVideoServer::NotifyForceStop ()
   // Chain up just for log.
   SvelteServer::NotifyForceStop ();
 
-  // Stop streaming.
+  // Stop traffic.
   m_sendEvent.Cancel ();
 }
 

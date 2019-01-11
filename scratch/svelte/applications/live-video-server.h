@@ -34,7 +34,7 @@ class LiveVideoServer : public SvelteServer
 {
 public:
   /**
-   * \brief Get the type ID.
+   * \brief Register this type.
    * \return the object TypeId.
    */
   static TypeId GetTypeId (void);
@@ -65,9 +65,10 @@ private:
   void LoadTrace (std::string filename);
 
   /**
-   * \brief Start sending the video.
+   * \brief Socket receive callback.
+   * \param socket Socket with data available to be read.
    */
-  void SendStream (void);
+  void ReadPacket (Ptr<Socket> socket);
 
   /**
    * \brief Handle a packet transmission.
@@ -76,10 +77,9 @@ private:
   void SendPacket (uint32_t size);
 
   /**
-   * \brief Socket receive callback.
-   * \param socket Socket with data available to be read.
+   * \brief Start sending the video.
    */
-  void ReadPacket (Ptr<Socket> socket);
+  void SendStream (void);
 
   /**
    * Trace entry, representing a MPEG frame.
