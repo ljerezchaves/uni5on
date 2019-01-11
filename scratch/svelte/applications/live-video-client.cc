@@ -36,12 +36,23 @@ LiveVideoClient::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::LiveVideoClient")
     .SetParent<SvelteClient> ()
     .AddConstructor<LiveVideoClient> ()
+    .AddAttribute ("MaxPayloadSize",
+                   "The maximum payload size of packets [bytes].",
+                   UintegerValue (1400),
+                   MakeUintegerAccessor (&LiveVideoClient::m_pktSize),
+                   MakeUintegerChecker<uint32_t> ())
+    .AddAttribute ("TraceFilename",
+                   "Name of file to load a trace from.",
+                   StringValue (std::string ()),
+                   MakeStringAccessor (&LiveVideoClient::LoadTrace),
+                   MakeStringChecker ())
   ;
   return tid;
 }
 
 LiveVideoClient::LiveVideoClient ()
-  : m_stopEvent (EventId ())
+  : m_sendEvent (EventId ()),
+  m_stopEvent (EventId ())
 {
   NS_LOG_FUNCTION (this);
 }
@@ -63,6 +74,11 @@ LiveVideoClient::Start ()
 
   // Chain up to reset statistics, notify server, and fire start trace source.
   SvelteClient::Start ();
+
+  // Start streaming.
+  m_sendEvent.Cancel ();
+  m_currentEntry = 0;
+  SendStream ();
 }
 
 void
@@ -71,6 +87,8 @@ LiveVideoClient::DoDispose (void)
   NS_LOG_FUNCTION (this);
 
   m_stopEvent.Cancel ();
+  m_sendEvent.Cancel ();
+  m_entries.clear ();
   SvelteClient::DoDispose ();
 }
 
@@ -79,8 +97,9 @@ LiveVideoClient::ForceStop ()
 {
   NS_LOG_FUNCTION (this);
 
-  // Cancel (possible) pending stop event.
+  // Cancel (possible) pending stop event and stop the traffic.
   m_stopEvent.Cancel ();
+  m_sendEvent.Cancel ();
 
   // Chain up to notify server.
   SvelteClient::ForceStop ();
@@ -98,7 +117,7 @@ LiveVideoClient::StartApplication ()
   TypeId udpFactory = TypeId::LookupByName ("ns3::UdpSocketFactory");
   m_socket = Socket::CreateSocket (GetNode (), udpFactory);
   m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
-  m_socket->ShutdownSend ();
+  m_socket->Connect (InetSocketAddress::ConvertFrom (m_serverAddress));
   m_socket->SetRecvCallback (
     MakeCallback (&LiveVideoClient::ReadPacket, this));
 }
@@ -113,6 +132,105 @@ LiveVideoClient::StopApplication ()
       m_socket->Close ();
       m_socket->Dispose ();
       m_socket = 0;
+    }
+}
+
+void
+LiveVideoClient::LoadTrace (std::string filename)
+{
+  NS_LOG_FUNCTION (this << filename);
+
+  m_entries.clear ();
+  if (filename.empty ())
+    {
+      return;
+    }
+
+  std::ifstream ifTraceFile;
+  ifTraceFile.open (filename.c_str (), std::ifstream::in);
+  NS_ABORT_MSG_IF (!ifTraceFile.good (), "Trace file not found.");
+
+  uint32_t time, index, size, prevTime = 0;
+  char frameType;
+  TraceEntry entry;
+  while (ifTraceFile.good ())
+    {
+      ifTraceFile >> index >> frameType >> time >> size;
+      if (frameType == 'B')
+        {
+          entry.timeToSend = 0;
+        }
+      else
+        {
+          entry.timeToSend = time - prevTime;
+          prevTime = time;
+        }
+      entry.packetSize = size;
+      entry.frameType = frameType;
+      m_entries.push_back (entry);
+    }
+  ifTraceFile.close ();
+}
+
+void
+LiveVideoClient::SendStream (void)
+{
+  NS_LOG_FUNCTION (this);
+  NS_ASSERT (m_sendEvent.IsExpired ());
+
+  if (m_entries.empty ())
+    {
+      NS_LOG_WARN ("No trace file defined.");
+      return;
+    }
+
+  struct TraceEntry *entry = &m_entries[m_currentEntry];
+  NS_LOG_DEBUG ("Frame no. " << m_currentEntry <<
+                " with " << entry->packetSize << " bytes");
+  do
+    {
+      for (uint32_t i = 0; i < entry->packetSize / m_pktSize; i++)
+        {
+          SendPacket (m_pktSize);
+        }
+      uint16_t sizeToSend = entry->packetSize % m_pktSize;
+      SendPacket (sizeToSend);
+
+      m_currentEntry++;
+      m_currentEntry %= m_entries.size ();
+      entry = &m_entries[m_currentEntry];
+    }
+  while (entry->timeToSend == 0);
+
+  // Schedulle next transmission.
+  m_sendEvent = Simulator::Schedule (MilliSeconds (entry->timeToSend),
+                                     &LiveVideoClient::SendStream, this);
+}
+
+void
+LiveVideoClient::SendPacket (uint32_t size)
+{
+  NS_LOG_FUNCTION (this << size);
+
+  static const uint32_t seqTsSize = 12;
+
+  // Create the packet and add the seq header without increasing packet size.
+  uint32_t packetSize = size > seqTsSize ? size - seqTsSize : 0;
+  Ptr<Packet> packet = Create<Packet> (packetSize);
+
+  SeqTsHeader seqTs;
+  seqTs.SetSeq (NotifyTx (packetSize + seqTsSize));
+  packet->AddHeader (seqTs);
+
+  int bytes = m_socket->Send (packet);
+  if (bytes == static_cast<int> (packet->GetSize ()))
+    {
+      NS_LOG_DEBUG ("Client TX " << bytes << " bytes with " <<
+                    "sequence number " << seqTs.GetSeq ());
+    }
+  else
+    {
+      NS_LOG_ERROR ("Client TX error.");
     }
 }
 

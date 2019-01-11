@@ -26,8 +26,9 @@ namespace ns3 {
 
 /**
  * \ingroup svelteApps
- * This is the server side of a live video traffic generator, sending UDP
- * datagrams following a MPEG video pattern with random video length.
+ * This is the server side of a live video traffic generator, sending and
+ * receiving UDP datagrams following a MPEG video pattern with random
+ * video length.
  */
 class LiveVideoServer : public SvelteServer
 {
@@ -75,6 +76,12 @@ private:
   void SendPacket (uint32_t size);
 
   /**
+   * \brief Socket receive callback.
+   * \param socket Socket with data available to be read.
+   */
+  void ReadPacket (Ptr<Socket> socket);
+
+  /**
    * Trace entry, representing a MPEG frame.
    */
   struct TraceEntry
@@ -85,9 +92,9 @@ private:
   };
 
   uint16_t                        m_pktSize;          //!< Packet size.
-  EventId                         m_sendEvent;        //!< SendPacket event.
   uint32_t                        m_currentEntry;     //!< Current entry.
   std::vector<struct TraceEntry>  m_entries;          //!< Trace entries.
+  EventId                         m_sendEvent;        //!< SendPacket event.
 };
 
 } // namespace ns3

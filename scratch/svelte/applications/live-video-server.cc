@@ -84,7 +84,8 @@ LiveVideoServer::StartApplication (void)
   m_socket = Socket::CreateSocket (GetNode (), udpFactory);
   m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
   m_socket->Connect (InetSocketAddress::ConvertFrom (m_clientAddress));
-  m_socket->ShutdownRecv ();
+  m_socket->SetRecvCallback (
+    MakeCallback (&LiveVideoServer::ReadPacket, this));
 }
 
 void
@@ -223,6 +224,21 @@ LiveVideoServer::SendPacket (uint32_t size)
     {
       NS_LOG_ERROR ("Server TX error.");
     }
+}
+
+void
+LiveVideoServer::ReadPacket (Ptr<Socket> socket)
+{
+  NS_LOG_FUNCTION (this << socket);
+
+  // Receive the datagram from the socket.
+  Ptr<Packet> packet = socket->Recv ();
+
+  SeqTsHeader seqTs;
+  packet->PeekHeader (seqTs);
+  NotifyRx (packet->GetSize (), seqTs.GetTs ());
+  NS_LOG_DEBUG ("Server RX " << packet->GetSize () << " bytes with " <<
+                "sequence number " << seqTs.GetSeq ());
 }
 
 } // Namespace ns3

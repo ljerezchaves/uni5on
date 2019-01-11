@@ -26,8 +26,9 @@ namespace ns3 {
 
 /**
  * \ingroup svelteApps
- * This is the client side of a live video traffic generator, receiving
- * UDP datagrams following a MPEG video pattern with random video length.
+ * This is the client side of a live video traffic generator, sending and
+ * receiving UDP datagrams following a MPEG video pattern with random
+ * video length.
  */
 class LiveVideoClient : public SvelteClient
 {
@@ -57,12 +58,46 @@ private:
   virtual void StopApplication (void);
 
   /**
+   * \brief Load the trace file to be used by the application.
+   * \param filename a path to an MPEG4 trace file formatted as follows:
+   *  Frame No Frametype   Time[ms]    Length [byte]
+   *  Frame No Frametype   Time[ms]    Length [byte]
+   *  ...
+   */
+  void LoadTrace (std::string filename);
+
+  /**
+   * \brief Start sending the video.
+   */
+  void SendStream (void);
+
+  /**
+   * \brief Handle a packet transmission.
+   * \param size The packet size.
+   */
+  void SendPacket (uint32_t size);
+
+  /**
    * \brief Socket receive callback.
    * \param socket Socket with data available to be read.
    */
   void ReadPacket (Ptr<Socket> socket);
 
-  EventId                     m_stopEvent;    //!< Stop event.
+  /**
+   * Trace entry, representing a MPEG frame.
+   */
+  struct TraceEntry
+  {
+    uint32_t timeToSend;  //!< Relative time to send the frame (ms)
+    uint32_t packetSize;  //!< Size of the frame
+    char     frameType;   //!< Frame type (I, P or B)
+  };
+
+  uint16_t                        m_pktSize;          //!< Packet size.
+  uint32_t                        m_currentEntry;     //!< Current entry.
+  std::vector<struct TraceEntry>  m_entries;          //!< Trace entries.
+  EventId                         m_sendEvent;        //!< SendPacket event.
+  EventId                         m_stopEvent;        //!< Stop event.
 };
 
 } // Namespace ns3

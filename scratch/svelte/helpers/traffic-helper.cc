@@ -557,6 +557,8 @@ TrafficHelper::InstallApplications ()
             int videoIdx = m_gbrVidRng->GetInteger ();
             m_livVideoHelper.SetServerAttribute (
               "TraceFilename", StringValue (GetVideoFilename (videoIdx)));
+            m_livVideoHelper.SetClientAttribute (
+              "TraceFilename", StringValue (std::string ()));
             GbrQosInformation qos;
             qos.gbrDl = GetVideoGbr (videoIdx).GetBitRate ();
             qos.mbrDl = GetVideoMbr (videoIdx).GetBitRate ();
@@ -618,6 +620,8 @@ TrafficHelper::InstallApplications ()
             int videoIdx = m_nonVidRng->GetInteger ();
             m_livVideoHelper.SetServerAttribute (
               "TraceFilename", StringValue (GetVideoFilename (videoIdx)));
+            m_livVideoHelper.SetClientAttribute (
+              "TraceFilename", StringValue (std::string ()));
             EpsBearer bearer (EpsBearer::NGBR_VOICE_VIDEO_GAMING);
 
             // Downlink UDP traffic.
@@ -735,14 +739,17 @@ TrafficHelper::InstallApplications ()
             // Live video streaming over dedicated Non-GBR EPS bearer.
             // QCI 7 is typically associated with voice, live video streaming
             // and interactive games.
-            int videoIdx = m_nonVidRng->GetInteger ();
+            int videoIdxDl = m_nonVidRng->GetInteger ();
+            int videoIdxUl = m_nonVidRng->GetInteger ();
             m_livVideoHelper.SetServerAttribute (
-              "TraceFilename", StringValue (GetVideoFilename (videoIdx)));
+              "TraceFilename", StringValue (GetVideoFilename (videoIdxDl)));
+            m_livVideoHelper.SetClientAttribute (
+              "TraceFilename", StringValue (GetVideoFilename (videoIdxUl)));
             EpsBearer bearer (EpsBearer::NGBR_VOICE_VIDEO_GAMING);
 
             // Downlink UDP traffic.
             EpcTft::PacketFilter filter;
-            filter.direction = EpcTft::DOWNLINK;
+            filter.direction = EpcTft::BIDIRECTIONAL;
             filter.protocol = UdpL4Protocol::PROT_NUMBER;
             InstallAppDedicated (m_livVideoHelper, bearer, filter);
           }
