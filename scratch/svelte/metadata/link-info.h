@@ -38,15 +38,16 @@ typedef std::vector<Ptr<LinkInfo> > LinkInfoList_t;
  * \ingroup svelteInfra
  * Metadata associated to a link between two OpenFlow backhaul switches.
  *
- * The link is prepared to handle infrastructure network slicing, and each
- * slice has the following information associated to it:
- * - The maximum bit rate, adjusted by the backhaul controller;
+ * The link is prepared to handle inter-slicing, and each slice has the
+ * following information associated to it:
+ * - The quota, adjusted by the backhaul controller;
  * - The reserved bit rate, updated by reserve/release procedures;
- * - The transmitted bytes, updated by monitoring port device TX operations;
- * - The average throughput, periodically updated using EWMA;
+ * - The extra bit rate, updated by ??? FIXME!
  * - The meter diff, updated by reserve/release procedures and responsible for
  *   firing the meter adjusted trace source when the total reserved bit rate
  *   changes over a threshold value indicated by the AdjustmentStep attribute.
+ * - The transmitted bytes, updated by monitoring port device TX operations;
+ * - The average throughput, periodically updated using EWMA;
  */
 class LinkInfo : public Object
 {

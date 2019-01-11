@@ -601,7 +601,7 @@ BackhaulController::SlicingMeterInstall (Ptr<const LinkInfo> lInfo)
     {
     case SliceMode::SHAR:
       {
-        // Install the shared Non- GBR meter entry for all slice on each port
+        // Install the shared Non-GBR meter entry for all slice on each port
         // direction (FWD and BWD).
         SliceId slice = SliceId::ALL;
         for (int d = 0; d <= LinkInfo::BWD; d++)
