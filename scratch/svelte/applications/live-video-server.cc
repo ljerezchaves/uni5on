@@ -211,7 +211,7 @@ LiveVideoServer::SendPacket (uint32_t size)
   Ptr<Packet> packet = Create<Packet> (packetSize);
 
   SeqTsHeader seqTs;
-  seqTs.SetSeq (NotifyTx (packetSize + seqTsSize));
+  seqTs.SetSeq (NotifyTx (packetSize + seqTsSize) - 1);
   packet->AddHeader (seqTs);
 
   int bytes = m_socket->Send (packet);

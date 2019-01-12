@@ -91,7 +91,7 @@ AppStatsCalculator::NotifyTx (uint32_t txBytes)
       m_firstTxTime = Simulator::Now ();
     }
 
-  return m_txPackets - 1;
+  return m_txPackets;
 }
 
 void

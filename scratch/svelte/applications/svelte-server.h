@@ -91,7 +91,7 @@ protected:
   /**
    * Update TX counter for a new transmitted packet on client stats calculator.
    * \param txBytes The total number of bytes in this packet.
-   * \return The next TX sequence number to use.
+   * \return The counter of TX packets.
    */
   uint32_t NotifyTx (uint32_t txBytes);
 

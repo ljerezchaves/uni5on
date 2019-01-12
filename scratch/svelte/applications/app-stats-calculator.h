@@ -54,7 +54,7 @@ public:
   /**
    * Update TX counters for a new transmitted packet.
    * \param txBytes The total number of bytes in this packet.
-   * \return The next TX sequence number to use.
+   * \return The counter of TX packets.
    */
   virtual uint32_t NotifyTx (uint32_t txBytes);
 
