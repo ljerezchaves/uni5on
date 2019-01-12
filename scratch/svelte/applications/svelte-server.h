@@ -26,7 +26,7 @@
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
 #include <ns3/lte-module.h>
-#include "app-stats-calculator.h"
+#include "../statistics/flow-stats-calculator.h"
 
 namespace ns3 {
 
@@ -57,12 +57,12 @@ public:
    * \return The requested value.
    */
   //\{
-  std::string                   GetAppName    (void) const;
-  Ptr<const AppStatsCalculator> GetAppStats   (void) const;
-  Ptr<SvelteClient>             GetClientApp  (void) const;
-  std::string                   GetTeidHex    (void) const;
-  bool                          IsActive      (void) const;
-  bool                          IsForceStop   (void) const;
+  std::string                     GetAppName    (void) const;
+  Ptr<const FlowStatsCalculator>  GetAppStats   (void) const;
+  Ptr<SvelteClient>               GetClientApp  (void) const;
+  std::string                     GetTeidHex    (void) const;
+  bool                            IsActive      (void) const;
+  bool                            IsForceStop   (void) const;
   //\}
 
   /**
@@ -107,11 +107,11 @@ protected:
    */
   void ResetAppStats ();
 
-  Ptr<AppStatsCalculator> m_appStats;         //!< QoS statistics.
-  Ptr<Socket>             m_socket;           //!< Local socket.
-  uint16_t                m_localPort;        //!< Local port.
-  Address                 m_clientAddress;    //!< Client address.
-  Ptr<SvelteClient>       m_clientApp;        //!< Client application.
+  Ptr<FlowStatsCalculator>  m_appStats;         //!< QoS statistics.
+  Ptr<Socket>               m_socket;           //!< Local socket.
+  uint16_t                  m_localPort;        //!< Local port.
+  Address                   m_clientAddress;    //!< Client address.
+  Ptr<SvelteClient>         m_clientApp;        //!< Client application.
 };
 
 } // namespace ns3

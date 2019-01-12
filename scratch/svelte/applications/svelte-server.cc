@@ -32,7 +32,7 @@ NS_LOG_COMPONENT_DEFINE ("SvelteServer");
 NS_OBJECT_ENSURE_REGISTERED (SvelteServer);
 
 SvelteServer::SvelteServer ()
-  : m_appStats (CreateObject<AppStatsCalculator> ()),
+  : m_appStats (CreateObject<FlowStatsCalculator> ()),
   m_socket (0),
   m_clientApp (0)
 {
@@ -102,7 +102,7 @@ SvelteServer::GetClientApp (void) const
   return m_clientApp;
 }
 
-Ptr<const AppStatsCalculator>
+Ptr<const FlowStatsCalculator>
 SvelteServer::GetAppStats (void) const
 {
   NS_LOG_FUNCTION (this);

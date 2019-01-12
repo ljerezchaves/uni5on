@@ -23,8 +23,8 @@
 
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
-#include "../applications/app-stats-calculator.h"
 #include "../logical/epc-gtpu-tag.h"
+#include "../statistics/flow-stats-calculator.h"
 
 // Total number of drop reasons + 1 for aggregated metadata.
 #define N_REASONS_ALL (static_cast<uint8_t> (DropReason::ALL) + 1)
@@ -42,10 +42,10 @@ class SvelteClient;
 
 /**
  * \ingroup svelteStats
- * This class extends the AppStatsCalculator to monitor basic QoS statistics at
+ * This class extends the FlowStatsCalculator to monitor basic QoS statistics at
  * link level in the OpenFlow EPC network, including packet drops.
  */
-class EpcStatsCalculator : public AppStatsCalculator
+class EpcStatsCalculator : public FlowStatsCalculator
 {
 public:
   /** Reason for packet drops at OpenFlow EPC network. */
@@ -67,7 +67,7 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  // Inherited from AppStatsCalculator.
+  // Inherited from FlowStatsCalculator.
   void ResetCounters (void);
 
   /**

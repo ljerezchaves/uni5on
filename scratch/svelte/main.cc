@@ -403,7 +403,6 @@ EnableVerbose (bool enable)
       LogComponentEnable ("UeInfo",                   logLevelWarnInfo);
 
       // Applications.
-      LogComponentEnable ("AppStatsCalculator",       logLevelWarnInfo);
       LogComponentEnable ("BufferedVideoClient",      logLevelWarnInfo);
       LogComponentEnable ("BufferedVideoServer",      logLevelWarnInfo);
       LogComponentEnable ("HttpClient",               logLevelWarnInfo);
@@ -418,6 +417,7 @@ EnableVerbose (bool enable)
       // Statistic components.
       LogComponentEnable ("AdmissionStatsCalculator", logLevelWarnInfo);
       LogComponentEnable ("BackhaulStatsCalculator",  logLevelWarnInfo);
+      LogComponentEnable ("FlowStatsCalculator",      logLevelWarnInfo);
       LogComponentEnable ("LteRrcStatsCalculator",    logLevelWarnInfo);
       LogComponentEnable ("PgwTftStatsCalculator",    logLevelWarnInfo);
       LogComponentEnable ("TrafficStatsCalculator",   logLevelWarnInfo);

@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef APP_STATS_CALCULATOR_H
-#define APP_STATS_CALCULATOR_H
+#ifndef FLOW_STATS_CALCULATOR_H
+#define FLOW_STATS_CALCULATOR_H
 
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
@@ -27,18 +27,18 @@
 namespace ns3 {
 
 /**
- * \ingroup svelteApps
- * This class monitors some basic QoS statistics in a network traffic flow. It
- * counts the number of transmitted/received bytes and packets, computes the
- * loss ratio, the average delay and the jitter. This class can be used to
- * monitor statistics at application and network level, but keep in mind that
- * it is not aware of duplicated or fragmented packets at lower levels.
+ * \ingroup svelteStats
+ * This class monitors some basic QoS statistics of a traffic flow. It counts
+ * the number of transmitted/received bytes and packets, computes the loss
+ * ratio, the average delay and the jitter. This class can be used to monitor
+ * statistics at any network level, but keep in mind that it is not aware of
+ * duplicated or fragmented packets at other levels.
  */
-class AppStatsCalculator : public Object
+class FlowStatsCalculator : public Object
 {
 public:
-  AppStatsCalculator ();          //!< Default constructor.
-  virtual ~AppStatsCalculator (); //!< Dummy destructor, see DoDispose.
+  FlowStatsCalculator ();          //!< Default constructor.
+  virtual ~FlowStatsCalculator (); //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
@@ -91,10 +91,10 @@ public:
   static std::ostream & PrintHeader (std::ostream &os);
 
   /**
-   * TracedCallback signature for AppStatsCalculator.
+   * TracedCallback signature for FlowStatsCalculator.
    * \param stats The statistics.
    */
-  typedef void (*AppStatsCallback)(Ptr<const AppStatsCalculator> stats);
+  typedef void (*FlowStatsCallback)(Ptr<const FlowStatsCalculator> stats);
 
 protected:
   /** Destructor implementation. */
@@ -114,14 +114,14 @@ private:
 };
 
 /**
- * Print the application QoS metadata on an output stream.
+ * Print the traffic flow QoS metadata on an output stream.
  * \param os The output stream.
- * \param stats The AppStatsCalculator object.
+ * \param stats The FlowStatsCalculator object.
  * \returns The output stream.
  * \internal Keep this method consistent with the
- *           AppStatsCalculator::PrintHeader ().
+ *           FlowStatsCalculator::PrintHeader ().
  */
-std::ostream & operator << (std::ostream &os, const AppStatsCalculator &stats);
+std::ostream & operator << (std::ostream &os, const FlowStatsCalculator &stats);
 
 } // namespace ns3
-#endif /* APP_STATS_CALCULATOR_H */
+#endif /* FLOW_STATS_CALCULATOR_H */

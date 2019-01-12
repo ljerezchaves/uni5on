@@ -53,7 +53,7 @@ TypeId
 EpcStatsCalculator::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::EpcStatsCalculator")
-    .SetParent<AppStatsCalculator> ()
+    .SetParent<FlowStatsCalculator> ()
     .AddConstructor<EpcStatsCalculator> ()
   ;
   return tid;
@@ -69,7 +69,7 @@ EpcStatsCalculator::ResetCounters (void)
       m_dpBytes [r] = 0;
       m_dpPackets [r] = 0;
     }
-  AppStatsCalculator::ResetCounters ();
+  FlowStatsCalculator::ResetCounters ();
 }
 
 uint32_t
@@ -103,7 +103,7 @@ EpcStatsCalculator::NotifyDrop (uint32_t dpBytes, DropReason reason)
 std::ostream &
 EpcStatsCalculator::PrintHeader (std::ostream &os)
 {
-  AppStatsCalculator::PrintHeader (os);
+  FlowStatsCalculator::PrintHeader (os);
   os << " " << setw (6) << "DpLoa"
      << " " << setw (6) << "DpMbr"
      << " " << setw (6) << "DpSli"
@@ -117,12 +117,12 @@ EpcStatsCalculator::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
-  AppStatsCalculator::DoDispose ();
+  FlowStatsCalculator::DoDispose ();
 }
 
 std::ostream & operator << (std::ostream &os, const EpcStatsCalculator &stats)
 {
-  os << static_cast<AppStatsCalculator> (stats);
+  os << static_cast<FlowStatsCalculator> (stats);
   for (int r = 0; r <= EpcStatsCalculator::ALL; r++)
     {
       os << " " << setw (6) << stats.GetDpPackets (
@@ -246,7 +246,7 @@ TrafficStatsCalculator::NotifyConstructionCompleted (void)
     << " " << setw (9) << "AppName"
     << " " << setw (7) << "TrafDir";
   RoutingInfo::PrintHeader (*m_appWrapper->GetStream ());
-  AppStatsCalculator::PrintHeader (*m_appWrapper->GetStream ());
+  FlowStatsCalculator::PrintHeader (*m_appWrapper->GetStream ());
   *m_appWrapper->GetStream () << std::endl;
 
   // Create the output file for EPC stats.

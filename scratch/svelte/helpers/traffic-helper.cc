@@ -27,12 +27,12 @@
 #include "../applications/live-video-server.h"
 #include "../applications/svelte-udp-client.h"
 #include "../applications/svelte-udp-server.h"
-#include "../applications/app-stats-calculator.h"
 #include "../infrastructure/radio-network.h"
 #include "../logical/slice-controller.h"
 #include "../logical/slice-network.h"
 #include "../logical/traffic-manager.h"
 #include "../metadata/ue-info.h"
+#include "../statistics/flow-stats-calculator.h"
 
 namespace ns3 {
 

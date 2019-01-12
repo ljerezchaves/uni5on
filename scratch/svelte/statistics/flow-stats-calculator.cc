@@ -20,17 +20,17 @@
 
 #include <iomanip>
 #include <iostream>
-#include "app-stats-calculator.h"
+#include "flow-stats-calculator.h"
 #include "../svelte-common.h"
 
 using namespace std;
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("AppStatsCalculator");
-NS_OBJECT_ENSURE_REGISTERED (AppStatsCalculator);
+NS_LOG_COMPONENT_DEFINE ("FlowStatsCalculator");
+NS_OBJECT_ENSURE_REGISTERED (FlowStatsCalculator);
 
-AppStatsCalculator::AppStatsCalculator ()
+FlowStatsCalculator::FlowStatsCalculator ()
   : m_txPackets (0),
   m_txBytes (0),
   m_rxPackets (0),
@@ -45,23 +45,23 @@ AppStatsCalculator::AppStatsCalculator ()
   NS_LOG_FUNCTION (this);
 }
 
-AppStatsCalculator::~AppStatsCalculator ()
+FlowStatsCalculator::~FlowStatsCalculator ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-AppStatsCalculator::GetTypeId (void)
+FlowStatsCalculator::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::AppStatsCalculator")
+  static TypeId tid = TypeId ("ns3::FlowStatsCalculator")
     .SetParent<Object> ()
-    .AddConstructor<AppStatsCalculator> ()
+    .AddConstructor<FlowStatsCalculator> ()
   ;
   return tid;
 }
 
 void
-AppStatsCalculator::ResetCounters (void)
+FlowStatsCalculator::ResetCounters (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -78,7 +78,7 @@ AppStatsCalculator::ResetCounters (void)
 }
 
 uint32_t
-AppStatsCalculator::NotifyTx (uint32_t txBytes)
+FlowStatsCalculator::NotifyTx (uint32_t txBytes)
 {
   NS_LOG_FUNCTION (this << txBytes);
 
@@ -94,7 +94,7 @@ AppStatsCalculator::NotifyTx (uint32_t txBytes)
 }
 
 void
-AppStatsCalculator::NotifyRx (uint32_t rxBytes, Time timestamp)
+FlowStatsCalculator::NotifyRx (uint32_t rxBytes, Time timestamp)
 {
   NS_LOG_FUNCTION (this << rxBytes << timestamp);
 
@@ -121,7 +121,7 @@ AppStatsCalculator::NotifyRx (uint32_t rxBytes, Time timestamp)
 }
 
 Time
-AppStatsCalculator::GetActiveTime (void) const
+FlowStatsCalculator::GetActiveTime (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -136,7 +136,7 @@ AppStatsCalculator::GetActiveTime (void) const
 }
 
 uint32_t
-AppStatsCalculator::GetLostPackets (void) const
+FlowStatsCalculator::GetLostPackets (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -151,7 +151,7 @@ AppStatsCalculator::GetLostPackets (void) const
 }
 
 double
-AppStatsCalculator::GetLossRatio (void) const
+FlowStatsCalculator::GetLossRatio (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -166,7 +166,7 @@ AppStatsCalculator::GetLossRatio (void) const
 }
 
 uint32_t
-AppStatsCalculator::GetTxPackets (void) const
+FlowStatsCalculator::GetTxPackets (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -174,7 +174,7 @@ AppStatsCalculator::GetTxPackets (void) const
 }
 
 uint32_t
-AppStatsCalculator::GetTxBytes (void) const
+FlowStatsCalculator::GetTxBytes (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -182,7 +182,7 @@ AppStatsCalculator::GetTxBytes (void) const
 }
 
 uint32_t
-AppStatsCalculator::GetRxPackets (void) const
+FlowStatsCalculator::GetRxPackets (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -190,7 +190,7 @@ AppStatsCalculator::GetRxPackets (void) const
 }
 
 uint32_t
-AppStatsCalculator::GetRxBytes (void) const
+FlowStatsCalculator::GetRxBytes (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -198,7 +198,7 @@ AppStatsCalculator::GetRxBytes (void) const
 }
 
 Time
-AppStatsCalculator::GetRxDelay (void) const
+FlowStatsCalculator::GetRxDelay (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -213,7 +213,7 @@ AppStatsCalculator::GetRxDelay (void) const
 }
 
 Time
-AppStatsCalculator::GetRxJitter (void) const
+FlowStatsCalculator::GetRxJitter (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -221,7 +221,7 @@ AppStatsCalculator::GetRxJitter (void) const
 }
 
 DataRate
-AppStatsCalculator::GetRxThroughput (void) const
+FlowStatsCalculator::GetRxThroughput (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -236,7 +236,7 @@ AppStatsCalculator::GetRxThroughput (void) const
 }
 
 std::ostream &
-AppStatsCalculator::PrintHeader (std::ostream &os)
+FlowStatsCalculator::PrintHeader (std::ostream &os)
 {
   os << " " << setw (8) << "ActvSec"
      << " " << setw (7) << "DlyMsec"
@@ -250,14 +250,14 @@ AppStatsCalculator::PrintHeader (std::ostream &os)
 }
 
 void
-AppStatsCalculator::DoDispose ()
+FlowStatsCalculator::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
   Object::DoDispose ();
 }
 
-std::ostream & operator << (std::ostream &os, const AppStatsCalculator &stats)
+std::ostream & operator << (std::ostream &os, const FlowStatsCalculator &stats)
 {
   os << " " << setw (8) << stats.GetActiveTime ().GetSeconds ()
      << " " << setw (7) << stats.GetRxDelay ().GetSeconds () * 1000
