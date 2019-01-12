@@ -82,15 +82,14 @@ AppStatsCalculator::NotifyTx (uint32_t txBytes)
 {
   NS_LOG_FUNCTION (this << txBytes);
 
-  m_txPackets++;
-  m_txBytes += txBytes;
-
-  // Check for the first TX packet
-  if (m_txPackets == 1)
+  // Check for the first TX packet.
+  if (!m_txPackets)
     {
       m_firstTxTime = Simulator::Now ();
     }
 
+  m_txPackets++;
+  m_txBytes += txBytes;
   return m_txPackets;
 }
 
@@ -99,23 +98,25 @@ AppStatsCalculator::NotifyRx (uint32_t rxBytes, Time timestamp)
 {
   NS_LOG_FUNCTION (this << rxBytes << timestamp);
 
-  m_rxPackets++;
-  m_rxBytes += rxBytes;
   Time now = Simulator::Now ();
 
-  // Check for the first RX packet
-  if (m_rxPackets == 1)
+  // Check for the first RX packet.
+  if (!m_rxPackets)
     {
       m_firstRxTime = now;
     }
 
+  m_rxPackets++;
+  m_rxBytes += rxBytes;
+
+  // Updating the jitter estimation.
   // The jitter is calculated using the RFC 1889 (RTP) jitter definition.
   Time delta = (now - m_lastRxTime) - (timestamp - m_lastTimestamp);
   m_jitter += ((Abs (delta)).GetTimeStep () - m_jitter) >> 4;
   m_lastRxTime = now;
   m_lastTimestamp = timestamp;
 
-  // Updating delay sum
+  // Updating the delay sum.
   m_delaySum += (now - timestamp);
 }
 
@@ -156,7 +157,7 @@ AppStatsCalculator::GetLossRatio (void) const
 
   if (GetLostPackets ())
     {
-      return (double)GetLostPackets () / GetTxPackets ();
+      return static_cast<double> (GetLostPackets ()) / GetTxPackets ();
     }
   else
     {
@@ -203,7 +204,7 @@ AppStatsCalculator::GetRxDelay (void) const
 
   if (GetRxPackets ())
     {
-      return m_delaySum / (int64_t)GetRxPackets ();
+      return m_delaySum / static_cast<int64_t> (GetRxPackets ());
     }
   else
     {
