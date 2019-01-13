@@ -130,13 +130,13 @@ private:
   Ptr<OutputStreamWrapper>  m_epcWrapper;   //!< EpcStats file wrapper.
 
   /** A pair of FlowStatsCalculator, for downlink and uplink traffic. */
-  struct EpcStatsPair
+  struct FlowStatsPair
   {
     Ptr<FlowStatsCalculator> stats [2];
   };
 
   /** A Map saving GTP TEID / EPC stats pair. */
-  typedef std::map<uint32_t, EpcStatsPair> TeidEpcStatsMap_t;
+  typedef std::map<uint32_t, FlowStatsPair> TeidEpcStatsMap_t;
   TeidEpcStatsMap_t         m_qosByTeid;    //!< TEID EPC statistics.
 };
 

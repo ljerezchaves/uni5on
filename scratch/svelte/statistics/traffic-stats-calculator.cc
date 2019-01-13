@@ -340,10 +340,10 @@ TrafficStatsCalculator::GetEpcStats (uint32_t teid, Direction dir)
     }
   else
     {
-      EpcStatsPair pair;
+      FlowStatsPair pair;
       pair.stats [Direction::DLINK] = CreateObject<FlowStatsCalculator> ();
       pair.stats [Direction::ULINK] = CreateObject<FlowStatsCalculator> ();
-      std::pair<uint32_t, EpcStatsPair> entry (teid, pair);
+      std::pair<uint32_t, FlowStatsPair> entry (teid, pair);
       auto ret = m_qosByTeid.insert (entry);
       NS_ABORT_MSG_IF (ret.second == false, "Error when saving QoS entry.");
 
