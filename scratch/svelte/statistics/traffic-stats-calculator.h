@@ -122,7 +122,7 @@ private:
    * \param dir The traffic direction.
    * \return The QoS information.
    */
-  Ptr<FlowStatsCalculator> GetEpcStats (uint32_t teid, Direction dir);
+  Ptr<FlowStatsCalculator> GetFlowStats (uint32_t teid, Direction dir);
 
   std::string               m_appFilename;  //!< AppStats filename.
   Ptr<OutputStreamWrapper>  m_appWrapper;   //!< AppStats file wrapper.
@@ -136,8 +136,8 @@ private:
   };
 
   /** A Map saving GTP TEID / EPC stats pair. */
-  typedef std::map<uint32_t, FlowStatsPair> TeidEpcStatsMap_t;
-  TeidEpcStatsMap_t         m_qosByTeid;    //!< TEID EPC statistics.
+  typedef std::map<uint32_t, FlowStatsPair> TeidFlowStatsMap_t;
+  TeidFlowStatsMap_t        m_qosByTeid;    //!< TEID EPC statistics.
 };
 
 } // namespace ns3
