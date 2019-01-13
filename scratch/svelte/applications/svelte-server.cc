@@ -118,22 +118,15 @@ SvelteServer::GetUlGoodput (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  if (m_startTime == m_stopTime || m_startTime == Simulator::Now ())
+  Time elapsed = (IsActive () ? Simulator::Now () : m_stopTime) - m_startTime;
+  if (elapsed.IsZero ())
     {
-      // Invalid conditions for goodput calculation (division by 0).
       return DataRate (0);
-    }
-
-  Time elapsed = Time (0);
-  if (IsActive ())
-    {
-      elapsed = Simulator::Now () - m_startTime;
     }
   else
     {
-      elapsed = m_stopTime - m_startTime;
+      return DataRate (m_rxBytes * 8 / elapsed.GetSeconds ());
     }
-  return DataRate (m_rxBytes * 8 / elapsed.GetSeconds ());
 }
 
 void
