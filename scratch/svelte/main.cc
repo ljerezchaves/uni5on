@@ -417,6 +417,7 @@ EnableVerbose (bool enable)
       // Statistic components.
       LogComponentEnable ("AdmissionStatsCalculator", logLevelWarnInfo);
       LogComponentEnable ("BackhaulStatsCalculator",  logLevelWarnInfo);
+      LogComponentEnable ("EpcFlowStatsCalculator",   logLevelWarnInfo);
       LogComponentEnable ("FlowStatsCalculator",      logLevelWarnInfo);
       LogComponentEnable ("LteRrcStatsCalculator",    logLevelWarnInfo);
       LogComponentEnable ("PgwTftStatsCalculator",    logLevelWarnInfo);
