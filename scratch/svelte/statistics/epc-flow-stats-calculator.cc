@@ -27,9 +27,9 @@ using namespace std;
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("EpcFlowStatsCalculator");
-NS_OBJECT_ENSURE_REGISTERED (EpcStatsCalculator); // FIXME
+NS_OBJECT_ENSURE_REGISTERED (EpcFlowStatsCalculator);
 
-EpcStatsCalculator::EpcStatsCalculator ()
+EpcFlowStatsCalculator::EpcFlowStatsCalculator ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -40,23 +40,23 @@ EpcStatsCalculator::EpcStatsCalculator ()
     }
 }
 
-EpcStatsCalculator::~EpcStatsCalculator ()
+EpcFlowStatsCalculator::~EpcFlowStatsCalculator ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-EpcStatsCalculator::GetTypeId (void)
+EpcFlowStatsCalculator::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::EpcStatsCalculator")
+  static TypeId tid = TypeId ("ns3::EpcFlowStatsCalculator")
     .SetParent<FlowStatsCalculator> ()
-    .AddConstructor<EpcStatsCalculator> ()
+    .AddConstructor<EpcFlowStatsCalculator> ()
   ;
   return tid;
 }
 
 void
-EpcStatsCalculator::ResetCounters (void)
+EpcFlowStatsCalculator::ResetCounters (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -69,7 +69,7 @@ EpcStatsCalculator::ResetCounters (void)
 }
 
 uint32_t
-EpcStatsCalculator::GetDpBytes (DropReason reason) const
+EpcFlowStatsCalculator::GetDpBytes (DropReason reason) const
 {
   NS_LOG_FUNCTION (this << reason);
 
@@ -77,7 +77,7 @@ EpcStatsCalculator::GetDpBytes (DropReason reason) const
 }
 
 uint32_t
-EpcStatsCalculator::GetDpPackets (DropReason reason) const
+EpcFlowStatsCalculator::GetDpPackets (DropReason reason) const
 {
   NS_LOG_FUNCTION (this << reason);
 
@@ -85,7 +85,7 @@ EpcStatsCalculator::GetDpPackets (DropReason reason) const
 }
 
 void
-EpcStatsCalculator::NotifyDrop (uint32_t dpBytes, DropReason reason)
+EpcFlowStatsCalculator::NotifyDrop (uint32_t dpBytes, DropReason reason)
 {
   NS_LOG_FUNCTION (this << dpBytes << reason);
 
@@ -97,7 +97,7 @@ EpcStatsCalculator::NotifyDrop (uint32_t dpBytes, DropReason reason)
 }
 
 std::ostream &
-EpcStatsCalculator::PrintHeader (std::ostream &os)
+EpcFlowStatsCalculator::PrintHeader (std::ostream &os)
 {
   FlowStatsCalculator::PrintHeader (os);
   os << " " << setw (6) << "DpLoa"
@@ -109,20 +109,21 @@ EpcStatsCalculator::PrintHeader (std::ostream &os)
 }
 
 void
-EpcStatsCalculator::DoDispose ()
+EpcFlowStatsCalculator::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
   FlowStatsCalculator::DoDispose ();
 }
 
-std::ostream & operator << (std::ostream &os, const EpcStatsCalculator &stats)
+std::ostream & operator << (std::ostream &os,
+                            const EpcFlowStatsCalculator &stats)
 {
   os << static_cast<FlowStatsCalculator> (stats);
-  for (int r = 0; r <= EpcStatsCalculator::ALL; r++)
+  for (int r = 0; r <= EpcFlowStatsCalculator::ALL; r++)
     {
       os << " " << setw (6) << stats.GetDpPackets (
-        static_cast<EpcStatsCalculator::DropReason> (r));
+        static_cast<EpcFlowStatsCalculator::DropReason> (r));
     }
   return os;
 }

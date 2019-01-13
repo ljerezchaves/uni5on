@@ -144,17 +144,17 @@ private:
    * \param dir The traffic direction.
    * \return The QoS information.
    */
-  Ptr<EpcStatsCalculator> GetEpcStats (uint32_t teid, Direction dir);
+  Ptr<EpcFlowStatsCalculator> GetEpcStats (uint32_t teid, Direction dir);
 
   std::string               m_appFilename;  //!< AppStats filename.
   Ptr<OutputStreamWrapper>  m_appWrapper;   //!< AppStats file wrapper.
   std::string               m_epcFilename;  //!< EpcStats filename.
   Ptr<OutputStreamWrapper>  m_epcWrapper;   //!< EpcStats file wrapper.
 
-  /** A pair of EpcStatsCalculator, for downlink and uplink traffic. */
+  /** A pair of EpcFlowStatsCalculator, for downlink and uplink traffic. */
   struct EpcStatsPair
   {
-    Ptr<EpcStatsCalculator> stats [2];
+    Ptr<EpcFlowStatsCalculator> stats [2];
   };
 
   /** A Map saving GTP TEID / EPC stats pair. */

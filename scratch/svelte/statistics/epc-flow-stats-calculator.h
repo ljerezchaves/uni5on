@@ -32,10 +32,10 @@ namespace ns3 {
 
 /**
  * \ingroup svelteStats
- * This class extends the FlowStatsCalculator to monitor basic QoS statistics at
- * link level in the OpenFlow EPC network, including packet drops.
+ * This class extends the FlowStatsCalculator to monitor basic QoS statistics
+ * at link level in the OpenFlow EPC network, including packet drops.
  */
-class EpcStatsCalculator : public FlowStatsCalculator
+class EpcFlowStatsCalculator : public FlowStatsCalculator
 {
 public:
   /** Reason for packet drops at OpenFlow EPC network. */
@@ -48,8 +48,8 @@ public:
     ALL   = 4     //!< ALL previous reasons.
   };
 
-  EpcStatsCalculator ();          //!< Default constructor.
-  virtual ~EpcStatsCalculator (); //!< Dummy destructor, see DoDispose.
+  EpcFlowStatsCalculator ();          //!< Default constructor.
+  virtual ~EpcFlowStatsCalculator (); //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
@@ -97,12 +97,13 @@ private:
 /**
  * Print the EPC QoS metadata on an output stream.
  * \param os The output stream.
- * \param stats The EpcStatsCalculator object.
+ * \param stats The EpcFlowStatsCalculator object.
  * \returns The output stream.
  * \internal Keep this method consistent with the
- *           EpcStatsCalculator::PrintHeader ().
+ *           EpcFlowStatsCalculator::PrintHeader ().
  */
-std::ostream & operator << (std::ostream &os, const EpcStatsCalculator &stats);
+std::ostream & operator << (std::ostream &os,
+                            const EpcFlowStatsCalculator &stats);
 
 } // namespace ns3
 #endif /* EPC_FLOW_STATS_CALCULATOR_H */
