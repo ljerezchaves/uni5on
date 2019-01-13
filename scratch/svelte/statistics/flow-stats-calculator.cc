@@ -61,10 +61,10 @@ FlowStatsCalculator::ResetCounters (void)
   m_txBytes = 0;
   m_rxPackets = 0;
   m_rxBytes = 0;
-  m_firstTxTime = Simulator::Now ();
-  m_firstRxTime = Simulator::Now ();
-  m_lastRxTime = Simulator::Now ();
-  m_lastTimestamp = Simulator::Now ();
+  m_firstTxTime = Time (0);
+  m_firstRxTime = Time (0);
+  m_lastRxTime = Time (0);
+  m_lastTimestamp = Time (0);
   m_jitter = 0;
   m_delaySum = Time ();
 
@@ -102,6 +102,8 @@ FlowStatsCalculator::NotifyRx (uint32_t rxBytes, Time timestamp)
   if (!m_rxPackets)
     {
       m_firstRxTime = now;
+      m_lastRxTime = now;
+      m_lastTimestamp = timestamp;
     }
 
   m_rxPackets++;
