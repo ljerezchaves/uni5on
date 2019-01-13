@@ -39,9 +39,8 @@ class SvelteClient;
 
 /**
  * \ingroup svelteStats
- * This class monitors the traffic QoS statistics at application L7 level for
- * end-to-end traffic, and also at L2 OpenFlow link level for traffic within
- * the LTE EPC.
+ * This class monitors the network traffic at application L7 level and also at
+ * L2 OpenFlow link level for traffic within the LTE backhaul.
  */
 class TrafficStatsCalculator : public Object
 {

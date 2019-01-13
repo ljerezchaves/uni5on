@@ -81,13 +81,13 @@ TrafficStatsCalculator::GetTypeId (void)
     .SetParent<Object> ()
     .AddConstructor<TrafficStatsCalculator> ()
     .AddAttribute ("AppStatsFilename",
-                   "Filename for L7 traffic application QoS statistics.",
-                   StringValue ("traffic-qos-l7-app"),
+                   "Filename for application L7 traffic statistics.",
+                   StringValue ("traffic-application-l7"),
                    MakeStringAccessor (&TrafficStatsCalculator::m_appFilename),
                    MakeStringChecker ())
     .AddAttribute ("EpcStatsFilename",
-                   "Filename for L3 traffic EPC QoS statistics.",
-                   StringValue ("traffic-qos-l3-epc"),
+                   "Filename for EPC L2 traffic statistics.",
+                   StringValue ("traffic-backhaul-l2"),
                    MakeStringAccessor (&TrafficStatsCalculator::m_epcFilename),
                    MakeStringChecker ())
   ;
