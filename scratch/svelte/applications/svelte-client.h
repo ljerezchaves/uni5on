@@ -95,7 +95,7 @@ public:
   void SetServer (Ptr<SvelteServer> serverApp, Address serverAddress);
 
   /**
-   * Start this application. Reset internal counters, notify the server
+   * Start this application. Update internal members, notify the server
    * application, fire the start trace source, and start traffic generation.
    */
   virtual void Start ();
@@ -159,11 +159,6 @@ protected:
   TracedCallback<Ptr<SvelteClient> > m_appErrorTrace;
 
 private:
-  /**
-   * Reset the QoS statistics.
-   */
-  void ResetAppStats ();
-
   std::string               m_name;           //!< Application name.
   bool                      m_active;         //!< Active state.
   Ptr<RandomVariableStream> m_lengthRng;      //!< Random traffic length.
@@ -173,8 +168,8 @@ private:
 
   // Traffic statistics.
   uint32_t                  m_rxBytes;        //!< Number of RX bytes.
-  Time                      m_resetTime;      //!< First TX time.
-  Time                      m_lastRxTime;     //!< Last RX time.
+  Time                      m_startTime;      //!< App start time.
+  Time                      m_stopTime;       //!< App stop time.
 
   // LTE EPS metadata.
   EpsBearer                 m_bearer;         //!< EPS bearer info.

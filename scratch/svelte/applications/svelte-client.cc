@@ -39,8 +39,8 @@ SvelteClient::SvelteClient ()
   m_forceStop (EventId ()),
   m_forceStopFlag (false),
   m_rxBytes (0),
-  m_resetTime (Simulator::Now ()),
-  m_lastRxTime (Simulator::Now ()),
+  m_startTime (Time (0)),
+  m_stopTime (Time (0)),
   m_bearerId (1),   // This is the default BID.
   m_teid (0)
 {
@@ -216,8 +216,10 @@ SvelteClient::Start ()
   NS_ASSERT_MSG (!IsActive (), "Can't start an already active application.");
   m_active = true;
 
-  // Reset internal statistics.
-  ResetAppStats ();
+  // Reset rx byte counter and update start time.
+  m_rxBytes = 0;
+  m_startTime = Simulator::Now ();
+  m_stopTime = Time (0);
 
   // Schedule the force stop event.
   m_forceStopFlag = false;
@@ -238,9 +240,9 @@ SvelteClient::GetAppGoodput (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  if (m_rxBytes && m_lastRxTime != m_resetTime)
+  if (m_stopTime != Time (0) && m_startTime != m_stopTime)
     {
-      Time elapsed = m_lastRxTime - m_resetTime;
+      Time elapsed = m_stopTime - m_startTime;
       return DataRate (m_rxBytes * 8 / elapsed.GetSeconds ());
     }
   else
@@ -296,6 +298,13 @@ SvelteClient::NotifyStop (bool withError)
   m_active = false;
   m_forceStop.Cancel ();
 
+  // Update stop time.
+  m_stopTime = Simulator::Now ();
+
+  // Notify the server.
+  NS_ASSERT_MSG (m_serverApp, "Server application undefined.");
+  m_serverApp->NotifyStop ();
+
   // Fire the stop trace source.
   if (withError)
     {
@@ -314,17 +323,6 @@ SvelteClient::NotifyRx (uint32_t bytes)
   NS_LOG_FUNCTION (this << bytes);
 
   m_rxBytes += bytes;
-  m_lastRxTime = Simulator::Now ();
-}
-
-void
-SvelteClient::ResetAppStats ()
-{
-  NS_LOG_FUNCTION (this);
-
-  m_rxBytes = 0;
-  m_resetTime = Simulator::Now ();
-  m_lastRxTime = Simulator::Now ();
 }
 
 } // namespace ns3

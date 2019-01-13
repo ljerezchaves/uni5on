@@ -35,8 +35,8 @@ SvelteServer::SvelteServer ()
   : m_socket (0),
   m_clientApp (0),
   m_rxBytes (0),
-  m_resetTime (Simulator::Now ()),
-  m_lastRxTime (Simulator::Now ())
+  m_startTime (Time (0)),
+  m_stopTime (Time (0))
 {
   NS_LOG_FUNCTION (this);
 }
@@ -118,9 +118,9 @@ SvelteServer::GetAppGoodput (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  if (m_rxBytes && m_lastRxTime != m_resetTime)
+  if (m_stopTime != Time (0) && m_startTime != m_stopTime)
     {
-      Time elapsed = m_lastRxTime - m_resetTime;
+      Time elapsed = m_stopTime - m_startTime;
       return DataRate (m_rxBytes * 8 / elapsed.GetSeconds ());
     }
   else
@@ -145,8 +145,20 @@ SvelteServer::NotifyStart ()
   NS_LOG_FUNCTION (this);
   NS_LOG_INFO ("Starting server application.");
 
-  // Reset internal statistics.
-  ResetAppStats ();
+  // Reset rx byte counter and update start time.
+  m_rxBytes = 0;
+  m_startTime = Simulator::Now ();
+  m_stopTime = Time (0);
+}
+
+void
+SvelteServer::NotifyStop ()
+{
+  NS_LOG_FUNCTION (this);
+  NS_LOG_INFO ("Stopping server application.");
+
+  // Update stop time.
+  m_stopTime = Simulator::Now ();
 }
 
 void
@@ -162,17 +174,6 @@ SvelteServer::NotifyRx (uint32_t bytes)
   NS_LOG_FUNCTION (this << bytes);
 
   m_rxBytes += bytes;
-  m_lastRxTime = Simulator::Now ();
-}
-
-void
-SvelteServer::ResetAppStats ()
-{
-  NS_LOG_FUNCTION (this);
-
-  m_rxBytes = 0;
-  m_resetTime = Simulator::Now ();
-  m_lastRxTime = Simulator::Now ();
 }
 
 } // namespace ns3

@@ -81,14 +81,20 @@ protected:
   virtual void DoDispose (void);
 
   /**
-   * Notify this server of a start event on the client application. The server
-   * must reset internal counters and start traffic when applicable.
+   * Notify this server of a start event on the client application. Update
+   * internal members and start traffic when applicable.
    */
   virtual void NotifyStart ();
 
   /**
-   * Notify this server of a force stop event on the client application. When
-   * applicable, the server must stop generating traffic.
+   * Notify this server of a stop event on the client application. Update
+   * internal members.
+   */
+  virtual void NotifyStop ();
+
+  /**
+   * Notify this server of a force stop event on the client application. Update
+   * internal members and stop traffic when applicable.
    */
   virtual void NotifyForceStop ();
 
@@ -98,11 +104,6 @@ protected:
    */
   void NotifyRx (uint32_t bytes);
 
-  /**
-   * Reset the QoS statistics.
-   */
-  void ResetAppStats ();
-
   Ptr<Socket>               m_socket;           //!< Local socket.
   uint16_t                  m_localPort;        //!< Local port.
   Address                   m_clientAddress;    //!< Client address.
@@ -110,8 +111,8 @@ protected:
 
   // Traffic statistics.
   uint32_t                  m_rxBytes;        //!< Number of RX bytes.
-  Time                      m_resetTime;      //!< First TX time.
-  Time                      m_lastRxTime;     //!< Last RX time.
+  Time                      m_startTime;      //!< App start time.
+  Time                      m_stopTime;       //!< App stop time.
 };
 
 } // namespace ns3
