@@ -140,6 +140,16 @@ typedef enum
 
 /**
  * \ingroup svelte
+ * Enumeration of available traffic directions.
+ */
+typedef enum
+{
+  DLINK = 0,  //!< Downlink traffic.
+  ULINK = 1   //!< Uplink traffic.
+} Direction;
+
+/**
+ * \ingroup svelte
  * Get the LTE interface name.
  * \param iface The LTE interface.
  * \return The string with the LTE interface name.
@@ -161,6 +171,14 @@ std::string OpModeStr (OpMode mode);
  * \return The string with the slice ID name.
  */
 std::string SliceIdStr (SliceId slice);
+
+/**
+ * \ingroup svelte
+ * Get the direction name.
+ * \param dir The direction.
+ * \return The string with the direction string.
+ */
+std::string DirectionStr (Direction dir);
 
 /**
  * \ingroup svelte

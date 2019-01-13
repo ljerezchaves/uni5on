@@ -45,13 +45,6 @@ class SvelteClient;
 class TrafficStatsCalculator : public Object
 {
 public:
-  /** Traffic direction. */
-  enum Direction
-  {
-    DLINK = 0,  //!< Downlink traffic.
-    ULINK = 1   //!< Uplink traffic.
-  };
-
   TrafficStatsCalculator ();          //!< Default constructor.
   virtual ~TrafficStatsCalculator (); //!< Dummy destructor, see DoDispose.
 
@@ -60,13 +53,6 @@ public:
    * \return The object TypeId.
    */
   static TypeId GetTypeId (void);
-
-  /**
-   * Get the string representing the given direction.
-   * \param dir The link direction.
-   * \return The link direction string.
-   */
-  static std::string DirectionStr (Direction dir);
 
   /**
    * Identify the traffic direction based on the GTPU packet tag.

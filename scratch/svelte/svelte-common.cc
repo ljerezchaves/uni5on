@@ -89,6 +89,21 @@ SliceIdStr (SliceId slice)
     }
 }
 
+std::string
+DirectionStr (Direction dir)
+{
+  switch (dir)
+    {
+    case Direction::DLINK:
+      return "Dlink";
+    case Direction::ULINK:
+      return "Ulink";
+    default:
+      NS_LOG_ERROR ("Invalid direction.");
+      return std::string ();
+    }
+}
+
 double
 Bps2Kbps (uint64_t bitrate)
 {

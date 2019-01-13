@@ -94,20 +94,6 @@ TrafficStatsCalculator::GetTypeId (void)
   return tid;
 }
 
-std::string
-TrafficStatsCalculator::DirectionStr (Direction dir)
-{
-  switch (dir)
-    {
-    case TrafficStatsCalculator::DLINK:
-      return "Dlink";
-    case TrafficStatsCalculator::ULINK:
-      return "Ulink";
-    default:
-      return "-";
-    }
-}
-
 TrafficStatsCalculator::Direction
 TrafficStatsCalculator::GetDirection (EpcGtpuTag &gtpuTag)
 {
@@ -354,8 +340,7 @@ TrafficStatsCalculator::EpcOutputPacket (std::string context,
 }
 
 Ptr<FlowStatsCalculator>
-TrafficStatsCalculator::GetEpcStats (uint32_t teid,
-                                     TrafficStatsCalculator::Direction dir)
+TrafficStatsCalculator::GetEpcStats (uint32_t teid, Direction dir)
 {
   NS_LOG_FUNCTION (this << teid << dir);
 
