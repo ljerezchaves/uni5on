@@ -31,18 +31,10 @@ NS_LOG_COMPONENT_DEFINE ("FlowStatsCalculator");
 NS_OBJECT_ENSURE_REGISTERED (FlowStatsCalculator);
 
 FlowStatsCalculator::FlowStatsCalculator ()
-  : m_txPackets (0),
-  m_txBytes (0),
-  m_rxPackets (0),
-  m_rxBytes (0),
-  m_firstTxTime (Simulator::Now ()),
-  m_firstRxTime (Simulator::Now ()),
-  m_lastRxTime (Simulator::Now ()),
-  m_lastTimestamp (Simulator::Now ()),
-  m_jitter (0),
-  m_delaySum (Time ())
 {
   NS_LOG_FUNCTION (this);
+
+  ResetCounters ();
 }
 
 FlowStatsCalculator::~FlowStatsCalculator ()
@@ -75,6 +67,12 @@ FlowStatsCalculator::ResetCounters (void)
   m_lastTimestamp = Simulator::Now ();
   m_jitter = 0;
   m_delaySum = Time ();
+
+  for (int r = 0; r <= DropReason::ALL; r++)
+    {
+      m_dpBytes [r] = 0;
+      m_dpPackets [r] = 0;
+    }
 }
 
 uint32_t
@@ -118,6 +116,34 @@ FlowStatsCalculator::NotifyRx (uint32_t rxBytes, Time timestamp)
 
   // Updating the delay sum.
   m_delaySum += (now - timestamp);
+}
+
+void
+FlowStatsCalculator::NotifyDrop (uint32_t dpBytes, DropReason reason)
+{
+  NS_LOG_FUNCTION (this << dpBytes << reason);
+
+  m_dpPackets [reason]++;
+  m_dpBytes [reason] += dpBytes;
+
+  m_dpPackets [DropReason::ALL]++;
+  m_dpBytes [DropReason::ALL] += dpBytes;
+}
+
+uint32_t
+FlowStatsCalculator::GetDpBytes (DropReason reason) const
+{
+  NS_LOG_FUNCTION (this << reason);
+
+  return m_dpBytes [reason];
+}
+
+uint32_t
+FlowStatsCalculator::GetDpPackets (DropReason reason) const
+{
+  NS_LOG_FUNCTION (this << reason);
+
+  return m_dpPackets [reason];
 }
 
 Time
@@ -245,7 +271,12 @@ FlowStatsCalculator::PrintHeader (std::ostream &os)
      << " " << setw (7) << "RxPkts"
      << " " << setw (7) << "LossRat"
      << " " << setw (8) << "RxBytes"
-     << " " << setw (9) << "ThpKbps";
+     << " " << setw (9) << "ThpKbps"
+     << " " << setw (6) << "DpLoa"
+     << " " << setw (6) << "DpMbr"
+     << " " << setw (6) << "DpSli"
+     << " " << setw (6) << "DpQue"
+     << " " << setw (6) << "DpAll";
   return os;
 }
 
@@ -267,6 +298,12 @@ std::ostream & operator << (std::ostream &os, const FlowStatsCalculator &stats)
      << " " << setw (7) << stats.GetLossRatio () * 100
      << " " << setw (8) << stats.GetRxBytes ()
      << " " << setw (9) << Bps2Kbps (stats.GetRxThroughput ().GetBitRate ());
+
+  for (int r = 0; r <= FlowStatsCalculator::ALL; r++)
+    {
+      os << " " << setw (6) << stats.GetDpPackets (
+        static_cast<FlowStatsCalculator::DropReason> (r));
+    }
   return os;
 }
 

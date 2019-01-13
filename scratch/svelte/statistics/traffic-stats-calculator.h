@@ -23,7 +23,7 @@
 
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
-#include "epc-flow-stats-calculator.h"
+#include "flow-stats-calculator.h"
 #include "../logical/epc-gtpu-tag.h"
 
 namespace ns3 {
@@ -144,17 +144,17 @@ private:
    * \param dir The traffic direction.
    * \return The QoS information.
    */
-  Ptr<EpcFlowStatsCalculator> GetEpcStats (uint32_t teid, Direction dir);
+  Ptr<FlowStatsCalculator> GetEpcStats (uint32_t teid, Direction dir);
 
   std::string               m_appFilename;  //!< AppStats filename.
   Ptr<OutputStreamWrapper>  m_appWrapper;   //!< AppStats file wrapper.
   std::string               m_epcFilename;  //!< EpcStats filename.
   Ptr<OutputStreamWrapper>  m_epcWrapper;   //!< EpcStats file wrapper.
 
-  /** A pair of EpcFlowStatsCalculator, for downlink and uplink traffic. */
+  /** A pair of FlowStatsCalculator, for downlink and uplink traffic. */
   struct EpcStatsPair
   {
-    Ptr<EpcFlowStatsCalculator> stats [2];
+    Ptr<FlowStatsCalculator> stats [2];
   };
 
   /** A Map saving GTP TEID / EPC stats pair. */

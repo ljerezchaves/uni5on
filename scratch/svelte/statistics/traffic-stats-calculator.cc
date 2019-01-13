@@ -161,7 +161,7 @@ TrafficStatsCalculator::NotifyConstructionCompleted (void)
     << " " << setw (9) << "AppName"
     << " " << setw (7) << "TrafDir";
   RoutingInfo::PrintHeader (*m_epcWrapper->GetStream ());
-  EpcFlowStatsCalculator::PrintHeader (*m_epcWrapper->GetStream ());
+  FlowStatsCalculator::PrintHeader (*m_epcWrapper->GetStream ());
   *m_epcWrapper->GetStream () << std::endl;
 
   Object::NotifyConstructionCompleted ();
@@ -175,7 +175,7 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
 
   uint32_t teid = app->GetTeid ();
   Ptr<const RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-  Ptr<const EpcFlowStatsCalculator> epcStats;
+  Ptr<const FlowStatsCalculator> epcStats;
 
   *m_appWrapper->GetStream ()
     << " " << setw (8)  << Simulator::Now ().GetSeconds ()
@@ -230,12 +230,12 @@ TrafficStatsCalculator::OverloadDropPacket (std::string context,
   NS_LOG_FUNCTION (this << context << packet);
 
   EpcGtpuTag gtpuTag;
-  Ptr<EpcFlowStatsCalculator> epcStats;
+  Ptr<FlowStatsCalculator> epcStats;
   if (packet->PeekPacketTag (gtpuTag))
     {
       epcStats = GetEpcStats (gtpuTag.GetTeid (), GetDirection (gtpuTag));
       epcStats->NotifyDrop (packet->GetSize (),
-                            EpcFlowStatsCalculator::PLOAD);
+                            FlowStatsCalculator::PLOAD);
     }
   else
     {
@@ -258,7 +258,7 @@ TrafficStatsCalculator::OverloadDropPacket (std::string context,
       epcStats = GetEpcStats (teid, Direction::DLINK);
       epcStats->NotifyTx (packetCopy->GetSize ());
       epcStats->NotifyDrop (packetCopy->GetSize (),
-                            EpcFlowStatsCalculator::PLOAD);
+                            FlowStatsCalculator::PLOAD);
     }
 }
 
@@ -270,7 +270,7 @@ TrafficStatsCalculator::MeterDropPacket (
 
   uint32_t teid;
   EpcGtpuTag gtpuTag;
-  Ptr<EpcFlowStatsCalculator> epcStats;
+  Ptr<FlowStatsCalculator> epcStats;
   if (packet->PeekPacketTag (gtpuTag))
     {
       teid = gtpuTag.GetTeid ();
@@ -280,12 +280,12 @@ TrafficStatsCalculator::MeterDropPacket (
       if (teid == meterId)
         {
           epcStats->NotifyDrop (packet->GetSize (),
-                                EpcFlowStatsCalculator::METER);
+                                FlowStatsCalculator::METER);
         }
       else
         {
           epcStats->NotifyDrop (packet->GetSize (),
-                                EpcFlowStatsCalculator::SLICE);
+                                FlowStatsCalculator::SLICE);
         }
     }
   else
@@ -303,7 +303,7 @@ TrafficStatsCalculator::MeterDropPacket (
       // Notify the droped packet (it must be a traffic meter because we only
       // have slicing meters on ring switches, not on the P-GW).
       epcStats->NotifyDrop (packet->GetSize (),
-                            EpcFlowStatsCalculator::METER);
+                            FlowStatsCalculator::METER);
     }
 }
 
@@ -314,12 +314,12 @@ TrafficStatsCalculator::QueueDropPacket (std::string context,
   NS_LOG_FUNCTION (this << context << packet);
 
   EpcGtpuTag gtpuTag;
-  Ptr<EpcFlowStatsCalculator> epcStats;
+  Ptr<FlowStatsCalculator> epcStats;
   if (packet->PeekPacketTag (gtpuTag))
     {
       epcStats = GetEpcStats (gtpuTag.GetTeid (), GetDirection (gtpuTag));
       epcStats->NotifyDrop (packet->GetSize (),
-                            EpcFlowStatsCalculator::QUEUE);
+                            FlowStatsCalculator::QUEUE);
     }
 }
 
@@ -330,7 +330,7 @@ TrafficStatsCalculator::EpcInputPacket (std::string context,
   NS_LOG_FUNCTION (this << context << packet);
 
   EpcGtpuTag gtpuTag;
-  Ptr<EpcFlowStatsCalculator> epcStats;
+  Ptr<FlowStatsCalculator> epcStats;
   if (packet->PeekPacketTag (gtpuTag))
     {
       epcStats = GetEpcStats (gtpuTag.GetTeid (), GetDirection (gtpuTag));
@@ -345,7 +345,7 @@ TrafficStatsCalculator::EpcOutputPacket (std::string context,
   NS_LOG_FUNCTION (this << context << packet);
 
   EpcGtpuTag gtpuTag;
-  Ptr<EpcFlowStatsCalculator> epcStats;
+  Ptr<FlowStatsCalculator> epcStats;
   if (packet->PeekPacketTag (gtpuTag))
     {
       epcStats = GetEpcStats (gtpuTag.GetTeid (), GetDirection (gtpuTag));
@@ -353,13 +353,13 @@ TrafficStatsCalculator::EpcOutputPacket (std::string context,
     }
 }
 
-Ptr<EpcFlowStatsCalculator>
+Ptr<FlowStatsCalculator>
 TrafficStatsCalculator::GetEpcStats (uint32_t teid,
                                      TrafficStatsCalculator::Direction dir)
 {
   NS_LOG_FUNCTION (this << teid << dir);
 
-  Ptr<EpcFlowStatsCalculator> epcStats = 0;
+  Ptr<FlowStatsCalculator> epcStats = 0;
   auto it = m_qosByTeid.find (teid);
   if (it != m_qosByTeid.end ())
     {
@@ -368,8 +368,8 @@ TrafficStatsCalculator::GetEpcStats (uint32_t teid,
   else
     {
       EpcStatsPair pair;
-      pair.stats [Direction::DLINK] = CreateObject<EpcFlowStatsCalculator> ();
-      pair.stats [Direction::ULINK] = CreateObject<EpcFlowStatsCalculator> ();
+      pair.stats [Direction::DLINK] = CreateObject<FlowStatsCalculator> ();
+      pair.stats [Direction::ULINK] = CreateObject<FlowStatsCalculator> ();
       std::pair<uint32_t, EpcStatsPair> entry (teid, pair);
       auto ret = m_qosByTeid.insert (entry);
       NS_ABORT_MSG_IF (ret.second == false, "Error when saving QoS entry.");

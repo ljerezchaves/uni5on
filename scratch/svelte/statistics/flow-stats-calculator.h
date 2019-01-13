@@ -24,19 +24,31 @@
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
 
+// Total number of drop reasons + 1 for aggregated metadata.
+#define N_REASONS_ALL (static_cast<uint8_t> (DropReason::ALL) + 1)
+
 namespace ns3 {
 
 /**
  * \ingroup svelteStats
- * This class monitors some basic QoS statistics of a traffic flow. It counts
- * the number of transmitted/received bytes and packets, computes the loss
- * ratio, the average delay and the jitter. This class can be used to monitor
- * statistics at any network level, but keep in mind that it is not aware of
- * duplicated or fragmented packets at other levels.
+ * This class monitors basic QoS statistics at link level in the OpenFlow
+ * backhaul network. This class monitors some basic QoS statistics of a traffic
+ * flow. It counts the number of transmitted, received and dropped bytes and
+ * packets. It computes the loss ratio, the average delay, and the jitter.
  */
 class FlowStatsCalculator : public Object
 {
 public:
+  /** Reason for packet drops at OpenFlow backhaul network. */
+  enum DropReason
+  {
+    PLOAD = 0,    //!< Switch pipeline capacity overloaded.
+    METER = 1,    //!< EPC bearer MBR meter.
+    SLICE = 2,    //!< OpenFlow EPC infrastructure slicing.
+    QUEUE = 3,    //!< Network device queues.
+    ALL   = 4     //!< ALL previous reasons.
+  };
+
   FlowStatsCalculator ();          //!< Default constructor.
   virtual ~FlowStatsCalculator (); //!< Dummy destructor, see DoDispose.
 
@@ -49,27 +61,37 @@ public:
   /**
    * Reset all internal counters.
    */
-  virtual void ResetCounters (void);
+  void ResetCounters (void);
 
   /**
    * Update TX counters for a new transmitted packet.
    * \param txBytes The total number of bytes in this packet.
    * \return The counter of TX packets.
    */
-  virtual uint32_t NotifyTx (uint32_t txBytes);
+  uint32_t NotifyTx (uint32_t txBytes);
 
   /**
    * Update RX counters for a new received packet.
    * \param rxBytes The total number of bytes in this packet.
    * \param timestamp The timestamp when this packet was sent.
    */
-  virtual void NotifyRx (uint32_t rxBytes, Time timestamp = Simulator::Now ());
+  void NotifyRx (uint32_t rxBytes, Time timestamp = Simulator::Now ());
+
+  /**
+   * Update drop counters for a new dropped packet.
+   * \param dpBytes The total number of bytes in this packet.
+   * \param reason The drop reason.
+   */
+  void NotifyDrop (uint32_t dpBytes, DropReason reason);
 
   /**
    * Get QoS statistics.
+   * \param reason The drop reason.
    * \return The statistic value.
    */
   //\{
+  uint32_t  GetDpBytes      (DropReason reason) const;
+  uint32_t  GetDpPackets    (DropReason reason) const;
   Time      GetActiveTime   (void) const;
   uint32_t  GetLostPackets  (void) const;
   double    GetLossRatio    (void) const;
@@ -101,16 +123,18 @@ protected:
   virtual void DoDispose ();
 
 private:
-  uint32_t           m_txPackets;        //!< Number of TX packets.
-  uint32_t           m_txBytes;          //!< Number of TX bytes.
-  uint32_t           m_rxPackets;        //!< Number of RX packets.
-  uint32_t           m_rxBytes;          //!< Number of RX bytes.
-  Time               m_firstTxTime;      //!< First TX time.
-  Time               m_firstRxTime;      //!< First RX time.
-  Time               m_lastRxTime;       //!< Last RX time.
-  Time               m_lastTimestamp;    //!< Last timestamp.
-  int64_t            m_jitter;           //!< Jitter estimation.
-  Time               m_delaySum;         //!< Sum of packet delays.
+  uint32_t  m_dpPackets [N_REASONS_ALL];  //!< Number of dropped packets.
+  uint32_t  m_dpBytes [N_REASONS_ALL];    //!< Number of dropped bytes.
+  uint32_t  m_txPackets;                  //!< Number of TX packets.
+  uint32_t  m_txBytes;                    //!< Number of TX bytes.
+  uint32_t  m_rxPackets;                  //!< Number of RX packets.
+  uint32_t  m_rxBytes;                    //!< Number of RX bytes.
+  Time      m_firstTxTime;                //!< First TX time.
+  Time      m_firstRxTime;                //!< First RX time.
+  Time      m_lastRxTime;                 //!< Last RX time.
+  Time      m_lastTimestamp;              //!< Last timestamp.
+  int64_t   m_jitter;                     //!< Jitter estimation.
+  Time      m_delaySum;                   //!< Sum of packet delays.
 };
 
 /**
