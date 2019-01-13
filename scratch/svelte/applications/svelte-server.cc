@@ -32,9 +32,11 @@ NS_LOG_COMPONENT_DEFINE ("SvelteServer");
 NS_OBJECT_ENSURE_REGISTERED (SvelteServer);
 
 SvelteServer::SvelteServer ()
-  : m_appStats (CreateObject<FlowStatsCalculator> ()),
-  m_socket (0),
-  m_clientApp (0)
+  : m_socket (0),
+  m_clientApp (0),
+  m_rxBytes (0),
+  m_resetTime (Simulator::Now ()),
+  m_lastRxTime (Simulator::Now ())
 {
   NS_LOG_FUNCTION (this);
 }
@@ -102,14 +104,6 @@ SvelteServer::GetClientApp (void) const
   return m_clientApp;
 }
 
-Ptr<const FlowStatsCalculator>
-SvelteServer::GetAppStats (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_appStats;
-}
-
 void
 SvelteServer::SetClient (Ptr<SvelteClient> clientApp, Address clientAddress)
 {
@@ -119,12 +113,27 @@ SvelteServer::SetClient (Ptr<SvelteClient> clientApp, Address clientAddress)
   m_clientAddress = clientAddress;
 }
 
+DataRate
+SvelteServer::GetAppGoodput (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  if (m_rxBytes && m_lastRxTime != m_resetTime)
+    {
+      Time elapsed = m_lastRxTime - m_resetTime;
+      return DataRate (m_rxBytes * 8 / elapsed.GetSeconds ());
+    }
+  else
+    {
+      return DataRate (0);
+    }
+}
+
 void
 SvelteServer::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
 
-  m_appStats = 0;
   m_socket = 0;
   m_clientApp = 0;
   Application::DoDispose ();
@@ -147,21 +156,13 @@ SvelteServer::NotifyForceStop ()
   NS_LOG_INFO ("Forcing the server application to stop.");
 }
 
-uint32_t
-SvelteServer::NotifyTx (uint32_t txBytes)
-{
-  NS_LOG_FUNCTION (this << txBytes);
-
-  NS_ASSERT_MSG (m_clientApp, "Client application undefined.");
-  return m_clientApp->m_appStats->NotifyTx (txBytes);
-}
-
 void
-SvelteServer::NotifyRx (uint32_t rxBytes, Time timestamp)
+SvelteServer::NotifyRx (uint32_t bytes)
 {
-  NS_LOG_FUNCTION (this << rxBytes << timestamp);
+  NS_LOG_FUNCTION (this << bytes);
 
-  m_appStats->NotifyRx (rxBytes, timestamp);
+  m_rxBytes += bytes;
+  m_lastRxTime = Simulator::Now ();
 }
 
 void
@@ -169,7 +170,9 @@ SvelteServer::ResetAppStats ()
 {
   NS_LOG_FUNCTION (this);
 
-  m_appStats->ResetCounters ();
+  m_rxBytes = 0;
+  m_resetTime = Simulator::Now ();
+  m_lastRxTime = Simulator::Now ();
 }
 
 } // namespace ns3

@@ -26,7 +26,6 @@
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
 #include <ns3/lte-module.h>
-#include "../statistics/flow-stats-calculator.h"
 
 namespace ns3 {
 
@@ -57,12 +56,11 @@ public:
    * \return The requested value.
    */
   //\{
-  std::string                     GetAppName    (void) const;
-  Ptr<const FlowStatsCalculator>  GetAppStats   (void) const;
-  Ptr<SvelteClient>               GetClientApp  (void) const;
-  std::string                     GetTeidHex    (void) const;
-  bool                            IsActive      (void) const;
-  bool                            IsForceStop   (void) const;
+  std::string       GetAppName    (void) const;
+  Ptr<SvelteClient> GetClientApp  (void) const;
+  std::string       GetTeidHex    (void) const;
+  bool              IsActive      (void) const;
+  bool              IsForceStop   (void) const;
   //\}
 
   /**
@@ -71,6 +69,12 @@ public:
    * \param clientAddress The Inet socket address of the client.
    */
   void SetClient (Ptr<SvelteClient> clientApp, Address clientAddress);
+
+  /**
+   * Get the goodput for this application.
+   * \return The goodput.
+   */
+  DataRate GetAppGoodput (void) const;
 
 protected:
   /** Destructor implementation. */
@@ -89,29 +93,25 @@ protected:
   virtual void NotifyForceStop ();
 
   /**
-   * Update TX counter for a new transmitted packet on client stats calculator.
-   * \param txBytes The total number of bytes in this packet.
-   * \return The counter of TX packets.
+   * Update RX counter for new bytes received by this application.
+   * \param bytes The number of bytes received.
    */
-  uint32_t NotifyTx (uint32_t txBytes);
-
-  /**
-   * Update RX counter for a new received packet on server stats calculator.
-   * \param rxBytes The total number of bytes in this packet.
-   * \param timestamp The timestamp when this packet was sent.
-   */
-  void NotifyRx (uint32_t rxBytes, Time timestamp = Simulator::Now ());
+  void NotifyRx (uint32_t bytes);
 
   /**
    * Reset the QoS statistics.
    */
   void ResetAppStats ();
 
-  Ptr<FlowStatsCalculator>  m_appStats;         //!< QoS statistics.
   Ptr<Socket>               m_socket;           //!< Local socket.
   uint16_t                  m_localPort;        //!< Local port.
   Address                   m_clientAddress;    //!< Client address.
   Ptr<SvelteClient>         m_clientApp;        //!< Client application.
+
+  // Traffic statistics.
+  uint32_t                  m_rxBytes;        //!< Number of RX bytes.
+  Time                      m_resetTime;      //!< First TX time.
+  Time                      m_lastRxTime;     //!< Last RX time.
 };
 
 } // namespace ns3

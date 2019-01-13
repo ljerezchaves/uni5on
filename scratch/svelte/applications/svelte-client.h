@@ -26,7 +26,6 @@
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
 #include <ns3/lte-module.h>
-#include "../statistics/flow-stats-calculator.h"
 
 namespace ns3 {
 
@@ -41,7 +40,7 @@ class SvelteServer;
  * \ingroup svelteApps
  * This class extends the Application class to proper work with the SVELTE
  * architecture. Only clients applications (those which will be installed into
- * UEs) should extend this class. It includes a FlowStatsCalculator for traffic
+ * UEs) should extend this class. It includes a rx byte counter for traffic
  * statistics, and start/stop callbacks to notify the slice controller when the
  * traffic stats/stops. Each application is associated with an EPS bearer, and
  * application traffic is sent within GTP tunnels over EPC interfaces. These
@@ -66,18 +65,16 @@ public:
    * \return The requested value.
    */
   //\{
-  std::string                     GetAppName        (void) const;
-  Ptr<const FlowStatsCalculator>  GetAppStats       (void) const;
-  EpsBearer                       GetEpsBearer      (void) const;
-  uint8_t                         GetEpsBearerId    (void) const;
-  Time                            GetMaxOnTime      (void) const;
-  std::string                     GetNameTeid       (void) const;
-  Ptr<SvelteServer>               GetServerApp      (void) const;
-  Ptr<const FlowStatsCalculator>  GetServerAppStats (void) const;
-  uint32_t                        GetTeid           (void) const;
-  std::string                     GetTeidHex        (void) const;
-  bool                            IsActive          (void) const;
-  bool                            IsForceStop       (void) const;
+  std::string       GetAppName        (void) const;
+  EpsBearer         GetEpsBearer      (void) const;
+  uint8_t           GetEpsBearerId    (void) const;
+  Time              GetMaxOnTime      (void) const;
+  std::string       GetNameTeid       (void) const;
+  Ptr<SvelteServer> GetServerApp      (void) const;
+  uint32_t          GetTeid           (void) const;
+  std::string       GetTeidHex        (void) const;
+  bool              IsActive          (void) const;
+  bool              IsForceStop       (void) const;
   //\}
 
   /**
@@ -85,9 +82,9 @@ public:
    * \param value The value to set.
    */
   //\{
-  void                            SetEpsBearer      (EpsBearer  value);
-  void                            SetEpsBearerId    (uint8_t    value);
-  void                            SetTeid           (uint32_t   value);
+  void              SetEpsBearer      (EpsBearer  value);
+  void              SetEpsBearerId    (uint8_t    value);
+  void              SetTeid           (uint32_t   value);
   //\}
 
   /**
@@ -102,6 +99,12 @@ public:
    * application, fire the start trace source, and start traffic generation.
    */
   virtual void Start ();
+
+  /**
+   * Get the goodput for this application.
+   * \return The goodput.
+   */
+  DataRate GetAppGoodput (void) const;
 
   /**
    * TracedCallback signature for Ptr<SvelteClient>.
@@ -136,20 +139,11 @@ protected:
   virtual void NotifyStop (bool withError = false);
 
   /**
-   * Update TX counter for a new transmitted packet on server stats calculator.
-   * \param txBytes The total number of bytes in this packet.
-   * \return The counter of TX packets.
+   * Update RX counter for new bytes received by this application.
+   * \param bytes The number of bytes received.
    */
-  uint32_t NotifyTx (uint32_t txBytes);
+  void NotifyRx (uint32_t bytes);
 
-  /**
-   * Update RX counter for a new received packet on client stats calculator.
-   * \param rxBytes The total number of bytes in this packet.
-   * \param timestamp The timestamp when this packet was sent.
-   */
-  void NotifyRx (uint32_t rxBytes, Time timestamp = Simulator::Now ());
-
-  Ptr<FlowStatsCalculator>  m_appStats;         //!< QoS statistics.
   Ptr<Socket>               m_socket;           //!< Local socket.
   uint16_t                  m_localPort;        //!< Local port.
   Address                   m_serverAddress;    //!< Server address.
@@ -176,6 +170,11 @@ private:
   Time                      m_maxOnTime;      //!< Max duration time.
   EventId                   m_forceStop;      //!< Max duration stop event.
   bool                      m_forceStopFlag;  //!< Force stop flag.
+
+  // Traffic statistics.
+  uint32_t                  m_rxBytes;        //!< Number of RX bytes.
+  Time                      m_resetTime;      //!< First TX time.
+  Time                      m_lastRxTime;     //!< Last RX time.
 
   // LTE EPS metadata.
   EpsBearer                 m_bearer;         //!< EPS bearer info.

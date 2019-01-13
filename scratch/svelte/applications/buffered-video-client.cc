@@ -213,7 +213,6 @@ BufferedVideoClient::SendRequest (Ptr<Socket> socket, std::string url)
   Ptr<Packet> packet = Create<Packet> ();
   packet->AddHeader (httpHeaderRequest);
 
-  NotifyTx (packet->GetSize ());
   int bytes = socket->Send (packet);
   if (bytes != static_cast<int> (packet->GetSize ()))
     {

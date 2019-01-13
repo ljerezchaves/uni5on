@@ -193,7 +193,7 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
         << " " << setw (9) << app->GetAppName ()
         << " " << setw (7) << DirectionStr (Direction::ULINK)
         << *rInfo
-        << *app->GetServerAppStats ()
+        // << *app->GetServerAppStats ()
         << std::endl;
     }
 
@@ -214,7 +214,7 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
         << " " << setw (9) << app->GetAppName ()
         << " " << setw (7) << DirectionStr (Direction::DLINK)
         << *rInfo
-        << *app->GetAppStats ()
+        // << *app->GetAppStats () // FIXME......
         << std::endl;
     }
 }

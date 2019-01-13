@@ -33,12 +33,14 @@ NS_LOG_COMPONENT_DEFINE ("SvelteClient");
 NS_OBJECT_ENSURE_REGISTERED (SvelteClient);
 
 SvelteClient::SvelteClient ()
-  : m_appStats (CreateObject<FlowStatsCalculator> ()),
-  m_socket (0),
+  : m_socket (0),
   m_serverApp (0),
   m_active (false),
   m_forceStop (EventId ()),
   m_forceStopFlag (false),
+  m_rxBytes (0),
+  m_resetTime (Simulator::Now ()),
+  m_lastRxTime (Simulator::Now ()),
   m_bearerId (1),   // This is the default BID.
   m_teid (0)
 {
@@ -171,23 +173,6 @@ SvelteClient::GetServerApp (void) const
   return m_serverApp;
 }
 
-Ptr<const FlowStatsCalculator>
-SvelteClient::GetAppStats (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_appStats;
-}
-
-Ptr<const FlowStatsCalculator>
-SvelteClient::GetServerAppStats (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  NS_ASSERT_MSG (m_serverApp, "Server application undefined.");
-  return m_serverApp->GetAppStats ();
-}
-
 void
 SvelteClient::SetEpsBearer (EpsBearer value)
 {
@@ -248,12 +233,27 @@ SvelteClient::Start ()
   m_appStartTrace (this);
 }
 
+DataRate
+SvelteClient::GetAppGoodput (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  if (m_rxBytes && m_lastRxTime != m_resetTime)
+    {
+      Time elapsed = m_lastRxTime - m_resetTime;
+      return DataRate (m_rxBytes * 8 / elapsed.GetSeconds ());
+    }
+  else
+    {
+      return DataRate (0);
+    }
+}
+
 void
 SvelteClient::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
 
-  m_appStats = 0;
   m_lengthRng = 0;
   m_socket = 0;
   m_serverApp = 0;
@@ -308,21 +308,13 @@ SvelteClient::NotifyStop (bool withError)
     }
 }
 
-uint32_t
-SvelteClient::NotifyTx (uint32_t txBytes)
-{
-  NS_LOG_FUNCTION (this << txBytes);
-
-  NS_ASSERT_MSG (m_serverApp, "Server application undefined.");
-  return m_serverApp->m_appStats->NotifyTx (txBytes);
-}
-
 void
-SvelteClient::NotifyRx (uint32_t rxBytes, Time timestamp)
+SvelteClient::NotifyRx (uint32_t bytes)
 {
-  NS_LOG_FUNCTION (this << rxBytes << timestamp);
+  NS_LOG_FUNCTION (this << bytes);
 
-  m_appStats->NotifyRx (rxBytes, timestamp);
+  m_rxBytes += bytes;
+  m_lastRxTime = Simulator::Now ();
 }
 
 void
@@ -330,7 +322,9 @@ SvelteClient::ResetAppStats ()
 {
   NS_LOG_FUNCTION (this);
 
-  m_appStats->ResetCounters ();
+  m_rxBytes = 0;
+  m_resetTime = Simulator::Now ();
+  m_lastRxTime = Simulator::Now ();
 }
 
 } // namespace ns3

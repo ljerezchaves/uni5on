@@ -144,21 +144,11 @@ SvelteUdpClient::SendPacket (uint32_t size)
 {
   NS_LOG_FUNCTION (this << size);
 
-  static const uint32_t seqTsSize = 12;
-
-  // Create the packet and add the seq header without increasing packet size.
-  uint32_t packetSize = size > seqTsSize ? size - seqTsSize : 0;
-  Ptr<Packet> packet = Create<Packet> (packetSize);
-
-  SeqTsHeader seqTs;
-  seqTs.SetSeq (NotifyTx (packetSize + seqTsSize) - 1);
-  packet->AddHeader (seqTs);
-
+  Ptr<Packet> packet = Create<Packet> (size);
   int bytes = m_socket->Send (packet);
   if (bytes == static_cast<int> (packet->GetSize ()))
     {
-      NS_LOG_DEBUG ("Client TX " << bytes << " bytes with " <<
-                    "sequence number " << seqTs.GetSeq ());
+      NS_LOG_DEBUG ("Client TX packet with " << bytes << " bytes.");
     }
   else
     {
@@ -177,14 +167,9 @@ SvelteUdpClient::ReadPacket (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 
-  // Receive the datagram from the socket.
   Ptr<Packet> packet = socket->Recv ();
-
-  SeqTsHeader seqTs;
-  packet->PeekHeader (seqTs);
-  NotifyRx (packet->GetSize (), seqTs.GetTs ());
-  NS_LOG_DEBUG ("Client RX " << packet->GetSize () << " bytes with " <<
-                "sequence number " << seqTs.GetSeq ());
+  NotifyRx (packet->GetSize ());
+  NS_LOG_DEBUG ("Client RX packet with " << packet->GetSize () << " bytes.");
 }
 
 } // Namespace ns3

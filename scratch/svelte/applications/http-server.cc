@@ -234,7 +234,6 @@ HttpServer::ProccessHttpRequest (Ptr<Socket> socket, HttpHeader header)
       Ptr<Packet> outPacket = Create<Packet> (0);
       outPacket->AddHeader (httpHeaderOut);
 
-      NotifyTx (outPacket->GetSize () + m_pendingBytes);
       int bytes = socket->Send (outPacket);
       if (bytes != static_cast<int> (outPacket->GetSize ()))
         {
@@ -262,7 +261,6 @@ HttpServer::ProccessHttpRequest (Ptr<Socket> socket, HttpHeader header)
       Ptr<Packet> outPacket = Create<Packet> (0);
       outPacket->AddHeader (httpHeaderOut);
 
-      NotifyTx (outPacket->GetSize () + m_pendingBytes);
       int bytes = socket->Send (outPacket);
       if (bytes != static_cast<int> (outPacket->GetSize ()))
         {
