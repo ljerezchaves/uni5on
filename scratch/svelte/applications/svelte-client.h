@@ -101,10 +101,16 @@ public:
   virtual void Start ();
 
   /**
-   * Get the goodput for this application.
-   * \return The goodput.
+   * Get the downlink goodput for this application.
+   * \return The requested goodput.
    */
-  DataRate GetAppGoodput (void) const;
+  DataRate GetDlGoodput (void) const;
+
+  /**
+   * Get the uplink goodput for this application.
+   * \return The requested goodput.
+   */
+  DataRate GetUlGoodput (void) const;
 
   /**
    * TracedCallback signature for Ptr<SvelteClient>.

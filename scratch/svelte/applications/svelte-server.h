@@ -71,10 +71,10 @@ public:
   void SetClient (Ptr<SvelteClient> clientApp, Address clientAddress);
 
   /**
-   * Get the goodput for this application.
-   * \return The goodput.
+   * Get the uplink goodput for this application.
+   * \return The requested goodput.
    */
-  DataRate GetAppGoodput (void) const;
+  DataRate GetUlGoodput (void) const;
 
 protected:
   /** Destructor implementation. */

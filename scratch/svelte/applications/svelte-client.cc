@@ -236,7 +236,7 @@ SvelteClient::Start ()
 }
 
 DataRate
-SvelteClient::GetAppGoodput (void) const
+SvelteClient::GetDlGoodput (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -256,6 +256,14 @@ SvelteClient::GetAppGoodput (void) const
       elapsed = m_stopTime - m_startTime;
     }
   return DataRate (m_rxBytes * 8 / elapsed.GetSeconds ());
+}
+
+DataRate
+SvelteClient::GetUlGoodput (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_serverApp->GetUlGoodput ();
 }
 
 void

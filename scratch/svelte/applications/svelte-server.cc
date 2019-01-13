@@ -114,7 +114,7 @@ SvelteServer::SetClient (Ptr<SvelteClient> clientApp, Address clientAddress)
 }
 
 DataRate
-SvelteServer::GetAppGoodput (void) const
+SvelteServer::GetUlGoodput (void) const
 {
   NS_LOG_FUNCTION (this);
 
