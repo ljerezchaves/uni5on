@@ -84,6 +84,12 @@ EpcGtpuTag::Print (std::ostream &os) const
      << " timestamp=" << m_ts;
 }
 
+Direction
+EpcGtpuTag::GetDirection () const
+{
+  return IsDownlink () ? Direction::DLINK : Direction::ULINK;
+}
+
 uint32_t
 EpcGtpuTag::GetTeid () const
 {

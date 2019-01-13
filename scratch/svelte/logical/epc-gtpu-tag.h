@@ -24,6 +24,7 @@
 #include "ns3/tag.h"
 #include "ns3/nstime.h"
 #include "ns3/simulator.h"
+#include "../svelte-common.h"
 
 namespace ns3 {
 
@@ -39,7 +40,7 @@ public:
   enum EpcInputNode
   {
     ENB = 0,  //!< At the eNB node
-    PGW = 1   //!< At the SgwPgw node
+    PGW = 1   //!< At the P-GW node
   };
 
   static TypeId GetTypeId (void);
@@ -54,6 +55,9 @@ public:
   virtual void Deserialize (TagBuffer i);
   virtual uint32_t GetSerializedSize () const;
   virtual void Print (std::ostream &os) const;
+
+  /** \return the direction for this traffic */
+  Direction GetDirection () const;
 
   /** \return the teid field */
   uint32_t GetTeid () const;

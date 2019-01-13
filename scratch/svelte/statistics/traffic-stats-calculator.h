@@ -54,13 +54,6 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /**
-   * Identify the traffic direction based on the GTPU packet tag.
-   * \param gtpuTag The GTPU packet tag.
-   * \return The traffic direction.
-   */
-  static Direction GetDirection (EpcGtpuTag &gtpuTag);
-
 protected:
   /** Destructor implementation. */
   virtual void DoDispose ();

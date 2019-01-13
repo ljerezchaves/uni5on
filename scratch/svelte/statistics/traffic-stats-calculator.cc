@@ -94,12 +94,6 @@ TrafficStatsCalculator::GetTypeId (void)
   return tid;
 }
 
-TrafficStatsCalculator::Direction
-TrafficStatsCalculator::GetDirection (EpcGtpuTag &gtpuTag)
-{
-  return gtpuTag.IsDownlink () ? Direction::DLINK : Direction::ULINK;
-}
-
 void
 TrafficStatsCalculator::DoDispose ()
 {
@@ -219,9 +213,8 @@ TrafficStatsCalculator::OverloadDropPacket (std::string context,
   Ptr<FlowStatsCalculator> epcStats;
   if (packet->PeekPacketTag (gtpuTag))
     {
-      epcStats = GetEpcStats (gtpuTag.GetTeid (), GetDirection (gtpuTag));
-      epcStats->NotifyDrop (packet->GetSize (),
-                            FlowStatsCalculator::PLOAD);
+      epcStats = GetEpcStats (gtpuTag.GetTeid (), gtpuTag.GetDirection ());
+      epcStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::PLOAD);
     }
   else
     {
@@ -243,8 +236,7 @@ TrafficStatsCalculator::OverloadDropPacket (std::string context,
 
       epcStats = GetEpcStats (teid, Direction::DLINK);
       epcStats->NotifyTx (packetCopy->GetSize ());
-      epcStats->NotifyDrop (packetCopy->GetSize (),
-                            FlowStatsCalculator::PLOAD);
+      epcStats->NotifyDrop (packetCopy->GetSize (), FlowStatsCalculator::PLOAD);
     }
 }
 
@@ -260,18 +252,16 @@ TrafficStatsCalculator::MeterDropPacket (
   if (packet->PeekPacketTag (gtpuTag))
     {
       teid = gtpuTag.GetTeid ();
-      epcStats = GetEpcStats (teid, GetDirection (gtpuTag));
+      epcStats = GetEpcStats (teid, gtpuTag.GetDirection ());
 
       // Notify the droped packet, based on meter type (traffic or slicing).
       if (teid == meterId)
         {
-          epcStats->NotifyDrop (packet->GetSize (),
-                                FlowStatsCalculator::METER);
+          epcStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::METER);
         }
       else
         {
-          epcStats->NotifyDrop (packet->GetSize (),
-                                FlowStatsCalculator::SLICE);
+          epcStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::SLICE);
         }
     }
   else
@@ -288,8 +278,7 @@ TrafficStatsCalculator::MeterDropPacket (
 
       // Notify the droped packet (it must be a traffic meter because we only
       // have slicing meters on ring switches, not on the P-GW).
-      epcStats->NotifyDrop (packet->GetSize (),
-                            FlowStatsCalculator::METER);
+      epcStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::METER);
     }
 }
 
@@ -303,9 +292,8 @@ TrafficStatsCalculator::QueueDropPacket (std::string context,
   Ptr<FlowStatsCalculator> epcStats;
   if (packet->PeekPacketTag (gtpuTag))
     {
-      epcStats = GetEpcStats (gtpuTag.GetTeid (), GetDirection (gtpuTag));
-      epcStats->NotifyDrop (packet->GetSize (),
-                            FlowStatsCalculator::QUEUE);
+      epcStats = GetEpcStats (gtpuTag.GetTeid (), gtpuTag.GetDirection ());
+      epcStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::QUEUE);
     }
 }
 
@@ -319,7 +307,7 @@ TrafficStatsCalculator::EpcInputPacket (std::string context,
   Ptr<FlowStatsCalculator> epcStats;
   if (packet->PeekPacketTag (gtpuTag))
     {
-      epcStats = GetEpcStats (gtpuTag.GetTeid (), GetDirection (gtpuTag));
+      epcStats = GetEpcStats (gtpuTag.GetTeid (), gtpuTag.GetDirection ());
       epcStats->NotifyTx (packet->GetSize ());
     }
 }
@@ -334,7 +322,7 @@ TrafficStatsCalculator::EpcOutputPacket (std::string context,
   Ptr<FlowStatsCalculator> epcStats;
   if (packet->PeekPacketTag (gtpuTag))
     {
-      epcStats = GetEpcStats (gtpuTag.GetTeid (), GetDirection (gtpuTag));
+      epcStats = GetEpcStats (gtpuTag.GetTeid (), gtpuTag.GetDirection ());
       epcStats->NotifyRx (packet->GetSize (), gtpuTag.GetTimestamp ());
     }
 }
