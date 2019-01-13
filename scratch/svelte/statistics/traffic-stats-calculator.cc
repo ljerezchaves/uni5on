@@ -146,8 +146,9 @@ TrafficStatsCalculator::NotifyConstructionCompleted (void)
     << " " << setw (9) << "AppName"
     << " " << setw (7) << "TrafDir";
   RoutingInfo::PrintHeader (*m_appWrapper->GetStream ());
-  FlowStatsCalculator::PrintHeader (*m_appWrapper->GetStream ());
-  *m_appWrapper->GetStream () << std::endl;
+  *m_appWrapper->GetStream ()
+    << " " << setw (9) << "GdpKbps"
+    << std::endl;
 
   // Create the output file for EPC stats.
   m_epcWrapper = Create<OutputStreamWrapper> (
@@ -193,7 +194,7 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
         << " " << setw (9) << app->GetAppName ()
         << " " << setw (7) << DirectionStr (Direction::ULINK)
         << *rInfo
-        // << *app->GetServerAppStats ()
+        << " " << setw (9) << Bps2Kbps (app->GetUlGoodput ().GetBitRate ())
         << std::endl;
     }
 
@@ -214,7 +215,7 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
         << " " << setw (9) << app->GetAppName ()
         << " " << setw (7) << DirectionStr (Direction::DLINK)
         << *rInfo
-        // << *app->GetAppStats () // FIXME......
+        << " " << setw (9) << Bps2Kbps (app->GetDlGoodput ().GetBitRate ())
         << std::endl;
     }
 }
