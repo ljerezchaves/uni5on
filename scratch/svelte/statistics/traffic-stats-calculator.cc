@@ -142,12 +142,12 @@ TrafficStatsCalculator::NotifyConstructionCompleted (void)
   // Print the header in output file.
   *m_appWrapper->GetStream ()
     << boolalpha << right << fixed << setprecision (3)
-    << " " << setw (8) << "TimeSec"
-    << " " << setw (9) << "AppName"
-    << " " << setw (7) << "TrafDir";
-  RoutingInfo::PrintHeader (*m_appWrapper->GetStream ());
-  *m_appWrapper->GetStream ()
-    << " " << setw (9) << "GdpKbps"
+    << " " << setw (8)  << "TimeSec"
+    << " " << setw (9)  << "AppName"
+    << " " << setw (11) << "Teid"
+    << " " << setw (6)  << "Slice"
+    << " " << setw (11) << "GdpDlKbps"
+    << " " << setw (11) << "GdpUlKbps"
     << std::endl;
 
   // Create the output file for EPC stats.
@@ -177,6 +177,15 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
   Ptr<const RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
   Ptr<const EpcFlowStatsCalculator> epcStats;
 
+  *m_appWrapper->GetStream ()
+    << " " << setw (8)  << Simulator::Now ().GetSeconds ()
+    << " " << setw (9)  << app->GetAppName ()
+    << " " << setw (11) << rInfo->GetTeidHex ()
+    << " " << setw (6)  << rInfo->GetSliceIdStr ()
+    << " " << setw (11) << Bps2Kbps (app->GetUlGoodput ().GetBitRate ())
+    << " " << setw (11) << Bps2Kbps (app->GetDlGoodput ().GetBitRate ())
+    << std::endl;
+
   if (rInfo->HasUlTraffic ())
     {
       // Dump uplink statistics.
@@ -187,14 +196,6 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
         << " " << setw (7) << DirectionStr (Direction::ULINK)
         << *rInfo
         << *epcStats
-        << std::endl;
-
-      *m_appWrapper->GetStream ()
-        << " " << setw (8) << Simulator::Now ().GetSeconds ()
-        << " " << setw (9) << app->GetAppName ()
-        << " " << setw (7) << DirectionStr (Direction::ULINK)
-        << *rInfo
-        << " " << setw (9) << Bps2Kbps (app->GetUlGoodput ().GetBitRate ())
         << std::endl;
     }
 
@@ -208,14 +209,6 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
         << " " << setw (7) << DirectionStr (Direction::DLINK)
         << *rInfo
         << *epcStats
-        << std::endl;
-
-      *m_appWrapper->GetStream ()
-        << " " << setw (8) << Simulator::Now ().GetSeconds ()
-        << " " << setw (9) << app->GetAppName ()
-        << " " << setw (7) << DirectionStr (Direction::DLINK)
-        << *rInfo
-        << " " << setw (9) << Bps2Kbps (app->GetDlGoodput ().GetBitRate ())
         << std::endl;
     }
 }
