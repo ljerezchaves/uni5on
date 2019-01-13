@@ -240,15 +240,22 @@ SvelteClient::GetAppGoodput (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  if (m_stopTime != Time (0) && m_startTime != m_stopTime)
+  if (m_startTime == m_stopTime || m_startTime == Simulator::Now ())
     {
-      Time elapsed = m_stopTime - m_startTime;
-      return DataRate (m_rxBytes * 8 / elapsed.GetSeconds ());
+      // Invalid conditions for goodput calculation (division by 0).
+      return DataRate (0);
+    }
+
+  Time elapsed = Time (0);
+  if (IsActive ())
+    {
+      elapsed = Simulator::Now () - m_startTime;
     }
   else
     {
-      return DataRate (0);
+      elapsed = m_stopTime - m_startTime;
     }
+  return DataRate (m_rxBytes * 8 / elapsed.GetSeconds ());
 }
 
 void
