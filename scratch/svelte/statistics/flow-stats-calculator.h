@@ -123,6 +123,15 @@ protected:
   virtual void DoDispose ();
 
 private:
+  /**
+   * Get the time of the first and last TX/RX events since last reset.
+   * \return The requested value.
+   */
+  //\{
+  Time GetFirstTxRxTime (void) const;
+  Time GetLastTxRxTime (void) const; 
+  //\}
+
   uint64_t  m_dpPackets [N_REASONS_ALL];  //!< Number of dropped packets.
   uint64_t  m_dpBytes [N_REASONS_ALL];    //!< Number of dropped bytes.
   uint64_t  m_txPackets;                  //!< Number of TX packets.

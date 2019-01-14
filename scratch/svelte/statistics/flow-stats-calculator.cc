@@ -61,10 +61,10 @@ FlowStatsCalculator::ResetCounters (void)
   m_txBytes = 0;
   m_rxPackets = 0;
   m_rxBytes = 0;
-  m_firstTxTime = Time (0);
-  m_firstRxTime = Time (0);
-  m_lastTxTime = Time (0);
-  m_lastRxTime = Time (0);
+  m_firstTxTime = Time::Max ();
+  m_firstRxTime = Time::Max ();
+  m_lastTxTime = Time::Min ();
+  m_lastRxTime = Time::Min ();
   m_lastTimestamp = Time (0);
   m_lastResetTime = Simulator::Now ();
   m_jitter = 0;
@@ -293,6 +293,18 @@ FlowStatsCalculator::DoDispose ()
   NS_LOG_FUNCTION (this);
 
   Object::DoDispose ();
+}
+
+Time
+FlowStatsCalculator::GetFirstTxRxTime (void) const
+{
+  return Min (m_firstTxTime, m_firstRxTime);
+}
+
+Time
+FlowStatsCalculator::GetLastTxRxTime (void) const
+{
+  return Max (m_lastTxTime, m_lastRxTime);
 }
 
 std::ostream & operator << (std::ostream &os, const FlowStatsCalculator &stats)
