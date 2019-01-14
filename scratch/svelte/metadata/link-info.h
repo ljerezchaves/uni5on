@@ -341,6 +341,16 @@ private:
     uint64_t src, uint64_t dst, SliceId slice, uint64_t bitRate);
 
   /**
+   * Set the slice queota for this link on the given direction
+   * \param dir The link direction.
+   * \param slice The network slice.
+   * \param quota The slice quota.
+   * \return True if succeeded, false otherwise.
+   */
+  bool SetQuota (
+    Direction dir, SliceId slice, uint16_t quota);
+
+  /**
    * Update the maximum bit rate over this link on the given
    * direction for each network slice.
    * \param dir The link direction.

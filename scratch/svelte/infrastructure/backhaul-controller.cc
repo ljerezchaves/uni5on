@@ -275,23 +275,22 @@ BackhaulController::NotifySlicesBuilt (ApplicationContainer &controllers)
   LinkInfo::SliceQuotaMap_t quotas;
   for (auto const &it : m_sliceCtrlById)
     {
+      SliceId sliceId = it.first;
       UintegerValue quotaValue (0);
       if (it.second)
         {
           it.second->GetAttribute ("Quota", quotaValue);
         }
-      std::pair<SliceId, uint16_t> entry (it.first, quotaValue.Get ());
-      auto ret = quotas.insert (entry);
-      NS_ABORT_MSG_IF (ret.second == false, "Error when creating quota map.");
-    }
+      uint16_t quota = quotaValue.Get ();
 
-  // Iterate over links setting the initial quotas.
-  for (auto const &lInfo : LinkInfo::GetList ())
-    {
-      bool success = true;
-      success &= lInfo->SetSliceQuotas (LinkInfo::FWD, quotas);
-      success &= lInfo->SetSliceQuotas (LinkInfo::BWD, quotas);
-      NS_ASSERT_MSG (success, "Error when setting slice quotas.");
+      // Iterate over links setting the initial quotas.
+      for (auto const &lInfo : LinkInfo::GetList ())
+        {
+          bool success = true;
+          success &= lInfo->SetQuota (LinkInfo::FWD, sliceId, quota);
+          success &= lInfo->SetQuota (LinkInfo::BWD, sliceId, quota);
+          NS_ASSERT_MSG (success, "Error when setting slice quotas.");
+        }
     }
 
   // ---------------------------------------------------------------------

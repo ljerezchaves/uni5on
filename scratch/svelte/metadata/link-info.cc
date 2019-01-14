@@ -503,6 +503,62 @@ LinkInfo::ReserveBitRate (
 }
 
 bool
+LinkInfo::SetQuota (Direction dir, SliceId slice, uint16_t quota)
+{
+  NS_LOG_FUNCTION (this << dir << slice << quota);
+
+  NS_ASSERT_MSG (slice < SliceId::ALL, "Invalid slice for this operation.");
+
+  // Nothing to do when the quota doesn't change.
+  if (GetQuota (dir, slice) == quota)
+    {
+      return true;
+    }
+
+  // Check for valid slice quota.
+  NS_ASSERT_MSG (quota >= 0 && quota <= 100, "Invalid quota value.");
+  if (GetResBitRate (dir, slice) > ((GetLinkBitRate () * quota) / 100))
+    {
+      NS_LOG_WARN ("Can't change the slice quota. The new bit rate is "
+                   "lower than the already reserved bit rate.");
+      return false;
+    }
+
+  // Check for valid sum of quotas.
+  uint16_t sumQuotas = quota;
+  for (int s = 0; s < SliceId::ALL; s++)
+    {
+      SliceId sliceId = static_cast<SliceId> (s);
+      if (sliceId != slice)
+        {
+          sumQuotas += GetQuota (dir, sliceId);
+        }
+    }
+  if (sumQuotas > 100)
+    {
+      NS_LOG_WARN ("Can't change the slice quota. The new sum of quotas "
+                   "is exceeding the link capacity.");
+      return false;
+    }
+
+  // Update the slice quota.
+  int64_t oldBitRate = GetQuotaBitRate (dir, slice);
+  NS_LOG_DEBUG (SliceIdStr (slice) << " slice new quota: " << quota);
+  m_slices [slice][dir].quota = quota;
+  int64_t newBitRate = GetQuotaBitRate (dir, slice);
+  UpdateMeterDiff (dir, slice, newBitRate - oldBitRate);
+
+  // Update the fake shared slice
+  oldBitRate = GetQuotaBitRate (dir, SliceId::ALL);
+  NS_LOG_DEBUG (SliceIdStr (SliceId::ALL) << " slice new quota: " << sumQuotas);
+  m_slices [SliceId::ALL][dir].quota = sumQuotas;
+  newBitRate = GetQuotaBitRate (dir, SliceId::ALL);
+  UpdateMeterDiff (dir, SliceId::ALL, newBitRate - oldBitRate);
+
+  return true;
+}
+
+bool
 LinkInfo::SetSliceQuotas (
   Direction dir, const SliceQuotaMap_t &quotas)
 {
