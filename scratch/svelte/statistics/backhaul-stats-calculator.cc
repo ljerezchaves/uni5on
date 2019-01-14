@@ -98,7 +98,10 @@ BackhaulStatsCalculator::DoDispose ()
     {
       for (int d = 0; d <= Direction::ULINK; d++)
         {
-          m_slices [s].tffStats [d] = 0;
+          for (int t = 0; t <= QosType::GBR; t++)
+            {
+              m_slices [s].tffStats [d][t] = 0;
+            }
         }
       m_slices [s].bwdWrapper = 0;
       m_slices [s].tffWrapper = 0;
@@ -124,8 +127,12 @@ BackhaulStatsCalculator::NotifyConstructionCompleted (void)
       SliceStats &stats = m_slices [s];
       for (int d = 0; d <= Direction::ULINK; d++)
         {
-          stats.tffStats [d] = CreateObjectWithAttributes<FlowStatsCalculator> (
-              "ActiveSinceReset", BooleanValue (true));
+          for (int t = 0; t <= QosType::GBR; t++)
+            {
+              stats.tffStats [d][t] =
+                CreateObjectWithAttributes<FlowStatsCalculator> (
+                  "ActiveSinceReset", BooleanValue (true));
+            }
         }
 
       // Create the output files for this slice.
@@ -144,7 +151,8 @@ BackhaulStatsCalculator::NotifyConstructionCompleted (void)
       *stats.tffWrapper->GetStream ()
         << boolalpha << right << fixed << setprecision (3)
         << " " << setw (8) << "TimeSec"
-        << " " << setw (7) << "TrafDir";
+        << " " << setw (7) << "TrafDir"
+        << " " << setw (8) << "QosType";
       FlowStatsCalculator::PrintHeader (*stats.tffWrapper->GetStream ());
       *stats.tffWrapper->GetStream () << std::endl;
     }
@@ -179,17 +187,22 @@ BackhaulStatsCalculator::DumpStatistics (Time nextDump)
       *stats.bwdWrapper->GetStream () << std::endl;
 
       // Dump slice traffic stats for each direction.
-      for (int d = 0; d <= Direction::ULINK; d++)
+      for (int t = 0; t <= QosType::GBR; t++)
         {
-          Direction dir = static_cast<Direction> (d);
-          Ptr<FlowStatsCalculator> flowStats = stats.tffStats [d];
+          QosType type = static_cast<QosType> (t);
+          for (int d = 0; d <= Direction::ULINK; d++)
+            {
+              Direction dir = static_cast<Direction> (d);
+              Ptr<FlowStatsCalculator> flowStats = stats.tffStats [dir][type];
 
-          *stats.tffWrapper->GetStream ()
-            << " " << setw (8) << Simulator::Now ().GetSeconds ()
-            << " " << setw (7) << DirectionStr (dir)
-            << *flowStats
-            << std::endl;
-          flowStats->ResetCounters ();
+              *stats.tffWrapper->GetStream ()
+                << " " << setw (8) << Simulator::Now ().GetSeconds ()
+                << " " << setw (7) << DirectionStr (dir)
+                << " " << setw (8) << QosTypeStr (type)
+                << *flowStats
+                << std::endl;
+              flowStats->ResetCounters ();
+            }
         }
       *stats.tffWrapper->GetStream () << std::endl;
     }
@@ -211,11 +224,12 @@ BackhaulStatsCalculator::OverloadDropPacket (std::string context,
     {
       SliceId slice = gtpuTag.GetSliceId ();
       Direction dir = gtpuTag.GetDirection ();
+      QosType type = gtpuTag.GetQosType ();
 
-      sliStats = m_slices [slice].tffStats [dir];
+      sliStats = m_slices [slice].tffStats [dir][type];
       sliStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::PLOAD);
 
-      aggStats = m_slices [SliceId::ALL].tffStats [dir];
+      aggStats = m_slices [SliceId::ALL].tffStats [dir][type];
       aggStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::PLOAD);
     }
   else
@@ -236,14 +250,16 @@ BackhaulStatsCalculator::OverloadDropPacket (std::string context,
       Ptr<UeInfo> ueInfo = UeInfo::GetPointer (ipv4Header.GetDestination ());
       uint32_t teid = ueInfo->Classify (packetCopy);
 
-      SliceId slice = ExtractSliceId (teid);
+      Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
+      SliceId slice = rInfo->GetSliceId ();
       Direction dir = Direction::DLINK;
+      QosType type = rInfo->GetQosType ();
 
-      sliStats = m_slices [slice].tffStats [dir];
+      sliStats = m_slices [slice].tffStats [dir][type];
       sliStats->NotifyTx (packetCopy->GetSize ());
       sliStats->NotifyDrop (packetCopy->GetSize (), FlowStatsCalculator::PLOAD);
 
-      aggStats = m_slices [SliceId::ALL].tffStats [dir];
+      aggStats = m_slices [SliceId::ALL].tffStats [dir][type];
       aggStats->NotifyTx (packetCopy->GetSize ());
       aggStats->NotifyDrop (packetCopy->GetSize (), FlowStatsCalculator::PLOAD);
     }
@@ -262,9 +278,10 @@ BackhaulStatsCalculator::MeterDropPacket (
     {
       SliceId slice = gtpuTag.GetSliceId ();
       Direction dir = gtpuTag.GetDirection ();
+      QosType type = gtpuTag.GetQosType ();
 
-      sliStats = m_slices [slice].tffStats [dir];
-      aggStats = m_slices [SliceId::ALL].tffStats [dir];
+      sliStats = m_slices [slice].tffStats [dir][type];
+      aggStats = m_slices [SliceId::ALL].tffStats [dir][type];
 
       // Notify the droped packet, based on meter type (traffic or slicing).
       if (gtpuTag.GetTeid () == meterId)
@@ -291,12 +308,13 @@ BackhaulStatsCalculator::MeterDropPacket (
       //
       SliceId slice = gtpuTag.GetSliceId ();
       Direction dir = Direction::DLINK;
+      QosType type = gtpuTag.GetQosType ();
 
-      sliStats = m_slices [slice].tffStats [dir];
+      sliStats = m_slices [slice].tffStats [dir][type];
       sliStats->NotifyTx (packet->GetSize ());
       sliStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::METER);
 
-      aggStats = m_slices [SliceId::ALL].tffStats [dir];
+      aggStats = m_slices [SliceId::ALL].tffStats [dir][type];
       aggStats->NotifyTx (packet->GetSize ());
       aggStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::METER);
     }
@@ -315,11 +333,12 @@ BackhaulStatsCalculator::QueueDropPacket (std::string context,
     {
       SliceId slice = gtpuTag.GetSliceId ();
       Direction dir = gtpuTag.GetDirection ();
+      QosType type = gtpuTag.GetQosType ();
 
-      sliStats = m_slices [slice].tffStats [dir];
+      sliStats = m_slices [slice].tffStats [dir][type];
       sliStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::QUEUE);
 
-      aggStats = m_slices [SliceId::ALL].tffStats [dir];
+      aggStats = m_slices [SliceId::ALL].tffStats [dir][type];
       aggStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::QUEUE);
     }
 }
@@ -337,11 +356,12 @@ BackhaulStatsCalculator::EpcInputPacket (std::string context,
     {
       SliceId slice = gtpuTag.GetSliceId ();
       Direction dir = gtpuTag.GetDirection ();
+      QosType type = gtpuTag.GetQosType ();
 
-      sliStats = m_slices [slice].tffStats [dir];
+      sliStats = m_slices [slice].tffStats [dir][type];
       sliStats->NotifyTx (packet->GetSize ());
 
-      aggStats = m_slices [SliceId::ALL].tffStats [dir];
+      aggStats = m_slices [SliceId::ALL].tffStats [dir][type];
       aggStats->NotifyTx (packet->GetSize ());
     }
 }
@@ -359,11 +379,12 @@ BackhaulStatsCalculator::EpcOutputPacket (std::string context,
     {
       SliceId slice = gtpuTag.GetSliceId ();
       Direction dir = gtpuTag.GetDirection ();
+      QosType type = gtpuTag.GetQosType ();
 
-      sliStats = m_slices [slice].tffStats [dir];
+      sliStats = m_slices [slice].tffStats [dir][type];
       sliStats->NotifyRx (packet->GetSize (), gtpuTag.GetTimestamp ());
 
-      aggStats = m_slices [SliceId::ALL].tffStats [dir];
+      aggStats = m_slices [SliceId::ALL].tffStats [dir][type];
       aggStats->NotifyRx (packet->GetSize (), gtpuTag.GetTimestamp ());
     }
 }

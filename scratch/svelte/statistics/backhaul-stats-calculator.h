@@ -102,9 +102,9 @@ private:
   /** Metadata associated to a network slice. */
   struct SliceStats
   {
-    Ptr<OutputStreamWrapper>  bwdWrapper;   //!< BwdStats file wrapper.
-    Ptr<OutputStreamWrapper>  tffWrapper;   //!< FlwStats file wrapper.
-    Ptr<FlowStatsCalculator>  tffStats [2]; //!< Traffic statistics.
+    Ptr<OutputStreamWrapper>  bwdWrapper;       //!< BwdStats file wrapper.
+    Ptr<OutputStreamWrapper>  tffWrapper;       //!< FlwStats file wrapper.
+    Ptr<FlowStatsCalculator>  tffStats [2][2];  //!< Traffic statistics.
   };
 
   /** Metadata for each network slice. */
