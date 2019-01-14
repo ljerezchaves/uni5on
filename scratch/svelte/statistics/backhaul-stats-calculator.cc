@@ -124,7 +124,8 @@ BackhaulStatsCalculator::NotifyConstructionCompleted (void)
       SliceStats &stats = m_slices [s];
       for (int d = 0; d <= Direction::ULINK; d++)
         {
-          stats.tffStats [d] = CreateObject<FlowStatsCalculator> ();
+          stats.tffStats [d] = CreateObjectWithAttributes<FlowStatsCalculator> (
+              "ActiveSinceReset", BooleanValue (true));
         }
 
       // Create the output files for this slice.
