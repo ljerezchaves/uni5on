@@ -236,7 +236,7 @@ BackhaulStatsCalculator::OverloadDropPacket (std::string context,
       Ptr<UeInfo> ueInfo = UeInfo::GetPointer (ipv4Header.GetDestination ());
       uint32_t teid = ueInfo->Classify (packetCopy);
 
-      SliceId slice = GetSliceIdFromTeid (teid);
+      SliceId slice = ExtractSliceId (teid);
       Direction dir = Direction::DLINK;
 
       sliStats = m_slices [slice].tffStats [dir];

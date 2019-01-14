@@ -293,25 +293,25 @@ std::string DscpTypeStr (Ipv4Header::DscpType dscp);
 uint32_t GetSvelteTeid (SliceId sliceId, uint32_t ueImsi, uint32_t bearerId);
 
 /**
+ * Decompose the TEID to get the UE bearer ID.
+ * \param teid The GTP tunnel ID.
+ * \return The UE bearer ID for this tunnel.
+ */
+uint8_t ExtractBearerId (uint32_t teid);
+
+/**
  * Decompose the TEID to get the slice ID.
  * \param teid The GTP tunnel ID.
  * \return The slice ID for this tunnel.
  */
-SliceId GetSliceIdFromTeid (uint32_t teid);
+SliceId ExtractSliceId (uint32_t teid);
 
 /**
  * Decompose the TEID to get the UE IMSI.
  * \param teid The GTP tunnel ID.
  * \return The UE IMSI for this tunnel.
  */
-uint64_t GetUeImsiFromTeid (uint32_t teid);
-
-/**
- * Decompose the TEID to get the UE bearer ID.
- * \param teid The GTP tunnel ID.
- * \return The UE bearer ID for this tunnel.
- */
-uint8_t GetBearerIdFromTeid (uint32_t teid);
+uint64_t ExtractUeImsi (uint32_t teid);
 
 /**
  * \ingroup svelte

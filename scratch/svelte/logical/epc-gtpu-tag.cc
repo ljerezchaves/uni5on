@@ -113,7 +113,7 @@ EpcGtpuTag::GetQosType () const
 SliceId
 EpcGtpuTag::GetSliceId () const
 {
-  return GetSliceIdFromTeid (m_teid);
+  return ExtractSliceId (m_teid);
 }
 
 uint32_t
