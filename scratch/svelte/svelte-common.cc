@@ -89,11 +89,11 @@ QosTypeStr (QosType type)
   switch (type)
     {
     case QosType::NON:
-      return "non-gbr";
+      return "NonGBR";
     case QosType::GBR:
-      return "gbr";
+      return "GBR";
     case QosType::BOTH:
-      return "both";
+      return "Both";
     default:
       NS_LOG_ERROR ("Invalid LTE QoS traffic type.");
       return std::string ();
