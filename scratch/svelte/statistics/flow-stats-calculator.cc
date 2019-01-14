@@ -66,6 +66,7 @@ FlowStatsCalculator::ResetCounters (void)
   m_lastTxTime = Time (0);
   m_lastRxTime = Time (0);
   m_lastTimestamp = Time (0);
+  m_lastResetTime = Simulator::Now ();
   m_jitter = 0;
   m_delaySum = Time ();
 

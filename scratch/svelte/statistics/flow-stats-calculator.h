@@ -134,6 +134,7 @@ private:
   Time      m_lastTxTime;                 //!< Last TX time.
   Time      m_lastRxTime;                 //!< Last RX time.
   Time      m_lastTimestamp;              //!< Last timestamp.
+  Time      m_lastResetTime;              //!< Last reset time.
   int64_t   m_jitter;                     //!< Jitter estimation.
   Time      m_delaySum;                   //!< Sum of packet delays.
 };
