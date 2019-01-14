@@ -273,6 +273,14 @@ RoutingInfo::GetQosInfo (void) const
   return GetEpsBearer ().gbrQosInfo;
 }
 
+QosType
+RoutingInfo::GetQosType (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return IsGbr () ? QosType::GBR : QosType::NON;
+}
+
 Ptr<EpcTft>
 RoutingInfo::GetTft (void) const
 {

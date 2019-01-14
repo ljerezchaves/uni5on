@@ -119,6 +119,7 @@ public:
   EpsBearer             GetEpsBearer  (void) const;
   EpsBearer::Qci        GetQciInfo    (void) const;
   GbrQosInformation     GetQosInfo    (void) const;
+  QosType               GetQosType    (void) const;
   Ptr<EpcTft>           GetTft        (void) const;
   //\}
 
