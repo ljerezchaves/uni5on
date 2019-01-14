@@ -255,6 +255,32 @@ GetSvelteTeid (SliceId sliceId, uint32_t ueImsi, uint32_t bearerId)
   return teid;
 }
 
+SliceId
+GetSliceIdFromTeid (uint32_t teid)
+{
+  uint32_t sliceId = teid;
+  sliceId &= TEID_SLICE_MASK;
+  sliceId >>= 24;
+  return static_cast<SliceId> (sliceId);
+}
+
+uint64_t
+GetUeImsiFromTeid (uint32_t teid)
+{
+  uint32_t ueImsi = teid;
+  ueImsi &= TEID_IMSI_MASK;
+  ueImsi >>= 4;
+  return static_cast<uint64_t> (ueImsi);
+}
+
+uint8_t
+GetBearerIdFromTeid (uint32_t teid)
+{
+  uint32_t bearerId = teid;
+  bearerId &= TEID_BID_MASK;
+  return static_cast<uint8_t> (bearerId);
+}
+
 uint32_t
 GetSvelteMeterId (SliceId sliceId, uint32_t meterId)
 {
