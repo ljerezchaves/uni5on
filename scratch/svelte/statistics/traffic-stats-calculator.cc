@@ -122,11 +122,13 @@ TrafficStatsCalculator::NotifyConstructionCompleted (void)
   SetAttribute ("AppStatsFilename", StringValue (prefix + m_appFilename));
   SetAttribute ("EpcStatsFilename", StringValue (prefix + m_epcFilename));
 
-  // Create the output file for application stats.
+  // Create the output files.
   m_appWrapper = Create<OutputStreamWrapper> (
       m_appFilename + ".log", std::ios::out);
+  m_epcWrapper = Create<OutputStreamWrapper> (
+      m_epcFilename + ".log", std::ios::out);
 
-  // Print the header in output file.
+  // Print the headers in output files.
   *m_appWrapper->GetStream ()
     << boolalpha << right << fixed << setprecision (3)
     << " " << setw (8)  << "TimeSec"
@@ -137,11 +139,6 @@ TrafficStatsCalculator::NotifyConstructionCompleted (void)
     << " " << setw (11) << "GdpUlKbps"
     << std::endl;
 
-  // Create the output file for EPC stats.
-  m_epcWrapper = Create<OutputStreamWrapper> (
-      m_epcFilename + ".log", std::ios::out);
-
-  // Print the header in output file.
   *m_epcWrapper->GetStream ()
     << boolalpha << right << fixed << setprecision (3)
     << " " << setw (8) << "TimeSec"
@@ -164,6 +161,7 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
   Ptr<const RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
   Ptr<const FlowStatsCalculator> stats;
 
+  // Dump application statistics.
   *m_appWrapper->GetStream ()
     << " " << setw (8)  << Simulator::Now ().GetSeconds ()
     << " " << setw (9)  << app->GetAppName ()
@@ -173,9 +171,9 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
     << " " << setw (11) << Bps2Kbps (app->GetUlGoodput ().GetBitRate ())
     << std::endl;
 
+  // Dump backhaul statistics.
   if (rInfo->HasUlTraffic ())
     {
-      // Dump uplink statistics.
       stats = GetFlowStats (teid, Direction::ULINK);
       *m_epcWrapper->GetStream ()
         << " " << setw (8) << Simulator::Now ().GetSeconds ()
@@ -185,10 +183,8 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
         << *stats
         << std::endl;
     }
-
   if (rInfo->HasDlTraffic ())
     {
-      // Dump downlink statistics.
       stats = GetFlowStats (teid, Direction::DLINK);
       *m_epcWrapper->GetStream ()
         << " " << setw (8) << Simulator::Now ().GetSeconds ()
@@ -228,8 +224,8 @@ TrafficStatsCalculator::OverloadDropPacket (std::string context,
       //
       // This only happens when a packet is dropped at the P-GW, before
       // entering the logical port that is responsible for attaching the
-      // EpcGtpuTag and notifying that the packet is entering the EPC. To keep
-      // consistent log results, we are doing this manually here.
+      // EpcGtpuTag and notifying that the packet is entering the EPC.
+      // To keep consistent log results, we are doing this manually here.
       //
       EthernetHeader ethHeader;
       Ipv4Header ipv4Header;
@@ -253,16 +249,14 @@ TrafficStatsCalculator::MeterDropPacket (
 {
   NS_LOG_FUNCTION (this << context << packet << meterId);
 
-  uint32_t teid;
   EpcGtpuTag gtpuTag;
   Ptr<FlowStatsCalculator> stats;
   if (packet->PeekPacketTag (gtpuTag))
     {
-      teid = gtpuTag.GetTeid ();
-      stats = GetFlowStats (teid, gtpuTag.GetDirection ());
+      stats = GetFlowStats (gtpuTag.GetTeid (), gtpuTag.GetDirection ());
 
       // Notify the droped packet, based on meter type (traffic or slicing).
-      if (teid == meterId)
+      if (gtpuTag.GetTeid () == meterId)
         {
           stats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::METER);
         }
@@ -279,12 +273,11 @@ TrafficStatsCalculator::MeterDropPacket (
       // EpcGtpuTag and notifying that the packet is entering the EPC.
       // To keep consistent log results, we are doing this manually here.
       //
-      teid = meterId;
-      stats = GetFlowStats (teid, Direction::DLINK);
+      // It must be a packed dropped by a traffic meter because we only have
+      // slicing meters on ring switches, not on the P-GW.
+      //
+      stats = GetFlowStats (gtpuTag.GetTeid (), Direction::DLINK);
       stats->NotifyTx (packet->GetSize ());
-
-      // Notify the droped packet (it must be a traffic meter because we only
-      // have slicing meters on ring switches, not on the P-GW).
       stats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::METER);
     }
 }
