@@ -72,6 +72,16 @@ typedef std::pair<uint64_t, uint64_t> DpIdPair_t;
 
 /**
  * \ingroup svelte
+ * Enumeration of available traffic directions.
+ */
+typedef enum
+{
+  DLINK = 0,  //!< Downlink traffic.
+  ULINK = 1   //!< Uplink traffic.
+} Direction;
+
+/**
+ * \ingroup svelte
  * Enumeration of LTE logical interfaces.
  */
 typedef enum
@@ -96,6 +106,17 @@ typedef enum
 
 /**
  * \ingroup svelte
+ * Enumeration of available LTE QoS traffic types.
+ */
+typedef enum
+{
+  NON  = 0,  //!< Non-GBR traffic.
+  GBR  = 1,  //!< GBR traffic.
+  BOTH = 2   //!< Both GBR and Non-GBR traffic.
+} QosType;
+
+/**
+ * \ingroup svelte
  * Enumeration of available SVELTE logical slices IDs.
  * \internal Slice IDs are restricted to the range [0, 14] by the current
  * TEID allocation strategy. The NONE value must be fixed to 0xF (15).
@@ -109,9 +130,6 @@ typedef enum
   UNKN = 15  //!< Unknown slice.
 } SliceId;
 
-// Total number of slices + 1 for aggregated metadata.
-#define N_SLICES_ALL (static_cast<uint8_t> (SliceId::ALL) + 1)
-
 /**
  * \ingroup svelte
  * Enumeration of available inter-slicing operation modes.
@@ -124,29 +142,19 @@ typedef enum
   DYNA = 3    //!< Full dinaymic inter-slicing.
 } SliceMode;
 
-/**
- * \ingroup svelte
- * Enumeration of available LTE QoS traffic types.
- */
-typedef enum
-{
-  NON  = 0,  //!< Non-GBR traffic.
-  GBR  = 1,  //!< GBR traffic.
-  BOTH = 2   //!< Both GBR and Non-GBR traffic.
-} QosType;
+// Total number of slices + 1 for aggregated metadata.
+#define N_SLICES_ALL (static_cast<uint8_t> (SliceId::ALL) + 1)
 
 // Total number of types + 1 for aggregated metadata.
 #define N_TYPES_ALL (static_cast<uint8_t> (QosType::BOTH) + 1)
 
 /**
  * \ingroup svelte
- * Enumeration of available traffic directions.
+ * Get the direction name.
+ * \param dir The direction.
+ * \return The string with the direction string.
  */
-typedef enum
-{
-  DLINK = 0,  //!< Downlink traffic.
-  ULINK = 1   //!< Uplink traffic.
-} Direction;
+std::string DirectionStr (Direction dir);
 
 /**
  * \ingroup svelte
@@ -166,6 +174,14 @@ std::string OpModeStr (OpMode mode);
 
 /**
  * \ingroup svelte
+ * Get the LTE QoS traffic type name.
+ * \param type The LTE QoS traffic type.
+ * \return The string with the LTE QoS traffic type name.
+ */
+std::string QosTypeStr (QosType type);
+
+/**
+ * \ingroup svelte
  * Get the slice ID name.
  * \param slice The slice ID.
  * \return The string with the slice ID name.
@@ -179,22 +195,6 @@ std::string SliceIdStr (SliceId slice);
  * \return The string with the inter-slicing operation mode name.
  */
 std::string SliceModeStr (SliceMode mode);
-
-/**
- * \ingroup svelte
- * Get the LTE QoS traffic type name.
- * \param type The LTE QoS traffic type.
- * \return The string with the LTE QoS traffic type name.
- */
-std::string QosTypeStr (QosType type);
-
-/**
- * \ingroup svelte
- * Get the direction name.
- * \param dir The direction.
- * \return The string with the direction string.
- */
-std::string DirectionStr (Direction dir);
 
 /**
  * \ingroup svelte

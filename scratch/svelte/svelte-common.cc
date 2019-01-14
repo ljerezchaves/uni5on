@@ -33,6 +33,21 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("SvelteCommon");
 
 std::string
+DirectionStr (Direction dir)
+{
+  switch (dir)
+    {
+    case Direction::DLINK:
+      return "Dlink";
+    case Direction::ULINK:
+      return "Ulink";
+    default:
+      NS_LOG_ERROR ("Invalid traffic direction.");
+      return std::string ();
+    }
+}
+
+std::string
 LteIfaceStr (LteIface iface)
 {
   switch (iface)
@@ -64,6 +79,23 @@ OpModeStr (OpMode mode)
       return "auto";
     default:
       NS_LOG_ERROR ("Invalid operation mode.");
+      return std::string ();
+    }
+}
+
+std::string
+QosTypeStr (QosType type)
+{
+  switch (type)
+    {
+    case QosType::NON:
+      return "non-gbr";
+    case QosType::GBR:
+      return "gbr";
+    case QosType::BOTH:
+      return "both";
+    default:
+      NS_LOG_ERROR ("Invalid LTE QoS traffic type.");
       return std::string ();
     }
 }
@@ -104,38 +136,6 @@ SliceModeStr (SliceMode mode)
       return "dynamic";
     default:
       NS_LOG_ERROR ("Invalid inter-slice operation mode.");
-      return std::string ();
-    }
-}
-
-std::string
-QosTypeStr (QosType type)
-{
-  switch (type)
-    {
-    case QosType::NON:
-      return "non-gbr";
-    case QosType::GBR:
-      return "gbr";
-    case QosType::BOTH:
-      return "both";
-    default:
-      NS_LOG_ERROR ("Invalid LTE QoS traffic type.");
-      return std::string ();
-    }
-}
-
-std::string
-DirectionStr (Direction dir)
-{
-  switch (dir)
-    {
-    case Direction::DLINK:
-      return "Dlink";
-    case Direction::ULINK:
-      return "Ulink";
-    default:
-      NS_LOG_ERROR ("Invalid traffic direction.");
       return std::string ();
     }
 }
