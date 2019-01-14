@@ -39,13 +39,14 @@ typedef std::vector<Ptr<LinkInfo> > LinkInfoList_t;
  * Metadata associated to a link between two OpenFlow backhaul switches.
  *
  * The link is prepared to handle inter-slicing, and each slice has the
- * following information associated to it:
+ * following metadata information associated to it:
  * - The quota, adjusted by the backhaul controller;
+ * - The extra bit rate, adjusted by the backhaul controller;
  * - The reserved bit rate, updated by reserve/release procedures;
- * - The extra bit rate, updated by ??? FIXME!
- * - The meter diff, updated by reserve/release procedures and responsible for
- *   firing the meter adjusted trace source when the total reserved bit rate
- *   changes over a threshold value indicated by the AdjustmentStep attribute.
+ * - The meter diff, automatically updated when any of the previous metadatada
+ *   changes. When the meter diff absolute value reaches the threshold value
+ *   indicated by the AdjustmentStep attribute, the meter adjusted trace source
+ *   is fired to update the OpenFlow Non-GBR inter-slicing meter rules.
  * - The transmitted bytes, updated by monitoring port device TX operations;
  * - The average throughput, periodically updated using EWMA;
  */
@@ -150,7 +151,7 @@ public:
   /**
    * Get the slice quota for this link on the given direction, optionally
    * filtered by the network slice. If no slice is given, the this method will
-   * return the maximum quota of 1.0;
+   * return the sum of quotas from all slices.
    * \param dir The link direction.
    * \param slice The network slice.
    * \return The slice quota.

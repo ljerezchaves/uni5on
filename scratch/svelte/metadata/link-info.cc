@@ -494,11 +494,11 @@ LinkInfo::ReserveBitRate (
                 " free bit rate: " << GetFreeBitRate (dir, slice));
 
   // Updating the meter bit rate.
-  UpdateMeterDiff (dir, slice, -((int64_t)bitRate));
+  UpdateMeterDiff (dir, slice, (-1) * ((int64_t)bitRate));
 
   // Updating statistics for the fake shared slice.
   m_slices [SliceId::ALL][dir].reserved += bitRate;
-  UpdateMeterDiff (dir, SliceId::ALL, -((int64_t)bitRate));
+  UpdateMeterDiff (dir, SliceId::ALL, (-1) * ((int64_t)bitRate));
   return true;
 }
 
