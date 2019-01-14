@@ -81,7 +81,7 @@ FlowStatsCalculator::NotifyTx (uint32_t txBytes)
   NS_LOG_FUNCTION (this << txBytes);
 
   // Check for the first TX packet.
-  if (!m_txPackets)
+  if (GetTxPackets () == 0)
     {
       m_firstTxTime = Simulator::Now ();
     }
@@ -99,7 +99,7 @@ FlowStatsCalculator::NotifyRx (uint32_t rxBytes, Time timestamp)
   Time now = Simulator::Now ();
 
   // Check for the first RX packet.
-  if (!m_rxPackets)
+  if (GetRxPackets () == 0)
     {
       m_firstRxTime = now;
       m_lastRxTime = now;
