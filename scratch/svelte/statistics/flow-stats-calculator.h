@@ -90,15 +90,15 @@ public:
    * \return The statistic value.
    */
   //\{
-  uint32_t  GetDpBytes      (DropReason reason) const;
-  uint32_t  GetDpPackets    (DropReason reason) const;
+  uint64_t  GetDpBytes      (DropReason reason) const;
+  uint64_t  GetDpPackets    (DropReason reason) const;
   Time      GetActiveTime   (void) const;
-  uint32_t  GetLostPackets  (void) const;
+  uint64_t  GetLostPackets  (void) const;
   double    GetLossRatio    (void) const;
-  uint32_t  GetTxPackets    (void) const;
-  uint32_t  GetTxBytes      (void) const;
-  uint32_t  GetRxPackets    (void) const;
-  uint32_t  GetRxBytes      (void) const;
+  uint64_t  GetTxPackets    (void) const;
+  uint64_t  GetTxBytes      (void) const;
+  uint64_t  GetRxPackets    (void) const;
+  uint64_t  GetRxBytes      (void) const;
   Time      GetRxDelay      (void) const;
   Time      GetRxJitter     (void) const;
   DataRate  GetRxThroughput (void) const;
@@ -123,12 +123,12 @@ protected:
   virtual void DoDispose ();
 
 private:
-  uint32_t  m_dpPackets [N_REASONS_ALL];  //!< Number of dropped packets.
-  uint32_t  m_dpBytes [N_REASONS_ALL];    //!< Number of dropped bytes.
-  uint32_t  m_txPackets;                  //!< Number of TX packets.
-  uint32_t  m_txBytes;                    //!< Number of TX bytes.
-  uint32_t  m_rxPackets;                  //!< Number of RX packets.
-  uint32_t  m_rxBytes;                    //!< Number of RX bytes.
+  uint64_t  m_dpPackets [N_REASONS_ALL];  //!< Number of dropped packets.
+  uint64_t  m_dpBytes [N_REASONS_ALL];    //!< Number of dropped bytes.
+  uint64_t  m_txPackets;                  //!< Number of TX packets.
+  uint64_t  m_txBytes;                    //!< Number of TX bytes.
+  uint64_t  m_rxPackets;                  //!< Number of RX packets.
+  uint64_t  m_rxBytes;                    //!< Number of RX bytes.
   Time      m_firstTxTime;                //!< First TX time.
   Time      m_firstRxTime;                //!< First RX time.
   Time      m_lastRxTime;                 //!< Last RX time.

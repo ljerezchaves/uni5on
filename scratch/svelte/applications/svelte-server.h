@@ -110,7 +110,7 @@ protected:
   Ptr<SvelteClient>         m_clientApp;        //!< Client application.
 
   // Traffic statistics.
-  uint32_t                  m_rxBytes;        //!< Number of RX bytes.
+  uint64_t                  m_rxBytes;        //!< Number of RX bytes.
   Time                      m_startTime;      //!< App start time.
   Time                      m_stopTime;       //!< App stop time.
 };

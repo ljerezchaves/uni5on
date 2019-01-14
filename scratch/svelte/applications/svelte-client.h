@@ -173,7 +173,7 @@ private:
   bool                      m_forceStopFlag;  //!< Force stop flag.
 
   // Traffic statistics.
-  uint32_t                  m_rxBytes;        //!< Number of RX bytes.
+  uint64_t                  m_rxBytes;        //!< Number of RX bytes.
   Time                      m_startTime;      //!< App start time.
   Time                      m_stopTime;       //!< App stop time.
 
