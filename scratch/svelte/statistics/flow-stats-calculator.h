@@ -131,6 +131,7 @@ private:
   uint64_t  m_rxBytes;                    //!< Number of RX bytes.
   Time      m_firstTxTime;                //!< First TX time.
   Time      m_firstRxTime;                //!< First RX time.
+  Time      m_lastTxTime;                 //!< Last TX time.
   Time      m_lastRxTime;                 //!< Last RX time.
   Time      m_lastTimestamp;              //!< Last timestamp.
   int64_t   m_jitter;                     //!< Jitter estimation.
