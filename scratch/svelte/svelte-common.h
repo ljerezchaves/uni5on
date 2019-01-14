@@ -174,6 +174,22 @@ std::string SliceIdStr (SliceId slice);
 
 /**
  * \ingroup svelte
+ * Get the inter-slicing operation mode name.
+ * \param mode The inter-slicing operation mode.
+ * \return The string with the inter-slicing operation mode name.
+ */
+std::string SliceModeStr (SliceMode mode);
+
+/**
+ * \ingroup svelte
+ * Get the LTE QoS traffic type name.
+ * \param type The LTE QoS traffic type.
+ * \return The string with the LTE QoS traffic type name.
+ */
+std::string QosTypeStr (QosType type);
+
+/**
+ * \ingroup svelte
  * Get the direction name.
  * \param dir The direction.
  * \return The string with the direction string.

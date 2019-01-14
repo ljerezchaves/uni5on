@@ -46,7 +46,7 @@ LteIfaceStr (LteIface iface)
     case LteIface::SGI:
       return "sgi";
     default:
-      NS_LOG_ERROR ("Invalid LTE interface.");
+      NS_LOG_ERROR ("Invalid LTE logical interface.");
       return std::string ();
     }
 }
@@ -84,7 +84,43 @@ SliceIdStr (SliceId slice)
     case SliceId::UNKN:
       return "unknown";
     default:
-      NS_LOG_ERROR ("Invalid slice ID.");
+      NS_LOG_ERROR ("Invalid SVELTE logical slice ID.");
+      return std::string ();
+    }
+}
+
+std::string
+SliceModeStr (SliceMode mode)
+{
+  switch (mode)
+    {
+    case SliceMode::NONE:
+      return "none";
+    case SliceMode::SHAR:
+      return "shared";
+    case SliceMode::STAT:
+      return "static";
+    case SliceMode::DYNA:
+      return "dynamic";
+    default:
+      NS_LOG_ERROR ("Invalid inter-slice operation mode.");
+      return std::string ();
+    }
+}
+
+std::string
+QosTypeStr (QosType type)
+{
+  switch (type)
+    {
+    case QosType::NON:
+      return "non-gbr";
+    case QosType::GBR:
+      return "gbr";
+    case QosType::BOTH:
+      return "both";
+    default:
+      NS_LOG_ERROR ("Invalid LTE QoS traffic type.");
       return std::string ();
     }
 }
@@ -99,7 +135,7 @@ DirectionStr (Direction dir)
     case Direction::ULINK:
       return "Ulink";
     default:
-      NS_LOG_ERROR ("Invalid direction.");
+      NS_LOG_ERROR ("Invalid traffic direction.");
       return std::string ();
     }
 }
