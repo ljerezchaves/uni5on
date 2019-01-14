@@ -120,6 +120,7 @@ public:
   EpsBearer::Qci        GetQciInfo    (void) const;
   GbrQosInformation     GetQosInfo    (void) const;
   QosType               GetQosType    (void) const;
+  std::string           GetQosTypeStr (void) const;
   Ptr<EpcTft>           GetTft        (void) const;
   //\}
 

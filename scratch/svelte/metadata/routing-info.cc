@@ -281,6 +281,14 @@ RoutingInfo::GetQosType (void) const
   return IsGbr () ? QosType::GBR : QosType::NON;
 }
 
+std::string
+RoutingInfo::GetQosTypeStr (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return QosTypeStr (GetQosType ());
+}
+
 Ptr<EpcTft>
 RoutingInfo::GetTft (void) const
 {
@@ -604,7 +612,7 @@ RoutingInfo::PrintHeader (std::ostream &os)
      << " " << setw (6)  << "IsBlk"
      << " " << setw (9)  << "BlkReas"
      << " " << setw (4)  << "Qci"
-     << " " << setw (6)  << "IsGbr"
+     << " " << setw (8)  << "QosType"
      << " " << setw (5)  << "Dscp"
      << " " << setw (6)  << "Dlink"
      << " " << setw (11) << "DlGbrKbps"
@@ -777,7 +785,7 @@ std::ostream & operator << (std::ostream &os, const RoutingInfo &rInfo)
      << " " << setw (6)  << rInfo.IsBlocked ()
      << " " << setw (9)  << rInfo.GetBlockReasonStr ()
      << " " << setw (4)  << rInfo.GetQciInfo ()
-     << " " << setw (6)  << rInfo.IsGbr ()
+     << " " << setw (8)  << rInfo.GetQosTypeStr ()
      << " " << setw (5)  << rInfo.GetDscpStr ()
      << " " << setw (6)  << rInfo.HasDlTraffic ()
      << " " << setw (11) << Bps2Kbps (rInfo.GetGbrDlBitRate ())
