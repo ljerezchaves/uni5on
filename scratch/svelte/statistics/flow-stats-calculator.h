@@ -85,6 +85,15 @@ public:
   void NotifyDrop (uint32_t dpBytes, DropReason reason);
 
   /**
+   * Get the traffic active time. When the ActiveSinceReset flag is true, the
+   * GetActiveTime () method will consider the entire interval since the last
+   * reset operation, otherwise it will consider the first and last TX/RX
+   * events.
+   * \return The traffic active time.
+   */
+  Time GetActiveTime (void) const;
+
+  /**
    * Get QoS statistics.
    * \param reason The drop reason.
    * \return The statistic value.
@@ -92,7 +101,6 @@ public:
   //\{
   uint64_t  GetDpBytes      (DropReason reason) const;
   uint64_t  GetDpPackets    (DropReason reason) const;
-  Time      GetActiveTime   (void) const;
   uint64_t  GetLostPackets  (void) const;
   double    GetLossRatio    (void) const;
   uint64_t  GetTxPackets    (void) const;
@@ -129,9 +137,10 @@ private:
    */
   //\{
   Time GetFirstTxRxTime (void) const;
-  Time GetLastTxRxTime (void) const; 
+  Time GetLastTxRxTime (void) const;
   //\}
 
+  bool      m_actSinceReset;              //!< Traffic active since reset.
   uint64_t  m_dpPackets [N_REASONS_ALL];  //!< Number of dropped packets.
   uint64_t  m_dpBytes [N_REASONS_ALL];    //!< Number of dropped bytes.
   uint64_t  m_txPackets;                  //!< Number of TX packets.

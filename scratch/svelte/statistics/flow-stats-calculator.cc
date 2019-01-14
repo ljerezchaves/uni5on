@@ -48,6 +48,12 @@ FlowStatsCalculator::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::FlowStatsCalculator")
     .SetParent<Object> ()
     .AddConstructor<FlowStatsCalculator> ()
+    .AddAttribute ("ActiveSinceReset",
+                   "Considers the traffic as active since last reset time.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&FlowStatsCalculator::m_actSinceReset),
+                   MakeBooleanChecker ())
   ;
   return tid;
 }
@@ -158,13 +164,20 @@ FlowStatsCalculator::GetActiveTime (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  if (GetTxPackets () || GetRxPackets ())
+  if (m_actSinceReset)
     {
-      return GetLastEventTime () - GetFirstEventTime ();
+      return Simulator::Now () - m_lastResetTime;
     }
   else
     {
-      return Time (0);
+      if (GetTxPackets () || GetRxPackets ())
+        {
+          return GetLastTxRxTime () - GetFirstTxRxTime ();
+        }
+      else
+        {
+          return Time (0);
+        }
     }
 }
 
@@ -258,13 +271,13 @@ FlowStatsCalculator::GetRxThroughput (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  if (GetRxPackets ())
+  if (GetActiveTime ().IsZero ())
     {
-      return DataRate (GetRxBytes () * 8 / GetActiveTime ().GetSeconds ());
+      return DataRate (0);
     }
   else
     {
-      return DataRate (0);
+      return DataRate (GetRxBytes () * 8 / GetActiveTime ().GetSeconds ());
     }
 }
 
