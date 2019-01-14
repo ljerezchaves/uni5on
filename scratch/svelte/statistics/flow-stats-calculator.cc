@@ -48,14 +48,20 @@ FlowStatsCalculator::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::FlowStatsCalculator")
     .SetParent<Object> ()
     .AddConstructor<FlowStatsCalculator> ()
-    .AddAttribute ("ActiveSinceReset",
-                   "Considers the traffic as active since last reset time.",
+    .AddAttribute ("Continuous",
+                   "Monitoring the traffic continuously.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    BooleanValue (false),
-                   MakeBooleanAccessor (&FlowStatsCalculator::m_actSinceReset),
+                   MakeBooleanAccessor (&FlowStatsCalculator::m_continuous),
                    MakeBooleanChecker ())
   ;
   return tid;
+}
+
+bool
+FlowStatsCalculator::IsContinuous (void) const
+{
+  return m_continuous;
 }
 
 void
@@ -164,7 +170,7 @@ FlowStatsCalculator::GetActiveTime (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  if (m_actSinceReset)
+  if (IsContinuous ())
     {
       return Simulator::Now () - m_lastResetTime;
     }

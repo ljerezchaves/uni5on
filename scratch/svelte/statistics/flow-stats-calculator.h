@@ -59,6 +59,12 @@ public:
   static TypeId GetTypeId (void);
 
   /**
+   * Get the continuous attribute value.
+   * \return The continuous value.
+   */
+  bool IsContinuous (void) const;
+
+  /**
    * Reset all internal counters.
    */
   void ResetCounters (void);
@@ -140,7 +146,7 @@ private:
   Time GetLastTxRxTime (void) const;
   //\}
 
-  bool      m_actSinceReset;              //!< Traffic active since reset.
+  bool      m_continuous;                 //!< Continuous traffic monitorement.
   uint64_t  m_dpPackets [N_REASONS_ALL];  //!< Number of dropped packets.
   uint64_t  m_dpBytes [N_REASONS_ALL];    //!< Number of dropped bytes.
   uint64_t  m_txPackets;                  //!< Number of TX packets.

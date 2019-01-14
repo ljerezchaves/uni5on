@@ -131,7 +131,7 @@ BackhaulStatsCalculator::NotifyConstructionCompleted (void)
             {
               stats.tffStats [d][t] =
                 CreateObjectWithAttributes<FlowStatsCalculator> (
-                  "ActiveSinceReset", BooleanValue (true));
+                  "Continuous", BooleanValue (true));
             }
         }
 

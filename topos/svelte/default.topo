@@ -89,6 +89,7 @@ default ns3::LinkInfo::AdjustmentStep "5Mbps"
 default ns3::LinkInfo::EwmaAlpha "0.25"
 default ns3::LinkInfo::EwmaTimeout "100ms"
 
+default ns3::FlowStatsCalculator::Continuous "false"
 default ns3::AdmissionStatsCalculator::AdmStatsFilename "admission-counters"
 default ns3::AdmissionStatsCalculator::BrqStatsFilename "admission-requests"
 default ns3::BackhaulStatsCalculator::BwdStatsFilename "backhaul-bandwidth"
