@@ -158,13 +158,13 @@ FlowStatsCalculator::GetActiveTime (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  if (GetRxPackets ())
+  if (GetTxPackets () || GetRxPackets ())
     {
-      return m_lastRxTime - m_firstTxTime;
+      return GetLastEventTime () - GetFirstEventTime ();
     }
   else
     {
-      return Time ();
+      return Time (0);
     }
 }
 
