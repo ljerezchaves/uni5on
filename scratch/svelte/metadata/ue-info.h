@@ -55,6 +55,7 @@ class UeInfo : public Object
   friend class SliceController;
   friend class SvelteHelper;
   friend class SvelteMme;
+  friend class BackhaulStatsCalculator;
   friend class TrafficStatsCalculator;
 
 public:
