@@ -290,19 +290,20 @@ FlowStatsCalculator::GetRxThroughput (void) const
 std::ostream &
 FlowStatsCalculator::PrintHeader (std::ostream &os)
 {
-  os << " " << setw (8) << "ActvSec"
-     << " " << setw (7) << "DlyMsec"
-     << " " << setw (7) << "JitMsec"
-     << " " << setw (7) << "TxPkts"
-     << " " << setw (7) << "RxPkts"
-     << " " << setw (7) << "LossRat"
-     << " " << setw (8) << "RxBytes"
-     << " " << setw (9) << "ThpKbps"
-     << " " << setw (6) << "DpLoa"
-     << " " << setw (6) << "DpMbr"
-     << " " << setw (6) << "DpSli"
-     << " " << setw (6) << "DpQue"
-     << " " << setw (6) << "DpAll";
+  os << " " << setw (8)  << "ActvSec"
+     << " " << setw (7)  << "TxPkts"
+     << " " << setw (7)  << "RxPkts"
+     << " " << setw (8)  << "TxBytes"
+     << " " << setw (8)  << "RxBytes"
+     << " " << setw (8)  << "DlyMsec"
+     << " " << setw (8)  << "JitMsec"
+     << " " << setw (10) << "ThpKbps"
+     << " " << setw (8)  << "DpBytes"
+     << " " << setw (6)  << "DpPkts"
+     << " " << setw (6)  << "DpQue"
+     << " " << setw (6)  << "DpSli"
+     << " " << setw (6)  << "DpMbr"
+     << " " << setw (6)  << "DpLoa";
   return os;
 }
 
@@ -328,16 +329,17 @@ FlowStatsCalculator::GetLastTxRxTime (void) const
 
 std::ostream & operator << (std::ostream &os, const FlowStatsCalculator &stats)
 {
-  os << " " << setw (8) << stats.GetActiveTime ().GetSeconds ()
-     << " " << setw (7) << stats.GetRxDelay ().GetSeconds () * 1000
-     << " " << setw (7) << stats.GetRxJitter ().GetSeconds () * 1000
-     << " " << setw (7) << stats.GetTxPackets ()
-     << " " << setw (7) << stats.GetRxPackets ()
-     << " " << setw (7) << stats.GetLossRatio () * 100
-     << " " << setw (8) << stats.GetRxBytes ()
-     << " " << setw (9) << Bps2Kbps (stats.GetRxThroughput ().GetBitRate ());
+  os << " " << setw (8)  << stats.GetActiveTime ().GetSeconds ()
+     << " " << setw (7)  << stats.GetTxPackets ()
+     << " " << setw (7)  << stats.GetRxPackets ()
+     << " " << setw (8)  << stats.GetTxBytes ()
+     << " " << setw (8)  << stats.GetRxBytes ()
+     << " " << setw (8)  << stats.GetRxDelay ().GetSeconds () * 1000
+     << " " << setw (8)  << stats.GetRxJitter ().GetSeconds () * 1000
+     << " " << setw (10) << Bps2Kbps (stats.GetRxThroughput ().GetBitRate ())
+     << " " << setw (8)  << stats.GetDpBytes (FlowStatsCalculator::ALL);
 
-  for (int r = 0; r <= FlowStatsCalculator::ALL; r++)
+  for (int r = FlowStatsCalculator::ALL; r >= 0; r--)
     {
       os << " " << setw (6) << stats.GetDpPackets (
         static_cast<FlowStatsCalculator::DropReason> (r));
