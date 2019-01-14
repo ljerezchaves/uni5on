@@ -53,21 +53,21 @@ protected:
   virtual void NotifyConstructionCompleted (void);
 
 private:
-  /** Metadata associated to a network slice. */
-  struct SliceStats
-  {
-    Ptr<OutputStreamWrapper>  linWrapper;   //!< LinStats file wrapper.
-  };
-
   /**
    * Dump statistics into file.
    * \param nextDump The interval before next dump.
    */
   void DumpStatistics (Time nextDump);
 
+  /** Metadata associated to a network slice. */
+  struct SliceStats
+  {
+    Ptr<OutputStreamWrapper>  bwdWrapper;   //!< BwdStats file wrapper.
+  };
+
   /** Metadata for each network slice. */
   SliceStats                m_slices [N_SLICES_ALL];
-  std::string               m_linFilename;  //!< LinStats filename.
+  std::string               m_bwdFilename;  //!< BwdStats filename.
 };
 
 } // namespace ns3
