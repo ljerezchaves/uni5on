@@ -68,7 +68,7 @@ public:
    * \param txBytes The total number of bytes in this packet.
    * \return The counter of TX packets.
    */
-  uint32_t NotifyTx (uint32_t txBytes);
+  void NotifyTx (uint32_t txBytes);
 
   /**
    * Update RX counters for a new received packet.

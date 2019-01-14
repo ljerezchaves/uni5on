@@ -75,7 +75,7 @@ FlowStatsCalculator::ResetCounters (void)
     }
 }
 
-uint32_t
+void
 FlowStatsCalculator::NotifyTx (uint32_t txBytes)
 {
   NS_LOG_FUNCTION (this << txBytes);
@@ -88,7 +88,6 @@ FlowStatsCalculator::NotifyTx (uint32_t txBytes)
 
   m_txPackets++;
   m_txBytes += txBytes;
-  return m_txPackets;
 }
 
 void
