@@ -209,7 +209,7 @@ BackhaulStatsCalculator::OverloadDropPacket (std::string context,
   Ptr<FlowStatsCalculator> aggStats;
   if (packet->PeekPacketTag (gtpuTag))
     {
-      SliceId slice = GetSliceIdFromTeid (gtpuTag.GetTeid ());
+      SliceId slice = gtpuTag.GetSliceId ();
       Direction dir = gtpuTag.GetDirection ();
 
       sliStats = m_slices [slice].tffStats [dir];
@@ -260,7 +260,7 @@ BackhaulStatsCalculator::MeterDropPacket (
   Ptr<FlowStatsCalculator> aggStats;
   if (packet->PeekPacketTag (gtpuTag))
     {
-      SliceId slice = GetSliceIdFromTeid (gtpuTag.GetTeid ());
+      SliceId slice = gtpuTag.GetSliceId ();
       Direction dir = gtpuTag.GetDirection ();
 
       sliStats = m_slices [slice].tffStats [dir];
@@ -289,7 +289,7 @@ BackhaulStatsCalculator::MeterDropPacket (
       // It must be a packed dropped by a traffic meter because we only have
       // slicing meters on ring switches, not on the P-GW.
       //
-      SliceId slice = GetSliceIdFromTeid (gtpuTag.GetTeid ());
+      SliceId slice = gtpuTag.GetSliceId ();
       Direction dir = Direction::DLINK;
 
       sliStats = m_slices [slice].tffStats [dir];
@@ -313,7 +313,7 @@ BackhaulStatsCalculator::QueueDropPacket (std::string context,
   Ptr<FlowStatsCalculator> aggStats;
   if (packet->PeekPacketTag (gtpuTag))
     {
-      SliceId slice = GetSliceIdFromTeid (gtpuTag.GetTeid ());
+      SliceId slice = gtpuTag.GetSliceId ();
       Direction dir = gtpuTag.GetDirection ();
 
       sliStats = m_slices [slice].tffStats [dir];
@@ -335,7 +335,7 @@ BackhaulStatsCalculator::EpcInputPacket (std::string context,
   Ptr<FlowStatsCalculator> aggStats;
   if (packet->PeekPacketTag (gtpuTag))
     {
-      SliceId slice = GetSliceIdFromTeid (gtpuTag.GetTeid ());
+      SliceId slice = gtpuTag.GetSliceId ();
       Direction dir = gtpuTag.GetDirection ();
 
       sliStats = m_slices [slice].tffStats [dir];
@@ -357,7 +357,7 @@ BackhaulStatsCalculator::EpcOutputPacket (std::string context,
   Ptr<FlowStatsCalculator> aggStats;
   if (packet->PeekPacketTag (gtpuTag))
     {
-      SliceId slice = GetSliceIdFromTeid (gtpuTag.GetTeid ());
+      SliceId slice = gtpuTag.GetSliceId ();
       Direction dir = gtpuTag.GetDirection ();
 
       sliStats = m_slices [slice].tffStats [dir];

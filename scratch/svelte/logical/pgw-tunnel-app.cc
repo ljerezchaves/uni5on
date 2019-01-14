@@ -22,6 +22,7 @@
 #include "pgw-tunnel-app.h"
 #include "epc-gtpu-tag.h"
 #include "../metadata/ue-info.h"
+#include "../metadata/routing-info.h"
 
 namespace ns3 {
 
@@ -97,7 +98,8 @@ PgwTunnelApp::AttachEpcGtpuTag (Ptr<Packet> packet, uint32_t teid)
     }
 
   // Packet entering the EPC. Attach the tag and fire the S5 TX trace source.
-  EpcGtpuTag teidTag (teid, EpcGtpuTag::PGW);
+  Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
+  EpcGtpuTag teidTag (teid, EpcGtpuTag::PGW, rInfo->GetQosType ());
   packet->AddPacketTag (teidTag);
   m_txS5Trace (packet);
 }

@@ -30,8 +30,11 @@ namespace ns3 {
 
 class Tag;
 
+#define META_NODE 0x1
+#define META_TYPE 0x2
+
 /**
- * Tag used to identify the GTP TEID for packets.
+ * Tag used for GTP packets withing LTE EPC.
  */
 class EpcGtpuTag : public Tag
 {
@@ -48,42 +51,45 @@ public:
 
   /** Constructors */
   EpcGtpuTag ();
-  EpcGtpuTag (uint32_t teid, EpcInputNode inputNode);
+  EpcGtpuTag (uint32_t teid, EpcInputNode node, QosType type);
 
   // Inherited from Tag
   virtual void Serialize (TagBuffer i) const;
   virtual void Deserialize (TagBuffer i);
-  virtual uint32_t GetSerializedSize () const;
+  virtual uint32_t GetSerializedSize (void) const;
   virtual void Print (std::ostream &os) const;
 
-  /** \return the direction for this traffic */
-  Direction GetDirection () const;
+  /**
+   * Private member accessors for tag information.
+   * \return The requested information.
+   */
+  //\{
+  Direction     GetDirection  (void) const;
+  EpcInputNode  GetInputNode  (void) const;
+  QosType       GetQosType    (void) const;
+  SliceId       GetSliceId    (void) const;
+  uint32_t      GetTeid       (void) const;
+  Time          GetTimestamp  (void) const;
+  //\}
 
-  /** \return the teid field */
-  uint32_t GetTeid () const;
-
-  /** \return the input node field */
-  EpcInputNode GetInputNode () const;
-
-  /** \return the timestamp field */
-  Time GetTimestamp () const;
-
-  /** Set the teid field */
-  void SetTeid (uint32_t teid);
-
-  /** Set the input node field */
-  void SetInputNode (EpcInputNode inputNode);
-
-  /** \return true when downlink traffic */
-  bool IsDownlink () const;
-
-  /** \return true when uplink traffic */
-  bool IsUplink () const;
+  /**
+   * Get the EPC input node name.
+   * \param node The EPC input node.
+   * \return The string with the EPC input node name.
+   */
+  static std::string EpcInputNodeStr (EpcInputNode node);
 
 private:
-  uint32_t  m_teid;       //!< GTP teid
-  uint8_t   m_inputNode;  //!< Input node
-  uint64_t  m_ts;         //!< Input timestamp
+  /**
+   * Set internal metadata field.
+   * \param node The input node.
+   * \param type The QoS traffic type.
+   */
+  void SetMetadata (EpcInputNode node, QosType type);
+
+  uint8_t   m_meta;       //!< Packet metadata.
+  uint32_t  m_teid;       //!< GTP teid.
+  uint64_t  m_time;       //!< Input timestamp.
 };
 
 } // namespace ns3

@@ -22,7 +22,6 @@
 #include <iostream>
 #include "link-info.h"
 #include "../logical/epc-gtpu-tag.h"
-#include "../metadata/routing-info.h"
 
 using namespace std;
 
@@ -415,9 +414,8 @@ LinkInfo::NotifyTxPacket (std::string context, Ptr<const Packet> packet)
   EpcGtpuTag gtpuTag;
   if (packet->PeekPacketTag (gtpuTag))
     {
-      Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (gtpuTag.GetTeid ());
-      SliceId slice = rInfo->GetSliceId ();
-      QosType type = rInfo->IsGbr () ? QosType::GBR : QosType::NON;
+      SliceId slice = gtpuTag.GetSliceId ();
+      QosType type = gtpuTag.GetQosType ();
       uint32_t size = packet->GetSize ();
 
       // Update TX packets for the traffic slice and for fake shared slice,

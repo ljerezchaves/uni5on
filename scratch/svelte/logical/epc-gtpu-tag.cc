@@ -25,17 +25,18 @@ namespace ns3 {
 NS_OBJECT_ENSURE_REGISTERED (EpcGtpuTag);
 
 EpcGtpuTag::EpcGtpuTag ()
-  : m_teid (0),
-  m_inputNode (0),
-  m_ts (Simulator::Now ().GetTimeStep ())
+  : m_meta (0),
+  m_teid (0),
+  m_time (Simulator::Now ().GetTimeStep ())
 {
 }
 
-EpcGtpuTag::EpcGtpuTag (uint32_t teid, EpcInputNode inputNode)
-  : m_teid (teid),
-  m_inputNode ((uint8_t)inputNode),
-  m_ts (Simulator::Now ().GetTimeStep ())
+EpcGtpuTag::EpcGtpuTag (uint32_t teid, EpcInputNode node, QosType type)
+  : m_meta (0),
+  m_teid (teid),
+  m_time (Simulator::Now ().GetTimeStep ())
 {
+  SetMetadata (node, type);
 }
 
 TypeId
@@ -63,31 +64,56 @@ EpcGtpuTag::GetSerializedSize (void) const
 void
 EpcGtpuTag::Serialize (TagBuffer i) const
 {
+  i.WriteU8  (m_meta);
   i.WriteU32 (m_teid);
-  i.WriteU8 (m_inputNode);
-  i.WriteU64 (m_ts);
+  i.WriteU64 (m_time);
 }
 
 void
 EpcGtpuTag::Deserialize (TagBuffer i)
 {
+  m_meta = i.ReadU8 ();
   m_teid = i.ReadU32 ();
-  m_inputNode = i.ReadU8 ();
-  m_ts = i.ReadU64 ();
+  m_time = i.ReadU64 ();
 }
 
 void
 EpcGtpuTag::Print (std::ostream &os) const
 {
-  os << " TEID=" << m_teid
-     << " input=" << (m_inputNode == (uint8_t)EpcGtpuTag::ENB ? "eNb" : "Pgw")
-     << " timestamp=" << m_ts;
+  os << " teid=" << m_teid
+     << " input=" << EpcInputNodeStr (GetInputNode ())
+     << " type=" << QosTypeStr (GetQosType ())
+     << " timestamp=" << m_time;
 }
 
 Direction
 EpcGtpuTag::GetDirection () const
 {
-  return IsDownlink () ? Direction::DLINK : Direction::ULINK;
+  return GetInputNode () == EpcGtpuTag::PGW ?
+         Direction::DLINK : Direction::ULINK;
+}
+
+EpcGtpuTag::EpcInputNode
+EpcGtpuTag::GetInputNode () const
+{
+  uint8_t node = m_meta;
+  node &= META_NODE;
+  return static_cast<EpcGtpuTag::EpcInputNode> (node);
+}
+
+QosType
+EpcGtpuTag::GetQosType () const
+{
+  uint8_t type = m_meta;
+  type &= META_TYPE;
+  type >>= 1;
+  return static_cast<QosType> (type);
+}
+
+SliceId
+EpcGtpuTag::GetSliceId () const
+{
+  return GetSliceIdFromTeid (m_teid);
 }
 
 uint32_t
@@ -96,40 +122,36 @@ EpcGtpuTag::GetTeid () const
   return m_teid;
 }
 
-EpcGtpuTag::EpcInputNode
-EpcGtpuTag::GetInputNode () const
-{
-  return m_inputNode == 0 ? EpcGtpuTag::ENB : EpcGtpuTag::PGW;
-}
-
 Time
 EpcGtpuTag::GetTimestamp () const
 {
-  return Time (m_ts);
+  return Time (m_time);
+}
+
+std::string
+EpcGtpuTag::EpcInputNodeStr (EpcInputNode node)
+{
+  switch (node)
+    {
+    case EpcInputNode::ENB:
+      return "enb";
+    case EpcInputNode::PGW:
+      return "pgw";
+    default:
+      return std::string ();
+    }
 }
 
 void
-EpcGtpuTag::SetTeid (uint32_t teid)
+EpcGtpuTag::SetMetadata (EpcInputNode node, QosType type)
 {
-  m_teid = teid;
-}
+  NS_ASSERT_MSG (node <= 0x1, "Input node cannot exceed 1 bit.");
+  NS_ASSERT_MSG (type <= 0x1, "QoS type cannot exceed 1 bit.");
 
-void
-EpcGtpuTag::SetInputNode (EpcInputNode inputNode)
-{
-  m_inputNode = (uint8_t)inputNode;
-}
-
-bool
-EpcGtpuTag::IsDownlink () const
-{
-  return (bool)m_inputNode;
-}
-
-bool
-EpcGtpuTag::IsUplink () const
-{
-  return (bool)!m_inputNode;
+  m_meta = 0x0;
+  m_meta |= static_cast<uint8_t> (type);
+  m_meta <<= 1;
+  m_meta |= static_cast<uint8_t> (node);
 }
 
 } // namespace ns3
