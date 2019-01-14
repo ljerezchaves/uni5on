@@ -24,6 +24,8 @@
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
 #include <ns3/ofswitch13-device-container.h>
+#include "flow-stats-calculator.h"
+#include "../logical/epc-gtpu-tag.h"
 #include "../metadata/link-info.h"
 
 namespace ns3 {
@@ -59,15 +61,56 @@ private:
    */
   void DumpStatistics (Time nextDump);
 
+  /**
+   * Trace sink fired when a packet is dropped while exceeding pipeline load
+   * capacity.
+   * \param context Context information.
+   * \param packet The dropped packet.
+   */
+  void OverloadDropPacket (std::string context, Ptr<const Packet> packet);
+
+  /**
+   * Trace sink fired when a packets is dropped by meter band.
+   * \param context Context information.
+   * \param packet The dropped packet.
+   * \param meterId The meter ID that dropped the packet.
+   */
+  void MeterDropPacket (std::string context, Ptr<const Packet> packet,
+                        uint32_t meterId);
+
+  /**
+   * Trace sink fired when a packet is dropped by OpenFlow port queues.
+   * \param context Context information.
+   * \param packet The dropped packet.
+   */
+  void QueueDropPacket (std::string context, Ptr<const Packet> packet);
+
+  /**
+   * Trace sink fired when a packet enters the EPC.
+   * \param context Context information.
+   * \param packet The packet.
+   */
+  void EpcInputPacket (std::string context, Ptr<const Packet> packet);
+
+  /**
+   * Trace sink fired when a packet leaves the EPC.
+   * \param context Context information.
+   * \param packet The packet.
+   */
+  void EpcOutputPacket (std::string context, Ptr<const Packet> packet);
+
   /** Metadata associated to a network slice. */
   struct SliceStats
   {
     Ptr<OutputStreamWrapper>  bwdWrapper;   //!< BwdStats file wrapper.
+    Ptr<OutputStreamWrapper>  tffWrapper;   //!< FlwStats file wrapper.
+    Ptr<FlowStatsCalculator>  tffStats [2]; //!< Traffic statistics.
   };
 
   /** Metadata for each network slice. */
   SliceStats                m_slices [N_SLICES_ALL];
   std::string               m_bwdFilename;  //!< BwdStats filename.
+  std::string               m_tffFilename;  //!< TffStats filename.
 };
 
 } // namespace ns3
