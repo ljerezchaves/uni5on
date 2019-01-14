@@ -132,7 +132,7 @@ private:
   /** A pair of FlowStatsCalculator, for downlink and uplink traffic. */
   struct FlowStatsPair
   {
-    Ptr<FlowStatsCalculator> stats [2];
+    Ptr<FlowStatsCalculator> tffStats [2]; //!< Traffic statistics.
   };
 
   /** A Map saving GTP TEID / EPC stats pair. */

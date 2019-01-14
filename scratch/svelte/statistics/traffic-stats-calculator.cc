@@ -336,18 +336,18 @@ TrafficStatsCalculator::GetFlowStats (uint32_t teid, Direction dir)
   auto it = m_qosByTeid.find (teid);
   if (it != m_qosByTeid.end ())
     {
-      stats = it->second.stats [dir];
+      stats = it->second.tffStats [dir];
     }
   else
     {
       FlowStatsPair pair;
-      pair.stats [Direction::DLINK] = CreateObject<FlowStatsCalculator> ();
-      pair.stats [Direction::ULINK] = CreateObject<FlowStatsCalculator> ();
+      pair.tffStats [Direction::DLINK] = CreateObject<FlowStatsCalculator> ();
+      pair.tffStats [Direction::ULINK] = CreateObject<FlowStatsCalculator> ();
       std::pair<uint32_t, FlowStatsPair> entry (teid, pair);
       auto ret = m_qosByTeid.insert (entry);
       NS_ABORT_MSG_IF (ret.second == false, "Error when saving QoS entry.");
 
-      stats = pair.stats [dir];
+      stats = pair.tffStats [dir];
     }
   return stats;
 }
