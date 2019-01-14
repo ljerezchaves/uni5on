@@ -99,6 +99,13 @@ TrafficStatsCalculator::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
+  for (auto &statsIt : m_qosByTeid)
+    {
+      for (int d = 0; d <= Direction::ULINK; d++)
+        {
+          statsIt.second.tffStats [d] = 0;
+        }
+    }
   m_appWrapper = 0;
   m_epcWrapper = 0;
   Object::DoDispose ();
