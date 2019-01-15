@@ -558,65 +558,6 @@ LinkInfo::SetQuota (Direction dir, SliceId slice, uint16_t quota)
   return true;
 }
 
-bool
-LinkInfo::SetSliceQuotas (
-  Direction dir, const SliceQuotaMap_t &quotas)
-{
-  NS_LOG_FUNCTION (this << dir);
-
-  // First, check for consistent slice quotas.
-  uint16_t sumQuotas = 0;
-  for (int s = 0; s < SliceId::ALL; s++)
-    {
-      SliceId slice = static_cast<SliceId> (s);
-      auto it = quotas.find (slice);
-      NS_ASSERT_MSG (it != quotas.end (), "Missing slice quota.");
-
-      uint16_t quota = it->second;
-      NS_ASSERT_MSG (quota >= 0 && quota <= 100, "Invalid quota.");
-      sumQuotas += quota;
-
-      if (GetResBitRate (dir, slice) > ((GetLinkBitRate () * quota) / 100))
-        {
-          NS_LOG_WARN ("Can't change the slice quota. The new bit rate is "
-                       "lower than the already reserved bit rate.");
-          return false;
-        }
-    }
-  NS_ABORT_MSG_IF (sumQuotas > 100, "Inconsistent slice quotas.");
-
-  // Then, update slice bit rates.
-  for (auto const &it : quotas)
-    {
-      SliceId slice = it.first;
-      uint16_t quota = it.second;
-      NS_LOG_DEBUG (SliceIdStr (slice) << " slice quota: " << quota);
-
-      // Only update and fire adjusted trace source if the quota has changed.
-      if (quota != GetQuota (dir, slice))
-        {
-          m_slices [slice][dir].quota = quota;
-
-          NS_LOG_DEBUG ("Fire meter adjustment and clear meter diff.");
-          m_meterAdjustedTrace (Ptr<LinkInfo> (this), dir, slice);
-          m_slices [slice][dir].meterDiff = 0;
-        }
-    }
-
-  // Only update and fire adjusted trace source for the fake shared slice if
-  // the sum of quotas has changed.
-  if (sumQuotas != GetQuota (dir, SliceId::ALL))
-    {
-      m_slices [SliceId::ALL][dir].quota = sumQuotas;
-
-      NS_LOG_DEBUG ("Fire meter adjustment and clear meter diff.");
-      m_meterAdjustedTrace (Ptr<LinkInfo> (this), dir, SliceId::ALL);
-      m_slices [SliceId::ALL][dir].meterDiff = 0;
-    }
-
-  return true;
-}
-
 void
 LinkInfo::UpdateEwmaThp (void)
 {

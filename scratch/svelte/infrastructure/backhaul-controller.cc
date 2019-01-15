@@ -272,7 +272,6 @@ BackhaulController::NotifySlicesBuilt (ApplicationContainer &controllers)
 
   // Create the slice quota map for all slices (including those not configured
   // with null application pointer).
-  LinkInfo::SliceQuotaMap_t quotas;
   for (auto const &it : m_sliceCtrlById)
     {
       SliceId sliceId = it.first;

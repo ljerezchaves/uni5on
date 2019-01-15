@@ -56,9 +56,6 @@ class LinkInfo : public Object
   friend class RingController;
 
 public:
-  /** Map saving slice ID / slice quota. */
-  typedef std::map<SliceId, uint16_t> SliceQuotaMap_t;
-
   /** Link direction. */
   enum Direction
   {
@@ -349,16 +346,6 @@ private:
    */
   bool SetQuota (
     Direction dir, SliceId slice, uint16_t quota);
-
-  /**
-   * Update the maximum bit rate over this link on the given
-   * direction for each network slice.
-   * \param dir The link direction.
-   * \param quotas The map with slice quotas.
-   * \return True if succeeded, false otherwise.
-   */
-  bool SetSliceQuotas (
-    Direction dir, const SliceQuotaMap_t &quotas);
 
   /**
    * Update EWMA link throughput statistics.
