@@ -133,7 +133,7 @@ public:
    * \param slice The network slice.
    * \return The slice quota.
    */
-  uint16_t GetQuota (
+  int GetQuota (
     LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**
@@ -292,7 +292,7 @@ private:
   /** Metadata associated to a network slice. */
   struct SliceStats
   {
-    uint16_t quota;                     //!< Slice quota (0-100%).
+    int quota;                          //!< Slice quota (0-100%).
     uint64_t extra;                     //!< Extra (over quota) bit rate.
     uint64_t meter;                     //!< OpenFlow meter bit rate.
     uint64_t reserved;                  //!< Reserved bit rate.

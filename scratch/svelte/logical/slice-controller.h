@@ -336,8 +336,8 @@ private:
   // Slice identification.
   SliceId                 m_sliceId;        //!< Logical slice ID.
   std::string             m_sliceIdStr;     //!< Slice ID string.
-  uint16_t                m_slicePrio;      //!< Priority.
-  uint16_t                m_sliceQuota;     //!< Infrastructure quota.
+  int                     m_slicePrio;      //!< slice priority.
+  int                     m_sliceQuota;     //!< Initial infrastructure quota.
 
   // Infrastructure interface.
   Ptr<BackhaulController> m_backhaulCtrl;   //!< OpenFlow backhaul controller.

@@ -275,12 +275,12 @@ BackhaulController::NotifySlicesBuilt (ApplicationContainer &controllers)
   for (auto const &it : m_sliceCtrlById)
     {
       SliceId sliceId = it.first;
-      UintegerValue quotaValue (0);
+      IntegerValue quotaValue (0);
       if (it.second)
         {
           it.second->GetAttribute ("Quota", quotaValue);
         }
-      uint16_t quota = quotaValue.Get ();
+      int quota = quotaValue.Get ();
 
       // Iterate over links setting the initial quotas.
       for (auto const &lInfo : LinkInfo::GetList ())

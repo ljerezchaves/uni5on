@@ -67,15 +67,15 @@ SliceController::GetTypeId (void)
     .AddAttribute ("Priority",
                    "Priority for this slice.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   UintegerValue (1),
-                   MakeUintegerAccessor (&SliceController::m_slicePrio),
-                   MakeUintegerChecker<uint16_t> ())
+                   IntegerValue (1),
+                   MakeIntegerAccessor (&SliceController::m_slicePrio),
+                   MakeIntegerChecker<int> ())
     .AddAttribute ("Quota",
                    "Infrastructure quota for this slice.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   UintegerValue (0),
-                   MakeUintegerAccessor (&SliceController::m_sliceQuota),
-                   MakeUintegerChecker<uint16_t> (0, 100))
+                   IntegerValue (0),
+                   MakeIntegerAccessor (&SliceController::m_sliceQuota),
+                   MakeIntegerChecker<int> (0, 100))
 
     // Infrastructure.
     .AddAttribute ("BackhaulCtrl", "The OpenFlow backhaul controller pointer.",

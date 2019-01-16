@@ -403,8 +403,8 @@ SvelteHelper::NotifyConstructionCompleted (void)
 
   Ptr<BackhaulController> backahulCtrl = m_backhaul->GetControllerApp ();
   ApplicationContainer sliceControllers;
-  UintegerValue quotaValue;
-  uint16_t sumQuota = 0;
+  IntegerValue quotaValue;
+  int sumQuota = 0;
 
   // Create the HTC logical slice controller, network, and traffic helper.
   if (AreFactoriesOk (m_htcControllerFac, m_htcNetworkFac, m_htcTrafficFac))
