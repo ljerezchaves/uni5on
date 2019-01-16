@@ -248,22 +248,22 @@ LinkInfo::GetThpBitRate (EwmaTerm term, LinkDir dir, SliceId slice,
   return m_slices [slice][dir].ewmaThp [type][term];
 }
 
-double
-LinkInfo::GetThpSliceRatio (LinkDir dir, SliceId slice) const
-{
-  NS_LOG_FUNCTION (this << dir << slice);
+// double
+// LinkInfo::GetThpSliceRatio (LinkDir dir, SliceId slice) const
+// {
+//   NS_LOG_FUNCTION (this << dir << slice);
 
-  if (GetQuotaBitRate (dir, slice) == 0)
-    {
-      NS_ASSERT_MSG (GetThpBitRate (dir, slice) == 0, "Invalid slice usage.");
-      return 0.0;
-    }
-  else
-    {
-      return static_cast<double> (GetThpBitRate (dir, slice))
-             / GetQuotaBitRate (dir, slice);
-    }
-}
+//   if (GetQuotaBitRate (dir, slice) == 0)
+//     {
+//       NS_ASSERT_MSG (GetThpBitRate (dir, slice) == 0, "Invalid slice usage.");
+//       return 0.0;
+//     }
+//   else
+//     {
+//       return static_cast<double> (GetThpBitRate (dir, slice))
+//              / GetQuotaBitRate (dir, slice);
+//     }
+// }
 
 uint64_t
 LinkInfo::GetTxBytes (LinkDir dir, SliceId slice, QosType type) const

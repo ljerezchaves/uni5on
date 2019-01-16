@@ -218,8 +218,8 @@ public:
    * \param slice The network slice.
    * \return The bandwidth usage ratio.
    */
-  double GetThpSliceRatio (
-    LinkDir dir, SliceId slice = SliceId::ALL) const;
+  // double GetThpSliceRatio (
+  //   LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**
    * Get the total number of transmitted bytes over this link on the given
