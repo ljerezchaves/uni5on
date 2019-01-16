@@ -40,15 +40,13 @@ typedef std::vector<Ptr<LinkInfo> > LinkInfoList_t;
  *
  * The link is prepared to handle inter-slicing, and each slice has the
  * following metadata information associated to it:
- * - The quota, adjusted by the backhaul controller;
- * - The extra bit rate, adjusted by the backhaul controller;
- * - The reserved bit rate, updated by reserve/release procedures;
- * - The meter diff, automatically updated when any of the previous metadatada
- *   changes. When the meter diff absolute value reaches the threshold value
- *   indicated by the AdjustmentStep attribute, the meter adjusted trace source
- *   is fired to update the OpenFlow Non-GBR inter-slicing meter rules.
- * - The transmitted bytes, updated by monitoring port device TX operations;
- * - The average throughput, periodically updated using EWMA;
+ * - The slice quota, updated by the backhaul controller;
+ * - The extra (over quota) bit rate, updated by the backhaul controller;
+ * - The OpenFlow meter bit rate, updated by the backhaul controller;
+ * - The reserved bit rate, updated by Reserve/ReleaseBitRate methods;
+ * - The transmitted bytes, updated by NotifyTxPacket method;
+ * - The average throughput, for both short-term and long-term periods of
+ *   evaluation, periodically updated by UpdateEwmaThp method;
  */
 class LinkInfo : public Object
 {
@@ -129,9 +127,8 @@ public:
   uint64_t GetLinkBitRate (void) const;
 
   /**
-   * Get the slice quota for this link on the given direction, optionally
-   * filtered by the network slice. If no slice is given, the this method will
-   * return the sum of quotas from all slices.
+   * Get the slice quota for this link on the given direction,
+   * optionally filtered by the network slice.
    * \param dir The link direction.
    * \param slice The network slice.
    * \return The slice quota.
@@ -140,9 +137,8 @@ public:
     LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**
-   * Get the quota bit rate for this link on the given direction, optionally
-   * filtered by the network slice. If no slice is given, the this method will
-   * return the GetLinkBitRate ();
+   * Get the quota bit rate for this link on the given direction,
+   * optionally filtered by the network slice.
    * \param dir The link direction.
    * \param slice The network slice.
    * \return The maximum bit rate.
