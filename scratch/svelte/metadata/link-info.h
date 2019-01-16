@@ -109,24 +109,17 @@ public:
     uint64_t src, uint64_t dst) const;
 
   /**
-   * Get the extra bit rate for traffic over this link on the given
-   * direction, optionally filtered by the network slice.
-   * \param dir The link direction.
-   * \param slice The network slice.
-   * \return The extra bit rate.
+   * Get the pair of switch datapath IDs for this link, respecting the
+   * internal order.
+   * \return The pair of switch datapath IDs.
    */
-  uint64_t GetExtraBitRate (
-    Direction dir, SliceId slice = SliceId::ALL) const;
+  DpIdPair_t GetSwitchDpIdPair (void) const;
 
   /**
-   * Get the free (not reserved) bit rate for traffic over this link on
-   * the given direction, optionally filtered by the network slice.
-   * \param dir The link direction.
-   * \param slice The network slice.
-   * \return The available bit rate.
+   * Inspect physical channel for half-duplex or full-duplex operation mode.
+   * \return True when link in full-duplex mode, false otherwise.
    */
-  uint64_t GetFreeBitRate (
-    Direction dir, SliceId slice = SliceId::ALL) const;
+  bool IsFullDuplexLink (void) const;
 
   /**
    * Inspect physical channel for the assigned bit rate, which is the same for
@@ -134,16 +127,6 @@ public:
    * \return The channel maximum nominal bit rate (bps).
    */
   uint64_t GetLinkBitRate (void) const;
-
-  /**
-   * Get the meter bit rate for Non-GBR traffic over this link on
-   * the given direction, optionally filtered by the network slice.
-   * \param dir The link direction.
-   * \param slice The network slice.
-   * \return The available bit rate.
-   */
-  uint64_t GetMeterBitRate (
-    Direction dir, SliceId slice = SliceId::ALL) const;
 
   /**
    * Get the slice quota for this link on the given direction, optionally
@@ -168,6 +151,16 @@ public:
     Direction dir, SliceId slice = SliceId::ALL) const;
 
   /**
+   * Get the extra bit rate for traffic over this link on the given
+   * direction, optionally filtered by the network slice.
+   * \param dir The link direction.
+   * \param slice The network slice.
+   * \return The extra bit rate.
+   */
+  uint64_t GetExtraBitRate (
+    Direction dir, SliceId slice = SliceId::ALL) const;
+
+  /**
    * Get the reserved bit rate for traffic over this link on the given
    * direction, optionally filtered by the network slice.
    * \param dir The link direction.
@@ -178,11 +171,24 @@ public:
     Direction dir, SliceId slice = SliceId::ALL) const;
 
   /**
-   * Get the pair of switch datapath IDs for this link, respecting the
-   * internal order.
-   * \return The pair of switch datapath IDs.
+   * Get the free (not reserved) bit rate for traffic over this link on
+   * the given direction, optionally filtered by the network slice.
+   * \param dir The link direction.
+   * \param slice The network slice.
+   * \return The available bit rate.
    */
-  DpIdPair_t GetSwitchDpIdPair (void) const;
+  uint64_t GetFreeBitRate (
+    Direction dir, SliceId slice = SliceId::ALL) const;
+
+  /**
+   * Get the meter bit rate for Non-GBR traffic over this link on
+   * the given direction, optionally filtered by the network slice.
+   * \param dir The link direction.
+   * \param slice The network slice.
+   * \return The available bit rate.
+   */
+  uint64_t GetMeterBitRate (
+    Direction dir, SliceId slice = SliceId::ALL) const;
 
   /**
    * Get the EWMA throughput bit rate for this link on the given direction,
@@ -230,12 +236,6 @@ public:
    */
   bool HasBitRate (
     uint64_t src, uint64_t dst, SliceId slice, uint64_t bitRate) const;
-
-  /**
-   * Inspect physical channel for half-duplex or full-duplex operation mode.
-   * \return True when link in full-duplex mode, false otherwise.
-   */
-  bool IsFullDuplexLink (void) const;
 
   /**
    * Print the link metadata for a specific network slice.

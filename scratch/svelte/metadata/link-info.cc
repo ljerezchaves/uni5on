@@ -170,20 +170,20 @@ LinkInfo::GetDirection (uint64_t src, uint64_t dst) const
     }
 }
 
-uint64_t
-LinkInfo::GetExtraBitRate (Direction dir, SliceId slice) const
+DpIdPair_t
+LinkInfo::GetSwitchDpIdPair (void) const
 {
-  NS_LOG_FUNCTION (this << dir << slice);
+  NS_LOG_FUNCTION (this);
 
-  return m_slices [slice][dir].extra;
+  return DpIdPair_t (GetSwDpId (0), GetSwDpId (1));
 }
 
-uint64_t
-LinkInfo::GetFreeBitRate (Direction dir, SliceId slice) const
+bool
+LinkInfo::IsFullDuplexLink (void) const
 {
-  NS_LOG_FUNCTION (this << dir << slice);
+  NS_LOG_FUNCTION (this);
 
-  return GetQuotaBitRate (dir, slice) - GetResBitRate (dir, slice);
+  return m_channel->IsFullDuplex ();
 }
 
 uint64_t
@@ -192,14 +192,6 @@ LinkInfo::GetLinkBitRate (void) const
   NS_LOG_FUNCTION (this);
 
   return m_channel->GetDataRate ().GetBitRate ();
-}
-
-uint64_t
-LinkInfo::GetMeterBitRate (Direction dir, SliceId slice) const
-{
-  NS_LOG_FUNCTION (this << dir << slice);
-
-  return GetFreeBitRate (dir, slice) + GetExtraBitRate (dir, slice);
 }
 
 uint16_t
@@ -219,6 +211,14 @@ LinkInfo::GetQuotaBitRate (Direction dir, SliceId slice) const
 }
 
 uint64_t
+LinkInfo::GetExtraBitRate (Direction dir, SliceId slice) const
+{
+  NS_LOG_FUNCTION (this << dir << slice);
+
+  return m_slices [slice][dir].extra;
+}
+
+uint64_t
 LinkInfo::GetResBitRate (Direction dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
@@ -226,12 +226,20 @@ LinkInfo::GetResBitRate (Direction dir, SliceId slice) const
   return m_slices [slice][dir].reserved;
 }
 
-DpIdPair_t
-LinkInfo::GetSwitchDpIdPair (void) const
+uint64_t
+LinkInfo::GetFreeBitRate (Direction dir, SliceId slice) const
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION (this << dir << slice);
 
-  return DpIdPair_t (GetSwDpId (0), GetSwDpId (1));
+  return GetQuotaBitRate (dir, slice) - GetResBitRate (dir, slice);
+}
+
+uint64_t
+LinkInfo::GetMeterBitRate (Direction dir, SliceId slice) const
+{
+  NS_LOG_FUNCTION (this << dir << slice);
+
+  return GetFreeBitRate (dir, slice) + GetExtraBitRate (dir, slice);
 }
 
 uint64_t
@@ -278,14 +286,6 @@ LinkInfo::HasBitRate (
   LinkInfo::Direction dir = GetDirection (src, dst);
 
   return (GetFreeBitRate (dir, slice) >= bitRate);
-}
-
-bool
-LinkInfo::IsFullDuplexLink (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_channel->IsFullDuplex ();
 }
 
 std::ostream &
