@@ -232,6 +232,14 @@ LinkInfo::GetOldMeterBitRate (LinkDir dir, SliceId slice) const
 }
 
 uint64_t
+LinkInfo::GetMeterBitRate (LinkDir dir, SliceId slice) const
+{
+  NS_LOG_FUNCTION (this << dir << slice);
+
+  return m_slices [slice][dir].meter;
+}
+
+uint64_t
 LinkInfo::GetThpBitRate (LinkDir dir, SliceId slice,
                          QosType type, EwmaTerm term) const
 {
@@ -553,6 +561,14 @@ LinkInfo::SetExtraBitRate (LinkDir dir, SliceId slice, uint64_t bitRate)
   NS_LOG_FUNCTION (this << dir << slice << bitRate);
 
   m_slices [slice][dir].extra = bitRate;
+}
+
+void
+LinkInfo::SetMeterBitRate (LinkDir dir, SliceId slice, uint64_t bitRate)
+{
+  NS_LOG_FUNCTION (this << dir << slice << bitRate);
+
+  m_slices [slice][dir].meter = bitRate;
 }
 
 void

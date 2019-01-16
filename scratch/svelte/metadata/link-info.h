@@ -192,6 +192,16 @@ public:
     LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**
+   * Get the meter bit rate for this link on the given direction,
+   * optionally filtered by the network slice.
+   * \param dir The link direction.
+   * \param slice The network slice.
+   * \return The available bit rate.
+   */
+  uint64_t GetMeterBitRate (
+    LinkDir dir, SliceId slice = SliceId::ALL) const;
+
+  /**
    * Get the EWMA throughput bit rate for this link on the given direction,
    * optionally filtered by the network slice, QoS traffic type, and EWMA
    * period of evaluation.
@@ -301,7 +311,10 @@ private:
   {
     uint16_t quota;                     //!< Slice quota (0-100%).
     uint64_t extra;                     //!< Extra (over quota) bit rate.
+    uint64_t meter;                     //!< OpenFlow meter bit rate.
     uint64_t reserved;                  //!< Reserved bit rate.
+
+    // FIXME Remove in the future.
     int64_t  meterDiff;                 //!< Current meter bit rate diff.
 
     // Throughput measurement.
@@ -360,6 +373,15 @@ private:
    * \param bitRate The value to set.
    */
   void SetExtraBitRate (
+    LinkDir dir, SliceId slice, uint64_t bitRate);
+
+  /**
+   * Set the meter bit rate for this link on the given direction.
+   * \param dir The link direction.
+   * \param slice The network slice.
+   * \param bitRate The value to set.
+   */
+  void SetMeterBitRate (
     LinkDir dir, SliceId slice, uint64_t bitRate);
 
   /**
