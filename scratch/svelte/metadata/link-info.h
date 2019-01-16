@@ -187,7 +187,7 @@ public:
    * \param slice The network slice.
    * \return The available bit rate.
    */
-  uint64_t GetMeterBitRate (
+  uint64_t GetOldMeterBitRate (
     LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**

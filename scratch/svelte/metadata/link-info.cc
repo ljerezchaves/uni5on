@@ -224,7 +224,7 @@ LinkInfo::GetFreeBitRate (LinkDir dir, SliceId slice) const
 }
 
 uint64_t
-LinkInfo::GetMeterBitRate (LinkDir dir, SliceId slice) const
+LinkInfo::GetOldMeterBitRate (LinkDir dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
