@@ -57,7 +57,7 @@ class LinkInfo : public Object
 
 public:
   /** Link direction. */
-  enum Direction
+  enum LinkDir
   {
     FWD = 0,  //!< Forward direction (from first to second switch).
     BWD = 1   //!< Backward direction (from second to first switch).
@@ -105,7 +105,7 @@ public:
    * \param dst The destination switch datapath ID.
    * \return The link direction.
    */
-  LinkInfo::Direction GetDirection (
+  LinkInfo::LinkDir GetLinkDir (
     uint64_t src, uint64_t dst) const;
 
   /**
@@ -137,7 +137,7 @@ public:
    * \return The slice quota.
    */
   uint16_t GetQuota (
-    Direction dir, SliceId slice = SliceId::ALL) const;
+    LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**
    * Get the quota bit rate for this link on the given direction, optionally
@@ -148,7 +148,7 @@ public:
    * \return The maximum bit rate.
    */
   uint64_t GetQuotaBitRate (
-    Direction dir, SliceId slice = SliceId::ALL) const;
+    LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**
    * Get the extra bit rate for traffic over this link on the given
@@ -158,7 +158,7 @@ public:
    * \return The extra bit rate.
    */
   uint64_t GetExtraBitRate (
-    Direction dir, SliceId slice = SliceId::ALL) const;
+    LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**
    * Get the reserved bit rate for traffic over this link on the given
@@ -168,7 +168,7 @@ public:
    * \return The reserved bit rate.
    */
   uint64_t GetResBitRate (
-    Direction dir, SliceId slice = SliceId::ALL) const;
+    LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**
    * Get the free (not reserved) bit rate for traffic over this link on
@@ -178,7 +178,7 @@ public:
    * \return The available bit rate.
    */
   uint64_t GetFreeBitRate (
-    Direction dir, SliceId slice = SliceId::ALL) const;
+    LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**
    * Get the meter bit rate for Non-GBR traffic over this link on
@@ -188,7 +188,7 @@ public:
    * \return The available bit rate.
    */
   uint64_t GetMeterBitRate (
-    Direction dir, SliceId slice = SliceId::ALL) const;
+    LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**
    * Get the EWMA throughput bit rate for this link on the given direction,
@@ -199,7 +199,7 @@ public:
    * \return The EWMA throughput.
    */
   uint64_t GetThpBitRate (
-    Direction dir, SliceId slice = SliceId::ALL,
+    LinkDir dir, SliceId slice = SliceId::ALL,
     QosType type = QosType::BOTH) const;
 
   /**
@@ -211,7 +211,7 @@ public:
    * \return The bandwidth usage ratio.
    */
   double GetThpSliceRatio (
-    Direction dir, SliceId slice = SliceId::ALL) const;
+    LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**
    * Get the total number of transmitted bytes over this link on the given
@@ -222,7 +222,7 @@ public:
    * \return The TX bytes.
    */
   uint64_t GetTxBytes (
-    Direction dir, SliceId slice = SliceId::ALL,
+    LinkDir dir, SliceId slice = SliceId::ALL,
     QosType type = QosType::BOTH) const;
 
   /**
@@ -251,7 +251,7 @@ public:
    * \param dir The link direction.
    * \return The link direction string.
    */
-  static std::string DirectionStr (Direction dir);
+  static std::string LinkDirStr (LinkDir dir);
 
   /**
    * Get the list of link information.
@@ -283,7 +283,7 @@ public:
    * \param slice The network slice.
    */
   typedef void (*MeterAdjustedTracedCallback)(
-    Ptr<const LinkInfo> lInfo, LinkInfo::Direction dir, SliceId slice);
+    Ptr<const LinkInfo> lInfo, LinkInfo::LinkDir dir, SliceId slice);
 
 protected:
   /** Destructor implementation. */
@@ -345,7 +345,7 @@ private:
    * \return True if succeeded, false otherwise.
    */
   bool SetQuota (
-    Direction dir, SliceId slice, uint16_t quota);
+    LinkDir dir, SliceId slice, uint16_t quota);
 
   /**
    * Update EWMA link throughput statistics.
@@ -360,7 +360,7 @@ private:
    * \param bitRate The bit rate.
    */
   void UpdateMeterDiff (
-    Direction dir, SliceId slice, int64_t bitRate);
+    LinkDir dir, SliceId slice, int64_t bitRate);
 
   /**
    * Register the link information in global map for further usage.
@@ -369,7 +369,7 @@ private:
   static void RegisterLinkInfo (Ptr<LinkInfo> lInfo);
 
   /** Default meter bit rate adjusted trace source. */
-  TracedCallback<Ptr<const LinkInfo>, Direction, SliceId> m_meterAdjustedTrace;
+  TracedCallback<Ptr<const LinkInfo>, LinkDir, SliceId> m_meterAdjustedTrace;
 
   DataRate              m_adjustmentStep;       //!< Meter adjustment step.
   Ptr<CsmaChannel>      m_channel;              //!< The CSMA link channel.

@@ -552,7 +552,7 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 
 void
 BackhaulController::SlicingMeterAdjusted (
-  Ptr<const LinkInfo> lInfo, LinkInfo::Direction dir, SliceId slice)
+  Ptr<const LinkInfo> lInfo, LinkInfo::LinkDir dir, SliceId slice)
 {
   NS_LOG_FUNCTION (this << lInfo << dir << slice);
 
@@ -576,7 +576,7 @@ BackhaulController::SlicingMeterAdjusted (
       // Update the proper slicing meter.
       uint64_t kbps = Bps2Kbps (lInfo->GetMeterBitRate (dir, slice));
       NS_LOG_DEBUG ("Link slice " << SliceIdStr (slice) << ": " <<
-                    LinkInfo::DirectionStr (dir) <<
+                    LinkInfo::LinkDirStr (dir) <<
                     " link set to " << kbps << " Kbps");
       // ---------------------------------------------------------------------
       // Meter table
@@ -604,7 +604,7 @@ BackhaulController::SlicingMeterInstall (Ptr<const LinkInfo> lInfo)
         SliceId slice = SliceId::ALL;
         for (int d = 0; d <= LinkInfo::BWD; d++)
           {
-            LinkInfo::Direction dir = static_cast<LinkInfo::Direction> (d);
+            LinkInfo::LinkDir dir = static_cast<LinkInfo::LinkDir> (d);
             uint32_t meterId = GetSvelteMeterId (slice, d);
             NS_LOG_INFO ("Creating slicing meter ID " <<
                          GetUint32Hex (meterId) <<
@@ -613,7 +613,7 @@ BackhaulController::SlicingMeterInstall (Ptr<const LinkInfo> lInfo)
 
             uint64_t kbps = Bps2Kbps (lInfo->GetMeterBitRate (dir, slice));
             NS_LOG_DEBUG ("Link slice " << SliceIdStr (slice) <<
-                          ": " << LinkInfo::DirectionStr (dir) <<
+                          ": " << LinkInfo::LinkDirStr (dir) <<
                           " link set to " << kbps << " Kbps");
 
             // ----------------------------------------------------------------
@@ -638,7 +638,7 @@ BackhaulController::SlicingMeterInstall (Ptr<const LinkInfo> lInfo)
             SliceId slice = static_cast<SliceId> (s);
             for (int d = 0; d <= LinkInfo::BWD; d++)
               {
-                LinkInfo::Direction dir = static_cast<LinkInfo::Direction> (d);
+                LinkInfo::LinkDir dir = static_cast<LinkInfo::LinkDir> (d);
                 uint32_t meterId = GetSvelteMeterId (slice, d);
                 NS_LOG_INFO ("Creating slicing meter ID " <<
                              GetUint32Hex (meterId) <<
@@ -647,7 +647,7 @@ BackhaulController::SlicingMeterInstall (Ptr<const LinkInfo> lInfo)
 
                 uint64_t kbps = Bps2Kbps (lInfo->GetMeterBitRate (dir, slice));
                 NS_LOG_DEBUG ("Link slice " << SliceIdStr (slice) <<
-                              ": " << LinkInfo::DirectionStr (dir) <<
+                              ": " << LinkInfo::LinkDirStr (dir) <<
                               " link set to " << kbps << " Kbps");
 
                 // ------------------------------------------------------------

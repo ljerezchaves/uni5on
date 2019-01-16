@@ -628,7 +628,7 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
         SliceId slice = SliceId::ALL;
         for (int d = 0; d <= LinkInfo::BWD; d++)
           {
-            LinkInfo::Direction dir = static_cast<LinkInfo::Direction> (d);
+            LinkInfo::LinkDir dir = static_cast<LinkInfo::LinkDir> (d);
             RingInfo::RingPath path = RingInfo::LinkDirToRingPath (dir);
             uint32_t meterId = GetSvelteMeterId (slice, d);
 
@@ -663,7 +663,7 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
             SliceId slice = static_cast<SliceId> (s);
             for (int d = 0; d <= LinkInfo::BWD; d++)
               {
-                LinkInfo::Direction dir = static_cast<LinkInfo::Direction> (d);
+                LinkInfo::LinkDir dir = static_cast<LinkInfo::LinkDir> (d);
                 RingInfo::RingPath path = RingInfo::LinkDirToRingPath (dir);
                 uint32_t meterId = GetSvelteMeterId (slice, d);
 

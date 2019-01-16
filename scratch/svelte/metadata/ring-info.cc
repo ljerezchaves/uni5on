@@ -146,12 +146,12 @@ RingInfo::Invert (RingPath path)
 }
 
 RingInfo::RingPath
-RingInfo::LinkDirToRingPath (LinkInfo::Direction dir)
+RingInfo::LinkDirToRingPath (LinkInfo::LinkDir dir)
 {
   return dir == LinkInfo::FWD ? RingInfo::CLOCK : RingInfo::COUNTER;
 }
 
-LinkInfo::Direction
+LinkInfo::LinkDir
 RingInfo::RingPathToLinkDir (RingPath path)
 {
   return path == RingInfo::CLOCK ? LinkInfo::FWD : LinkInfo::BWD;

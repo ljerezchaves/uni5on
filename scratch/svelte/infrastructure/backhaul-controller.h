@@ -234,7 +234,7 @@ private:
    * \param slice The network slice.
    */
   void SlicingMeterAdjusted (Ptr<const LinkInfo> lInfo,
-                             LinkInfo::Direction dir, SliceId slice);
+                             LinkInfo::LinkDir dir, SliceId slice);
 
   /**
    * Install the infrastructure slicing meters. When the network slicing

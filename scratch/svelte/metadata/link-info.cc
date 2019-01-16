@@ -151,8 +151,8 @@ LinkInfo::GetSwPort (uint8_t idx) const
   return m_ports [idx];
 }
 
-LinkInfo::Direction
-LinkInfo::GetDirection (uint64_t src, uint64_t dst) const
+LinkInfo::LinkDir
+LinkInfo::GetLinkDir (uint64_t src, uint64_t dst) const
 {
   NS_LOG_FUNCTION (this << src << dst);
 
@@ -195,7 +195,7 @@ LinkInfo::GetLinkBitRate (void) const
 }
 
 uint16_t
-LinkInfo::GetQuota (Direction dir, SliceId slice) const
+LinkInfo::GetQuota (LinkDir dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
@@ -203,7 +203,7 @@ LinkInfo::GetQuota (Direction dir, SliceId slice) const
 }
 
 uint64_t
-LinkInfo::GetQuotaBitRate (Direction dir, SliceId slice) const
+LinkInfo::GetQuotaBitRate (LinkDir dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
@@ -211,7 +211,7 @@ LinkInfo::GetQuotaBitRate (Direction dir, SliceId slice) const
 }
 
 uint64_t
-LinkInfo::GetExtraBitRate (Direction dir, SliceId slice) const
+LinkInfo::GetExtraBitRate (LinkDir dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
@@ -219,7 +219,7 @@ LinkInfo::GetExtraBitRate (Direction dir, SliceId slice) const
 }
 
 uint64_t
-LinkInfo::GetResBitRate (Direction dir, SliceId slice) const
+LinkInfo::GetResBitRate (LinkDir dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
@@ -227,7 +227,7 @@ LinkInfo::GetResBitRate (Direction dir, SliceId slice) const
 }
 
 uint64_t
-LinkInfo::GetFreeBitRate (Direction dir, SliceId slice) const
+LinkInfo::GetFreeBitRate (LinkDir dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
@@ -235,7 +235,7 @@ LinkInfo::GetFreeBitRate (Direction dir, SliceId slice) const
 }
 
 uint64_t
-LinkInfo::GetMeterBitRate (Direction dir, SliceId slice) const
+LinkInfo::GetMeterBitRate (LinkDir dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
@@ -243,7 +243,7 @@ LinkInfo::GetMeterBitRate (Direction dir, SliceId slice) const
 }
 
 uint64_t
-LinkInfo::GetThpBitRate (Direction dir, SliceId slice, QosType type) const
+LinkInfo::GetThpBitRate (LinkDir dir, SliceId slice, QosType type) const
 {
   NS_LOG_FUNCTION (this << dir << slice << type);
 
@@ -251,7 +251,7 @@ LinkInfo::GetThpBitRate (Direction dir, SliceId slice, QosType type) const
 }
 
 double
-LinkInfo::GetThpSliceRatio (Direction dir, SliceId slice) const
+LinkInfo::GetThpSliceRatio (LinkDir dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
@@ -269,7 +269,7 @@ LinkInfo::GetThpSliceRatio (Direction dir, SliceId slice) const
 }
 
 uint64_t
-LinkInfo::GetTxBytes (Direction dir, SliceId slice, QosType type) const
+LinkInfo::GetTxBytes (LinkDir dir, SliceId slice, QosType type) const
 {
   NS_LOG_FUNCTION (this << dir << slice << type);
 
@@ -283,7 +283,7 @@ LinkInfo::HasBitRate (
   NS_LOG_FUNCTION (this << src << dst << slice << bitRate);
 
   NS_ASSERT_MSG (slice < SliceId::ALL, "Invalid slice for this operation.");
-  LinkInfo::Direction dir = GetDirection (src, dst);
+  LinkInfo::LinkDir dir = GetLinkDir (src, dst);
 
   return (GetFreeBitRate (dir, slice) >= bitRate);
 }
@@ -322,7 +322,7 @@ LinkInfo::PrintSliceValues (std::ostream &os, SliceId slice) const
 }
 
 std::string
-LinkInfo::DirectionStr (Direction dir)
+LinkInfo::LinkDirStr (LinkDir dir)
 {
   switch (dir)
     {
@@ -407,7 +407,7 @@ LinkInfo::NotifyTxPacket (std::string context, Ptr<const Packet> packet)
 {
   NS_LOG_FUNCTION (this << context << packet);
 
-  LinkInfo::Direction dir;
+  LinkInfo::LinkDir dir;
   dir = (context == "Forward") ? LinkInfo::FWD : LinkInfo::BWD;
 
   // Update TX packets for the packet slice.
@@ -439,7 +439,7 @@ LinkInfo::ReleaseBitRate (
   NS_LOG_FUNCTION (this << src << dst << slice << bitRate);
 
   NS_ASSERT_MSG (slice < SliceId::ALL, "Invalid slice for this operation.");
-  LinkInfo::Direction dir = GetDirection (src, dst);
+  LinkInfo::LinkDir dir = GetLinkDir (src, dst);
 
   // Check for reserved bit rate.
   if (GetResBitRate (dir, slice) < bitRate)
@@ -452,7 +452,7 @@ LinkInfo::ReleaseBitRate (
   m_slices [slice][dir].reserved -= bitRate;
   NS_LOG_DEBUG ("Releasing " << bitRate <<
                 " bit rate on slice " << SliceIdStr (slice) <<
-                " in " << DirectionStr (dir) << " direction.");
+                " in " << LinkDirStr (dir) << " direction.");
   NS_LOG_DEBUG ("Current " << SliceIdStr (slice) <<
                 " reserved bit rate: " << GetResBitRate (dir, slice));
   NS_LOG_DEBUG ("Current " << SliceIdStr (slice) <<
@@ -474,7 +474,7 @@ LinkInfo::ReserveBitRate (
   NS_LOG_FUNCTION (this << src << dst << slice << bitRate);
 
   NS_ASSERT_MSG (slice < SliceId::ALL, "Invalid slice for this operation.");
-  LinkInfo::Direction dir = GetDirection (src, dst);
+  LinkInfo::LinkDir dir = GetLinkDir (src, dst);
 
   // Check for available bit rate.
   if (GetFreeBitRate (dir, slice) < bitRate)
@@ -487,7 +487,7 @@ LinkInfo::ReserveBitRate (
   m_slices [slice][dir].reserved += bitRate;
   NS_LOG_DEBUG ("Reserving " << bitRate <<
                 " bit rate on slice " << SliceIdStr (slice) <<
-                " in " << DirectionStr (dir) << " direction.");
+                " in " << LinkDirStr (dir) << " direction.");
   NS_LOG_DEBUG ("Current " << SliceIdStr (slice) <<
                 " reserved bit rate: " << GetResBitRate (dir, slice));
   NS_LOG_DEBUG ("Current " << SliceIdStr (slice) <<
@@ -503,7 +503,7 @@ LinkInfo::ReserveBitRate (
 }
 
 bool
-LinkInfo::SetQuota (Direction dir, SliceId slice, uint16_t quota)
+LinkInfo::SetQuota (LinkDir dir, SliceId slice, uint16_t quota)
 {
   NS_LOG_FUNCTION (this << dir << slice << quota);
 
@@ -585,7 +585,7 @@ LinkInfo::UpdateEwmaThp (void)
 
 void
 LinkInfo::UpdateMeterDiff (
-  Direction dir, SliceId slice, int64_t bitRate)
+  LinkDir dir, SliceId slice, int64_t bitRate)
 {
   NS_LOG_FUNCTION (this << dir << slice << bitRate);
 
