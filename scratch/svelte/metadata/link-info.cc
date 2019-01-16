@@ -90,7 +90,7 @@ LinkInfo::GetTypeId (void)
                    MakeDataRateChecker ())
     .AddAttribute ("EwmaAlpha",
                    "The EWMA alpha parameter for averaging link statistics.",
-                   DoubleValue (0.25),
+                   DoubleValue (0.2),
                    MakeDoubleAccessor (&LinkInfo::m_ewmaAlpha),
                    MakeDoubleChecker<double> (0.0, 1.0))
     .AddAttribute ("EwmaTimeout",
