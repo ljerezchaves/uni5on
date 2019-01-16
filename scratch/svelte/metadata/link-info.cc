@@ -88,10 +88,15 @@ LinkInfo::GetTypeId (void)
                    DataRateValue (DataRate ("5Mbps")),
                    MakeDataRateAccessor (&LinkInfo::m_adjustmentStep),
                    MakeDataRateChecker ())
-    .AddAttribute ("EwmaAlpha",
-                   "The EWMA alpha parameter for averaging link statistics.",
-                   DoubleValue (0.2),
-                   MakeDoubleAccessor (&LinkInfo::m_ewmaAlpha),
+    .AddAttribute ("EwmaLongAlpha",
+                   "The EWMA alpha parameter for long-term link throughput.",
+                   DoubleValue (0.04),  // Last 5 seconds
+                   MakeDoubleAccessor (&LinkInfo::m_ewmaLtAlpha),
+                   MakeDoubleChecker<double> (0.0, 1.0))
+    .AddAttribute ("EwmaShortAlpha",
+                   "The EWMA alpha parameter for short-term link throughput.",
+                   DoubleValue (0.2),   // Last 1 second
+                   MakeDoubleAccessor (&LinkInfo::m_ewmaStAlpha),
                    MakeDoubleChecker<double> (0.0, 1.0))
     .AddAttribute ("EwmaTimeout",
                    "The interval between subsequent EWMA statistics update.",
@@ -243,11 +248,12 @@ LinkInfo::GetMeterBitRate (LinkDir dir, SliceId slice) const
 }
 
 uint64_t
-LinkInfo::GetThpBitRate (LinkDir dir, SliceId slice, QosType type) const
+LinkInfo::GetThpBitRate (LinkDir dir, SliceId slice,
+                         QosType type, EwmaTerm term) const
 {
   NS_LOG_FUNCTION (this << dir << slice << type);
 
-  return m_slices [slice][dir].ewmaThp [type];
+  return m_slices [slice][dir].ewmaThp [type][term];
 }
 
 double
@@ -571,8 +577,14 @@ LinkInfo::UpdateEwmaThp (void)
             {
               uint64_t bytes = stats.txBytes [t][now] - stats.txBytes [t][old];
               stats.txBytes [t][old] = stats.txBytes [t][now];
-              stats.ewmaThp [t] = (m_ewmaAlpha * 8 * bytes) / elapSecs +
-                (1 - m_ewmaAlpha) * stats.ewmaThp [t];
+
+              // Updating both long-term and short-term EWMA throughtpu.
+              stats.ewmaThp [t][EwmaTerm::LTERM] =
+                (m_ewmaLtAlpha * 8 * bytes) / elapSecs +
+                (1 - m_ewmaLtAlpha) * stats.ewmaThp [t][EwmaTerm::LTERM];
+              stats.ewmaThp [t][EwmaTerm::STERM] =
+                (m_ewmaStAlpha * 8 * bytes) / elapSecs +
+                (1 - m_ewmaStAlpha) * stats.ewmaThp [t][EwmaTerm::STERM];
             }
         }
     }

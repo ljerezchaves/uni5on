@@ -63,6 +63,13 @@ public:
     BWD = 1   //!< Backward direction (from second to first switch).
   };
 
+  /** EWMA period of evaluation. */
+  enum EwmaTerm
+  {
+    STERM = 0,  //!< Short-term EWMA evaluation.
+    LTERM = 1   //!< Long-term EWMA evaluation.
+  };
+
   /**
    * Complete constructor.
    * \param port1 First switch port.
@@ -192,15 +199,17 @@ public:
 
   /**
    * Get the EWMA throughput bit rate for this link on the given direction,
-   * optionally filtered by the network slice and QoS traffic type.
+   * optionally filtered by the network slice, QoS traffic type, and EWMA
+   * period of evaluation.
    * \param dir The link direction.
    * \param slice The network slice.
    * \param type Traffic QoS type.
+   * \param term The EWMA period of evaluation.
    * \return The EWMA throughput.
    */
   uint64_t GetThpBitRate (
     LinkDir dir, SliceId slice = SliceId::ALL,
-    QosType type = QosType::BOTH) const;
+    QosType type = QosType::BOTH, EwmaTerm term = EwmaTerm::STERM) const;
 
   /**
    * Get the EWMA throughput ratio for this link on the given direction,
@@ -302,8 +311,8 @@ private:
     int64_t  meterDiff;                 //!< Current meter bit rate diff.
 
     // Throughput measurement.
-    uint64_t ewmaThp [N_TYPES_ALL];     //!< EWMA throughput bit rate.
-    uint64_t txBytes [N_TYPES_ALL][2];  //!< TX bytes counters [curr and old].
+    uint64_t ewmaThp [N_TYPES_ALL][2];  //!< EWMA throughput [short / long].
+    uint64_t txBytes [N_TYPES_ALL][2];  //!< TX bytes counters [curr / old].
   };
 
   /**
@@ -379,7 +388,8 @@ private:
   SliceStats            m_slices [N_SLICES_ALL][2];
 
   // EWMA throughput calculation.
-  double                m_ewmaAlpha;            //!< EWMA alpha parameter.
+  double                m_ewmaLtAlpha;          //!< EWMA long-term alpha.
+  double                m_ewmaStAlpha;          //!< EWMA short-term alpha.
   Time                  m_ewmaTimeout;          //!< EWMA update timeout.
   Time                  m_ewmaLastTime;         //!< Last EWMA update time.
 
