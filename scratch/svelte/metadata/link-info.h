@@ -222,18 +222,6 @@ public:
   //   LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**
-   * Get the total number of transmitted bytes over this link on the given
-   * direction, optionally filtered by the network slice and QoS traffic type.
-   * \param dir The link direction.
-   * \param slice The network slice.
-   * \param type Traffic QoS type.
-   * \return The TX bytes.
-   */
-  uint64_t GetTxBytes (
-    LinkDir dir, SliceId slice = SliceId::ALL,
-    QosType type = QosType::BOTH) const;
-
-  /**
    * Check for available bit rate between these two switches that can be
    * further reserved by ReserveGbrBitRate () method.
    * \param src The source switch datapath ID.
@@ -314,8 +302,7 @@ private:
 
     // Throughput measurement.
     uint64_t ewmaThp [N_TYPES_ALL][2];  //!< EWMA throughput [short / long].
-    uint64_t txBytes [N_TYPES_ALL][2];  //!< TX bytes counters [curr / old].
-    // FIXME Dá pra ficar com txBytes só do intervalo mesmo.
+    uint64_t txBytes [N_TYPES_ALL];     //!< TX bytes counters.
   };
 
   /** A pair of switch datapath IDs. */

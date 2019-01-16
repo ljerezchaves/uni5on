@@ -267,15 +267,6 @@ LinkInfo::GetThpBitRate (EwmaTerm term, LinkDir dir, SliceId slice,
 //     }
 // }
 
-uint64_t
-LinkInfo::GetTxBytes (LinkDir dir, SliceId slice, QosType type) const
-{
-  NS_LOG_FUNCTION (this << dir << slice << type);
-
-  // Precisamos dessa função aqui mesmo?
-  return m_slices [slice][dir].txBytes [type][0];
-}
-
 bool
 LinkInfo::HasBitRate (
   uint64_t src, uint64_t dst, SliceId slice, uint64_t bitRate) const
@@ -422,10 +413,10 @@ LinkInfo::NotifyTxPacket (std::string context, Ptr<const Packet> packet)
 
       // Update TX packets for the traffic slice and for fake shared slice,
       // considering both the traffic type and the fake both type.
-      m_slices [slice][dir].txBytes [type][0] += size;
-      m_slices [slice][dir].txBytes [QosType::BOTH][0] += size;
-      m_slices [SliceId::ALL][dir].txBytes [type][0] += size;
-      m_slices [SliceId::ALL][dir].txBytes [QosType::BOTH][0] += size;
+      m_slices [slice][dir].txBytes [type] += size;
+      m_slices [slice][dir].txBytes [QosType::BOTH] += size;
+      m_slices [SliceId::ALL][dir].txBytes [type] += size;
+      m_slices [SliceId::ALL][dir].txBytes [QosType::BOTH] += size;
     }
   else
     {
@@ -578,7 +569,6 @@ LinkInfo::UpdateMeterBitRate (LinkDir dir, SliceId slice, int64_t bitRate)
 void
 LinkInfo::UpdateEwmaThp (void)
 {
-  const uint16_t now = 0, old = 1;
   double elapSecs = (Simulator::Now () - m_ewmaLastTime).GetSeconds ();
   for (int s = 0; s <= SliceId::ALL; s++)
     {
@@ -587,17 +577,14 @@ LinkInfo::UpdateEwmaThp (void)
           SliceStats &stats = m_slices [s][d];
           for (int t = 0; t <= QosType::BOTH; t++)
             {
-              uint64_t bytes = stats.txBytes [t][now] - stats.txBytes [t][old];
-              stats.txBytes [t][old] = stats.txBytes [t][now];
-
-              // FIXME Não precisa salvar o txbytes de um intervalo pra outro.
-              // Updating both long-term and short-term EWMA throughtpu.
+              // Updating both long-term and short-term EWMA throughput.
               stats.ewmaThp [t][EwmaTerm::LTERM] =
-                (m_ewmaLtAlpha * 8 * bytes) / elapSecs +
+                (m_ewmaLtAlpha * 8 * stats.txBytes [t]) / elapSecs +
                 (1 - m_ewmaLtAlpha) * stats.ewmaThp [t][EwmaTerm::LTERM];
               stats.ewmaThp [t][EwmaTerm::STERM] =
-                (m_ewmaStAlpha * 8 * bytes) / elapSecs +
+                (m_ewmaStAlpha * 8 * stats.txBytes [t]) / elapSecs +
                 (1 - m_ewmaStAlpha) * stats.ewmaThp [t][EwmaTerm::STERM];
+              stats.txBytes [t] = 0;
             }
         }
     }
