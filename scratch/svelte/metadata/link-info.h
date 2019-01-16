@@ -116,13 +116,6 @@ public:
     uint64_t src, uint64_t dst) const;
 
   /**
-   * Get the pair of switch datapath IDs for this link, respecting the
-   * internal order.
-   * \return The pair of switch datapath IDs.
-   */
-  DpIdPair_t GetSwitchDpIdPair (void) const;
-
-  /**
    * Inspect physical channel for half-duplex or full-duplex operation mode.
    * \return True when link in full-duplex mode, false otherwise.
    */
@@ -314,6 +307,9 @@ private:
     uint64_t ewmaThp [N_TYPES_ALL][2];  //!< EWMA throughput [short / long].
     uint64_t txBytes [N_TYPES_ALL][2];  //!< TX bytes counters [curr / old].
   };
+
+  /** A pair of switch datapath IDs. */
+  typedef std::pair<uint64_t, uint64_t> DpIdPair_t;
 
   /**
    * Notify this link of a successfully transmitted packet in link

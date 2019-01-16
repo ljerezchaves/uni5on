@@ -167,14 +167,6 @@ LinkInfo::GetLinkDir (uint64_t src, uint64_t dst) const
   return (src == GetSwDpId (0)) ? LinkInfo::FWD : LinkInfo::BWD;
 }
 
-DpIdPair_t
-LinkInfo::GetSwitchDpIdPair (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return DpIdPair_t (GetSwDpId (0), GetSwDpId (1));
-}
-
 bool
 LinkInfo::IsFullDuplexLink (void) const
 {

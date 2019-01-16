@@ -67,9 +67,6 @@ typedef EpcS11SapMme::BearerContextModified BearerModified_t;
 /** List of EPS bearer contexts modified. */
 typedef std::list<BearerModified_t> BearerModifiedList_t;
 
-/** A pair of switch datapath IDs. */
-typedef std::pair<uint64_t, uint64_t> DpIdPair_t;
-
 /**
  * \ingroup svelte
  * Enumeration of available traffic directions.
