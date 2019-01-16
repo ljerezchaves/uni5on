@@ -151,8 +151,8 @@ public:
     LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**
-   * Get the extra bit rate for traffic over this link on the given
-   * direction, optionally filtered by the network slice.
+   * Get the extra bit rate for this link on the given direction,
+   * optionally filtered by the network slice.
    * \param dir The link direction.
    * \param slice The network slice.
    * \return The extra bit rate.
@@ -161,8 +161,8 @@ public:
     LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**
-   * Get the reserved bit rate for traffic over this link on the given
-   * direction, optionally filtered by the network slice.
+   * Get the reserved bit rate for this link on the given direction,
+   * optionally filtered by the network slice.
    * \param dir The link direction.
    * \param slice The network slice.
    * \return The reserved bit rate.
@@ -171,8 +171,8 @@ public:
     LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**
-   * Get the free (not reserved) bit rate for traffic over this link on
-   * the given direction, optionally filtered by the network slice.
+   * Get the free (not reserved) bit rate for this link on the given direction,
+   * optionally filtered by the network slice.
    * \param dir The link direction.
    * \param slice The network slice.
    * \return The available bit rate.
@@ -181,8 +181,9 @@ public:
     LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**
-   * Get the meter bit rate for Non-GBR traffic over this link on
-   * the given direction, optionally filtered by the network slice.
+   * FIXME Delete this method.
+   * Get the meter bit rate for this link on the given direction,
+   * optionally filtered by the network slice.
    * \param dir The link direction.
    * \param slice The network slice.
    * \return The available bit rate.
@@ -346,7 +347,7 @@ private:
    * Set the slice quota for this link on the given direction.
    * \param dir The link direction.
    * \param slice The network slice.
-   * \param quota The slice quota to set.
+   * \param quota The value to set.
    * \return True if succeeded, false otherwise.
    */
   bool SetQuota (
@@ -356,7 +357,7 @@ private:
    * Set the extra bit rate for this link on the given direction.
    * \param dir The link direction.
    * \param slice The network slice.
-   * \param bitRate The extra bit rate to set.
+   * \param bitRate The value to set.
    */
   void SetExtraBitRate (
     LinkDir dir, SliceId slice, uint64_t bitRate);
