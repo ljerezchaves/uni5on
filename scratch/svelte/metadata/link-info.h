@@ -315,6 +315,7 @@ private:
     // Throughput measurement.
     uint64_t ewmaThp [N_TYPES_ALL][2];  //!< EWMA throughput [short / long].
     uint64_t txBytes [N_TYPES_ALL][2];  //!< TX bytes counters [curr / old].
+    // FIXME Dá pra ficar com txBytes só do intervalo mesmo.
   };
 
   /** A pair of switch datapath IDs. */

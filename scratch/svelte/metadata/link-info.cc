@@ -220,6 +220,7 @@ LinkInfo::GetFreeBitRate (LinkDir dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
+  // FIXME Qual é mesmo a definição de banda livre?
   return GetQuotaBitRate (dir, slice) - GetResBitRate (dir, slice);
 }
 
@@ -228,6 +229,7 @@ LinkInfo::GetOldMeterBitRate (LinkDir dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
+  // FIXME Essa função tem que sumir.
   return GetFreeBitRate (dir, slice) + GetExtraBitRate (dir, slice);
 }
 
@@ -270,6 +272,7 @@ LinkInfo::GetTxBytes (LinkDir dir, SliceId slice, QosType type) const
 {
   NS_LOG_FUNCTION (this << dir << slice << type);
 
+  // Precisamos dessa função aqui mesmo?
   return m_slices [slice][dir].txBytes [type][0];
 }
 
@@ -282,6 +285,7 @@ LinkInfo::HasBitRate (
   NS_ASSERT_MSG (slice < SliceId::ALL, "Invalid slice for this operation.");
   LinkInfo::LinkDir dir = GetLinkDir (src, dst);
 
+  // FIXME Considerar reservas com valores máximos diferenciados por QCI.
   return (GetFreeBitRate (dir, slice) >= bitRate);
 }
 
@@ -295,6 +299,7 @@ LinkInfo::PrintSliceValues (std::ostream &os, SliceId slice) const
   linkDescStr += "->";
   linkDescStr += std::to_string (GetSwDpId (1));
 
+  // FIXME Imprimir o máximo possível de informações.
   os << " " << setw (9)  << linkDescStr
      << " " << setw (12) << Bps2Kbps (GetLinkBitRate ())
      << " " << setw (8)  << GetQuota (LinkInfo::FWD, slice)
@@ -455,7 +460,7 @@ LinkInfo::ReleaseBitRate (
   NS_LOG_DEBUG ("Current " << SliceIdStr (slice) <<
                 " free bit rate: " << GetFreeBitRate (dir, slice));
 
-  // Updating the meter bit rate.
+  // Updating the meter bit rate. FIXME remover.
   UpdateMeterDiff (dir, slice, bitRate);
 
   // Updating statistics for the fake shared slice.
@@ -490,7 +495,7 @@ LinkInfo::ReserveBitRate (
   NS_LOG_DEBUG ("Current " << SliceIdStr (slice) <<
                 " free bit rate: " << GetFreeBitRate (dir, slice));
 
-  // Updating the meter bit rate.
+  // Updating the meter bit rate. FIXME remover.
   UpdateMeterDiff (dir, slice, (-1) * ((int64_t)bitRate));
 
   // Updating statistics for the fake shared slice.
@@ -521,6 +526,7 @@ LinkInfo::SetQuota (LinkDir dir, SliceId slice, uint16_t quota)
       return false;
     }
 
+  // FIXME Precisa mesmo validar quota excedente?
   // Check for valid sum of quotas.
   uint16_t sumQuotas = quota;
   for (int s = 0; s < SliceId::ALL; s++)
@@ -538,6 +544,7 @@ LinkInfo::SetQuota (LinkDir dir, SliceId slice, uint16_t quota)
       return false;
     }
 
+  // FIXME Juntar a parte de ajuste do slice e do fake assim como fiz nos outros.
   // Update the slice quota.
   int64_t oldBitRate = GetQuotaBitRate (dir, slice);
   NS_LOG_DEBUG (SliceIdStr (slice) << " slice new quota: " << quota);
@@ -586,6 +593,7 @@ LinkInfo::UpdateEwmaThp (void)
               uint64_t bytes = stats.txBytes [t][now] - stats.txBytes [t][old];
               stats.txBytes [t][old] = stats.txBytes [t][now];
 
+              // FIXME Não precisa salvar o txbytes de um intervalo pra outro.
               // Updating both long-term and short-term EWMA throughtpu.
               stats.ewmaThp [t][EwmaTerm::LTERM] =
                 (m_ewmaLtAlpha * 8 * bytes) / elapSecs +
@@ -602,6 +610,7 @@ LinkInfo::UpdateEwmaThp (void)
   Simulator::Schedule (m_ewmaTimeout, &LinkInfo::UpdateEwmaThp, this);
 }
 
+// FIXME Essa função vai cair fora. Essas lógicas vão pro controlador.
 void
 LinkInfo::UpdateMeterDiff (
   LinkDir dir, SliceId slice, int64_t bitRate)
