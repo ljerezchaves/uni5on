@@ -298,7 +298,7 @@ private:
   /** Metadata associated to a network slice. */
   struct SliceStats
   {
-    uint16_t quota;                     //!< Slice quota.
+    uint16_t quota;                     //!< Slice quota (0-100%).
     uint64_t reserved;                  //!< Reserved bit rate.
     uint64_t extra;                     //!< Extra (overlapping) bit rate
     int64_t  meterDiff;                 //!< Current meter bit rate diff.
@@ -343,10 +343,10 @@ private:
     uint64_t src, uint64_t dst, SliceId slice, uint64_t bitRate);
 
   /**
-   * Set the slice queota for this link on the given direction
+   * Set the slice quota for this link on the given direction.
    * \param dir The link direction.
    * \param slice The network slice.
-   * \param quota The slice quota.
+   * \param quota The slice quota to set.
    * \return True if succeeded, false otherwise.
    */
   bool SetQuota (
