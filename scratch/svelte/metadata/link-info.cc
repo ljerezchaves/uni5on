@@ -548,6 +548,14 @@ LinkInfo::SetQuota (LinkDir dir, SliceId slice, uint16_t quota)
 }
 
 void
+LinkInfo::SetExtraBitRate (LinkDir dir, SliceId slice, uint64_t bitRate)
+{
+  NS_LOG_FUNCTION (this << dir << slice << bitRate);
+
+  m_slices [slice][dir].extra = bitRate;
+}
+
+void
 LinkInfo::UpdateEwmaThp (void)
 {
   const uint16_t now = 0, old = 1;

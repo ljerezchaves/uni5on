@@ -299,8 +299,8 @@ private:
   struct SliceStats
   {
     uint16_t quota;                     //!< Slice quota (0-100%).
+    uint64_t extra;                     //!< Extra (over quota) bit rate.
     uint64_t reserved;                  //!< Reserved bit rate.
-    uint64_t extra;                     //!< Extra (overlapping) bit rate
     int64_t  meterDiff;                 //!< Current meter bit rate diff.
 
     // Throughput measurement.
@@ -351,6 +351,15 @@ private:
    */
   bool SetQuota (
     LinkDir dir, SliceId slice, uint16_t quota);
+
+  /**
+   * Set the extra bit rate for this link on the given direction.
+   * \param dir The link direction.
+   * \param slice The network slice.
+   * \param bitRate The extra bit rate to set.
+   */
+  void SetExtraBitRate (
+    LinkDir dir, SliceId slice, uint64_t bitRate);
 
   /**
    * Update EWMA link throughput statistics.
