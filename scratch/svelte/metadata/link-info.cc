@@ -257,13 +257,12 @@ LinkInfo::GetThpSliceRatio (LinkDir dir, SliceId slice) const
 
   if (GetQuotaBitRate (dir, slice) == 0)
     {
-      NS_ASSERT_MSG (GetThpBitRate (dir, slice, QosType::BOTH) == 0,
-                     "Invalid slice usage.");
+      NS_ASSERT_MSG (GetThpBitRate (dir, slice) == 0, "Invalid slice usage.");
       return 0.0;
     }
   else
     {
-      return static_cast<double> (GetThpBitRate (dir, slice, QosType::BOTH))
+      return static_cast<double> (GetThpBitRate (dir, slice))
              / GetQuotaBitRate (dir, slice);
     }
 }
