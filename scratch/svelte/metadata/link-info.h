@@ -199,17 +199,16 @@ public:
 
   /**
    * Get the EWMA throughput bit rate for this link on the given direction,
-   * optionally filtered by the network slice, QoS traffic type, and EWMA
-   * period of evaluation.
+   * optionally filtered by the network slice and QoS traffic type.
+   * \param term The EWMA period of evaluation.
    * \param dir The link direction.
    * \param slice The network slice.
    * \param type Traffic QoS type.
-   * \param term The EWMA period of evaluation.
    * \return The EWMA throughput.
    */
   uint64_t GetThpBitRate (
-    LinkDir dir, SliceId slice = SliceId::ALL,
-    QosType type = QosType::BOTH, EwmaTerm term = EwmaTerm::STERM) const;
+    EwmaTerm term, LinkDir dir, SliceId slice = SliceId::ALL,
+    QosType type = QosType::BOTH) const;
 
   /**
    * Get the EWMA throughput ratio for this link on the given direction,
