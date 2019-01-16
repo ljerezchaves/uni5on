@@ -164,7 +164,7 @@ LinkInfo::GetLinkDir (uint64_t src, uint64_t dst) const
   NS_ASSERT_MSG ((src == GetSwDpId (0) && dst == GetSwDpId (1))
                  || (src == GetSwDpId (1) && dst == GetSwDpId (0)),
                  "Invalid datapath IDs for this connection.");
-  return (src == GetSwDpId (0)) ? LinkInfo::FWD : return LinkInfo::BWD;
+  return (src == GetSwDpId (0)) ? LinkInfo::FWD : LinkInfo::BWD;
 }
 
 DpIdPair_t
