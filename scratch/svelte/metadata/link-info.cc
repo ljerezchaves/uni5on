@@ -424,7 +424,6 @@ LinkInfo::NotifyTxPacket (std::string context, Ptr<const Packet> packet)
       // considering both the traffic type and the fake both type.
       m_slices [slice][dir].txBytes [type][0] += size;
       m_slices [slice][dir].txBytes [QosType::BOTH][0] += size;
-
       m_slices [SliceId::ALL][dir].txBytes [type][0] += size;
       m_slices [SliceId::ALL][dir].txBytes [QosType::BOTH][0] += size;
     }
@@ -452,6 +451,7 @@ LinkInfo::ReleaseBitRate (
 
   // Releasing the bit rate.
   m_slices [slice][dir].reserved -= bitRate;
+  m_slices [SliceId::ALL][dir].reserved -= bitRate;
   NS_LOG_DEBUG ("Releasing " << bitRate <<
                 " bit rate on slice " << SliceIdStr (slice) <<
                 " in " << LinkDirStr (dir) << " direction.");
@@ -462,9 +462,6 @@ LinkInfo::ReleaseBitRate (
 
   // Updating the meter bit rate. FIXME remover.
   UpdateMeterDiff (dir, slice, bitRate);
-
-  // Updating statistics for the fake shared slice.
-  m_slices [SliceId::ALL][dir].reserved -= bitRate;
   UpdateMeterDiff (dir, SliceId::ALL, bitRate);
   return true;
 }
@@ -487,6 +484,7 @@ LinkInfo::ReserveBitRate (
 
   // Reserving the bit rate.
   m_slices [slice][dir].reserved += bitRate;
+  m_slices [SliceId::ALL][dir].reserved += bitRate;
   NS_LOG_DEBUG ("Reserving " << bitRate <<
                 " bit rate on slice " << SliceIdStr (slice) <<
                 " in " << LinkDirStr (dir) << " direction.");
@@ -497,9 +495,6 @@ LinkInfo::ReserveBitRate (
 
   // Updating the meter bit rate. FIXME remover.
   UpdateMeterDiff (dir, slice, (-1) * ((int64_t)bitRate));
-
-  // Updating statistics for the fake shared slice.
-  m_slices [SliceId::ALL][dir].reserved += bitRate;
   UpdateMeterDiff (dir, SliceId::ALL, (-1) * ((int64_t)bitRate));
   return true;
 }
@@ -563,19 +558,21 @@ LinkInfo::SetQuota (LinkDir dir, SliceId slice, uint16_t quota)
 }
 
 void
-LinkInfo::SetExtraBitRate (LinkDir dir, SliceId slice, uint64_t bitRate)
+LinkInfo::UpdateExtraBitRate (LinkDir dir, SliceId slice, int64_t bitRate)
 {
   NS_LOG_FUNCTION (this << dir << slice << bitRate);
 
-  m_slices [slice][dir].extra = bitRate;
+  m_slices [slice][dir].extra += bitRate;
+  m_slices [SliceId::ALL][dir].extra += bitRate;
 }
 
 void
-LinkInfo::SetMeterBitRate (LinkDir dir, SliceId slice, uint64_t bitRate)
+LinkInfo::UpdateMeterBitRate (LinkDir dir, SliceId slice, int64_t bitRate)
 {
   NS_LOG_FUNCTION (this << dir << slice << bitRate);
 
-  m_slices [slice][dir].meter = bitRate;
+  m_slices [slice][dir].meter += bitRate;
+  m_slices [SliceId::ALL][dir].meter += bitRate;
 }
 
 void

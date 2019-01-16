@@ -366,19 +366,19 @@ private:
    * Set the extra bit rate for this link on the given direction.
    * \param dir The link direction.
    * \param slice The network slice.
-   * \param bitRate The value to set.
+   * \param bitRate The value to update.
    */
-  void SetExtraBitRate (
-    LinkDir dir, SliceId slice, uint64_t bitRate);
+  void UpdateExtraBitRate (
+    LinkDir dir, SliceId slice, int64_t bitRate);
 
   /**
    * Set the meter bit rate for this link on the given direction.
    * \param dir The link direction.
    * \param slice The network slice.
-   * \param bitRate The value to set.
+   * \param bitRate The value to update.
    */
-  void SetMeterBitRate (
-    LinkDir dir, SliceId slice, uint64_t bitRate);
+  void UpdateMeterBitRate (
+    LinkDir dir, SliceId slice, int64_t bitRate);
 
   /**
    * Update EWMA link throughput statistics.
