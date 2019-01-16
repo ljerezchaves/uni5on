@@ -225,13 +225,13 @@ double Bps2Kbps (DataRate datarate);
  * 'translating' the DSCP values so we can keep the priority queuing
  * consistency both on traffic control module and OpenFlow port queues.
  * \verbatim
- * DSCP_EF   --> ToS 0x10 --> priority 6 --> queue 0 (high priority).
- * DSCP_AF41 --> ToS 0x18 --> priority 4 --> queue 1 (normal priority).
- * DSCP_AF31 --> ToS 0x00 --> priority 0 --> queue 1 (normal priority).
- * DSCP_AF32 --> ToS 0x00 --> priority 0 --> queue 1 (normal priority).
- * DSCP_AF11 --> ToS 0x00 --> priority 0 --> queue 1 (normal priority).
- * DSCP_AF11 --> ToS 0x00 --> priority 0 --> queue 1 (normal priority).
- * DSCP_BE   --> ToS 0x08 --> priority 2 --> queue 2 (low priority).
+ * DSCP_EF   --> ToS 0x10 --> prio 6 --> band 0 --> queue 0 (high).
+ * DSCP_AF41 --> ToS 0x18 --> prio 4 --> band 1 --> queue 1 (normal).
+ * DSCP_AF31 --> ToS 0x00 --> prio 0 --> band 1 --> queue 1 (normal).
+ * DSCP_AF32 --> ToS 0x00 --> prio 0 --> band 1 --> queue 1 (normal).
+ * DSCP_AF11 --> ToS 0x00 --> prio 0 --> band 1 --> queue 1 (normal).
+ * DSCP_AF11 --> ToS 0x00 --> prio 0 --> band 1 --> queue 1 (normal).
+ * DSCP_BE   --> ToS 0x08 --> prio 2 --> band 2 --> queue 2 (low).
  * \endverbatim
  * \see See the ns3::Socket::IpTos2Priority for details.
  */
@@ -246,7 +246,9 @@ uint8_t Dscp2Tos (Ipv4Header::DscpType dscp);
  * \internal
  * The following EPS QCI --> IP DSCP mapping is specified in "GSM Association
  * IR.34 (2013) Guidelines for IPX Provider networks, Version 9.1, Section 6.2,
- * May 2013."
+ * May 2013." This same mapping can also be found in "Cox, Christopher.
+ * An Introduction to LTE: LTE, LTE-Advanced, SAE, VoLTE and 4G Mobile
+ * Communications (2nd editio), Section 13.4.3, 2014."
  * \verbatim
  *     GBR traffic: QCI 1, 2, 3 --> DSCP_EF
  *                  QCI 4       --> DSCP_AF41
