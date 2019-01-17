@@ -47,7 +47,7 @@ public:
   };
 
   // Total number of DropReason items + 1.
-  #define N_DROP_REASONS (static_cast<uint8_t> (DropReason::ALL) + 1)
+  #define N_DROP_REASONS (static_cast<int> (DropReason::ALL) + 1)
 
   FlowStatsCalculator ();          //!< Default constructor.
   virtual ~FlowStatsCalculator (); //!< Dummy destructor, see DoDispose.

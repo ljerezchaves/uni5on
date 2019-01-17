@@ -193,7 +193,7 @@ BackhaulStatsCalculator::DumpStatistics (Time nextDump)
           for (int d = 0; d <= Direction::ULINK; d++)
             {
               Direction dir = static_cast<Direction> (d);
-              Ptr<FlowStatsCalculator> flowStats = slData.flowStats [dir][type];
+              Ptr<FlowStatsCalculator> flowStats = slData.flowStats [d][t];
 
               *slData.tffWrapper->GetStream ()
                 << " " << setw (8) << Simulator::Now ().GetSeconds ()
