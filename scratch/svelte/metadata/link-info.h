@@ -61,8 +61,8 @@ public:
     BWD = 1   //!< Backward direction (from second to first switch).
   };
 
-// Total number of valid LinkDir items + 1.
-#define N_LINK_DIRS (static_cast<int> (LinkDir::BWD) + 1)
+  // Total number of valid LinkDir items + 1.
+  #define N_LINK_DIRS (static_cast<int> (LinkDir::BWD) + 1)
 
   /** EWMA period of evaluation. */
   enum EwmaTerm
@@ -71,8 +71,8 @@ public:
     LTERM = 1  //!< Long-term EWMA evaluation.
   };
 
-// Total number of valid EwmaTerm items + 1.
-#define N_EWMA_TERMS (static_cast<int> (EwmaTerm::LTERM) + 1)
+  // Total number of valid EwmaTerm items + 1.
+  #define N_EWMA_TERMS (static_cast<int> (EwmaTerm::LTERM) + 1)
 
   /**
    * Complete constructor.

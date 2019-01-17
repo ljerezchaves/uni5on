@@ -24,9 +24,6 @@
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
 
-// Total number of drop reasons + 1 for aggregated metadata.
-#define N_REASONS_ALL (static_cast<uint8_t> (DropReason::ALL) + 1)
-
 namespace ns3 {
 
 /**
@@ -48,6 +45,9 @@ public:
     QUEUE = 3,    //!< Network device queues.
     ALL   = 4     //!< ALL previous reasons.
   };
+
+  // Total number of DropReason items + 1.
+  #define N_DROP_REASONS (static_cast<uint8_t> (DropReason::ALL) + 1)
 
   FlowStatsCalculator ();          //!< Default constructor.
   virtual ~FlowStatsCalculator (); //!< Dummy destructor, see DoDispose.
@@ -147,8 +147,8 @@ private:
   //\}
 
   bool      m_continuous;                 //!< Continuous traffic monitorement.
-  uint64_t  m_dpPackets [N_REASONS_ALL];  //!< Number of dropped packets.
-  uint64_t  m_dpBytes [N_REASONS_ALL];    //!< Number of dropped bytes.
+  uint64_t  m_dpPackets [N_DROP_REASONS]; //!< Number of dropped packets.
+  uint64_t  m_dpBytes [N_DROP_REASONS];   //!< Number of dropped bytes.
   uint64_t  m_txPackets;                  //!< Number of TX packets.
   uint64_t  m_txBytes;                    //!< Number of TX bytes.
   uint64_t  m_rxPackets;                  //!< Number of RX packets.
