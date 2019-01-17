@@ -221,21 +221,25 @@ LinkInfo::GetResBitRate (LinkDir dir, SliceId slice) const
 }
 
 int64_t
-LinkInfo::GetFreeBitRate (LinkDir dir, SliceId slice) const
+LinkInfo::GetMaxBitRate (LinkDir dir, QosType type, SliceId slice) const
 {
-  NS_LOG_FUNCTION (this << dir << slice);
+  NS_LOG_FUNCTION (this << dir << type << slice);
 
-  // FIXME Qual é mesmo a definição de banda livre?
-  return GetQuotaBitRate (dir, slice) - GetResBitRate (dir, slice);
+  NS_ASSERT_MSG (type != QosType::BOTH, "Invalid type for this operation.");
+  int64_t bitRate = GetQuotaBitRate (dir, slice);
+  if (type == QosType::NON)
+    {
+      bitRate += GetExtraBitRate (dir, slice);
+    }
+  return bitRate;
 }
 
 int64_t
-LinkInfo::GetOldMeterBitRate (LinkDir dir, SliceId slice) const
+LinkInfo::GetFreeBitRate (LinkDir dir, QosType type, SliceId slice) const
 {
-  NS_LOG_FUNCTION (this << dir << slice);
+  NS_LOG_FUNCTION (this << dir << type << slice);
 
-  // FIXME Essa função tem que sumir.
-  return GetFreeBitRate (dir, slice) + GetExtraBitRate (dir, slice);
+  return GetMaxBitRate (dir, type, slice) - GetResBitRate (dir, slice);
 }
 
 int64_t
@@ -281,8 +285,7 @@ LinkInfo::HasBitRate (
   NS_ASSERT_MSG (slice < SliceId::ALL, "Invalid slice for this operation.");
   LinkInfo::LinkDir dir = GetLinkDir (src, dst);
 
-  // FIXME Considerar reservas com valores máximos diferenciados por QCI.
-  return (GetFreeBitRate (dir, slice) >= bitRate);
+  return (GetFreeBitRate (dir, QosType::GBR, slice) >= bitRate);
 }
 
 std::ostream &
@@ -470,7 +473,7 @@ LinkInfo::ReserveBitRate (
   LinkInfo::LinkDir dir = GetLinkDir (src, dst);
 
   // Check for available bit rate.
-  if (GetFreeBitRate (dir, slice) < bitRate)
+  if (GetFreeBitRate (dir, QosType::GBR, slice) < bitRate)
     {
       NS_LOG_WARN ("No bandwidth available to reserve.");
       return false;

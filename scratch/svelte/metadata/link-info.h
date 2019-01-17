@@ -173,25 +173,26 @@ public:
     LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**
-   * Get the free (not reserved) bit rate for this link on the given direction,
-   * optionally filtered by the network slice.
+   * Get the maximum bit rate for this link on the given direction that can be
+   * used by a specific traffic type, optionally filtered by the network slice.
    * \param dir The link direction.
+   * \param type Traffic QoS type.
+   * \param slice The network slice.
+   * \return The reserved bit rate.
+   */
+  int64_t GetMaxBitRate (
+    LinkDir dir, QosType type, SliceId slice = SliceId::ALL) const;
+
+  /**
+   * Get the free bit rate for this link on the given direction that can be used
+   * by a specific traffic type, optionally filtered by the network slice.
+   * \param dir The link direction.
+   * \param type Traffic QoS type.
    * \param slice The network slice.
    * \return The available bit rate.
    */
   int64_t GetFreeBitRate (
-    LinkDir dir, SliceId slice = SliceId::ALL) const;
-
-  /**
-   * FIXME Delete this method.
-   * Get the meter bit rate for this link on the given direction,
-   * optionally filtered by the network slice.
-   * \param dir The link direction.
-   * \param slice The network slice.
-   * \return The available bit rate.
-   */
-  int64_t GetOldMeterBitRate (
-    LinkDir dir, SliceId slice = SliceId::ALL) const;
+    LinkDir dir, QosType type, SliceId slice = SliceId::ALL) const;
 
   /**
    * Get the meter bit rate for this link on the given direction,
