@@ -453,8 +453,6 @@ LinkInfo::ReleaseBitRate (
                 " in " << LinkDirStr (dir) << " direction.");
   NS_LOG_DEBUG ("Current " << SliceIdStr (slice) <<
                 " reserved bit rate: " << GetResBitRate (dir, slice));
-  NS_LOG_DEBUG ("Current " << SliceIdStr (slice) <<
-                " free bit rate: " << GetFreeBitRate (dir, slice));
 
   // Updating the meter bit rate. FIXME remover.
   UpdateMeterDiff (dir, slice, bitRate);
@@ -486,8 +484,6 @@ LinkInfo::ReserveBitRate (
                 " in " << LinkDirStr (dir) << " direction.");
   NS_LOG_DEBUG ("Current " << SliceIdStr (slice) <<
                 " reserved bit rate: " << GetResBitRate (dir, slice));
-  NS_LOG_DEBUG ("Current " << SliceIdStr (slice) <<
-                " free bit rate: " << GetFreeBitRate (dir, slice));
 
   // Updating the meter bit rate. FIXME remover.
   UpdateMeterDiff (dir, slice, (-1) * ((int64_t)bitRate));
@@ -525,6 +521,7 @@ LinkInfo::UpdateExtraBitRate (LinkDir dir, SliceId slice, int64_t bitRate)
 {
   NS_LOG_FUNCTION (this << dir << slice << bitRate);
 
+  // FIXME Should I validate the bit rate bounds?
   NS_ASSERT_MSG (slice < SliceId::ALL, "Invalid slice for this operation.");
   m_slices [slice][dir].extra += bitRate;
   m_slices [SliceId::ALL][dir].extra += bitRate;
@@ -535,6 +532,7 @@ LinkInfo::UpdateMeterBitRate (LinkDir dir, SliceId slice, int64_t bitRate)
 {
   NS_LOG_FUNCTION (this << dir << slice << bitRate);
 
+  // FIXME Should I validate the bit rate bounds?
   NS_ASSERT_MSG (slice < SliceId::ALL, "Invalid slice for this operation.");
   m_slices [slice][dir].meter += bitRate;
   m_slices [SliceId::ALL][dir].meter += bitRate;
