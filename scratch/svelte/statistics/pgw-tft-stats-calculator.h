@@ -64,13 +64,13 @@ protected:
 
 private:
   /** Metadata associated to a network slice. */
-  struct SliceStats
+  struct SliceMetadata
   {
     Ptr<OutputStreamWrapper> tftWrapper;  //!< AdmStats file wrapper.
   };
 
   /** Metadata for each network slice. */
-  SliceStats                m_slices [SliceId::ALL];
+  SliceMetadata             m_slices [SliceId::ALL];
   std::string               m_tftFilename;    //!< TftStats filename.
 };
 

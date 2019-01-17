@@ -55,7 +55,7 @@ protected:
 
 private:
   /** Metadata associated to a network slice. */
-  struct SliceStats
+  struct SliceMetadata
   {
     uint32_t releases;      //!< Number of releases.
     uint32_t requests;      //!< Number of requests.
@@ -88,12 +88,12 @@ private:
 
   /**
    * Reset internal counters.
-   * \param stats The slice metadata to clear.
+   * \param slData The slice metadata to clear.
    */
-  void ResetCounters (SliceStats &stats);
+  void ResetCounters (SliceMetadata &slData);
 
   /** Metadata for each network slice. */
-  SliceStats               m_slices [N_SLICES_ALL];
+  SliceMetadata            m_slices [N_SLICES_ALL];
   std::string              m_admFilename;   //!< AdmStats filename.
   std::string              m_brqFilename;   //!< BrqStats filename.
   Ptr<OutputStreamWrapper> m_brqWrapper;    //!< BrqStats file wrapper.

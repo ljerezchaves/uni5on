@@ -40,7 +40,7 @@ AdmissionStatsCalculator::AdmissionStatsCalculator ()
   NS_LOG_FUNCTION (this);
 
   // Clear slice metadata.
-  memset (m_slices, 0, sizeof (SliceStats) * N_SLICES_ALL);
+  memset (m_slices, 0, sizeof (SliceMetadata) * N_SLICES_ALL);
 
   // Connect this stats calculator to required trace sources.
   Config::ConnectWithoutContext (
@@ -88,33 +88,33 @@ AdmissionStatsCalculator::NotifyBearerRequest (Ptr<const RoutingInfo> rInfo)
   NS_ASSERT_MSG (ringInfo, "No ring information for this routing info.");
 
   // Update the slice stats.
-  SliceStats &sliStats = m_slices [rInfo->GetSliceId ()];
-  SliceStats &aggStats = m_slices [SliceId::ALL];
+  SliceMetadata &slData = m_slices [rInfo->GetSliceId ()];
+  SliceMetadata &agData = m_slices [SliceId::ALL];
 
-  sliStats.requests++;
-  aggStats.requests++;
+  slData.requests++;
+  agData.requests++;
   if (rInfo->IsBlocked ())
     {
-      sliStats.blocked++;
-      aggStats.blocked++;
+      slData.blocked++;
+      agData.blocked++;
     }
   else
     {
-      sliStats.accepted++;
-      aggStats.accepted++;
-      sliStats.activeBearers++;
-      aggStats.activeBearers++;
+      slData.accepted++;
+      agData.accepted++;
+      slData.activeBearers++;
+      agData.activeBearers++;
       if (rInfo->IsAggregated ())
         {
-          sliStats.aggregBearers++;
-          aggStats.aggregBearers++;
-          sliStats.aggregated++;
-          aggStats.aggregated++;
+          slData.aggregBearers++;
+          agData.aggregBearers++;
+          slData.aggregated++;
+          agData.aggregated++;
         }
       else
         {
-          sliStats.instalBearers++;
-          aggStats.instalBearers++;
+          slData.instalBearers++;
+          agData.instalBearers++;
         }
     }
 
@@ -135,23 +135,23 @@ AdmissionStatsCalculator::NotifyBearerRelease (Ptr<const RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo);
 
-  SliceStats &sliStats = m_slices [rInfo->GetSliceId ()];
-  SliceStats &aggStats = m_slices [SliceId::ALL];
-  NS_ASSERT_MSG (sliStats.activeBearers, "No active bearer here.");
+  SliceMetadata &slData = m_slices [rInfo->GetSliceId ()];
+  SliceMetadata &agData = m_slices [SliceId::ALL];
+  NS_ASSERT_MSG (slData.activeBearers, "No active bearer here.");
 
-  sliStats.releases++;
-  aggStats.releases++;
-  sliStats.activeBearers--;
-  aggStats.activeBearers--;
+  slData.releases++;
+  agData.releases++;
+  slData.activeBearers--;
+  agData.activeBearers--;
   if (rInfo->IsAggregated ())
     {
-      sliStats.aggregBearers--;
-      aggStats.aggregBearers--;
+      slData.aggregBearers--;
+      agData.aggregBearers--;
     }
   else
     {
-      sliStats.instalBearers--;
-      aggStats.instalBearers--;
+      slData.instalBearers--;
+      agData.instalBearers--;
     }
 }
 
@@ -182,14 +182,14 @@ AdmissionStatsCalculator::NotifyConstructionCompleted (void)
   for (int s = 0; s <= SliceId::ALL; s++)
     {
       std::string sliceStr = SliceIdStr (static_cast<SliceId> (s));
-      SliceStats &stats = m_slices [s];
+      SliceMetadata &slData = m_slices [s];
 
       // Create the output file for this slice.
-      stats.admWrapper = Create<OutputStreamWrapper> (
+      slData.admWrapper = Create<OutputStreamWrapper> (
           m_admFilename + "-" + sliceStr + ".log", std::ios::out);
 
       // Print the header in output file.
-      *stats.admWrapper->GetStream ()
+      *slData.admWrapper->GetStream ()
         << boolalpha << right << fixed << setprecision (3)
         << " " << setw (8) << "TimeSec"
         << " " << setw (7) << "Release"
@@ -236,19 +236,19 @@ AdmissionStatsCalculator::DumpStatistics (Time nextDump)
   // Iterate over all slices dumping statistics.
   for (int s = 0; s <= SliceId::ALL; s++)
     {
-      SliceStats &stats = m_slices [s];
-      *stats.admWrapper->GetStream ()
+      SliceMetadata &slData = m_slices [s];
+      *slData.admWrapper->GetStream ()
         << " " << setw (8) << Simulator::Now ().GetSeconds ()
-        << " " << setw (7) << stats.releases
-        << " " << setw (7) << stats.requests
-        << " " << setw (7) << stats.accepted
-        << " " << setw (7) << stats.blocked
-        << " " << setw (7) << stats.aggregated
-        << " " << setw (7) << stats.activeBearers
-        << " " << setw (7) << stats.instalBearers
-        << " " << setw (7) << stats.aggregBearers
+        << " " << setw (7) << slData.releases
+        << " " << setw (7) << slData.requests
+        << " " << setw (7) << slData.accepted
+        << " " << setw (7) << slData.blocked
+        << " " << setw (7) << slData.aggregated
+        << " " << setw (7) << slData.activeBearers
+        << " " << setw (7) << slData.instalBearers
+        << " " << setw (7) << slData.aggregBearers
         << std::endl;
-      ResetCounters (stats);
+      ResetCounters (slData);
     }
 
   Simulator::Schedule (nextDump, &AdmissionStatsCalculator::DumpStatistics,
@@ -256,15 +256,15 @@ AdmissionStatsCalculator::DumpStatistics (Time nextDump)
 }
 
 void
-AdmissionStatsCalculator::ResetCounters (SliceStats &stats)
+AdmissionStatsCalculator::ResetCounters (SliceMetadata &slData)
 {
   NS_LOG_FUNCTION (this);
 
-  stats.releases   = 0;
-  stats.requests   = 0;
-  stats.accepted   = 0;
-  stats.blocked    = 0;
-  stats.aggregated = 0;
+  slData.releases   = 0;
+  slData.requests   = 0;
+  slData.accepted   = 0;
+  slData.blocked    = 0;
+  slData.aggregated = 0;
 }
 
 } // Namespace ns3

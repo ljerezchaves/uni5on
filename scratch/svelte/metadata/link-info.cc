@@ -67,7 +67,7 @@ LinkInfo::LinkInfo (Ptr<OFSwitch13Port> port1, Ptr<OFSwitch13Port> port2,
     "PhyTxEnd", "Backward", MakeCallback (&LinkInfo::NotifyTxPacket, this));
 
   // Clear slice metadata.
-  memset (m_slices, 0, sizeof (SliceStats) * N_SLICES_ALL * 2);
+  memset (m_slices, 0, sizeof (SliceMetadata) * N_SLICES_ALL * 2);
 
   RegisterLinkInfo (Ptr<LinkInfo> (this));
 }
@@ -574,17 +574,17 @@ LinkInfo::UpdateEwmaThp (void)
     {
       for (int d = 0; d <= LinkInfo::BWD; d++)
         {
-          SliceStats &stats = m_slices [s][d];
+          SliceMetadata &slData = m_slices [s][d];
           for (int t = 0; t <= QosType::BOTH; t++)
             {
               // Updating both long-term and short-term EWMA throughput.
-              stats.ewmaThp [t][EwmaTerm::LTERM] =
-                (m_ewmaLtAlpha * 8 * stats.txBytes [t]) / elapSecs +
-                (1 - m_ewmaLtAlpha) * stats.ewmaThp [t][EwmaTerm::LTERM];
-              stats.ewmaThp [t][EwmaTerm::STERM] =
-                (m_ewmaStAlpha * 8 * stats.txBytes [t]) / elapSecs +
-                (1 - m_ewmaStAlpha) * stats.ewmaThp [t][EwmaTerm::STERM];
-              stats.txBytes [t] = 0;
+              slData.ewmaThp [t][EwmaTerm::LTERM] =
+                (m_ewmaLtAlpha * 8 * slData.txBytes [t]) / elapSecs +
+                (1 - m_ewmaLtAlpha) * slData.ewmaThp [t][EwmaTerm::LTERM];
+              slData.ewmaThp [t][EwmaTerm::STERM] =
+                (m_ewmaStAlpha * 8 * slData.txBytes [t]) / elapSecs +
+                (1 - m_ewmaStAlpha) * slData.ewmaThp [t][EwmaTerm::STERM];
+              slData.txBytes [t] = 0;
             }
         }
     }

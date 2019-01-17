@@ -100,7 +100,7 @@ private:
   void EpcOutputPacket (std::string context, Ptr<const Packet> packet);
 
   /** Metadata associated to a network slice. */
-  struct SliceStats
+  struct SliceMetadata
   {
     Ptr<OutputStreamWrapper>  bwdWrapper;       //!< BwdStats file wrapper.
     Ptr<OutputStreamWrapper>  tffWrapper;       //!< FlwStats file wrapper.
@@ -108,7 +108,7 @@ private:
   };
 
   /** Metadata for each network slice. */
-  SliceStats                m_slices [N_SLICES_ALL];
+  SliceMetadata             m_slices [N_SLICES_ALL];
   std::string               m_bwdFilename;  //!< BwdStats filename.
   std::string               m_tffFilename;  //!< TffStats filename.
 };

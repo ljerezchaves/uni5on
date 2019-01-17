@@ -36,7 +36,7 @@ BackhaulStatsCalculator::BackhaulStatsCalculator ()
   NS_LOG_FUNCTION (this);
 
   // Clear slice metadata.
-  memset (m_slices, 0, sizeof (SliceStats) * N_SLICES_ALL);
+  memset (m_slices, 0, sizeof (SliceMetadata) * N_SLICES_ALL);
 
   // Connect this stats calculator to required trace sources.
   Config::Connect (
@@ -124,37 +124,37 @@ BackhaulStatsCalculator::NotifyConstructionCompleted (void)
   for (int s = 0; s <= SliceId::ALL; s++)
     {
       std::string sliceStr = SliceIdStr (static_cast<SliceId> (s));
-      SliceStats &stats = m_slices [s];
+      SliceMetadata &slData = m_slices [s];
       for (int d = 0; d <= Direction::ULINK; d++)
         {
           for (int t = 0; t <= QosType::GBR; t++)
             {
-              stats.tffStats [d][t] =
+              slData.tffStats [d][t] =
                 CreateObjectWithAttributes<FlowStatsCalculator> (
                   "Continuous", BooleanValue (true));
             }
         }
 
       // Create the output files for this slice.
-      stats.bwdWrapper = Create<OutputStreamWrapper> (
+      slData.bwdWrapper = Create<OutputStreamWrapper> (
           m_bwdFilename + "-" + sliceStr + ".log", std::ios::out);
-      stats.tffWrapper = Create<OutputStreamWrapper> (
+      slData.tffWrapper = Create<OutputStreamWrapper> (
           m_tffFilename + "-" + sliceStr + ".log", std::ios::out);
 
       // Print the headers in output files.
-      *stats.bwdWrapper->GetStream ()
+      *slData.bwdWrapper->GetStream ()
         << boolalpha << right << fixed << setprecision (3)
         << " " << setw (8) << "TimeSec";
-      LinkInfo::PrintHeader (*stats.bwdWrapper->GetStream ());
-      *stats.bwdWrapper->GetStream () << std::endl;
+      LinkInfo::PrintHeader (*slData.bwdWrapper->GetStream ());
+      *slData.bwdWrapper->GetStream () << std::endl;
 
-      *stats.tffWrapper->GetStream ()
+      *slData.tffWrapper->GetStream ()
         << boolalpha << right << fixed << setprecision (3)
         << " " << setw (8) << "TimeSec"
         << " " << setw (7) << "TrafDir"
         << " " << setw (8) << "QosType";
-      FlowStatsCalculator::PrintHeader (*stats.tffWrapper->GetStream ());
-      *stats.tffWrapper->GetStream () << std::endl;
+      FlowStatsCalculator::PrintHeader (*slData.tffWrapper->GetStream ());
+      *slData.tffWrapper->GetStream () << std::endl;
     }
 
   TimeValue timeValue;
@@ -174,17 +174,17 @@ BackhaulStatsCalculator::DumpStatistics (Time nextDump)
   for (int s = 0; s <= SliceId::ALL; s++)
     {
       SliceId slice = static_cast<SliceId> (s);
-      SliceStats &stats = m_slices [s];
+      SliceMetadata &slData = m_slices [s];
 
       // Dump slice bandwidth usage for each link.
       for (auto const &lInfo : LinkInfo::GetList ())
         {
-          *stats.bwdWrapper->GetStream ()
+          *slData.bwdWrapper->GetStream ()
             << " " << setw (8) << Simulator::Now ().GetSeconds ();
-          lInfo->PrintSliceValues (*stats.bwdWrapper->GetStream (), slice);
-          *stats.bwdWrapper->GetStream () << std::endl;
+          lInfo->PrintSliceValues (*slData.bwdWrapper->GetStream (), slice);
+          *slData.bwdWrapper->GetStream () << std::endl;
         }
-      *stats.bwdWrapper->GetStream () << std::endl;
+      *slData.bwdWrapper->GetStream () << std::endl;
 
       // Dump slice traffic stats for each direction.
       for (int t = 0; t <= QosType::GBR; t++)
@@ -193,9 +193,9 @@ BackhaulStatsCalculator::DumpStatistics (Time nextDump)
           for (int d = 0; d <= Direction::ULINK; d++)
             {
               Direction dir = static_cast<Direction> (d);
-              Ptr<FlowStatsCalculator> flowStats = stats.tffStats [dir][type];
+              Ptr<FlowStatsCalculator> flowStats = slData.tffStats [dir][type];
 
-              *stats.tffWrapper->GetStream ()
+              *slData.tffWrapper->GetStream ()
                 << " " << setw (8) << Simulator::Now ().GetSeconds ()
                 << " " << setw (7) << DirectionStr (dir)
                 << " " << setw (8) << QosTypeStr (type)
@@ -204,7 +204,7 @@ BackhaulStatsCalculator::DumpStatistics (Time nextDump)
               flowStats->ResetCounters ();
             }
         }
-      *stats.tffWrapper->GetStream () << std::endl;
+      *slData.tffWrapper->GetStream () << std::endl;
     }
 
   Simulator::Schedule (nextDump, &BackhaulStatsCalculator::DumpStatistics,

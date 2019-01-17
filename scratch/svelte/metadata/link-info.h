@@ -290,7 +290,7 @@ protected:
 
 private:
   /** Metadata associated to a network slice. */
-  struct SliceStats
+  struct SliceMetadata
   {
     int quota;                          //!< Slice quota (0-100%).
     uint64_t extra;                     //!< Extra (over quota) bit rate.
@@ -396,7 +396,7 @@ private:
   Ptr<OFSwitch13Port>   m_ports [2];            //!< OpenFlow ports.
 
   /** Metadata for each network slice. */
-  SliceStats            m_slices [N_SLICES_ALL][2];
+  SliceMetadata         m_slices [N_SLICES_ALL][2];
 
   // EWMA throughput calculation.
   double                m_ewmaLtAlpha;          //!< EWMA long-term alpha.
