@@ -207,7 +207,7 @@ BufferedVideoServer::ProccessHttpRequest (Ptr<Socket> socket,
 
   // Check for requested URL.
   std::string url = header.GetRequestUrl ();
-  NS_LOG_INFO ("Client requested " << url);
+  NS_LOG_DEBUG ("Client requested " << url);
   if (url == "main/video")
     {
       // Get traffic length from client request.

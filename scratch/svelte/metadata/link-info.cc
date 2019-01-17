@@ -513,7 +513,9 @@ LinkInfo::UpdateQuota (LinkDir dir, SliceId slice, int quota)
     }
 
   // Update the slice quota.
-  NS_LOG_DEBUG (SliceIdStr (slice) << " slice new quota: " << quota);
+  NS_LOG_DEBUG ("Slice " << SliceIdStr (slice) << " new quota: " << quota
+                " in " << LinkDirStr (dir) << " direction.");
+
   m_slices [slice][dir].quota += quota;
   m_slices [SliceId::ALL][dir].quota += quota;
   return true;
