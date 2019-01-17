@@ -306,7 +306,7 @@ BackhaulController::NotifySlicesBuilt (ApplicationContainer &controllers)
   // Meter table
   //
   // Install inter-slicing meters.
-  for (auto const &lInfo : LinkInfo::GetList ())
+  for (auto &lInfo : LinkInfo::GetList ())
     {
       SlicingMeterInstall (lInfo);
       lInfo->TraceConnectWithoutContext (
@@ -559,7 +559,7 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 
 void
 BackhaulController::SlicingMeterAdjusted (
-  Ptr<const LinkInfo> lInfo, LinkInfo::LinkDir dir, SliceId slice)
+  Ptr<LinkInfo> lInfo, LinkInfo::LinkDir dir, SliceId slice)
 {
   NS_LOG_FUNCTION (this << lInfo << dir << slice);
 
@@ -601,7 +601,7 @@ BackhaulController::SlicingMeterAdjusted (
 }
 
 void
-BackhaulController::SlicingMeterInstall (Ptr<const LinkInfo> lInfo)
+BackhaulController::SlicingMeterInstall (Ptr<LinkInfo> lInfo)
 {
   NS_LOG_FUNCTION (this << lInfo);
 
@@ -616,20 +616,21 @@ BackhaulController::SlicingMeterInstall (Ptr<const LinkInfo> lInfo)
       {
         // Install the shared Non-GBR meter entry for all slice on each port
         // direction (FWD and BWD).
-        SliceId slice = SliceId::ALL;
         for (int d = 0; d <= LinkInfo::BWD; d++)
           {
             LinkInfo::LinkDir dir = static_cast<LinkInfo::LinkDir> (d);
-            uint32_t meterId = GetSvelteMeterId (slice, d);
+            uint32_t meterId = GetSvelteMeterId (SliceId::ALL, d);
             NS_LOG_INFO ("Creating slicing meter ID " <<
                          GetUint32Hex (meterId) <<
                          " for link info " << lInfo->GetSwDpId (0) <<
                          " to " << lInfo->GetSwDpId (1));
 
-            int64_t kbps = Bps2Kbps (lInfo->GetFreeBitRate (dir, QosType::NON, slice));
-            NS_LOG_DEBUG ("Link slice " << SliceIdStr (slice) <<
+            int64_t kbps = Bps2Kbps (
+                lInfo->GetFreeBitRate (dir, QosType::NON, SliceId::ALL));
+            lInfo->SetMeterBitRate (dir, SliceId::ALL, kbps * 1000);
+            NS_LOG_DEBUG ("Link slice " << SliceIdStr (SliceId::ALL) <<
                           ": " << LinkInfo::LinkDirStr (dir) <<
-                          " link set to " << kbps << " Kbps");
+                          " meter set to " << kbps << " Kbps");
 
             // ----------------------------------------------------------------
             // Meter table
@@ -660,10 +661,12 @@ BackhaulController::SlicingMeterInstall (Ptr<const LinkInfo> lInfo)
                              " for link info " << lInfo->GetSwDpId (0) <<
                              " to " << lInfo->GetSwDpId (1));
 
-                int64_t kbps = Bps2Kbps (lInfo->GetFreeBitRate (dir, QosType::NON, slice));
+                int64_t kbps = Bps2Kbps (
+                    lInfo->GetFreeBitRate (dir, QosType::NON, slice));
+                lInfo->SetMeterBitRate (dir, slice, kbps * 1000);
                 NS_LOG_DEBUG ("Link slice " << SliceIdStr (slice) <<
                               ": " << LinkInfo::LinkDirStr (dir) <<
-                              " link set to " << kbps << " Kbps");
+                              " meter set to " << kbps << " Kbps");
 
                 // ------------------------------------------------------------
                 // Meter table

@@ -233,7 +233,7 @@ private:
    * \param dir The link direction.
    * \param slice The network slice.
    */
-  void SlicingMeterAdjusted (Ptr<const LinkInfo> lInfo,
+  void SlicingMeterAdjusted (Ptr<LinkInfo> lInfo,
                              LinkInfo::LinkDir dir, SliceId slice);
 
   /**
@@ -245,7 +245,7 @@ private:
    *
    * \param swtch The OpenFlow switch information.
    */
-  void SlicingMeterInstall (Ptr<const LinkInfo> lInfo);
+  void SlicingMeterInstall (Ptr<LinkInfo> lInfo);
 
   /** Initialize static attributes only once. */
   static void StaticInitialize (void);
