@@ -347,12 +347,12 @@ private:
     LinkDir dir, SliceId slice, int64_t bitRate);
 
   /**
-   * Update the meter bit rate for this link on the given direction.
+   * Set the meter bit rate for this link on the given direction.
    * \param dir The link direction.
    * \param slice The network slice.
-   * \param bitRate The value to update.
+   * \param bitRate The value to set.
    */
-  void UpdateMeterBitRate (
+  void SetMeterBitRate (
     LinkDir dir, SliceId slice, int64_t bitRate);
 
   /**

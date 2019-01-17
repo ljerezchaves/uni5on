@@ -531,14 +531,11 @@ LinkInfo::UpdateExtraBitRate (LinkDir dir, SliceId slice, int64_t bitRate)
 }
 
 void
-LinkInfo::UpdateMeterBitRate (LinkDir dir, SliceId slice, int64_t bitRate)
+LinkInfo::SetMeterBitRate (LinkDir dir, SliceId slice, int64_t bitRate)
 {
   NS_LOG_FUNCTION (this << dir << slice << bitRate);
 
-  // FIXME Should I validate the bit rate bounds?
-  NS_ASSERT_MSG (slice < SliceId::ALL, "Invalid slice for this operation.");
-  m_slices [slice][dir].meter += bitRate;
-  m_slices [SliceId::ALL][dir].meter += bitRate;
+  m_slices [slice][dir].meter = bitRate;
 }
 
 void
