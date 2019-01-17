@@ -492,7 +492,7 @@ LinkInfo::UpdateQuota (LinkDir dir, SliceId slice, int quota)
     }
 
   // Update the slice quota.
-  NS_LOG_DEBUG ("Slice " << SliceIdStr (slice) << " new quota: " << quota
+  NS_LOG_DEBUG ("Slice " << SliceIdStr (slice) << " new quota: " << quota <<
                 " in " << LinkDirStr (dir) << " direction.");
 
   m_slices [slice][dir].quota += quota;
@@ -500,7 +500,7 @@ LinkInfo::UpdateQuota (LinkDir dir, SliceId slice, int quota)
   return true;
 }
 
-void
+bool
 LinkInfo::UpdateExtraBitRate (LinkDir dir, SliceId slice, int64_t bitRate)
 {
   NS_LOG_FUNCTION (this << dir << slice << bitRate);
@@ -509,14 +509,21 @@ LinkInfo::UpdateExtraBitRate (LinkDir dir, SliceId slice, int64_t bitRate)
   NS_ASSERT_MSG (slice < SliceId::ALL, "Invalid slice for this operation.");
   m_slices [slice][dir].extra += bitRate;
   m_slices [SliceId::ALL][dir].extra += bitRate;
+  return true;
 }
 
-void
+bool
 LinkInfo::SetMeterBitRate (LinkDir dir, SliceId slice, int64_t bitRate)
 {
   NS_LOG_FUNCTION (this << dir << slice << bitRate);
 
+  if (bitRate < 0 || bitRate > GetMaxBitRate (dir, QosType::NON, slice))
+    {
+      NS_LOG_WARN ("Invalid meter bit rate.");
+      return false;
+    }
   m_slices [slice][dir].meter = bitRate;
+  return true;
 }
 
 void

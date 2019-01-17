@@ -342,8 +342,9 @@ private:
    * \param dir The link direction.
    * \param slice The network slice.
    * \param bitRate The value to update.
+   * \return True if succeeded, false otherwise.
    */
-  void UpdateExtraBitRate (
+  bool UpdateExtraBitRate (
     LinkDir dir, SliceId slice, int64_t bitRate);
 
   /**
@@ -351,8 +352,9 @@ private:
    * \param dir The link direction.
    * \param slice The network slice.
    * \param bitRate The value to set.
+   * \return True if succeeded, false otherwise.
    */
-  void SetMeterBitRate (
+  bool SetMeterBitRate (
     LinkDir dir, SliceId slice, int64_t bitRate);
 
   /**
@@ -369,7 +371,7 @@ private:
   /** Metadata associated to a network slice. */
   struct SliceMetadata
   {
-    int quota;                          //!< Slice quota (0-100%).
+    int     quota;                      //!< Slice quota (0-100%).
     int64_t extra;                      //!< Extra (over quota) bit rate.
     int64_t meter;                      //!< OpenFlow meter bit rate.
     int64_t reserved;                   //!< Reserved bit rate.
