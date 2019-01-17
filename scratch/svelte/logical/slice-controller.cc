@@ -61,9 +61,9 @@ SliceController::GetTypeId (void)
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    EnumValue (SliceId::UNKN),
                    MakeEnumAccessor (&SliceController::m_sliceId),
-                   MakeEnumChecker (SliceId::HTC, "htc",
-                                    SliceId::MTC, "mtc",
-                                    SliceId::TMP, "tmp"))
+                   MakeEnumChecker (SliceId::HTC, SliceIdStr (SliceId::HTC),
+                                    SliceId::MTC, SliceIdStr (SliceId::MTC),
+                                    SliceId::TMP, SliceIdStr (SliceId::TMP)))
     .AddAttribute ("Priority",
                    "Priority for this slice.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -96,8 +96,8 @@ SliceController::GetTypeId (void)
                    "P-GW overloaded block policy.",
                    EnumValue (OpMode::ON),
                    MakeEnumAccessor (&SliceController::m_pgwBlockPolicy),
-                   MakeEnumChecker (OpMode::OFF, "off",
-                                    OpMode::ON,  "on"))
+                   MakeEnumChecker (OpMode::OFF, OpModeStr (OpMode::OFF),
+                                    OpMode::ON,  OpModeStr (OpMode::ON)))
     .AddAttribute ("PgwBlockThs",
                    "The P-GW block threshold.",
                    DoubleValue (0.9),
@@ -108,9 +108,9 @@ SliceController::GetTypeId (void)
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    EnumValue (OpMode::OFF),
                    MakeEnumAccessor (&SliceController::m_tftLoadBal),
-                   MakeEnumChecker (OpMode::OFF,  "off",
-                                    OpMode::ON,   "on",
-                                    OpMode::AUTO, "auto"))
+                   MakeEnumChecker (OpMode::OFF,  OpModeStr (OpMode::OFF),
+                                    OpMode::ON,   OpModeStr (OpMode::ON),
+                                    OpMode::AUTO, OpModeStr (OpMode::AUTO)))
     .AddAttribute ("PgwTftJoinThs",
                    "The P-GW TFT join threshold.",
                    DoubleValue (0.30),
@@ -132,8 +132,8 @@ SliceController::GetTypeId (void)
                    "S-GW overloaded block policy.",
                    EnumValue (OpMode::ON),
                    MakeEnumAccessor (&SliceController::m_sgwBlockPolicy),
-                   MakeEnumChecker (OpMode::OFF, "off",
-                                    OpMode::ON,  "on"))
+                   MakeEnumChecker (OpMode::OFF, OpModeStr (OpMode::OFF),
+                                    OpMode::ON,  OpModeStr (OpMode::ON)))
     .AddAttribute ("SgwBlockThs",
                    "The S-GW block threshold.",
                    DoubleValue (0.9),

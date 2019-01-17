@@ -62,8 +62,8 @@ BackhaulController::GetTypeId (void)
                    "Switch overloaded block policy.",
                    EnumValue (OpMode::ON),
                    MakeEnumAccessor (&BackhaulController::m_blockPolicy),
-                   MakeEnumChecker (OpMode::OFF, "off",
-                                    OpMode::ON,  "on"))
+                   MakeEnumChecker (OpMode::OFF, OpModeStr (OpMode::OFF),
+                                    OpMode::ON,  OpModeStr (OpMode::ON)))
     .AddAttribute ("BlockThs",
                    "Switch overloaded block threshold.",
                    DoubleValue (0.9),
@@ -74,10 +74,14 @@ BackhaulController::GetTypeId (void)
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    EnumValue (SliceMode::NONE),
                    MakeEnumAccessor (&BackhaulController::m_slicing),
-                   MakeEnumChecker (SliceMode::NONE, "none",
-                                    SliceMode::SHAR, "shared",
-                                    SliceMode::STAT, "static",
-                                    SliceMode::DYNA, "dynamic"))
+                   MakeEnumChecker (SliceMode::NONE,
+                                    SliceModeStr (SliceMode::NONE),
+                                    SliceMode::SHAR,
+                                    SliceModeStr (SliceMode::SHAR),
+                                    SliceMode::STAT,
+                                    SliceModeStr (SliceMode::STAT),
+                                    SliceMode::DYNA,
+                                    SliceModeStr (SliceMode::DYNA)))
     .AddAttribute ("MeterStep",
                    "Default meter bit rate adjustment step.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -89,8 +93,8 @@ BackhaulController::GetTypeId (void)
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    EnumValue (OpMode::ON),
                    MakeEnumAccessor (&BackhaulController::m_priorityQueues),
-                   MakeEnumChecker (OpMode::OFF, "off",
-                                    OpMode::ON,  "on"))
+                   MakeEnumChecker (OpMode::OFF, OpModeStr (OpMode::OFF),
+                                    OpMode::ON,  OpModeStr (OpMode::ON)))
   ;
   return tid;
 }

@@ -48,8 +48,10 @@ RingController::GetTypeId (void)
     .AddAttribute ("Routing", "The ring routing strategy.",
                    EnumValue (RingController::SPO),
                    MakeEnumAccessor (&RingController::m_strategy),
-                   MakeEnumChecker (RingController::SPO, "spo",
-                                    RingController::SPF, "spf"))
+                   MakeEnumChecker (RingController::SPO,
+                                    RoutingStrategyStr (RingController::SPO),
+                                    RingController::SPF,
+                                    RoutingStrategyStr (RingController::SPF)))
   ;
   return tid;
 }
@@ -60,9 +62,9 @@ RingController::RoutingStrategyStr (RoutingStrategy strategy)
   switch (strategy)
     {
     case RingController::SPO:
-      return "shortest path only";
+      return "spo";
     case RingController::SPF:
-      return "shortest path first";
+      return "spf";
     default:
       return "-";
     }
