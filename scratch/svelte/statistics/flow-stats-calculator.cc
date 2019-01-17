@@ -149,7 +149,7 @@ FlowStatsCalculator::NotifyDrop (uint32_t dpBytes, DropReason reason)
   m_dpBytes [DropReason::ALL] += dpBytes;
 }
 
-uint64_t
+int64_t
 FlowStatsCalculator::GetDpBytes (DropReason reason) const
 {
   NS_LOG_FUNCTION (this << reason);
@@ -157,7 +157,7 @@ FlowStatsCalculator::GetDpBytes (DropReason reason) const
   return m_dpBytes [reason];
 }
 
-uint64_t
+int64_t
 FlowStatsCalculator::GetDpPackets (DropReason reason) const
 {
   NS_LOG_FUNCTION (this << reason);
@@ -187,7 +187,7 @@ FlowStatsCalculator::GetActiveTime (void) const
     }
 }
 
-uint64_t
+int64_t
 FlowStatsCalculator::GetLostPackets (void) const
 {
   NS_LOG_FUNCTION (this);
@@ -217,7 +217,7 @@ FlowStatsCalculator::GetLossRatio (void) const
     }
 }
 
-uint64_t
+int64_t
 FlowStatsCalculator::GetTxPackets (void) const
 {
   NS_LOG_FUNCTION (this);
@@ -225,7 +225,7 @@ FlowStatsCalculator::GetTxPackets (void) const
   return m_txPackets;
 }
 
-uint64_t
+int64_t
 FlowStatsCalculator::GetTxBytes (void) const
 {
   NS_LOG_FUNCTION (this);
@@ -233,7 +233,7 @@ FlowStatsCalculator::GetTxBytes (void) const
   return m_txBytes;
 }
 
-uint64_t
+int64_t
 FlowStatsCalculator::GetRxPackets (void) const
 {
   NS_LOG_FUNCTION (this);
@@ -241,7 +241,7 @@ FlowStatsCalculator::GetRxPackets (void) const
   return m_rxPackets;
 }
 
-uint64_t
+int64_t
 FlowStatsCalculator::GetRxBytes (void) const
 {
   NS_LOG_FUNCTION (this);

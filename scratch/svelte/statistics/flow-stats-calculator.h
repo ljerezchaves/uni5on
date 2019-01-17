@@ -105,14 +105,14 @@ public:
    * \return The statistic value.
    */
   //\{
-  uint64_t  GetDpBytes      (DropReason reason) const;
-  uint64_t  GetDpPackets    (DropReason reason) const;
-  uint64_t  GetLostPackets  (void) const;
+  int64_t   GetDpBytes      (DropReason reason) const;
+  int64_t   GetDpPackets    (DropReason reason) const;
+  int64_t   GetLostPackets  (void) const;
   double    GetLossRatio    (void) const;
-  uint64_t  GetTxPackets    (void) const;
-  uint64_t  GetTxBytes      (void) const;
-  uint64_t  GetRxPackets    (void) const;
-  uint64_t  GetRxBytes      (void) const;
+  int64_t   GetTxPackets    (void) const;
+  int64_t   GetTxBytes      (void) const;
+  int64_t   GetRxPackets    (void) const;
+  int64_t   GetRxBytes      (void) const;
   Time      GetRxDelay      (void) const;
   Time      GetRxJitter     (void) const;
   DataRate  GetRxThroughput (void) const;
@@ -147,12 +147,12 @@ private:
   //\}
 
   bool      m_continuous;                 //!< Continuous traffic monitorement.
-  uint64_t  m_dpPackets [N_DROP_REASONS]; //!< Number of dropped packets.
-  uint64_t  m_dpBytes [N_DROP_REASONS];   //!< Number of dropped bytes.
-  uint64_t  m_txPackets;                  //!< Number of TX packets.
-  uint64_t  m_txBytes;                    //!< Number of TX bytes.
-  uint64_t  m_rxPackets;                  //!< Number of RX packets.
-  uint64_t  m_rxBytes;                    //!< Number of RX bytes.
+  int64_t   m_dpPackets [N_DROP_REASONS]; //!< Number of dropped packets.
+  int64_t   m_dpBytes [N_DROP_REASONS];   //!< Number of dropped bytes.
+  int64_t   m_txPackets;                  //!< Number of TX packets.
+  int64_t   m_txBytes;                    //!< Number of TX bytes.
+  int64_t   m_rxPackets;                  //!< Number of RX packets.
+  int64_t   m_rxBytes;                    //!< Number of RX bytes.
   Time      m_firstTxTime;                //!< First TX time.
   Time      m_firstRxTime;                //!< First RX time.
   Time      m_lastTxTime;                 //!< Last TX time.
