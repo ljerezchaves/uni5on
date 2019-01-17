@@ -153,14 +153,15 @@ public:
     LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**
-   * Get the extra bit rate for this link on the given direction,
-   * optionally filtered by the network slice.
+   * Get the maximum bit rate for this link on the given direction that can be
+   * used by a specific traffic type, optionally filtered by the network slice.
    * \param dir The link direction.
+   * \param type Traffic QoS type.
    * \param slice The network slice.
-   * \return The extra bit rate.
+   * \return The reserved bit rate.
    */
-  int64_t GetExtraBitRate (
-    LinkDir dir, SliceId slice = SliceId::ALL) const;
+  int64_t GetMaxBitRate (
+    LinkDir dir, QosType type, SliceId slice = SliceId::ALL) const;
 
   /**
    * Get the reserved bit rate for this link on the given direction,
@@ -173,17 +174,6 @@ public:
     LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**
-   * Get the maximum bit rate for this link on the given direction that can be
-   * used by a specific traffic type, optionally filtered by the network slice.
-   * \param dir The link direction.
-   * \param type Traffic QoS type.
-   * \param slice The network slice.
-   * \return The reserved bit rate.
-   */
-  int64_t GetMaxBitRate (
-    LinkDir dir, QosType type, SliceId slice = SliceId::ALL) const;
-
-  /**
    * Get the free bit rate for this link on the given direction that can be used
    * by a specific traffic type, optionally filtered by the network slice.
    * \param dir The link direction.
@@ -193,16 +183,6 @@ public:
    */
   int64_t GetFreeBitRate (
     LinkDir dir, QosType type, SliceId slice = SliceId::ALL) const;
-
-  /**
-   * Get the meter bit rate for this link on the given direction,
-   * optionally filtered by the network slice.
-   * \param dir The link direction.
-   * \param slice The network slice.
-   * \return The available bit rate.
-   */
-  int64_t GetMeterBitRate (
-    LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**
    * Get the EWMA throughput bit rate for this link on the given direction,
@@ -229,6 +209,26 @@ public:
   int64_t GetIdleBitRate (
     EwmaTerm term, LinkDir dir, QosType type = QosType::BOTH,
     SliceId slice = SliceId::ALL) const;
+
+  /**
+   * Get the extra bit rate for this link on the given direction,
+   * optionally filtered by the network slice.
+   * \param dir The link direction.
+   * \param slice The network slice.
+   * \return The extra bit rate.
+   */
+  int64_t GetExtraBitRate (
+    LinkDir dir, SliceId slice = SliceId::ALL) const;
+
+  /**
+   * Get the meter bit rate for this link on the given direction,
+   * optionally filtered by the network slice.
+   * \param dir The link direction.
+   * \param slice The network slice.
+   * \return The available bit rate.
+   */
+  int64_t GetMeterBitRate (
+    LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**
    * Get the EWMA throughput ratio for this link on the given direction,

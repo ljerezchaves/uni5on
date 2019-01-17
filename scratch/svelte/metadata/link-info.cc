@@ -193,22 +193,6 @@ LinkInfo::GetQuotaBitRate (LinkDir dir, SliceId slice) const
 }
 
 int64_t
-LinkInfo::GetExtraBitRate (LinkDir dir, SliceId slice) const
-{
-  NS_LOG_FUNCTION (this << dir << slice);
-
-  return m_slices [dir][slice].extra;
-}
-
-int64_t
-LinkInfo::GetResBitRate (LinkDir dir, SliceId slice) const
-{
-  NS_LOG_FUNCTION (this << dir << slice);
-
-  return m_slices [dir][slice].reserved;
-}
-
-int64_t
 LinkInfo::GetMaxBitRate (LinkDir dir, QosType type, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << type << slice);
@@ -223,19 +207,19 @@ LinkInfo::GetMaxBitRate (LinkDir dir, QosType type, SliceId slice) const
 }
 
 int64_t
+LinkInfo::GetResBitRate (LinkDir dir, SliceId slice) const
+{
+  NS_LOG_FUNCTION (this << dir << slice);
+
+  return m_slices [dir][slice].reserved;
+}
+
+int64_t
 LinkInfo::GetFreeBitRate (LinkDir dir, QosType type, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << type << slice);
 
   return GetMaxBitRate (dir, type, slice) - GetResBitRate (dir, slice);
-}
-
-int64_t
-LinkInfo::GetMeterBitRate (LinkDir dir, SliceId slice) const
-{
-  NS_LOG_FUNCTION (this << dir << slice);
-
-  return m_slices [dir][slice].meter;
 }
 
 int64_t
@@ -255,6 +239,22 @@ LinkInfo::GetIdleBitRate (EwmaTerm term, LinkDir dir, QosType type,
 
   return GetMaxBitRate (dir, type, slice) -
          GetUseBitRate (term, dir, type, slice);
+}
+
+int64_t
+LinkInfo::GetExtraBitRate (LinkDir dir, SliceId slice) const
+{
+  NS_LOG_FUNCTION (this << dir << slice);
+
+  return m_slices [dir][slice].extra;
+}
+
+int64_t
+LinkInfo::GetMeterBitRate (LinkDir dir, SliceId slice) const
+{
+  NS_LOG_FUNCTION (this << dir << slice);
+
+  return m_slices [dir][slice].meter;
 }
 
 // double
