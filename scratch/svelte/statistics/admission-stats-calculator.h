@@ -57,14 +57,14 @@ private:
   /** Metadata associated to a network slice. */
   struct SliceMetadata
   {
-    uint32_t releases;      //!< Number of releases.
-    uint32_t requests;      //!< Number of requests.
-    uint32_t accepted;      //!< Number of requests accepted.
-    uint32_t blocked;       //!< Number of requests blocked.
-    uint32_t aggregated;    //!< Number of requests aggregated.
-    uint32_t activeBearers; //!< Number of active bearers.
-    uint32_t instalBearers; //!< Number of installed bearers.
-    uint32_t aggregBearers; //!< Number of aggregated bearers.
+    int releases;      //!< Number of releases.
+    int requests;      //!< Number of requests.
+    int accepted;      //!< Number of requests accepted.
+    int blocked;       //!< Number of requests blocked.
+    int aggregated;    //!< Number of requests aggregated.
+    int activeBearers; //!< Number of active bearers.
+    int instalBearers; //!< Number of installed bearers.
+    int aggregBearers; //!< Number of aggregated bearers.
     Ptr<OutputStreamWrapper> admWrapper;  //!< AdmStats file wrapper.
   };
 
