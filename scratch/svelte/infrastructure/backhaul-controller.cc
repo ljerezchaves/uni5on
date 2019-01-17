@@ -309,9 +309,6 @@ BackhaulController::NotifySlicesBuilt (ApplicationContainer &controllers)
   for (auto &lInfo : LinkInfo::GetList ())
     {
       SlicingMeterInstall (lInfo);
-      lInfo->TraceConnectWithoutContext (
-        "MeterAdjusted", MakeCallback (
-          &BackhaulController::SlicingMeterAdjusted, this));
     }
 }
 

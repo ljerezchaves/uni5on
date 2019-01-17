@@ -361,23 +361,10 @@ private:
   void EwmaUpdate (void);
 
   /**
-   * Update the internal meter diff for firing the meter adjusted trace source
-   * depending on current slicing operation mode.
-   * \param dir The link direction.
-   * \param slice The network slice.
-   * \param bitRate The bit rate.
-   */
-  void UpdateMeterDiff (
-    LinkDir dir, SliceId slice, int64_t bitRate);
-
-  /**
    * Register the link information in global map for further usage.
    * \param lInfo The link information to save.
    */
   static void RegisterLinkInfo (Ptr<LinkInfo> lInfo);
-
-  /** Default meter bit rate adjusted trace source. */
-  TracedCallback<Ptr<const LinkInfo>, LinkDir, SliceId> m_meterAdjustedTrace;
 
   /** Metadata associated to a network slice. */
   struct SliceMetadata
@@ -387,9 +374,6 @@ private:
     int64_t meter;                      //!< OpenFlow meter bit rate.
     int64_t reserved;                   //!< Reserved bit rate.
 
-    // FIXME Remove in the future.
-    int64_t meterDiff;                  //!< Current meter bit rate diff.
-
     /** EWMA throughput for both short-term and long-term averages. */
     int64_t ewmaThp [N_QOS_TYPES][N_EWMA_TERMS];
 
@@ -397,7 +381,6 @@ private:
     int64_t txBytes [N_QOS_TYPES];
   };
 
-  DataRate              m_adjustmentStep;       //!< Meter adjustment step.
   Ptr<CsmaChannel>      m_channel;              //!< The CSMA link channel.
   Ptr<OFSwitch13Port>   m_ports [2];            //!< OpenFlow ports.
 

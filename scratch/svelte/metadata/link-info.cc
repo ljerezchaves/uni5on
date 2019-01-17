@@ -87,12 +87,6 @@ LinkInfo::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::LinkInfo")
     .SetParent<Object> ()
-    .AddAttribute ("AdjustmentStep",
-                   "Default meter bit rate adjustment step.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   DataRateValue (DataRate ("5Mbps")),
-                   MakeDataRateAccessor (&LinkInfo::m_adjustmentStep),
-                   MakeDataRateChecker ())
     .AddAttribute ("EwmaLongAlpha",
                    "The EWMA alpha parameter for long-term link throughput.",
                    DoubleValue (0.04),  // Last 5 seconds
@@ -108,12 +102,6 @@ LinkInfo::GetTypeId (void)
                    TimeValue (MilliSeconds (100)),
                    MakeTimeAccessor (&LinkInfo::m_ewmaTimeout),
                    MakeTimeChecker ())
-
-    // Trace source used by controller to update slicing meters.
-    .AddTraceSource ("MeterAdjusted",
-                     "Meter bit rate adjusted.",
-                     MakeTraceSourceAccessor (&LinkInfo::m_meterAdjustedTrace),
-                     "ns3::LinkInfo::MeterAdjustedTracedCallback")
   ;
   return tid;
 }
@@ -455,10 +443,6 @@ LinkInfo::ReleaseBitRate (
                 " in " << LinkDirStr (dir) << " direction.");
   NS_LOG_DEBUG ("Current " << SliceIdStr (slice) <<
                 " reserved bit rate: " << GetResBitRate (dir, slice));
-
-  // Updating the meter bit rate. FIXME remover.
-  UpdateMeterDiff (dir, slice, bitRate);
-  UpdateMeterDiff (dir, SliceId::ALL, bitRate);
   return true;
 }
 
@@ -486,10 +470,6 @@ LinkInfo::ReserveBitRate (
                 " in " << LinkDirStr (dir) << " direction.");
   NS_LOG_DEBUG ("Current " << SliceIdStr (slice) <<
                 " reserved bit rate: " << GetResBitRate (dir, slice));
-
-  // Updating the meter bit rate. FIXME remover.
-  UpdateMeterDiff (dir, slice, (-1) * ((int64_t)bitRate));
-  UpdateMeterDiff (dir, SliceId::ALL, (-1) * ((int64_t)bitRate));
   return true;
 }
 
@@ -565,28 +545,6 @@ LinkInfo::EwmaUpdate (void)
   // Scheduling the next EWMA update.
   m_ewmaLastTime = Simulator::Now ();
   Simulator::Schedule (m_ewmaTimeout, &LinkInfo::EwmaUpdate, this);
-}
-
-// FIXME Essa função vai cair fora. Essas lógicas vão pro controlador.
-void
-LinkInfo::UpdateMeterDiff (
-  LinkDir dir, SliceId slice, int64_t bitRate)
-{
-  NS_LOG_FUNCTION (this << dir << slice << bitRate);
-
-  m_slices [slice][dir].meterDiff += bitRate;
-  NS_LOG_DEBUG ("Current " << SliceIdStr (slice) <<
-                " diff bit rate: " << m_slices [slice][dir].meterDiff);
-
-  int64_t diff = m_slices [slice][dir].meterDiff;
-  uint64_t diffAbs = diff >= 0 ? diff : (-1) * diff;
-  if (diffAbs >= m_adjustmentStep.GetBitRate ())
-    {
-      // Fire meter adjusted trace source to update meters.
-      NS_LOG_DEBUG ("Fire meter adjustment and clear meter diff.");
-      m_meterAdjustedTrace (Ptr<LinkInfo> (this), dir, slice);
-      m_slices [slice][dir].meterDiff = 0;
-    }
 }
 
 void

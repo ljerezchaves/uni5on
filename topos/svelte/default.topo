@@ -86,7 +86,6 @@ default ns3::SvelteHelper::TmpController "ns3::SliceController[Quota=34]"
 default ns3::SvelteHelper::TmpSlice "ns3::SliceNetwork[]"
 default ns3::SvelteHelper::TmpTraffic "ns3::TrafficHelper[]"
 
-default ns3::LinkInfo::AdjustmentStep "5Mbps"
 default ns3::LinkInfo::EwmaLongAlpha "0.04"
 default ns3::LinkInfo::EwmaShortAlpha "0.2"
 default ns3::LinkInfo::EwmaTimeout "100ms"
