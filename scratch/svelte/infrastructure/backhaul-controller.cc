@@ -305,16 +305,13 @@ BackhaulController::NotifySlicesBuilt (ApplicationContainer &controllers)
   // ---------------------------------------------------------------------
   // Meter table
   //
-  // Install slice meters only if the slicing mechanism is enabled.
-  if (GetInterSliceMode () != SliceMode::NONE)
+  // Install inter-slicing meters.
+  for (auto const &lInfo : LinkInfo::GetList ())
     {
-      for (auto const &lInfo : LinkInfo::GetList ())
-        {
-          SlicingMeterInstall (lInfo);
-          lInfo->TraceConnectWithoutContext (
-            "MeterAdjusted", MakeCallback (
-              &BackhaulController::SlicingMeterAdjusted, this));
-        }
+      SlicingMeterInstall (lInfo);
+      lInfo->TraceConnectWithoutContext (
+        "MeterAdjusted", MakeCallback (
+          &BackhaulController::SlicingMeterAdjusted, this));
     }
 }
 
@@ -566,8 +563,11 @@ BackhaulController::SlicingMeterAdjusted (
 {
   NS_LOG_FUNCTION (this << lInfo << dir << slice);
 
-  NS_ASSERT_MSG (GetInterSliceMode () != SliceMode::NONE, "Not supposed to "
-                 "adjust slicing meters when inter-slice mode is disabled.");
+  if (GetInterSliceMode () == SliceMode::NONE)
+    {
+      // Nothing to do when inter-slicing is disabled.
+      return;
+    }
 
   // Identify the meter ID based on inter-slice operation mode. When using the
   // static inter-slicing, the traffic of each slice will be independently
@@ -607,6 +607,11 @@ BackhaulController::SlicingMeterInstall (Ptr<const LinkInfo> lInfo)
 
   switch (GetInterSliceMode ())
     {
+    case SliceMode::NONE:
+      {
+        // Nothing to do when inter-slicing is disabled.
+        return;
+      }
     case SliceMode::SHAR:
       {
         // Install the shared Non-GBR meter entry for all slice on each port
@@ -674,7 +679,10 @@ BackhaulController::SlicingMeterInstall (Ptr<const LinkInfo> lInfo)
         break;
       }
     default:
-      break;
+      {
+        NS_LOG_WARN ("Undefined inter-slicing operation mode.");
+        break;
+      }
     }
 }
 
