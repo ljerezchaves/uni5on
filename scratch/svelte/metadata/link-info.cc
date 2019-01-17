@@ -239,12 +239,22 @@ LinkInfo::GetMeterBitRate (LinkDir dir, SliceId slice) const
 }
 
 int64_t
-LinkInfo::GetThpBitRate (EwmaTerm term, LinkDir dir, SliceId slice,
-                         QosType type) const
+LinkInfo::GetUseBitRate (EwmaTerm term, LinkDir dir, QosType type,
+                         SliceId slice) const
 {
   NS_LOG_FUNCTION (this << term << dir << slice << type);
 
   return m_slices [dir][slice].ewmaThp [type][term];
+}
+
+int64_t
+LinkInfo::GetIdleBitRate (EwmaTerm term, LinkDir dir, QosType type,
+                          SliceId slice) const
+{
+  NS_LOG_FUNCTION (this << term << dir << slice << type);
+
+  return GetMaxBitRate (dir, type, slice) -
+         GetUseBitRate (term, dir, type, slice);
 }
 
 // double
@@ -254,12 +264,12 @@ LinkInfo::GetThpBitRate (EwmaTerm term, LinkDir dir, SliceId slice,
 
 //   if (GetQuotaBitRate (dir, slice) == 0)
 //     {
-//       NS_ASSERT_MSG (GetThpBitRate (dir, slice) == 0, "Invalid slice usage.");
+//       NS_ASSERT_MSG (GetUseBitRate (dir, slice) == 0, "Invalid slice usage.");
 //       return 0.0;
 //     }
 //   else
 //     {
-//       return static_cast<double> (GetThpBitRate (dir, slice))
+//       return static_cast<double> (GetUseBitRate (dir, slice))
 //              / GetQuotaBitRate (dir, slice);
 //     }
 // }
@@ -299,13 +309,13 @@ LinkInfo::PrintSliceValues (std::ostream &os, SliceId slice) const
      << " " << setw (12) << Bps2Kbps (GetMeterBitRate (LinkInfo::FWD, slice))
      << " " << setw (12) << Bps2Kbps (GetMeterBitRate (LinkInfo::BWD, slice))
      << " " << setw (14)
-     << Bps2Kbps (GetThpBitRate (EwmaTerm::STERM, LinkInfo::FWD, slice, QosType::GBR))
+     << Bps2Kbps (GetUseBitRate (EwmaTerm::STERM, LinkInfo::FWD, QosType::GBR, slice))
      << " " << setw (14)
-     << Bps2Kbps (GetThpBitRate (EwmaTerm::STERM, LinkInfo::BWD, slice, QosType::GBR))
+     << Bps2Kbps (GetUseBitRate (EwmaTerm::STERM, LinkInfo::BWD, QosType::GBR, slice))
      << " " << setw (14)
-     << Bps2Kbps (GetThpBitRate (EwmaTerm::STERM, LinkInfo::FWD, slice, QosType::NON))
+     << Bps2Kbps (GetUseBitRate (EwmaTerm::STERM, LinkInfo::FWD, QosType::NON, slice))
      << " " << setw (14)
-     << Bps2Kbps (GetThpBitRate (EwmaTerm::STERM, LinkInfo::BWD, slice, QosType::NON));
+     << Bps2Kbps (GetUseBitRate (EwmaTerm::STERM, LinkInfo::BWD, QosType::NON, slice));
   return os;
 }
 
