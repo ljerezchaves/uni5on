@@ -512,8 +512,22 @@ LinkInfo::UpdateExtraBitRate (LinkDir dir, SliceId slice, int64_t bitRate)
 {
   NS_LOG_FUNCTION (this << dir << slice << bitRate);
 
-  // FIXME Should I validate the bit rate bounds?
   NS_ASSERT_MSG (slice < SliceId::ALL, "Invalid slice for this operation.");
+
+  // Check for valid slice extra bit rate.
+  int64_t newSliExtra = GetExtraBitRate (dir, slice) + bitRate;
+  int64_t newAggExtra = GetExtraBitRate (dir, SliceId::ALL) + bitRate;
+  if ((newSliExtra < 0) || (newAggExtra < 0))
+    {
+      NS_LOG_WARN ("Can't change the slice extra bit rate.");
+      return false;
+    }
+
+  // Update the slice extra bit rate.
+  NS_LOG_DEBUG ("Slice " << SliceIdStr (slice) <<
+                " with new extra bit rate " << newSliExtra <<
+                " in " << LinkDirStr (dir) << " direction.");
+
   m_slices [dir][slice].extra += bitRate;
   m_slices [dir][SliceId::ALL].extra += bitRate;
   return true;
