@@ -502,36 +502,14 @@ LinkInfo::UpdateQuota (LinkDir dir, SliceId slice, int quota)
 
   NS_ASSERT_MSG (slice < SliceId::ALL, "Invalid slice for this operation.");
 
-  // Nothing to do when the quota doesn't change.
-  if (GetQuota (dir, slice) == quota)
-    {
-      return true;
-    }
-
   // Check for valid slice quota.
-  NS_ASSERT_MSG (quota >= 0 && quota <= 100, "Invalid quota value.");
-  if (GetResBitRate (dir, slice) > ((GetLinkBitRate () * quota) / 100))
+  int newSliQuota = GetQuota (dir, slice) + quota;
+  int newAggQuota = GetQuota (dir, SliceId::ALL) + quota;
+  if ((GetResBitRate (dir, slice) > ((GetLinkBitRate () * newSliQuota) / 100))
+      || (newSliQuota < 0 || newSliQuota > 100)
+      || (newAggQuota < 0 || newAggQuota > 100))
     {
-      NS_LOG_WARN ("Can't change the slice quota. The new bit rate is "
-                   "lower than the already reserved bit rate.");
-      return false;
-    }
-
-  // FIXME Precisa mesmo validar quota excedente?
-  // Check for valid sum of quotas.
-  uint16_t sumQuotas = quota;
-  for (int s = 0; s < SliceId::ALL; s++)
-    {
-      SliceId sliceId = static_cast<SliceId> (s);
-      if (sliceId != slice)
-        {
-          sumQuotas += GetQuota (dir, sliceId);
-        }
-    }
-  if (sumQuotas > 100)
-    {
-      NS_LOG_WARN ("Can't change the slice quota. The new sum of quotas "
-                   "is exceeding the link capacity.");
+      NS_LOG_WARN ("Can't change the slice quota.");
       return false;
     }
 
