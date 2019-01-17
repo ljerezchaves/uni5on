@@ -50,7 +50,7 @@ RoutingInfo::RoutingInfo (uint32_t teid, BearerCreated_t bearer,
   m_isMbrUlInst (false),
   m_isInstalled (false),
   m_pgwTftIdx (0),
-  m_priority (0),
+  m_priority (1),
   m_sliceId (ueInfo->GetSliceId ()),
   m_teid (teid),
   m_timeout (0),
@@ -692,6 +692,7 @@ RoutingInfo::SetPriority (uint16_t value)
 {
   NS_LOG_FUNCTION (this << value);
 
+  NS_ASSERT_MSG (value > 0, "Invalid zero priority.");
   m_priority = value;
 }
 

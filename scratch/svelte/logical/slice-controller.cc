@@ -1368,6 +1368,7 @@ SliceController::SgwRulesUpdate (Ptr<RoutingInfo> rInfo,
       }
 
       // Remove old low-priority OpenFlow rules.
+      NS_ASSERT_MSG (rInfo->GetPriority () > 0, "Invalid zero priority.");
       {
         // Build the dpctl command string.
         std::ostringstream cmd;
