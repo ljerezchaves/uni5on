@@ -72,7 +72,7 @@ LinkInfo::LinkInfo (Ptr<OFSwitch13Port> port1, Ptr<OFSwitch13Port> port2,
     "PhyTxEnd", "Backward", MakeCallback (&LinkInfo::NotifyTxPacket, this));
 
   // Clear slice metadata.
-  memset (m_slices, 0, sizeof (SliceMetadata) * N_SLICE_IDS * N_LINK_DIRS);
+  memset (m_slices, 0, sizeof (SliceMetadata) * N_LINK_DIRS * N_SLICE_IDS);
 
   RegisterLinkInfo (Ptr<LinkInfo> (this));
 }
@@ -181,7 +181,7 @@ LinkInfo::GetQuota (LinkDir dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
-  return m_slices [slice][dir].quota;
+  return m_slices [dir][slice].quota;
 }
 
 int64_t
@@ -197,7 +197,7 @@ LinkInfo::GetExtraBitRate (LinkDir dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
-  return m_slices [slice][dir].extra;
+  return m_slices [dir][slice].extra;
 }
 
 int64_t
@@ -205,7 +205,7 @@ LinkInfo::GetResBitRate (LinkDir dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
-  return m_slices [slice][dir].reserved;
+  return m_slices [dir][slice].reserved;
 }
 
 int64_t
@@ -235,7 +235,7 @@ LinkInfo::GetMeterBitRate (LinkDir dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
-  return m_slices [slice][dir].meter;
+  return m_slices [dir][slice].meter;
 }
 
 int64_t
@@ -244,7 +244,7 @@ LinkInfo::GetThpBitRate (EwmaTerm term, LinkDir dir, SliceId slice,
 {
   NS_LOG_FUNCTION (this << term << dir << slice << type);
 
-  return m_slices [slice][dir].ewmaThp [type][term];
+  return m_slices [dir][slice].ewmaThp [type][term];
 }
 
 // double
@@ -408,10 +408,10 @@ LinkInfo::NotifyTxPacket (std::string context, Ptr<const Packet> packet)
 
       // Update TX packets for the traffic slice and for fake shared slice,
       // considering both the traffic type and the fake both type.
-      m_slices [slice][dir].txBytes [type] += size;
-      m_slices [slice][dir].txBytes [QosType::BOTH] += size;
-      m_slices [SliceId::ALL][dir].txBytes [type] += size;
-      m_slices [SliceId::ALL][dir].txBytes [QosType::BOTH] += size;
+      m_slices [dir][slice].txBytes [type] += size;
+      m_slices [dir][slice].txBytes [QosType::BOTH] += size;
+      m_slices [dir][SliceId::ALL].txBytes [type] += size;
+      m_slices [dir][SliceId::ALL].txBytes [QosType::BOTH] += size;
     }
   else
     {
@@ -436,8 +436,8 @@ LinkInfo::ReleaseBitRate (
     }
 
   // Releasing the bit rate.
-  m_slices [slice][dir].reserved -= bitRate;
-  m_slices [SliceId::ALL][dir].reserved -= bitRate;
+  m_slices [dir][slice].reserved -= bitRate;
+  m_slices [dir][SliceId::ALL].reserved -= bitRate;
   NS_LOG_DEBUG ("Releasing " << bitRate <<
                 " bit rate on slice " << SliceIdStr (slice) <<
                 " in " << LinkDirStr (dir) << " direction.");
@@ -463,8 +463,8 @@ LinkInfo::ReserveBitRate (
     }
 
   // Reserving the bit rate.
-  m_slices [slice][dir].reserved += bitRate;
-  m_slices [SliceId::ALL][dir].reserved += bitRate;
+  m_slices [dir][slice].reserved += bitRate;
+  m_slices [dir][SliceId::ALL].reserved += bitRate;
   NS_LOG_DEBUG ("Reserving " << bitRate <<
                 " bit rate on slice " << SliceIdStr (slice) <<
                 " in " << LinkDirStr (dir) << " direction.");
@@ -495,8 +495,8 @@ LinkInfo::UpdateQuota (LinkDir dir, SliceId slice, int quota)
   NS_LOG_DEBUG ("Slice " << SliceIdStr (slice) << " new quota: " << quota <<
                 " in " << LinkDirStr (dir) << " direction.");
 
-  m_slices [slice][dir].quota += quota;
-  m_slices [SliceId::ALL][dir].quota += quota;
+  m_slices [dir][slice].quota += quota;
+  m_slices [dir][SliceId::ALL].quota += quota;
   return true;
 }
 
@@ -507,8 +507,8 @@ LinkInfo::UpdateExtraBitRate (LinkDir dir, SliceId slice, int64_t bitRate)
 
   // FIXME Should I validate the bit rate bounds?
   NS_ASSERT_MSG (slice < SliceId::ALL, "Invalid slice for this operation.");
-  m_slices [slice][dir].extra += bitRate;
-  m_slices [SliceId::ALL][dir].extra += bitRate;
+  m_slices [dir][slice].extra += bitRate;
+  m_slices [dir][SliceId::ALL].extra += bitRate;
   return true;
 }
 
@@ -522,7 +522,7 @@ LinkInfo::SetMeterBitRate (LinkDir dir, SliceId slice, int64_t bitRate)
       NS_LOG_WARN ("Invalid meter bit rate.");
       return false;
     }
-  m_slices [slice][dir].meter = bitRate;
+  m_slices [dir][slice].meter = bitRate;
   return true;
 }
 
@@ -534,7 +534,7 @@ LinkInfo::EwmaUpdate (void)
     {
       for (int d = 0; d <= LinkInfo::BWD; d++)
         {
-          SliceMetadata &slData = m_slices [s][d];
+          SliceMetadata &slData = m_slices [d][s];
           for (int t = 0; t <= QosType::BOTH; t++)
             {
               // Updating both long-term and short-term EWMA throughput.
