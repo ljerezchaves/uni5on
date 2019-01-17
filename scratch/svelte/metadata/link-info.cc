@@ -393,9 +393,9 @@ LinkInfo::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
-  // Scheduling the first update statistics.
+  // Scheduling the first EWMA update.
   m_ewmaLastTime = Simulator::Now ();
-  Simulator::Schedule (m_ewmaTimeout, &LinkInfo::UpdateEwmaThp, this);
+  Simulator::Schedule (m_ewmaTimeout, &LinkInfo::EwmaUpdate, this);
 
   Object::NotifyConstructionCompleted ();
 }
@@ -541,7 +541,7 @@ LinkInfo::UpdateMeterBitRate (LinkDir dir, SliceId slice, int64_t bitRate)
 }
 
 void
-LinkInfo::UpdateEwmaThp (void)
+LinkInfo::EwmaUpdate (void)
 {
   double elapSecs = (Simulator::Now () - m_ewmaLastTime).GetSeconds ();
   for (int s = 0; s <= SliceId::ALL; s++)
@@ -563,9 +563,9 @@ LinkInfo::UpdateEwmaThp (void)
         }
     }
 
-  // Scheduling the next update statistics.
+  // Scheduling the next EWMA update.
   m_ewmaLastTime = Simulator::Now ();
-  Simulator::Schedule (m_ewmaTimeout, &LinkInfo::UpdateEwmaThp, this);
+  Simulator::Schedule (m_ewmaTimeout, &LinkInfo::EwmaUpdate, this);
 }
 
 // FIXME Essa função vai cair fora. Essas lógicas vão pro controlador.

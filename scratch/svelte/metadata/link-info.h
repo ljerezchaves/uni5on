@@ -46,7 +46,7 @@ typedef std::vector<Ptr<LinkInfo> > LinkInfoList_t;
  * - The reserved bit rate, updated by Reserve/ReleaseBitRate methods;
  * - The transmitted bytes, updated by NotifyTxPacket method;
  * - The average throughput, for both short-term and long-term periods of
- *   evaluation, periodically updated by UpdateEwmaThp method;
+ *   evaluation, periodically updated by EwmaUpdate method;
  */
 class LinkInfo : public Object
 {
@@ -355,9 +355,9 @@ private:
     LinkDir dir, SliceId slice, int64_t bitRate);
 
   /**
-   * Update EWMA link throughput statistics.
+   * Update EWMA average statistics.
    */
-  void UpdateEwmaThp (void);
+  void EwmaUpdate (void);
 
   /**
    * Update the internal meter diff for firing the meter adjusted trace source
