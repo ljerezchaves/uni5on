@@ -348,17 +348,17 @@ private:
     uint64_t src, uint64_t dst, SliceId slice, uint64_t bitRate);
 
   /**
-   * Set the slice quota for this link on the given direction.
+   * Update the slice quota for this link on the given direction.
    * \param dir The link direction.
    * \param slice The network slice.
-   * \param quota The value to set.
+   * \param quota The value to update.
    * \return True if succeeded, false otherwise.
    */
-  bool SetQuota (
-    LinkDir dir, SliceId slice, uint16_t quota);
+  bool UpdateQuota (
+    LinkDir dir, SliceId slice, int quota);
 
   /**
-   * Set the extra bit rate for this link on the given direction.
+   * Update the extra bit rate for this link on the given direction.
    * \param dir The link direction.
    * \param slice The network slice.
    * \param bitRate The value to update.
@@ -367,7 +367,7 @@ private:
     LinkDir dir, SliceId slice, int64_t bitRate);
 
   /**
-   * Set the meter bit rate for this link on the given direction.
+   * Update the meter bit rate for this link on the given direction.
    * \param dir The link direction.
    * \param slice The network slice.
    * \param bitRate The value to update.

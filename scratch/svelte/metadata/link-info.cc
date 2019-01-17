@@ -491,7 +491,7 @@ LinkInfo::ReserveBitRate (
 }
 
 bool
-LinkInfo::SetQuota (LinkDir dir, SliceId slice, uint16_t quota)
+LinkInfo::UpdateQuota (LinkDir dir, SliceId slice, int quota)
 {
   NS_LOG_FUNCTION (this << dir << slice << quota);
 
@@ -530,21 +530,10 @@ LinkInfo::SetQuota (LinkDir dir, SliceId slice, uint16_t quota)
       return false;
     }
 
-  // FIXME Juntar a parte de ajuste do slice e do fake assim como fiz nos outros.
   // Update the slice quota.
-  int64_t oldBitRate = GetQuotaBitRate (dir, slice);
   NS_LOG_DEBUG (SliceIdStr (slice) << " slice new quota: " << quota);
-  m_slices [slice][dir].quota = quota;
-  int64_t newBitRate = GetQuotaBitRate (dir, slice);
-  UpdateMeterDiff (dir, slice, newBitRate - oldBitRate);
-
-  // Update the fake shared slice
-  oldBitRate = GetQuotaBitRate (dir, SliceId::ALL);
-  NS_LOG_DEBUG (SliceIdStr (SliceId::ALL) << " slice new quota: " << sumQuotas);
-  m_slices [SliceId::ALL][dir].quota = sumQuotas;
-  newBitRate = GetQuotaBitRate (dir, SliceId::ALL);
-  UpdateMeterDiff (dir, SliceId::ALL, newBitRate - oldBitRate);
-
+  m_slices [slice][dir].quota += quota;
+  m_slices [SliceId::ALL][dir].quota += quota;
   return true;
 }
 
@@ -553,6 +542,7 @@ LinkInfo::UpdateExtraBitRate (LinkDir dir, SliceId slice, int64_t bitRate)
 {
   NS_LOG_FUNCTION (this << dir << slice << bitRate);
 
+  NS_ASSERT_MSG (slice < SliceId::ALL, "Invalid slice for this operation.");
   m_slices [slice][dir].extra += bitRate;
   m_slices [SliceId::ALL][dir].extra += bitRate;
 }
@@ -562,6 +552,7 @@ LinkInfo::UpdateMeterBitRate (LinkDir dir, SliceId slice, int64_t bitRate)
 {
   NS_LOG_FUNCTION (this << dir << slice << bitRate);
 
+  NS_ASSERT_MSG (slice < SliceId::ALL, "Invalid slice for this operation.");
   m_slices [slice][dir].meter += bitRate;
   m_slices [SliceId::ALL][dir].meter += bitRate;
 }

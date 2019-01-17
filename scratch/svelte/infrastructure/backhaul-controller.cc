@@ -286,8 +286,8 @@ BackhaulController::NotifySlicesBuilt (ApplicationContainer &controllers)
       for (auto const &lInfo : LinkInfo::GetList ())
         {
           bool success = true;
-          success &= lInfo->SetQuota (LinkInfo::FWD, sliceId, quota);
-          success &= lInfo->SetQuota (LinkInfo::BWD, sliceId, quota);
+          success &= lInfo->UpdateQuota (LinkInfo::FWD, sliceId, quota);
+          success &= lInfo->UpdateQuota (LinkInfo::BWD, sliceId, quota);
           NS_ASSERT_MSG (success, "Error when setting slice quotas.");
         }
     }
