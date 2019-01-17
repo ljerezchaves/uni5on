@@ -59,6 +59,11 @@ LinkInfo::LinkInfo (Ptr<OFSwitch13Port> port1, Ptr<OFSwitch13Port> port2,
   // Asserting full-duplex csma channel.
   NS_ASSERT_MSG (IsFullDuplexLink (), "Invalid half-duplex csma channel.");
 
+  // Validate maximum bit rate for this implementation.
+  uint64_t link = m_channel->GetDataRate ().GetBitRate ();
+  uint64_t maxr = static_cast<uint64_t> (std::numeric_limits<int64_t>::max ());
+  NS_ASSERT_MSG (link < maxr, "Invalid bit rate for this implementation.");
+
   // Connecting trace source to CsmaNetDevice PhyTxEnd trace source, used to
   // monitor data transmitted over this connection.
   GetPortDev (0)->TraceConnect (
@@ -175,12 +180,12 @@ LinkInfo::IsFullDuplexLink (void) const
   return m_channel->IsFullDuplex ();
 }
 
-uint64_t
+int64_t
 LinkInfo::GetLinkBitRate (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_channel->GetDataRate ().GetBitRate ();
+  return static_cast<int64_t> (m_channel->GetDataRate ().GetBitRate ());
 }
 
 int
@@ -191,7 +196,7 @@ LinkInfo::GetQuota (LinkDir dir, SliceId slice) const
   return m_slices [slice][dir].quota;
 }
 
-uint64_t
+int64_t
 LinkInfo::GetQuotaBitRate (LinkDir dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
@@ -199,7 +204,7 @@ LinkInfo::GetQuotaBitRate (LinkDir dir, SliceId slice) const
   return GetLinkBitRate () * GetQuota (dir, slice) / 100;
 }
 
-uint64_t
+int64_t
 LinkInfo::GetExtraBitRate (LinkDir dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
@@ -207,7 +212,7 @@ LinkInfo::GetExtraBitRate (LinkDir dir, SliceId slice) const
   return m_slices [slice][dir].extra;
 }
 
-uint64_t
+int64_t
 LinkInfo::GetResBitRate (LinkDir dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
@@ -215,7 +220,7 @@ LinkInfo::GetResBitRate (LinkDir dir, SliceId slice) const
   return m_slices [slice][dir].reserved;
 }
 
-uint64_t
+int64_t
 LinkInfo::GetFreeBitRate (LinkDir dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
@@ -224,7 +229,7 @@ LinkInfo::GetFreeBitRate (LinkDir dir, SliceId slice) const
   return GetQuotaBitRate (dir, slice) - GetResBitRate (dir, slice);
 }
 
-uint64_t
+int64_t
 LinkInfo::GetOldMeterBitRate (LinkDir dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
@@ -233,7 +238,7 @@ LinkInfo::GetOldMeterBitRate (LinkDir dir, SliceId slice) const
   return GetFreeBitRate (dir, slice) + GetExtraBitRate (dir, slice);
 }
 
-uint64_t
+int64_t
 LinkInfo::GetMeterBitRate (LinkDir dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
@@ -241,7 +246,7 @@ LinkInfo::GetMeterBitRate (LinkDir dir, SliceId slice) const
   return m_slices [slice][dir].meter;
 }
 
-uint64_t
+int64_t
 LinkInfo::GetThpBitRate (EwmaTerm term, LinkDir dir, SliceId slice,
                          QosType type) const
 {
@@ -269,7 +274,7 @@ LinkInfo::GetThpBitRate (EwmaTerm term, LinkDir dir, SliceId slice,
 
 bool
 LinkInfo::HasBitRate (
-  uint64_t src, uint64_t dst, SliceId slice, uint64_t bitRate) const
+  uint64_t src, uint64_t dst, SliceId slice, int64_t bitRate) const
 {
   NS_LOG_FUNCTION (this << src << dst << slice << bitRate);
 
@@ -426,7 +431,7 @@ LinkInfo::NotifyTxPacket (std::string context, Ptr<const Packet> packet)
 
 bool
 LinkInfo::ReleaseBitRate (
-  uint64_t src, uint64_t dst, SliceId slice, uint64_t bitRate)
+  uint64_t src, uint64_t dst, SliceId slice, int64_t bitRate)
 {
   NS_LOG_FUNCTION (this << src << dst << slice << bitRate);
 
@@ -459,7 +464,7 @@ LinkInfo::ReleaseBitRate (
 
 bool
 LinkInfo::ReserveBitRate (
-  uint64_t src, uint64_t dst, SliceId slice, uint64_t bitRate)
+  uint64_t src, uint64_t dst, SliceId slice, int64_t bitRate)
 {
   NS_LOG_FUNCTION (this << src << dst << slice << bitRate);
 

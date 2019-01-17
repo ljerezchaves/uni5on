@@ -130,7 +130,7 @@ public:
    * both directions in full-duplex links.
    * \return The channel maximum nominal bit rate (bps).
    */
-  uint64_t GetLinkBitRate (void) const;
+  int64_t GetLinkBitRate (void) const;
 
   /**
    * Get the slice quota for this link on the given direction,
@@ -149,7 +149,7 @@ public:
    * \param slice The network slice.
    * \return The maximum bit rate.
    */
-  uint64_t GetQuotaBitRate (
+  int64_t GetQuotaBitRate (
     LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**
@@ -159,7 +159,7 @@ public:
    * \param slice The network slice.
    * \return The extra bit rate.
    */
-  uint64_t GetExtraBitRate (
+  int64_t GetExtraBitRate (
     LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**
@@ -169,7 +169,7 @@ public:
    * \param slice The network slice.
    * \return The reserved bit rate.
    */
-  uint64_t GetResBitRate (
+  int64_t GetResBitRate (
     LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**
@@ -179,7 +179,7 @@ public:
    * \param slice The network slice.
    * \return The available bit rate.
    */
-  uint64_t GetFreeBitRate (
+  int64_t GetFreeBitRate (
     LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**
@@ -190,7 +190,7 @@ public:
    * \param slice The network slice.
    * \return The available bit rate.
    */
-  uint64_t GetOldMeterBitRate (
+  int64_t GetOldMeterBitRate (
     LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**
@@ -200,7 +200,7 @@ public:
    * \param slice The network slice.
    * \return The available bit rate.
    */
-  uint64_t GetMeterBitRate (
+  int64_t GetMeterBitRate (
     LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**
@@ -212,7 +212,7 @@ public:
    * \param type Traffic QoS type.
    * \return The EWMA throughput.
    */
-  uint64_t GetThpBitRate (
+  int64_t GetThpBitRate (
     EwmaTerm term, LinkDir dir, SliceId slice = SliceId::ALL,
     QosType type = QosType::BOTH) const;
 
@@ -237,7 +237,7 @@ public:
    * \return True if there is available bit rate, false otherwise.
    */
   bool HasBitRate (
-    uint64_t src, uint64_t dst, SliceId slice, uint64_t bitRate) const;
+    uint64_t src, uint64_t dst, SliceId slice, int64_t bitRate) const;
 
   /**
    * Print the link metadata for a specific network slice.
@@ -295,27 +295,6 @@ protected:
   void NotifyConstructionCompleted (void);
 
 private:
-  /** Metadata associated to a network slice. */
-  struct SliceMetadata
-  {
-    int quota;                          //!< Slice quota (0-100%).
-    uint64_t extra;                     //!< Extra (over quota) bit rate.
-    uint64_t meter;                     //!< OpenFlow meter bit rate.
-    uint64_t reserved;                  //!< Reserved bit rate.
-
-    // FIXME Remove in the future.
-    int64_t  meterDiff;                 //!< Current meter bit rate diff.
-
-    /** EWMA throughput for both short-term and long-term averages. */
-    uint64_t ewmaThp [N_QOS_TYPES][N_EWMA_TERMS];
-
-    /** TX byte counters for each LTE QoS type. */
-    uint64_t txBytes [N_QOS_TYPES];
-  };
-
-  /** A pair of switch datapath IDs. */
-  typedef std::pair<uint64_t, uint64_t> DpIdPair_t;
-
   /**
    * Notify this link of a successfully transmitted packet in link
    * channel. This method will update internal byte counters.
@@ -333,7 +312,7 @@ private:
    * \return True if succeeded, false otherwise.
    */
   bool ReleaseBitRate (
-    uint64_t src, uint64_t dst, SliceId slice, uint64_t bitRate);
+    uint64_t src, uint64_t dst, SliceId slice, int64_t bitRate);
 
   /**
    * Reserve the requested bit rate between these two switches on the given
@@ -345,7 +324,7 @@ private:
    * \return True if succeeded, false otherwise.
    */
   bool ReserveBitRate (
-    uint64_t src, uint64_t dst, SliceId slice, uint64_t bitRate);
+    uint64_t src, uint64_t dst, SliceId slice, int64_t bitRate);
 
   /**
    * Update the slice quota for this link on the given direction.
@@ -399,6 +378,24 @@ private:
   /** Default meter bit rate adjusted trace source. */
   TracedCallback<Ptr<const LinkInfo>, LinkDir, SliceId> m_meterAdjustedTrace;
 
+  /** Metadata associated to a network slice. */
+  struct SliceMetadata
+  {
+    int quota;                          //!< Slice quota (0-100%).
+    int64_t extra;                      //!< Extra (over quota) bit rate.
+    int64_t meter;                      //!< OpenFlow meter bit rate.
+    int64_t reserved;                   //!< Reserved bit rate.
+
+    // FIXME Remove in the future.
+    int64_t meterDiff;                  //!< Current meter bit rate diff.
+
+    /** EWMA throughput for both short-term and long-term averages. */
+    int64_t ewmaThp [N_QOS_TYPES][N_EWMA_TERMS];
+
+    /** TX byte counters for each LTE QoS type. */
+    int64_t txBytes [N_QOS_TYPES];
+  };
+
   DataRate              m_adjustmentStep;       //!< Meter adjustment step.
   Ptr<CsmaChannel>      m_channel;              //!< The CSMA link channel.
   Ptr<OFSwitch13Port>   m_ports [2];            //!< OpenFlow ports.
@@ -411,6 +408,9 @@ private:
   double                m_ewmaStAlpha;          //!< EWMA short-term alpha.
   Time                  m_ewmaTimeout;          //!< EWMA update timeout.
   Time                  m_ewmaLastTime;         //!< Last EWMA update time.
+
+  /** A pair of switch datapath IDs. */
+  typedef std::pair<uint64_t, uint64_t> DpIdPair_t;
 
   /**
    * Map saving pair of switch datapath IDs / link information.
