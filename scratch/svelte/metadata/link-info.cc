@@ -451,8 +451,6 @@ LinkInfo::ReleaseBitRate (
   NS_LOG_DEBUG ("Releasing " << bitRate <<
                 " bit rate on slice " << SliceIdStr (slice) <<
                 " in " << LinkDirStr (dir) << " direction.");
-  NS_LOG_DEBUG ("Current " << SliceIdStr (slice) <<
-                " reserved bit rate: " << GetResBitRate (dir, slice));
   return true;
 }
 
@@ -478,8 +476,6 @@ LinkInfo::ReserveBitRate (
   NS_LOG_DEBUG ("Reserving " << bitRate <<
                 " bit rate on slice " << SliceIdStr (slice) <<
                 " in " << LinkDirStr (dir) << " direction.");
-  NS_LOG_DEBUG ("Current " << SliceIdStr (slice) <<
-                " reserved bit rate: " << GetResBitRate (dir, slice));
   return true;
 }
 
@@ -502,7 +498,8 @@ LinkInfo::UpdateQuota (LinkDir dir, SliceId slice, int quota)
     }
 
   // Update the slice quota.
-  NS_LOG_DEBUG ("Slice " << SliceIdStr (slice) << " new quota: " << quota <<
+  NS_LOG_DEBUG ("Slice " << SliceIdStr (slice) <<
+                " with new quota " << newSliQuota <<
                 " in " << LinkDirStr (dir) << " direction.");
 
   m_slices [dir][slice].quota += quota;
