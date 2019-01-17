@@ -276,12 +276,11 @@ LinkInfo::GetMeterBitRate (LinkDir dir, SliceId slice) const
 
 bool
 LinkInfo::HasBitRate (
-  uint64_t src, uint64_t dst, SliceId slice, int64_t bitRate) const
+  LinkDir dir, SliceId slice, int64_t bitRate) const
 {
-  NS_LOG_FUNCTION (this << src << dst << slice << bitRate);
+  NS_LOG_FUNCTION (this << dir << slice << bitRate);
 
   NS_ASSERT_MSG (slice < SliceId::ALL, "Invalid slice for this operation.");
-  LinkInfo::LinkDir dir = GetLinkDir (src, dst);
 
   return (GetFreeBitRate (dir, QosType::GBR, slice) >= bitRate);
 }
@@ -437,12 +436,11 @@ LinkInfo::NotifyTxPacket (std::string context, Ptr<const Packet> packet)
 
 bool
 LinkInfo::ReleaseBitRate (
-  uint64_t src, uint64_t dst, SliceId slice, int64_t bitRate)
+  LinkDir dir, SliceId slice, int64_t bitRate)
 {
-  NS_LOG_FUNCTION (this << src << dst << slice << bitRate);
+  NS_LOG_FUNCTION (this << dir << slice << bitRate);
 
   NS_ASSERT_MSG (slice < SliceId::ALL, "Invalid slice for this operation.");
-  LinkInfo::LinkDir dir = GetLinkDir (src, dst);
 
   // Check for reserved bit rate.
   if (GetResBitRate (dir, slice) < bitRate)
@@ -462,12 +460,11 @@ LinkInfo::ReleaseBitRate (
 
 bool
 LinkInfo::ReserveBitRate (
-  uint64_t src, uint64_t dst, SliceId slice, int64_t bitRate)
+  LinkDir dir, SliceId slice, int64_t bitRate)
 {
-  NS_LOG_FUNCTION (this << src << dst << slice << bitRate);
+  NS_LOG_FUNCTION (this << dir << slice << bitRate);
 
   NS_ASSERT_MSG (slice < SliceId::ALL, "Invalid slice for this operation.");
-  LinkInfo::LinkDir dir = GetLinkDir (src, dst);
 
   // Check for available bit rate.
   if (GetFreeBitRate (dir, QosType::GBR, slice) < bitRate)

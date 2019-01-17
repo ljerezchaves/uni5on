@@ -242,16 +242,15 @@ public:
   //   LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**
-   * Check for available bit rate between these two switches that can be
-   * further reserved by ReserveGbrBitRate () method.
-   * \param src The source switch datapath ID.
-   * \param dst The destination switch datapath ID.
+   * Check for available bit rate between on the given direction for the given
+   * slice that can be further reserved.
+   * \param dir The link direction.
    * \param slice The network slice.
    * \param bitRate The bit rate to check.
    * \return True if there is available bit rate, false otherwise.
    */
   bool HasBitRate (
-    uint64_t src, uint64_t dst, SliceId slice, int64_t bitRate) const;
+    LinkDir dir, SliceId slice, int64_t bitRate) const;
 
   /**
    * Print the link metadata for a specific network slice.
@@ -324,28 +323,26 @@ private:
   void NotifyTxPacket (std::string context, Ptr<const Packet> packet);
 
   /**
-   * Release the requested bit rate between these two switches on the given
+   * Release the requested bit rate on the given direction for the given
    * network slice.
-   * \param src The source switch datapath ID.
-   * \param dst The destination switch datapath ID.
+   * \param dir The link direction.
    * \param slice The network slice.
    * \param bitRate The bit rate to release.
    * \return True if succeeded, false otherwise.
    */
   bool ReleaseBitRate (
-    uint64_t src, uint64_t dst, SliceId slice, int64_t bitRate);
+    LinkDir dir, SliceId slice, int64_t bitRate);
 
   /**
-   * Reserve the requested bit rate between these two switches on the given
+   * Reserve the requested bit rate on the given direction for the given
    * network slice.
-   * \param src The source switch datapath ID.
-   * \param dst The destination switch datapath ID.
+   * \param dir The link direction.
    * \param slice The network slice.
    * \param bitRate The bit rate to reserve.
    * \return True if succeeded, false otherwise.
    */
   bool ReserveBitRate (
-    uint64_t src, uint64_t dst, SliceId slice, int64_t bitRate);
+    LinkDir dir, SliceId slice, int64_t bitRate);
 
   /**
    * Update the slice quota for this link on the given direction.

@@ -126,9 +126,13 @@ protected:
    * Search for link information between two switches by their indexes.
    * \param idx1 First switch index.
    * \param idx2 Second switch index.
-   * \return Pointer to link info saved.
+   * \return A tuple with:
+   *         1st: A pointer to the link information;
+   *         2nd: The link direction from idx1 to idx2;
+   *         3rd: The link direction from idx2 to idx1.
    */
-  Ptr<LinkInfo> GetLinkInfo (uint16_t idx1, uint16_t idx2) const;
+  std::tuple<Ptr<LinkInfo>, LinkInfo::LinkDir, LinkInfo::LinkDir> GetLinkInfo (
+    uint16_t idx1, uint16_t idx2) const;
 
   /**
    * Get the EWMA processing capacity usage for the given backhaul switch.

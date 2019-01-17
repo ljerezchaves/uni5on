@@ -174,12 +174,16 @@ BackhaulController::GetFlowTableUse (uint16_t idx, uint8_t tableId) const
   return m_switchDevices.Get (idx)->GetFlowTableUsage (tableId);
 }
 
-Ptr<LinkInfo>
+std::tuple<Ptr<LinkInfo>, LinkInfo::LinkDir, LinkInfo::LinkDir>
 BackhaulController::GetLinkInfo (uint16_t idx1, uint16_t idx2) const
 {
   NS_LOG_FUNCTION (this << idx1 << idx2);
 
-  return LinkInfo::GetPointer (GetDpId (idx1), GetDpId (idx2));
+  uint64_t dpId1 = GetDpId (idx1);
+  uint64_t dpId2 = GetDpId (idx2);
+  Ptr<LinkInfo> lInfo = LinkInfo::GetPointer (dpId1, dpId2);
+  LinkInfo::LinkDir dir = lInfo->GetLinkDir (dpId1, dpId2);
+  return std::make_tuple (lInfo, dir, LinkInfo::Invert (dir));
 }
 
 double

@@ -796,17 +796,18 @@ RingController::HasAvailableResources (Ptr<RingInfo> ringInfo)
   int64_t dlRate = rInfo->GetGbrDlBitRate ();
   int64_t ulRate = rInfo->GetGbrUlBitRate ();
 
+  Ptr<LinkInfo> lInfo;
+  LinkInfo::LinkDir dlDir, ulDir;
+
   // S5 interface (from P-GW to S-GW)
   curr = rInfo->GetPgwInfraSwIdx ();
   downPath = ringInfo->GetDlPath (LteIface::S5);
   while (success && curr != rInfo->GetSgwInfraSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, downPath);
-      Ptr<LinkInfo> lInfo = GetLinkInfo (curr, next);
-      uint64_t currId = GetDpId (curr);
-      uint64_t nextId = GetDpId (next);
-      success &= lInfo->HasBitRate (currId, nextId, slice, dlRate);
-      success &= lInfo->HasBitRate (nextId, currId, slice, ulRate);
+      std::tie (lInfo, dlDir, ulDir) = GetLinkInfo (curr, next);
+      success &= lInfo->HasBitRate (dlDir, slice, dlRate);
+      success &= lInfo->HasBitRate (ulDir, slice, ulRate);
       curr = next;
 
       // Save this link as used by S5 interface.
@@ -819,9 +820,7 @@ RingController::HasAvailableResources (Ptr<RingInfo> ringInfo)
   while (success && curr != rInfo->GetEnbInfraSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, downPath);
-      Ptr<LinkInfo> lInfo = GetLinkInfo (curr, next);
-      uint64_t currId = GetDpId (curr);
-      uint64_t nextId = GetDpId (next);
+      std::tie (lInfo, dlDir, ulDir) = GetLinkInfo (curr, next);
 
       // Check if this link was used by S5 interface.
       auto it = s5Links.find (lInfo);
@@ -830,15 +829,13 @@ RingController::HasAvailableResources (Ptr<RingInfo> ringInfo)
           // When checking for downlink resources for S1-U interface we also
           // must ensure that the link has uplink resources for S5 interface,
           // and vice-versa.
-          success &= lInfo->HasBitRate (currId, nextId, slice,
-                                        dlRate + ulRate);
-          success &= lInfo->HasBitRate (nextId, currId, slice,
-                                        ulRate + dlRate);
+          success &= lInfo->HasBitRate (dlDir, slice, dlRate + ulRate);
+          success &= lInfo->HasBitRate (ulDir, slice, ulRate + dlRate);
         }
       else
         {
-          success &= lInfo->HasBitRate (currId, nextId, slice, dlRate);
-          success &= lInfo->HasBitRate (nextId, currId, slice, ulRate);
+          success &= lInfo->HasBitRate (dlDir, slice, dlRate);
+          success &= lInfo->HasBitRate (ulDir, slice, ulRate);
         }
       curr = next;
     }
@@ -888,17 +885,18 @@ RingController::BitRateReserve (Ptr<RingInfo> ringInfo)
   RingInfo::RingPath downPath;
   bool success = true;
 
+  Ptr<LinkInfo> lInfo;
+  LinkInfo::LinkDir dlDir, ulDir;
+
   // S5 interface (from P-GW to S-GW)
   uint16_t curr = rInfo->GetPgwInfraSwIdx ();
   downPath = ringInfo->GetDlPath (LteIface::S5);
   while (success && curr != rInfo->GetSgwInfraSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, downPath);
-      Ptr<LinkInfo> lInfo = GetLinkInfo (curr, next);
-      uint64_t currId = GetDpId (curr);
-      uint64_t nextId = GetDpId (next);
-      success &= lInfo->ReserveBitRate (currId, nextId, slice, dlRate);
-      success &= lInfo->ReserveBitRate (nextId, currId, slice, ulRate);
+      std::tie (lInfo, dlDir, ulDir) = GetLinkInfo (curr, next);
+      success &= lInfo->ReserveBitRate (dlDir, slice, dlRate);
+      success &= lInfo->ReserveBitRate (ulDir, slice, ulRate);
       curr = next;
     }
 
@@ -907,11 +905,9 @@ RingController::BitRateReserve (Ptr<RingInfo> ringInfo)
   while (success && curr != rInfo->GetEnbInfraSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, downPath);
-      Ptr<LinkInfo> lInfo = GetLinkInfo (curr, next);
-      uint64_t currId = GetDpId (curr);
-      uint64_t nextId = GetDpId (next);
-      success &= lInfo->ReserveBitRate (currId, nextId, slice, dlRate);
-      success &= lInfo->ReserveBitRate (nextId, currId, slice, ulRate);
+      std::tie (lInfo, dlDir, ulDir) = GetLinkInfo (curr, next);
+      success &= lInfo->ReserveBitRate (dlDir, slice, dlRate);
+      success &= lInfo->ReserveBitRate (ulDir, slice, ulRate);
       curr = next;
     }
 
@@ -934,17 +930,18 @@ RingController::BitRateRelease (Ptr<RingInfo> ringInfo)
   RingInfo::RingPath downPath;
   bool success = true;
 
+  Ptr<LinkInfo> lInfo;
+  LinkInfo::LinkDir dlDir, ulDir;
+
   // S5 interface (from P-GW to S-GW)
   uint16_t curr = rInfo->GetPgwInfraSwIdx ();
   downPath = ringInfo->GetDlPath (LteIface::S5);
   while (success && curr != rInfo->GetSgwInfraSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, downPath);
-      Ptr<LinkInfo> lInfo = GetLinkInfo (curr, next);
-      uint64_t currId = GetDpId (curr);
-      uint64_t nextId = GetDpId (next);
-      success &= lInfo->ReleaseBitRate (currId, nextId, slice, dlRate);
-      success &= lInfo->ReleaseBitRate (nextId, currId, slice, ulRate);
+      std::tie (lInfo, dlDir, ulDir) = GetLinkInfo (curr, next);
+      success &= lInfo->ReleaseBitRate (dlDir, slice, dlRate);
+      success &= lInfo->ReleaseBitRate (ulDir, slice, ulRate);
       curr = next;
     }
 
@@ -953,11 +950,9 @@ RingController::BitRateRelease (Ptr<RingInfo> ringInfo)
   while (success && curr != rInfo->GetEnbInfraSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, downPath);
-      Ptr<LinkInfo> lInfo = GetLinkInfo (curr, next);
-      uint64_t currId = GetDpId (curr);
-      uint64_t nextId = GetDpId (next);
-      success &= lInfo->ReleaseBitRate (currId, nextId, slice, dlRate);
-      success &= lInfo->ReleaseBitRate (nextId, currId, slice, ulRate);
+      std::tie (lInfo, dlDir, ulDir) = GetLinkInfo (curr, next);
+      success &= lInfo->ReleaseBitRate (dlDir, slice, dlRate);
+      success &= lInfo->ReleaseBitRate (ulDir, slice, ulRate);
       curr = next;
     }
 
@@ -974,7 +969,8 @@ RingController::CreateSpanningTree (void)
   // Let's configure one single link to drop packets when flooding over ports
   // (OFPP_FLOOD) with OFPPC_NO_FWD config (0x20).
   uint16_t half = (GetNSwitches () / 2);
-  Ptr<LinkInfo> lInfo = GetLinkInfo (half, half + 1);
+  Ptr<LinkInfo> lInfo =
+    LinkInfo::GetPointer (GetDpId (half), GetDpId (half + 1));
   NS_LOG_DEBUG ("Disabling link from " << half << " to " <<
                 half + 1 << " for broadcast messages.");
   {
