@@ -270,6 +270,13 @@ public:
   static std::string LinkDirStr (LinkDir dir);
 
   /**
+   * Invert the given link direction.
+   * \param link The original link direction.
+   * \return The inverted link direction.
+   */
+  static LinkDir Invert (LinkDir dir);
+
+  /**
    * Get the list of link information.
    * \return The const reference to the list of link information.
    */
