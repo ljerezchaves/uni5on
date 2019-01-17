@@ -618,21 +618,17 @@ BackhaulController::SlicingMeterInstall (Ptr<LinkInfo> lInfo)
           {
             LinkInfo::LinkDir dir = static_cast<LinkInfo::LinkDir> (d);
             uint32_t meterId = GetSvelteMeterId (SliceId::ALL, d);
-            NS_LOG_INFO ("Creating slicing meter ID " <<
-                         GetUint32Hex (meterId) <<
-                         " for link info " << lInfo->GetSwDpId (0) <<
-                         " to " << lInfo->GetSwDpId (1));
-
             int64_t kbps = Bps2Kbps (
                 lInfo->GetFreeBitRate (dir, QosType::NON, SliceId::ALL));
             success &= lInfo->SetMeterBitRate (dir, SliceId::ALL, kbps * 1000);
-            NS_LOG_DEBUG ("Link slice " << SliceIdStr (SliceId::ALL) <<
-                          ": " << LinkInfo::LinkDirStr (dir) <<
-                          " meter set to " << kbps << " Kbps");
 
-            // ----------------------------------------------------------------
-            // Meter table
-            //
+            NS_LOG_INFO ("Slicing meter ID " << GetUint32Hex (meterId) <<
+                         " created for slice " << SliceIdStr (SliceId::ALL) <<
+                         " in link info from " << lInfo->GetSwDpId (0) <<
+                         " to " << lInfo->GetSwDpId (1) <<
+                         " in " << LinkInfo::LinkDirStr (dir) <<
+                         " direction set to " << kbps << " Kbps");
+
             std::ostringstream cmd;
             cmd << "meter-mod cmd=add"
                 << ",flags="      << OFPMF_KBPS
@@ -654,21 +650,17 @@ BackhaulController::SlicingMeterInstall (Ptr<LinkInfo> lInfo)
               {
                 LinkInfo::LinkDir dir = static_cast<LinkInfo::LinkDir> (d);
                 uint32_t meterId = GetSvelteMeterId (slice, d);
-                NS_LOG_INFO ("Creating slicing meter ID " <<
-                             GetUint32Hex (meterId) <<
-                             " for link info " << lInfo->GetSwDpId (0) <<
-                             " to " << lInfo->GetSwDpId (1));
-
                 int64_t kbps = Bps2Kbps (
                     lInfo->GetFreeBitRate (dir, QosType::NON, slice));
                 success &= lInfo->SetMeterBitRate (dir, slice, kbps * 1000);
-                NS_LOG_DEBUG ("Link slice " << SliceIdStr (slice) <<
-                              ": " << LinkInfo::LinkDirStr (dir) <<
-                              " meter set to " << kbps << " Kbps");
 
-                // ------------------------------------------------------------
-                // Meter table
-                //
+                NS_LOG_INFO ("Slicing meter ID " << GetUint32Hex (meterId) <<
+                             " created for slice " << SliceIdStr (slice) <<
+                             " in link info from " << lInfo->GetSwDpId (0) <<
+                             " to " << lInfo->GetSwDpId (1) <<
+                             " in " << LinkInfo::LinkDirStr (dir) <<
+                             " direction set to " << kbps << " Kbps");
+
                 std::ostringstream cmd;
                 cmd << "meter-mod cmd=add"
                     << ",flags="      << OFPMF_KBPS
