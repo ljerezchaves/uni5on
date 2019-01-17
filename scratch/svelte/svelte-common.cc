@@ -141,7 +141,7 @@ SliceModeStr (SliceMode mode)
 }
 
 double
-Bps2Kbps (uint64_t bitrate)
+Bps2Kbps (int64_t bitrate)
 {
   return static_cast<double> (bitrate) / 1000;
 }

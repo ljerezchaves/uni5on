@@ -783,8 +783,8 @@ RingController::HasAvailableResources (Ptr<RingInfo> ringInfo)
   // through S1-U interface.
   std::set<Ptr<LinkInfo> > s5Links;
 
-  uint64_t dlRate = rInfo->GetGbrDlBitRate ();
-  uint64_t ulRate = rInfo->GetGbrUlBitRate ();
+  int64_t dlRate = rInfo->GetGbrDlBitRate ();
+  int64_t ulRate = rInfo->GetGbrUlBitRate ();
 
   // S5 interface (from P-GW to S-GW)
   curr = rInfo->GetPgwInfraSwIdx ();
@@ -873,8 +873,8 @@ RingController::BitRateReserve (Ptr<RingInfo> ringInfo)
   NS_LOG_INFO ("Reserving resources for teid " << rInfo->GetTeidHex ());
 
   SliceId slice = rInfo->GetSliceId ();
-  uint64_t dlRate = rInfo->GetGbrDlBitRate ();
-  uint64_t ulRate = rInfo->GetGbrUlBitRate ();
+  int64_t dlRate = rInfo->GetGbrDlBitRate ();
+  int64_t ulRate = rInfo->GetGbrUlBitRate ();
   RingInfo::RingPath downPath;
   bool success = true;
 
@@ -919,8 +919,8 @@ RingController::BitRateRelease (Ptr<RingInfo> ringInfo)
   NS_LOG_INFO ("Releasing resources for teid " << rInfo->GetTeidHex ());
 
   SliceId slice = rInfo->GetSliceId ();
-  uint64_t dlRate = rInfo->GetGbrDlBitRate ();
-  uint64_t ulRate = rInfo->GetGbrUlBitRate ();
+  int64_t dlRate = rInfo->GetGbrDlBitRate ();
+  int64_t ulRate = rInfo->GetGbrUlBitRate ();
   RingInfo::RingPath downPath;
   bool success = true;
 

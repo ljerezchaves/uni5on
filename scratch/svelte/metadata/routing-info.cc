@@ -297,20 +297,20 @@ RoutingInfo::GetTft (void) const
   return m_bearer.tft;
 }
 
-uint64_t
+int64_t
 RoutingInfo::GetGbrDlBitRate (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return GetQosInfo ().gbrDl;
+  return static_cast<int64_t> (GetQosInfo ().gbrDl);
 }
 
-uint64_t
+int64_t
 RoutingInfo::GetGbrUlBitRate (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return GetQosInfo ().gbrUl;
+  return static_cast<int64_t> (GetQosInfo ().gbrUl);
 }
 
 bool
@@ -318,7 +318,7 @@ RoutingInfo::HasGbrDl (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return GetGbrDlBitRate ();
+  return GetGbrDlBitRate () != 0;
 }
 
 bool
@@ -326,7 +326,7 @@ RoutingInfo::HasGbrUl (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return GetGbrUlBitRate ();
+  return GetGbrUlBitRate () != 0;
 }
 
 bool
@@ -377,20 +377,20 @@ RoutingInfo::GetMbrUlAddCmd (void) const
   return meter.str ();
 }
 
-uint64_t
+int64_t
 RoutingInfo::GetMbrDlBitRate (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return GetQosInfo ().mbrDl;
+  return static_cast<int64_t> (GetQosInfo ().mbrDl);
 }
 
-uint64_t
+int64_t
 RoutingInfo::GetMbrUlBitRate (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return GetQosInfo ().mbrUl;
+  return static_cast<int64_t> (GetQosInfo ().mbrUl);
 }
 
 bool
@@ -398,7 +398,7 @@ RoutingInfo::HasMbrDl (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return GetMbrDlBitRate ();
+  return GetMbrDlBitRate () != 0;
 }
 
 bool
@@ -406,7 +406,7 @@ RoutingInfo::HasMbrUl (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return GetMbrUlBitRate ();
+  return GetMbrUlBitRate () != 0;
 }
 
 bool

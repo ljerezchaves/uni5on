@@ -202,7 +202,7 @@ std::string SliceModeStr (SliceMode mode);
  * \param bitrate The bit rate in BPS.
  * \return The bitrate in KBPS.
  */
-double Bps2Kbps (uint64_t bitrate);
+double Bps2Kbps (int64_t bitrate);
 
 /**
  * \ingroup svelte

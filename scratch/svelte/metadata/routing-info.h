@@ -130,8 +130,8 @@ public:
    * \return The requested information.
    */
   //\{
-  uint64_t    GetGbrDlBitRate   (void) const;
-  uint64_t    GetGbrUlBitRate   (void) const;
+  int64_t     GetGbrDlBitRate   (void) const;
+  int64_t     GetGbrUlBitRate   (void) const;
   bool        HasGbrDl          (void) const;
   bool        HasGbrUl          (void) const;
   bool        IsGbr             (void) const;
@@ -147,8 +147,8 @@ public:
   std::string GetMbrDelCmd      (void) const;
   std::string GetMbrDlAddCmd    (void) const;
   std::string GetMbrUlAddCmd    (void) const;
-  uint64_t    GetMbrDlBitRate   (void) const;
-  uint64_t    GetMbrUlBitRate   (void) const;
+  int64_t     GetMbrDlBitRate   (void) const;
+  int64_t     GetMbrUlBitRate   (void) const;
   bool        HasMbrDl          (void) const;
   bool        HasMbrUl          (void) const;
   bool        IsMbrDlInstalled  (void) const;

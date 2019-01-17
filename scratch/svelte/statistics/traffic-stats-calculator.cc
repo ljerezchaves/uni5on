@@ -167,8 +167,8 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
     << " " << setw (9)  << app->GetAppName ()
     << " " << setw (11) << rInfo->GetTeidHex ()
     << " " << setw (6)  << rInfo->GetSliceIdStr ()
-    << " " << setw (11) << Bps2Kbps (app->GetDlGoodput ().GetBitRate ())
-    << " " << setw (11) << Bps2Kbps (app->GetUlGoodput ().GetBitRate ())
+    << " " << setw (11) << Bps2Kbps (app->GetDlGoodput ())
+    << " " << setw (11) << Bps2Kbps (app->GetUlGoodput ())
     << std::endl;
 
   // Dump backhaul statistics.
