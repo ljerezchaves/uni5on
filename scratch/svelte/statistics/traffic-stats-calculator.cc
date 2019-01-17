@@ -103,7 +103,7 @@ TrafficStatsCalculator::DoDispose ()
     {
       for (int d = 0; d <= Direction::ULINK; d++)
         {
-          statsIt.second.tffStats [d] = 0;
+          statsIt.second.flowStats [d] = 0;
         }
     }
   m_appWrapper = 0;
@@ -336,18 +336,18 @@ TrafficStatsCalculator::GetFlowStats (uint32_t teid, Direction dir)
   auto it = m_qosByTeid.find (teid);
   if (it != m_qosByTeid.end ())
     {
-      stats = it->second.tffStats [dir];
+      stats = it->second.flowStats [dir];
     }
   else
     {
       FlowStatsPair pair;
-      pair.tffStats [Direction::DLINK] = CreateObject<FlowStatsCalculator> ();
-      pair.tffStats [Direction::ULINK] = CreateObject<FlowStatsCalculator> ();
+      pair.flowStats [Direction::DLINK] = CreateObject<FlowStatsCalculator> ();
+      pair.flowStats [Direction::ULINK] = CreateObject<FlowStatsCalculator> ();
       std::pair<uint32_t, FlowStatsPair> entry (teid, pair);
       auto ret = m_qosByTeid.insert (entry);
       NS_ABORT_MSG_IF (ret.second == false, "Error when saving QoS entry.");
 
-      stats = pair.tffStats [dir];
+      stats = pair.flowStats [dir];
     }
   return stats;
 }

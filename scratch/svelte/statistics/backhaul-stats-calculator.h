@@ -104,7 +104,7 @@ private:
   {
     Ptr<OutputStreamWrapper>  bwdWrapper;       //!< BwdStats file wrapper.
     Ptr<OutputStreamWrapper>  tffWrapper;       //!< FlwStats file wrapper.
-    Ptr<FlowStatsCalculator>  tffStats [2][2];  //!< Traffic statistics.
+    Ptr<FlowStatsCalculator>  flowStats [2][2]; //!< Traffic statistics.
   };
 
   /** Metadata for each network slice. */
