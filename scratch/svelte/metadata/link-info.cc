@@ -298,19 +298,18 @@ LinkInfo::PrintSliceValues (std::ostream &os, SliceId slice) const
   linkDescStr += "->";
   linkDescStr += std::to_string (GetSwDpId (1));
 
-  // FIXME Imprimir o máximo possível de informações.
   os << " " << setw (9)  << linkDescStr
      << " " << setw (12) << Bps2Kbps (GetLinkBitRate ())
      << " " << setw (8)  << GetQuota (LinkInfo::FWD, slice)
      << " " << setw (8)  << GetQuota (LinkInfo::BWD, slice)
      << " " << setw (12) << Bps2Kbps (GetQuotaBitRate (LinkInfo::FWD, slice))
      << " " << setw (12) << Bps2Kbps (GetQuotaBitRate (LinkInfo::BWD, slice))
-     << " " << setw (12) << Bps2Kbps (GetResBitRate   (LinkInfo::FWD, slice))
-     << " " << setw (12) << Bps2Kbps (GetResBitRate   (LinkInfo::BWD, slice))
-     << " " << setw (12) << Bps2Kbps (GetFreeBitRate  (LinkInfo::FWD, QosType::NON, slice))
-     << " " << setw (12) << Bps2Kbps (GetFreeBitRate  (LinkInfo::BWD, QosType::NON, slice))
      << " " << setw (12) << Bps2Kbps (GetExtraBitRate (LinkInfo::FWD, slice))
      << " " << setw (12) << Bps2Kbps (GetExtraBitRate (LinkInfo::BWD, slice))
+     << " " << setw (12) << Bps2Kbps (GetResBitRate   (LinkInfo::FWD, slice))
+     << " " << setw (12) << Bps2Kbps (GetResBitRate   (LinkInfo::BWD, slice))
+     << " " << setw (12) << Bps2Kbps (GetMeterBitRate (LinkInfo::FWD, slice))
+     << " " << setw (12) << Bps2Kbps (GetMeterBitRate (LinkInfo::BWD, slice))
      << " " << setw (14)
      << Bps2Kbps (GetThpBitRate (EwmaTerm::STERM, LinkInfo::FWD, slice, QosType::GBR))
      << " " << setw (14)
@@ -367,12 +366,12 @@ LinkInfo::PrintHeader (std::ostream &os)
      << " " << setw (8)  << "QuoBw"
      << " " << setw (12) << "QuoFwKbps"
      << " " << setw (12) << "QuoBwKbps"
-     << " " << setw (12) << "ResFwKbps"
-     << " " << setw (12) << "ResBwKbps"
-     << " " << setw (12) << "FreFwKbps"
-     << " " << setw (12) << "FreBwKbps"
      << " " << setw (12) << "ExtFwKbps"
      << " " << setw (12) << "ExtBwKbps"
+     << " " << setw (12) << "ResFwKbps"
+     << " " << setw (12) << "ResBwKbps"
+     << " " << setw (12) << "MetFwKbps"
+     << " " << setw (12) << "MetBwKbps"
      << " " << setw (14) << "ThpGbrFwKbps"
      << " " << setw (14) << "ThpGbrBwKbps"
      << " " << setw (14) << "ThpNonFwKbps"
