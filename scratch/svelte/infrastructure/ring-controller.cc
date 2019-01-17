@@ -1044,6 +1044,7 @@ RingController::NextSwitchIndex (uint16_t idx, RingInfo::RingPath path) const
 {
   NS_LOG_FUNCTION (this << idx << path);
 
+  NS_ASSERT_MSG (GetNSwitches () > 0, "Invalid number of switches.");
   NS_ASSERT_MSG (path != RingInfo::LOCAL,
                  "Not supposed to get here for local routing.");
 

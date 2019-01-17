@@ -538,6 +538,9 @@ SvelteHelper::GetEnbInfraSwIdx (uint16_t cellId)
 {
   NS_LOG_FUNCTION (this << cellId);
 
+  NS_ASSERT_MSG (cellId > 0, "Invalid cell ID.");
+  NS_ASSERT_MSG (m_backhaul->GetNSwitches () > 0, "Invalid number of switches.");
+
   // Connect the eNBs to switches in increasing index order, skipping the first
   // switch (index 0), which is exclusive for the P-GW connection. The three
   // eNBs from the same cell site are always connected to the same switch.
