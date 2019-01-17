@@ -78,6 +78,12 @@ BackhaulController::GetTypeId (void)
                                     SliceMode::SHAR, "shared",
                                     SliceMode::STAT, "static",
                                     SliceMode::DYNA, "dynamic"))
+    .AddAttribute ("MeterStep",
+                   "Default meter bit rate adjustment step.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   DataRateValue (DataRate ("5Mbps")),
+                   MakeDataRateAccessor (&BackhaulController::m_meterStep),
+                   MakeDataRateChecker ())
     .AddAttribute ("PriorityQueues",
                    "Priority output queues mechanism operation mode.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,

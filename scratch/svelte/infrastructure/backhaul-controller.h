@@ -256,6 +256,7 @@ private:
   OpMode                m_blockPolicy;    //!< Switch overload block policy.
   double                m_blockThs;       //!< Switch block threshold.
   OpMode                m_priorityQueues; //!< DSCP priority queues mechanism.
+  DataRate              m_meterStep;      //!< Meter adjustment step.
   SliceMode             m_slicing;        //!< Network inter-slicing mechanism.
 
   /** Map saving Slice ID / Slice controller application. */
