@@ -104,11 +104,13 @@ private:
   {
     Ptr<OutputStreamWrapper>  bwdWrapper;       //!< BwdStats file wrapper.
     Ptr<OutputStreamWrapper>  tffWrapper;       //!< FlwStats file wrapper.
-    Ptr<FlowStatsCalculator>  flowStats [2][2]; //!< Traffic statistics.
+
+    /** Flow stats calculator for each traffic direction and QoS type. */
+    Ptr<FlowStatsCalculator>  flowStats [N_DIRECTIONS][N_QOS_TYPES];
   };
 
   /** Metadata for each network slice. */
-  SliceMetadata             m_slices [N_SLICES_ALL];
+  SliceMetadata             m_slices [N_SLICE_IDS];
   std::string               m_bwdFilename;  //!< BwdStats filename.
   std::string               m_tffFilename;  //!< TffStats filename.
 };

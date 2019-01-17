@@ -129,10 +129,10 @@ private:
   std::string               m_epcFilename;  //!< EpcStats filename.
   Ptr<OutputStreamWrapper>  m_epcWrapper;   //!< EpcStats file wrapper.
 
-  /** A pair of FlowStatsCalculator, for downlink and uplink traffic. */
+  /** A pair of FlowStatsCalculator, one for each traffic direction. */
   struct FlowStatsPair
   {
-    Ptr<FlowStatsCalculator> flowStats [2]; //!< Traffic statistics.
+    Ptr<FlowStatsCalculator> flowStats [N_DIRECTIONS];
   };
 
   /** A Map saving GTP TEID / EPC stats pair. */

@@ -77,6 +77,9 @@ typedef enum
   ULINK = 1   //!< Uplink traffic.
 } Direction;
 
+// Total number of valid Direction items + 1.
+#define N_DIRECTIONS (static_cast<int> (Direction::ULINK) + 1)
+
 /**
  * \ingroup svelte
  * Enumeration of LTE logical interfaces.
@@ -112,6 +115,9 @@ typedef enum
   BOTH = 2   //!< Both GBR and Non-GBR traffic.
 } QosType;
 
+// Total number of valid QosType items + 1.
+#define N_QOS_TYPES (static_cast<int> (QosType::BOTH) + 1)
+
 /**
  * \ingroup svelte
  * Enumeration of available SVELTE logical slices IDs.
@@ -127,6 +133,9 @@ typedef enum
   UNKN = 15  //!< Unknown slice.
 } SliceId;
 
+// Total number of valid SliceId items + 1.
+#define N_SLICE_IDS (static_cast<int> (SliceId::ALL) + 1)
+
 /**
  * \ingroup svelte
  * Enumeration of available inter-slicing operation modes.
@@ -138,12 +147,6 @@ typedef enum
   STAT = 2,   //!< Full static inter-slicing.
   DYNA = 3    //!< Full dinaymic inter-slicing.
 } SliceMode;
-
-// Total number of slices + 1 for aggregated metadata.
-#define N_SLICES_ALL (static_cast<uint8_t> (SliceId::ALL) + 1)
-
-// Total number of types + 1 for aggregated metadata.
-#define N_TYPES_ALL (static_cast<uint8_t> (QosType::BOTH) + 1)
 
 /**
  * \ingroup svelte

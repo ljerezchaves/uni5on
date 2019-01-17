@@ -67,7 +67,7 @@ LinkInfo::LinkInfo (Ptr<OFSwitch13Port> port1, Ptr<OFSwitch13Port> port2,
     "PhyTxEnd", "Backward", MakeCallback (&LinkInfo::NotifyTxPacket, this));
 
   // Clear slice metadata.
-  memset (m_slices, 0, sizeof (SliceMetadata) * N_SLICES_ALL * 2);
+  memset (m_slices, 0, sizeof (SliceMetadata) * N_SLICE_IDS * N_LINK_DIRS);
 
   RegisterLinkInfo (Ptr<LinkInfo> (this));
 }

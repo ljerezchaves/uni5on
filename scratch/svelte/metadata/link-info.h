@@ -61,12 +61,18 @@ public:
     BWD = 1   //!< Backward direction (from second to first switch).
   };
 
+// Total number of valid LinkDir items + 1.
+#define N_LINK_DIRS (static_cast<int> (LinkDir::BWD) + 1)
+
   /** EWMA period of evaluation. */
   enum EwmaTerm
   {
     STERM = 0,  //!< Short-term EWMA evaluation.
-    LTERM = 1   //!< Long-term EWMA evaluation.
+    LTERM = 1  //!< Long-term EWMA evaluation.
   };
+
+// Total number of valid EwmaTerm items + 1.
+#define N_EWMA_TERMS (static_cast<int> (EwmaTerm::LTERM) + 1)
 
   /**
    * Complete constructor.
@@ -300,9 +306,11 @@ private:
     // FIXME Remove in the future.
     int64_t  meterDiff;                 //!< Current meter bit rate diff.
 
-    // Throughput measurement.
-    uint64_t ewmaThp [N_TYPES_ALL][2];  //!< EWMA throughput [short / long].
-    uint64_t txBytes [N_TYPES_ALL];     //!< TX bytes counters.
+    /** EWMA throughput for both short-term and long-term averages. */
+    uint64_t ewmaThp [N_QOS_TYPES][N_EWMA_TERMS];
+
+    /** TX byte counters for each LTE QoS type. */
+    uint64_t txBytes [N_QOS_TYPES];
   };
 
   /** A pair of switch datapath IDs. */
@@ -395,8 +403,8 @@ private:
   Ptr<CsmaChannel>      m_channel;              //!< The CSMA link channel.
   Ptr<OFSwitch13Port>   m_ports [2];            //!< OpenFlow ports.
 
-  /** Metadata for each network slice. */
-  SliceMetadata         m_slices [N_SLICES_ALL][2];
+  /** Metadata for each network slice in each link direction. */
+  SliceMetadata         m_slices [N_SLICE_IDS][N_LINK_DIRS];
 
   // EWMA throughput calculation.
   double                m_ewmaLtAlpha;          //!< EWMA long-term alpha.
