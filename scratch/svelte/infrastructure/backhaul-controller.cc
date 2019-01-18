@@ -309,10 +309,42 @@ BackhaulController::NotifySlicesBuilt (ApplicationContainer &controllers)
   // ---------------------------------------------------------------------
   // Meter table
   //
-  // Install inter-slicing meters.
-  for (auto &lInfo : LinkInfo::GetList ())
+  // Install inter-slicing meters, depending on the InterSliceMode attribute.
+  switch (GetInterSliceMode ())
     {
-      SlicingMeterInstall (lInfo);
+    case SliceMode::NONE:
+      {
+        // Nothing to do when inter-slicing is disabled.
+        break;
+      }
+    case SliceMode::SHAR:
+      {
+        // Install the shared Non-GBR meter entry.
+        for (auto &lInfo : LinkInfo::GetList ())
+          {
+            SlicingMeterInstall (lInfo, SliceId::ALL);
+          }
+        break;
+      }
+    case SliceMode::STAT:
+    case SliceMode::DYNA:
+      {
+        // Install individual Non-GBR meter entries.
+        for (auto &lInfo : LinkInfo::GetList ())
+          {
+            for (int s = 0; s < SliceId::ALL; s++)
+              {
+                SliceId slice = static_cast<SliceId> (s);
+                SlicingMeterInstall (lInfo, slice);
+              }
+          }
+        break;
+      }
+    default:
+      {
+        NS_LOG_WARN ("Undefined inter-slicing operation mode.");
+        break;
+      }
     }
 }
 
@@ -602,86 +634,38 @@ BackhaulController::SlicingMeterAdjusted (
 }
 
 void
-BackhaulController::SlicingMeterInstall (Ptr<LinkInfo> lInfo)
+BackhaulController::SlicingMeterInstall (Ptr<LinkInfo> lInfo, SliceId slice)
 {
-  NS_LOG_FUNCTION (this << lInfo);
+  NS_LOG_FUNCTION (this << lInfo << slice);
 
-  bool success = true;
-  switch (GetInterSliceMode ())
+  LinkInfo::LinkDir dir;
+  int64_t meterKbps;
+  uint32_t meterId;
+  bool success;
+
+  // Install slicing meters in both link directions.
+  for (int d = 0; d <= LinkInfo::BWD; d++)
     {
-    case SliceMode::NONE:
-      {
-        // Nothing to do when inter-slicing is disabled.
-        return;
-      }
-    case SliceMode::SHAR:
-      {
-        // Install the shared Non-GBR meter entry for all slice
-        // on each port direction (FWD and BWD).
-        for (int d = 0; d <= LinkInfo::BWD; d++)
-          {
-            LinkInfo::LinkDir dir = static_cast<LinkInfo::LinkDir> (d);
-            uint32_t meterId = GetSvelteMeterId (SliceId::ALL, d);
-            int64_t kbps = Bps2Kbps (
-                lInfo->GetFreeBitRate (dir, QosType::NON, SliceId::ALL));
-            success &= lInfo->SetMeterBitRate (dir, SliceId::ALL, kbps * 1000);
+      dir = static_cast<LinkInfo::LinkDir> (d);
+      meterId = GetSvelteMeterId (slice, d);
+      meterKbps = Bps2Kbps (lInfo->GetFreeBitRate (dir, QosType::NON, slice));
+      success = lInfo->SetMeterBitRate (dir, slice, meterKbps * 1000);
+      NS_ASSERT_MSG (success, "Error when setting meter bit rate.");
 
-            NS_LOG_INFO ("Slicing meter ID " << GetUint32Hex (meterId) <<
-                         " created for slice " << SliceIdStr (SliceId::ALL) <<
-                         " in link info from " << lInfo->GetSwDpId (0) <<
-                         " to " << lInfo->GetSwDpId (1) <<
-                         " in " << LinkInfo::LinkDirStr (dir) <<
-                         " direction set to " << kbps << " Kbps");
+      NS_LOG_INFO ("Slicing meter ID " << GetUint32Hex (meterId) <<
+                   " created for slice " << SliceIdStr (slice) <<
+                   " in link info from " << lInfo->GetSwDpId (0) <<
+                   " to " << lInfo->GetSwDpId (1) <<
+                   " in " << LinkInfo::LinkDirStr (dir) <<
+                   " direction set to " << meterKbps << " Kbps");
 
-            std::ostringstream cmd;
-            cmd << "meter-mod cmd=add"
-                << ",flags="      << OFPMF_KBPS
-                << ",meter="      << meterId
-                << " drop:rate="  << kbps;
-            DpctlSchedule (lInfo->GetSwDpId (d), cmd.str ());
-          }
-        break;
-      }
-    case SliceMode::STAT:
-    case SliceMode::DYNA:
-      {
-        // Install individual Non-GBR meter entries for each slice
-        // on each port direction (FWD and BWD).
-        for (int s = 0; s < SliceId::ALL; s++)
-          {
-            SliceId slice = static_cast<SliceId> (s);
-            for (int d = 0; d <= LinkInfo::BWD; d++)
-              {
-                LinkInfo::LinkDir dir = static_cast<LinkInfo::LinkDir> (d);
-                uint32_t meterId = GetSvelteMeterId (slice, d);
-                int64_t kbps = Bps2Kbps (
-                    lInfo->GetFreeBitRate (dir, QosType::NON, slice));
-                success &= lInfo->SetMeterBitRate (dir, slice, kbps * 1000);
-
-                NS_LOG_INFO ("Slicing meter ID " << GetUint32Hex (meterId) <<
-                             " created for slice " << SliceIdStr (slice) <<
-                             " in link info from " << lInfo->GetSwDpId (0) <<
-                             " to " << lInfo->GetSwDpId (1) <<
-                             " in " << LinkInfo::LinkDirStr (dir) <<
-                             " direction set to " << kbps << " Kbps");
-
-                std::ostringstream cmd;
-                cmd << "meter-mod cmd=add"
-                    << ",flags="      << OFPMF_KBPS
-                    << ",meter="      << meterId
-                    << " drop:rate="  << kbps;
-                DpctlSchedule (lInfo->GetSwDpId (d), cmd.str ());
-              }
-          }
-        break;
-      }
-    default:
-      {
-        NS_LOG_WARN ("Undefined inter-slicing operation mode.");
-        break;
-      }
+      std::ostringstream cmd;
+      cmd << "meter-mod cmd=add"
+          << ",flags="      << OFPMF_KBPS
+          << ",meter="      << meterId
+          << " drop:rate="  << meterKbps;
+      DpctlSchedule (lInfo->GetSwDpId (d), cmd.str ());
     }
-  NS_ASSERT_MSG (success, "Error when setting meter bit rates.");
 }
 
 void

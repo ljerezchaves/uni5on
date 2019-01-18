@@ -215,6 +215,13 @@ protected:
   virtual bool TopologyRoutingUpdate (Ptr<RoutingInfo> rInfo,
                                       Ptr<EnbInfo> dstEnbInfo) = 0;
 
+  /**
+   * Install the infrastructure inter-slicing OpenFlow meters.
+   * \param lInfo The link information.
+   * \param slice The network slice.
+   */
+  virtual void SlicingMeterInstall (Ptr<LinkInfo> lInfo, SliceId slice);
+
   // Inherited from OFSwitch13Controller.
   virtual ofl_err HandleError (
     struct ofl_msg_error *msg, Ptr<const RemoteSwitch> swtch,
@@ -239,17 +246,6 @@ private:
    */
   void SlicingMeterAdjusted (Ptr<LinkInfo> lInfo,
                              LinkInfo::LinkDir dir, SliceId slice);
-
-  /**
-   * Install the infrastructure slicing meters. When the network slicing
-   * operation mode is ON, the traffic of each slice will be independently
-   * monitored by slicing meters. When the slicing operation mode is AUTO, the
-   * traffic of all slices will be monitored together by the slicing meters,
-   * ensuring a better bandwidth sharing among slices.
-   *
-   * \param swtch The OpenFlow switch information.
-   */
-  void SlicingMeterInstall (Ptr<LinkInfo> lInfo);
 
   /** Initialize static attributes only once. */
   static void StaticInitialize (void);
