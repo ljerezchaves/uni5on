@@ -297,7 +297,7 @@ FlowStatsCalculator::PrintHeader (std::ostream &os)
      << " " << setw (8)  << "RxBytes"
      << " " << setw (8)  << "DlyMsec"
      << " " << setw (8)  << "JitMsec"
-     << " " << setw (10) << "ThpKbps"
+     << " " << setw (11) << "ThpKbps"
      << " " << setw (8)  << "DpBytes"
      << " " << setw (6)  << "DpPkts"
      << " " << setw (6)  << "DpQue"
@@ -336,7 +336,7 @@ std::ostream & operator << (std::ostream &os, const FlowStatsCalculator &stats)
      << " " << setw (8)  << stats.GetRxBytes ()
      << " " << setw (8)  << stats.GetRxDelay ().GetSeconds () * 1000
      << " " << setw (8)  << stats.GetRxJitter ().GetSeconds () * 1000
-     << " " << setw (10) << Bps2Kbps (stats.GetRxThroughput ())
+     << " " << setw (11) << Bps2Kbps (stats.GetRxThroughput ())
      << " " << setw (8)  << stats.GetDpBytes (FlowStatsCalculator::ALL);
 
   for (int r = FlowStatsCalculator::ALL; r >= 0; r--)

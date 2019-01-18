@@ -110,10 +110,10 @@ PgwTftStatsCalculator::NotifyConstructionCompleted (void)
         << " " << setw (9)  << "MaxTabEnt"
         << " " << setw (9)  << "AvgTabUse"
         << " " << setw (9)  << "MaxTabUse"
-        << " " << setw (13) << "AvgCpuMax"
-        << " " << setw (13) << "MaxCpuMax"
-        << " " << setw (13) << "AvgCpuLoa"
-        << " " << setw (13) << "MaxCpuLoa"
+        << " " << setw (11) << "AvgCpuMax"
+        << " " << setw (11) << "MaxCpuMax"
+        << " " << setw (11) << "AvgCpuLoa"
+        << " " << setw (11) << "MaxCpuLoa"
         << " " << setw (9)  << "AvgCpuUse"
         << " " << setw (9)  << "MaxCpuUse"
         << std::endl;
@@ -146,10 +146,10 @@ PgwTftStatsCalculator::NotifyPgwTftStats (
     << " " << setw (9)  << pgwInfo->GetTftMaxFlowTableCur ()
     << " " << setw (9)  << pgwInfo->GetTftAvgFlowTableUse () * 100
     << " " << setw (9)  << pgwInfo->GetTftMaxFlowTableUse () * 100
-    << " " << setw (13) << Bps2Kbps (pgwInfo->GetTftAvgCpuMax ())
-    << " " << setw (13) << Bps2Kbps (pgwInfo->GetTftMaxCpuMax ())
-    << " " << setw (13) << Bps2Kbps (pgwInfo->GetTftAvgEwmaCpuCur ())
-    << " " << setw (13) << Bps2Kbps (pgwInfo->GetTftMaxEwmaCpuCur ())
+    << " " << setw (11) << Bps2Kbps (pgwInfo->GetTftAvgCpuMax ())
+    << " " << setw (11) << Bps2Kbps (pgwInfo->GetTftMaxCpuMax ())
+    << " " << setw (11) << Bps2Kbps (pgwInfo->GetTftAvgEwmaCpuCur ())
+    << " " << setw (11) << Bps2Kbps (pgwInfo->GetTftMaxEwmaCpuCur ())
     << " " << setw (9)  << pgwInfo->GetTftAvgEwmaCpuUse () * 100
     << " " << setw (9)  << pgwInfo->GetTftMaxEwmaCpuUse () * 100
     << std::endl;
