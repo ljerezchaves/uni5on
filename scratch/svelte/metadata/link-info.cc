@@ -333,7 +333,7 @@ LinkInfo::LinkDirStr (LinkDir dir)
 }
 
 LinkInfo::LinkDir
-LinkInfo::Invert (LinkDir dir)
+LinkInfo::InvertDir (LinkDir dir)
 {
   return (dir == LinkInfo::FWD) ? LinkInfo::BWD : LinkInfo::FWD;
 }

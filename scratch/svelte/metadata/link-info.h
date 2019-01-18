@@ -273,7 +273,7 @@ public:
    * \param link The original link direction.
    * \return The inverted link direction.
    */
-  static LinkDir Invert (LinkDir dir);
+  static LinkDir InvertDir (LinkDir dir);
 
   /**
    * Get the list of link information.

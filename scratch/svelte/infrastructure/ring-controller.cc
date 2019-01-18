@@ -120,7 +120,7 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
         {
           rInfo->SetBlocked (false);
           ringInfo->ResetToDefaults ();
-          ringInfo->InvertPath (LteIface::S1U);
+          ringInfo->InvertIfacePath (LteIface::S1U);
           if (HasAvailableResources (ringInfo))
             {
               NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
@@ -134,7 +134,7 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
         {
           rInfo->SetBlocked (false);
           ringInfo->ResetToDefaults ();
-          ringInfo->InvertPath (LteIface::S5);
+          ringInfo->InvertIfacePath (LteIface::S5);
           if (HasAvailableResources (ringInfo))
             {
               NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
@@ -149,8 +149,8 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
         {
           rInfo->SetBlocked (false);
           ringInfo->ResetToDefaults ();
-          ringInfo->InvertPath (LteIface::S1U);
-          ringInfo->InvertPath (LteIface::S5);
+          ringInfo->InvertIfacePath (LteIface::S1U);
+          ringInfo->InvertIfacePath (LteIface::S5);
           if (HasAvailableResources (ringInfo))
             {
               NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<

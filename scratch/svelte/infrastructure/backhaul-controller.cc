@@ -183,7 +183,7 @@ BackhaulController::GetLinkInfo (uint16_t idx1, uint16_t idx2) const
   uint64_t dpId2 = GetDpId (idx2);
   Ptr<LinkInfo> lInfo = LinkInfo::GetPointer (dpId1, dpId2);
   LinkInfo::LinkDir dir = lInfo->GetLinkDir (dpId1, dpId2);
-  return std::make_tuple (lInfo, dir, LinkInfo::Invert (dir));
+  return std::make_tuple (lInfo, dir, LinkInfo::InvertDir (dir));
 }
 
 double

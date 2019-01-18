@@ -89,7 +89,7 @@ public:
    * \param path The original routing path.
    * \return The inverted routing path.
    */
-  static RingPath Invert (RingPath path);
+  static RingPath InvertPath (RingPath path);
 
   /**
    * Map the link direction to the corresponding ring routing path.
@@ -146,7 +146,7 @@ private:
    * Invert the S1-U or S5 routing path, only if different from LOCAL.
    * \param iface The LTE logical interface for this path.
    */
-  void InvertPath (LteIface iface);
+  void InvertIfacePath (LteIface iface);
 
   /**
    * Reset both routing paths (S1-U and S5) to the default values.

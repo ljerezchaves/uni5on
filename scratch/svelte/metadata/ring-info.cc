@@ -77,7 +77,7 @@ RingInfo::GetUlPath (LteIface iface) const
   NS_ASSERT_MSG (iface == LteIface::S1U || iface == LteIface::S5,
                  "Invalid LTE interface. Expected S1-U or S5 interface.");
 
-  return RingInfo::Invert (m_downPath [iface]);
+  return RingInfo::InvertPath (m_downPath [iface]);
 }
 
 bool
@@ -131,7 +131,7 @@ RingInfo::GetRoutingInfo (void) const
 }
 
 RingInfo::RingPath
-RingInfo::Invert (RingPath path)
+RingInfo::InvertPath (RingPath path)
 {
   if (path == RingInfo::LOCAL)
     {
@@ -223,7 +223,7 @@ RingInfo::SetDefaultPath (RingPath downPath, LteIface iface)
 }
 
 void
-RingInfo::InvertPath (LteIface iface)
+RingInfo::InvertIfacePath (LteIface iface)
 {
   NS_LOG_FUNCTION (this << iface);
 
@@ -232,7 +232,7 @@ RingInfo::InvertPath (LteIface iface)
 
   if (m_isLocalPath [iface] == false)
     {
-      m_downPath [iface] = RingInfo::Invert (m_downPath [iface]);
+      m_downPath [iface] = RingInfo::InvertPath (m_downPath [iface]);
       m_isDefaultPath [iface] = !m_isDefaultPath [iface];
     }
 }
@@ -244,12 +244,12 @@ RingInfo::ResetToDefaults ()
 
   if (m_isDefaultPath [LteIface::S1U] == false)
     {
-      InvertPath (LteIface::S1U);
+      InvertIfacePath (LteIface::S1U);
     }
 
   if (m_isDefaultPath [LteIface::S5] == false)
     {
-      InvertPath (LteIface::S5);
+      InvertIfacePath (LteIface::S5);
     }
 }
 
