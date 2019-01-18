@@ -73,7 +73,7 @@ BackhaulController::GetTypeId (void)
                    "Inter-slice operation mode.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    EnumValue (SliceMode::NONE),
-                   MakeEnumAccessor (&BackhaulController::m_slicing),
+                   MakeEnumAccessor (&BackhaulController::m_sliceMode),
                    MakeEnumChecker (SliceMode::NONE,
                                     SliceModeStr (SliceMode::NONE),
                                     SliceMode::SHAR,
