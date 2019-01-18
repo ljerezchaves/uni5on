@@ -622,6 +622,10 @@ BackhaulController::SlicingMeterAdjusted (
       int64_t meteBitRate = lInfo->GetMeterBitRate (dir, slice);
       int64_t freeBitRate = lInfo->GetFreeBitRate (dir, QosType::NON, slice);
       uint64_t diffBitRate = std::abs (meteBitRate - freeBitRate);
+      NS_LOG_DEBUG ("Meter bit rate: " << meteBitRate <<
+                    " free bit rate: " << freeBitRate <<
+                    " diff bit rate: " << diffBitRate <<
+                    " step bit rate: " << m_meterStep.GetBitRate ());
       if (diffBitRate >= m_meterStep.GetBitRate ())
         {
           uint32_t meterId = GetSvelteMeterId (slice, d);
@@ -641,7 +645,7 @@ BackhaulController::SlicingMeterAdjusted (
               << ",flags="      << OFPMF_KBPS
               << ",meter="      << meterId
               << " drop:rate="  << freeKbps;
-          DpctlSchedule (lInfo->GetSwDpId (d), cmd.str ());
+          DpctlExecute (lInfo->GetSwDpId (d), cmd.str ());
         }
     }
 }
