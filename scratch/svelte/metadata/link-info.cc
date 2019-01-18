@@ -289,7 +289,6 @@ LinkInfo::PrintSliceValues (std::ostream &os, SliceId slice) const
 {
   NS_LOG_FUNCTION (this);
 
-  // Macros fro reducing line length.
   #define ST EwmaTerm::STERM
   #define LT EwmaTerm::LTERM
   #define FW LinkDir::FWD
