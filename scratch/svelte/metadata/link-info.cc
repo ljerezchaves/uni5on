@@ -281,7 +281,6 @@ LinkInfo::HasBitRate (
   NS_LOG_FUNCTION (this << dir << slice << bitRate);
 
   NS_ASSERT_MSG (slice < SliceId::ALL, "Invalid slice for this operation.");
-
   return (GetFreeBitRate (dir, QosType::GBR, slice) >= bitRate);
 }
 
@@ -440,9 +439,8 @@ LinkInfo::ReleaseBitRate (
 {
   NS_LOG_FUNCTION (this << dir << slice << bitRate);
 
-  NS_ASSERT_MSG (slice < SliceId::ALL, "Invalid slice for this operation.");
-
   // Check for reserved bit rate.
+  NS_ASSERT_MSG (slice < SliceId::ALL, "Invalid slice for this operation.");
   if (GetResBitRate (dir, slice) < bitRate)
     {
       NS_LOG_WARN ("No bandwidth available to release.");
@@ -464,9 +462,8 @@ LinkInfo::ReserveBitRate (
 {
   NS_LOG_FUNCTION (this << dir << slice << bitRate);
 
-  NS_ASSERT_MSG (slice < SliceId::ALL, "Invalid slice for this operation.");
-
   // Check for available bit rate.
+  NS_ASSERT_MSG (slice < SliceId::ALL, "Invalid slice for this operation.");
   if (GetFreeBitRate (dir, QosType::GBR, slice) < bitRate)
     {
       NS_LOG_WARN ("No bandwidth available to reserve.");
