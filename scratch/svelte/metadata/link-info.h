@@ -298,15 +298,6 @@ public:
    */
   static std::ostream & PrintHeader (std::ostream &os);
 
-  /**
-   * TracedCallback signature for meter adjusted traced source.
-   * \param lInfo The link information.
-   * \param dir The link direction.
-   * \param slice The network slice.
-   */
-  typedef void (*MeterAdjustedTracedCallback)(
-    Ptr<const LinkInfo> lInfo, LinkInfo::LinkDir dir, SliceId slice);
-
 protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
