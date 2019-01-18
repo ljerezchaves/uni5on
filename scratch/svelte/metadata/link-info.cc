@@ -257,23 +257,6 @@ LinkInfo::GetMeterBitRate (LinkDir dir, SliceId slice) const
   return m_slices [dir][slice].meter;
 }
 
-// double
-// LinkInfo::GetThpSliceRatio (LinkDir dir, SliceId slice) const
-// {
-//   NS_LOG_FUNCTION (this << dir << slice);
-
-//   if (GetQuotaBitRate (dir, slice) == 0)
-//     {
-//       NS_ASSERT_MSG (GetUseBitRate (dir, slice) == 0, "Invalid slice usage.");
-//       return 0.0;
-//     }
-//   else
-//     {
-//       return static_cast<double> (GetUseBitRate (dir, slice))
-//              / GetQuotaBitRate (dir, slice);
-//     }
-// }
-
 bool
 LinkInfo::HasBitRate (
   LinkDir dir, SliceId slice, int64_t bitRate) const

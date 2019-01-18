@@ -231,17 +231,6 @@ public:
     LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**
-   * Get the EWMA throughput ratio for this link on the given direction,
-   * considering all traffic types (GBR and Non-GBR) and optionally filtered
-   * by the network slice.
-   * \param dir The link direction.
-   * \param slice The network slice.
-   * \return The bandwidth usage ratio.
-   */
-  // double GetThpSliceRatio (
-  //   LinkDir dir, SliceId slice = SliceId::ALL) const;
-
-  /**
    * Check for available bit rate between on the given direction for the given
    * slice that can be further reserved.
    * \param dir The link direction.
