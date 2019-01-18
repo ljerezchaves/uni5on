@@ -215,21 +215,6 @@ protected:
   virtual bool TopologyRoutingUpdate (Ptr<RoutingInfo> rInfo,
                                       Ptr<EnbInfo> dstEnbInfo) = 0;
 
-  /**
-   * Adjust the infrastructure inter-slicing OpenFlow meter, depending on the
-   * MeterStep attribute value and current link configuration.
-   * \param lInfo The link information.
-   * \param slice The network slice.
-   */
-  virtual void SlicingMeterAdjusted (Ptr<LinkInfo> lInfo, SliceId slice);
-
-  /**
-   * Install the infrastructure inter-slicing OpenFlow meters.
-   * \param lInfo The link information.
-   * \param slice The network slice.
-   */
-  virtual void SlicingMeterInstall (Ptr<LinkInfo> lInfo, SliceId slice);
-
   // Inherited from OFSwitch13Controller.
   virtual ofl_err HandleError (
     struct ofl_msg_error *msg, Ptr<const RemoteSwitch> swtch,
@@ -242,6 +227,21 @@ protected:
     uint32_t xid);
   virtual void HandshakeSuccessful (Ptr<const RemoteSwitch> swtch);
   // Inherited from OFSwitch13Controller.
+
+  /**
+   * Adjust the infrastructure inter-slicing OpenFlow meter, depending on the
+   * MeterStep attribute value and current link configuration.
+   * \param lInfo The link information.
+   * \param slice The network slice.
+   */
+  void SlicingMeterAdjusted (Ptr<LinkInfo> lInfo, SliceId slice);
+
+  /**
+   * Install the infrastructure inter-slicing OpenFlow meters.
+   * \param lInfo The link information.
+   * \param slice The network slice.
+   */
+  void SlicingMeterInstall (Ptr<LinkInfo> lInfo, SliceId slice);
 
 private:
   /** Initialize static attributes only once. */
