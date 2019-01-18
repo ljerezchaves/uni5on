@@ -289,31 +289,39 @@ LinkInfo::PrintSliceValues (std::ostream &os, SliceId slice) const
 {
   NS_LOG_FUNCTION (this);
 
+  // Macros fro reducing line length.
+  #define ST EwmaTerm::STERM
+  #define LT EwmaTerm::LTERM
+  #define FW LinkDir::FWD
+  #define BW LinkDir::BWD
+  #define NT QosType::NON
+  #define GT QosType::GBR
+
   std::string linkDescStr;
   linkDescStr += std::to_string (GetSwDpId (0));
   linkDescStr += "->";
   linkDescStr += std::to_string (GetSwDpId (1));
 
   os << " " << setw (9)  << linkDescStr
-     << " " << setw (12) << Bps2Kbps (GetLinkBitRate ())
-     << " " << setw (8)  << GetQuota (LinkInfo::FWD, slice)
-     << " " << setw (8)  << GetQuota (LinkInfo::BWD, slice)
-     << " " << setw (12) << Bps2Kbps (GetQuotaBitRate (LinkInfo::FWD, slice))
-     << " " << setw (12) << Bps2Kbps (GetQuotaBitRate (LinkInfo::BWD, slice))
-     << " " << setw (12) << Bps2Kbps (GetExtraBitRate (LinkInfo::FWD, slice))
-     << " " << setw (12) << Bps2Kbps (GetExtraBitRate (LinkInfo::BWD, slice))
-     << " " << setw (12) << Bps2Kbps (GetResBitRate   (LinkInfo::FWD, slice))
-     << " " << setw (12) << Bps2Kbps (GetResBitRate   (LinkInfo::BWD, slice))
-     << " " << setw (12) << Bps2Kbps (GetMeterBitRate (LinkInfo::FWD, slice))
-     << " " << setw (12) << Bps2Kbps (GetMeterBitRate (LinkInfo::BWD, slice))
-     << " " << setw (14)
-     << Bps2Kbps (GetUseBitRate (EwmaTerm::STERM, LinkInfo::FWD, QosType::GBR, slice))
-     << " " << setw (14)
-     << Bps2Kbps (GetUseBitRate (EwmaTerm::STERM, LinkInfo::BWD, QosType::GBR, slice))
-     << " " << setw (14)
-     << Bps2Kbps (GetUseBitRate (EwmaTerm::STERM, LinkInfo::FWD, QosType::NON, slice))
-     << " " << setw (14)
-     << Bps2Kbps (GetUseBitRate (EwmaTerm::STERM, LinkInfo::BWD, QosType::NON, slice));
+     << " " << setw (11) << Bps2Kbps (GetLinkBitRate ())
+     << " " << setw (8)  << GetQuota (FW, slice)
+     << " " << setw (8)  << GetQuota (BW, slice)
+     << " " << setw (11) << Bps2Kbps (GetQuotaBitRate (FW, slice))
+     << " " << setw (11) << Bps2Kbps (GetQuotaBitRate (BW, slice))
+     << " " << setw (11) << Bps2Kbps (GetExtraBitRate (FW, slice))
+     << " " << setw (11) << Bps2Kbps (GetExtraBitRate (BW, slice))
+     << " " << setw (11) << Bps2Kbps (GetResBitRate   (FW, slice))
+     << " " << setw (11) << Bps2Kbps (GetResBitRate   (BW, slice))
+     << " " << setw (11) << Bps2Kbps (GetMeterBitRate (FW, slice))
+     << " " << setw (11) << Bps2Kbps (GetMeterBitRate (BW, slice))
+     << " " << setw (11) << Bps2Kbps (GetUseBitRate   (ST, FW, GT, slice))
+     << " " << setw (11) << Bps2Kbps (GetUseBitRate   (ST, BW, GT, slice))
+     << " " << setw (11) << Bps2Kbps (GetUseBitRate   (ST, FW, NT, slice))
+     << " " << setw (11) << Bps2Kbps (GetUseBitRate   (ST, BW, NT, slice))
+     << " " << setw (11) << Bps2Kbps (GetUseBitRate   (LT, FW, GT, slice))
+     << " " << setw (11) << Bps2Kbps (GetUseBitRate   (LT, BW, GT, slice))
+     << " " << setw (11) << Bps2Kbps (GetUseBitRate   (LT, FW, NT, slice))
+     << " " << setw (11) << Bps2Kbps (GetUseBitRate   (LT, BW, NT, slice));
   return os;
 }
 
@@ -363,21 +371,25 @@ std::ostream &
 LinkInfo::PrintHeader (std::ostream &os)
 {
   os << " " << setw (9)  << "DpIdFw"
-     << " " << setw (12) << "LinkKbps"
+     << " " << setw (11) << "LinkKbps"
      << " " << setw (8)  << "QuoFw"
      << " " << setw (8)  << "QuoBw"
-     << " " << setw (12) << "QuoFwKbps"
-     << " " << setw (12) << "QuoBwKbps"
-     << " " << setw (12) << "ExtFwKbps"
-     << " " << setw (12) << "ExtBwKbps"
-     << " " << setw (12) << "ResFwKbps"
-     << " " << setw (12) << "ResBwKbps"
-     << " " << setw (12) << "MetFwKbps"
-     << " " << setw (12) << "MetBwKbps"
-     << " " << setw (14) << "ThpGbrFwKbps"
-     << " " << setw (14) << "ThpGbrBwKbps"
-     << " " << setw (14) << "ThpNonFwKbps"
-     << " " << setw (14) << "ThpNonBwKbps";
+     << " " << setw (11) << "QuoFwKbps"
+     << " " << setw (11) << "QuoBwKbps"
+     << " " << setw (11) << "ExtFwKbps"
+     << " " << setw (11) << "ExtBwKbps"
+     << " " << setw (11) << "ResFwKbps"
+     << " " << setw (11) << "ResBwKbps"
+     << " " << setw (11) << "MetFwKbps"
+     << " " << setw (11) << "MetBwKbps"
+     << " " << setw (11) << "UseGbrFwSt"
+     << " " << setw (11) << "UseGbrBwSt"
+     << " " << setw (11) << "UseNonFwSt"
+     << " " << setw (11) << "UseNonBwSt"
+     << " " << setw (11) << "UseGbrFwLt"
+     << " " << setw (11) << "UseGbrBwLt"
+     << " " << setw (11) << "UseNonFwLt"
+     << " " << setw (11) << "UseNonBwLt";
   return os;
 }
 
