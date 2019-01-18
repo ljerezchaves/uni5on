@@ -192,8 +192,8 @@ FlowStatsCalculator::GetLostPackets (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  if (GetTxPackets () > 0 && GetRxPackets () >= 0                              
-      && GetTxPackets () > GetRxPackets ()) 
+  if (GetTxPackets () > 0 && GetRxPackets () >= 0
+      && GetTxPackets () > GetRxPackets ())
     {
       return GetTxPackets () - GetRxPackets ();
     }
