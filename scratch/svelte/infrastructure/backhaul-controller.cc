@@ -137,7 +137,7 @@ BackhaulController::GetInterSliceMode (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_slicing;
+  return m_sliceMode;
 }
 
 OpMode

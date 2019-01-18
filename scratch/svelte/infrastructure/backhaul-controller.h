@@ -254,7 +254,7 @@ private:
   double                m_blockThs;       //!< Switch block threshold.
   OpMode                m_priorityQueues; //!< DSCP priority queues mechanism.
   DataRate              m_meterStep;      //!< Meter adjustment step.
-  SliceMode             m_slicing;        //!< Network inter-slicing mechanism.
+  SliceMode             m_sliceMode;      //!< Inter-slicing operation mode.
 
   /** Map saving Slice ID / Slice controller application. */
   typedef std::map<SliceId, Ptr<SliceController> > SliceIdCtrlAppMap_t;
