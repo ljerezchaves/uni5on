@@ -243,6 +243,12 @@ protected:
    */
   void SlicingMeterInstall (Ptr<LinkInfo> lInfo, SliceId slice);
 
+  /**
+   * Periodically check for slice bandwidth utilization over backhaul links to
+   * update the extra bit rate when operating in the dynamic inter-slice mode.
+   */
+  void SlicingTimeout (void);
+
 private:
   /** Initialize static attributes only once. */
   static void StaticInitialize (void);

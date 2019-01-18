@@ -167,6 +167,10 @@ BackhaulController::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
+  // Schedule the first inter-slicing timeout operation.
+  Simulator::Schedule (
+    m_sliceTimeout, &BackhaulController::SlicingTimeout, this);
+
   OFSwitch13Controller::NotifyConstructionCompleted ();
 }
 
@@ -684,6 +688,25 @@ BackhaulController::SlicingMeterInstall (Ptr<LinkInfo> lInfo, SliceId slice)
           << " drop:rate="  << freeKbps;
       DpctlSchedule (lInfo->GetSwDpId (d), cmd.str ());
     }
+}
+
+void
+BackhaulController::SlicingTimeout (void)
+{
+  NS_LOG_FUNCTION (this);
+
+  if (GetInterSliceMode () == SliceMode::DYNA)
+    {
+      for (auto &lInfo : LinkInfo::GetList ())
+        {
+          // Check link usage and update extra bit rates.
+          NS_UNUSED (lInfo);
+        }
+    }
+
+  // Schedule the next inter-slicing timeout operation.
+  Simulator::Schedule (
+    m_sliceTimeout, &BackhaulController::SlicingTimeout, this);
 }
 
 void
