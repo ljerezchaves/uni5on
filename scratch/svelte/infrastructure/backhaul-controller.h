@@ -216,6 +216,14 @@ protected:
                                       Ptr<EnbInfo> dstEnbInfo) = 0;
 
   /**
+   * Adjust the infrastructure inter-slicing OpenFlow meter, depending on the
+   * MeterStep attribute value and current link configuration.
+   * \param lInfo The link information.
+   * \param slice The network slice.
+   */
+  virtual void SlicingMeterAdjusted (Ptr<LinkInfo> lInfo, SliceId slice);
+
+  /**
    * Install the infrastructure inter-slicing OpenFlow meters.
    * \param lInfo The link information.
    * \param slice The network slice.
@@ -236,17 +244,6 @@ protected:
   // Inherited from OFSwitch13Controller.
 
 private:
-  /**
-   * Notify this controller when the reserved bit rate in any network link and
-   * slice is adjusted, exceeding the AdjustmentStep attribute from LinkInfo
-   * class. This is used to update infrastructure slicing meters.
-   * \param lInfo The link information.
-   * \param dir The link direction.
-   * \param slice The network slice.
-   */
-  void SlicingMeterAdjusted (Ptr<LinkInfo> lInfo,
-                             LinkInfo::LinkDir dir, SliceId slice);
-
   /** Initialize static attributes only once. */
   static void StaticInitialize (void);
 

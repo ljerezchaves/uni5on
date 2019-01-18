@@ -897,6 +897,7 @@ RingController::BitRateReserve (Ptr<RingInfo> ringInfo)
       std::tie (lInfo, dlDir, ulDir) = GetLinkInfo (curr, next);
       success &= lInfo->ReserveBitRate (dlDir, slice, dlRate);
       success &= lInfo->ReserveBitRate (ulDir, slice, ulRate);
+      SlicingMeterAdjusted (lInfo, slice);
       curr = next;
     }
 
@@ -908,6 +909,7 @@ RingController::BitRateReserve (Ptr<RingInfo> ringInfo)
       std::tie (lInfo, dlDir, ulDir) = GetLinkInfo (curr, next);
       success &= lInfo->ReserveBitRate (dlDir, slice, dlRate);
       success &= lInfo->ReserveBitRate (ulDir, slice, ulRate);
+      SlicingMeterAdjusted (lInfo, slice);
       curr = next;
     }
 
@@ -942,6 +944,7 @@ RingController::BitRateRelease (Ptr<RingInfo> ringInfo)
       std::tie (lInfo, dlDir, ulDir) = GetLinkInfo (curr, next);
       success &= lInfo->ReleaseBitRate (dlDir, slice, dlRate);
       success &= lInfo->ReleaseBitRate (ulDir, slice, ulRate);
+      SlicingMeterAdjusted (lInfo, slice);
       curr = next;
     }
 
@@ -953,6 +956,7 @@ RingController::BitRateRelease (Ptr<RingInfo> ringInfo)
       std::tie (lInfo, dlDir, ulDir) = GetLinkInfo (curr, next);
       success &= lInfo->ReleaseBitRate (dlDir, slice, dlRate);
       success &= lInfo->ReleaseBitRate (ulDir, slice, ulRate);
+      SlicingMeterAdjusted (lInfo, slice);
       curr = next;
     }
 

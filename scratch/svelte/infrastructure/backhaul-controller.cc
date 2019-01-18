@@ -587,44 +587,62 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 
 void
 BackhaulController::SlicingMeterAdjusted (
-  Ptr<LinkInfo> lInfo, LinkInfo::LinkDir dir, SliceId slice)
+  Ptr<LinkInfo> lInfo, SliceId slice)
 {
-  NS_LOG_FUNCTION (this << lInfo << dir << slice);
+  NS_LOG_FUNCTION (this << lInfo << slice);
 
-  if (GetInterSliceMode () == SliceMode::NONE)
+  // Update inter-slicing meter, depending on the InterSliceMode attribute.
+  NS_ASSERT_MSG (slice < SliceId::ALL, "Invalid slice for this operation.");
+  switch (GetInterSliceMode ())
     {
+    case SliceMode::NONE:
       // Nothing to do when inter-slicing is disabled.
       return;
+
+    case SliceMode::SHAR:
+      // Update the shared Non-GBR meter entry.
+      slice = SliceId::ALL;
+      break;
+
+    case SliceMode::STAT:
+    case SliceMode::DYNA:
+      // Update the individual Non-GBR meter entry.
+      break;
+
+    default:
+      NS_LOG_WARN ("Undefined inter-slicing operation mode.");
+      break;
     }
 
-  // Identify the meter ID based on inter-slice operation mode. When using the
-  // static inter-slicing, the traffic of each slice will be independently
-  // monitored by slicing meters, so we ignore the fake shared slice. When
-  // using the Non-GBR shared inter-slicing, the Non-GBR traffic of all slices
-  // are monitored together by the slicing meters, so we ignore individual
-  // slices.
-  if ((GetInterSliceMode () == SliceMode::STAT && slice != SliceId::ALL)
-      || (GetInterSliceMode () == SliceMode::SHAR && slice == SliceId::ALL))
+  // Check for updated slicing meters in both link directions.
+  for (int d = 0; d <= LinkInfo::BWD; d++)
     {
-      uint32_t meterId = GetSvelteMeterId (slice, static_cast<uint32_t> (dir));
-      NS_LOG_INFO ("Updating slicing meter ID " << GetUint32Hex (meterId) <<
-                   " for link info " << lInfo->GetSwDpId (0) <<
-                   " to " << lInfo->GetSwDpId (1));
+      LinkInfo::LinkDir dir = static_cast<LinkInfo::LinkDir> (d);
 
-      // Update the proper slicing meter.
-      int64_t kbps = Bps2Kbps (lInfo->GetFreeBitRate (dir, QosType::NON, slice));
-      NS_LOG_DEBUG ("Link slice " << SliceIdStr (slice) << ": " <<
-                    LinkInfo::LinkDirStr (dir) <<
-                    " link set to " << kbps << " Kbps");
-      // ---------------------------------------------------------------------
-      // Meter table
-      //
-      std::ostringstream cmd;
-      cmd << "meter-mod cmd=mod"
-          << ",flags="      << OFPMF_KBPS
-          << ",meter="      << meterId
-          << " drop:rate="  << kbps;
-      DpctlExecute (lInfo->GetSwDpId (dir), cmd.str ());
+      int64_t meteBitRate = lInfo->GetMeterBitRate (dir, slice);
+      int64_t freeBitRate = lInfo->GetFreeBitRate (dir, QosType::NON, slice);
+      uint64_t diffBitRate = std::abs (meteBitRate - freeBitRate);
+      if (diffBitRate >= m_meterStep.GetBitRate ())
+        {
+          uint32_t meterId = GetSvelteMeterId (slice, d);
+          int64_t freeKbps = Bps2Kbps (freeBitRate);
+          bool success = lInfo->SetMeterBitRate (dir, slice, freeKbps * 1000);
+          NS_ASSERT_MSG (success, "Error when setting meter bit rate.");
+
+          NS_LOG_INFO ("Slicing meter ID " << GetUint32Hex (meterId) <<
+                       " updated for slice " << SliceIdStr (slice) <<
+                       " in link info from " << lInfo->GetSwDpId (0) <<
+                       " to " << lInfo->GetSwDpId (1) <<
+                       " in " << LinkInfo::LinkDirStr (dir) <<
+                       " direction set to " << freeKbps << " Kbps");
+
+          std::ostringstream cmd;
+          cmd << "meter-mod cmd=mod"
+              << ",flags="      << OFPMF_KBPS
+              << ",meter="      << meterId
+              << " drop:rate="  << freeKbps;
+          DpctlSchedule (lInfo->GetSwDpId (d), cmd.str ());
+        }
     }
 }
 
