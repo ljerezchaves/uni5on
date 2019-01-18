@@ -624,10 +624,9 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   switch (GetInterSliceMode ())
     {
     case SliceMode::NONE:
-      {
-        // Nothing to do when inter-slicing is disabled.
-        return;
-      }
+      // Nothing to do when inter-slicing is disabled.
+      break;
+
     case SliceMode::SHAR:
       {
         // Apply the shared Non-GBR meter entriy for all slices on each port
@@ -700,10 +699,8 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
         break;
       }
     default:
-      {
-        NS_LOG_WARN ("Undefined inter-slicing operation mode.");
-        break;
-      }
+      NS_LOG_WARN ("Undefined inter-slicing operation mode.");
+      break;
     }
 
   BackhaulController::HandshakeSuccessful (swtch);
