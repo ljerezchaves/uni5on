@@ -255,6 +255,7 @@ private:
   OpMode                m_priorityQueues; //!< DSCP priority queues mechanism.
   DataRate              m_meterStep;      //!< Meter adjustment step.
   SliceMode             m_sliceMode;      //!< Inter-slicing operation mode.
+  Time                  m_sliceTimeout;   //!< Inter-slicing timeout interval.
 
   /** Map saving Slice ID / Slice controller application. */
   typedef std::map<SliceId, Ptr<SliceController> > SliceIdCtrlAppMap_t;

@@ -82,6 +82,11 @@ BackhaulController::GetTypeId (void)
                                     SliceModeStr (SliceMode::STAT),
                                     SliceMode::DYNA,
                                     SliceModeStr (SliceMode::DYNA)))
+    .AddAttribute ("InterSliceTimeout",
+                   "The interval between dynamic inter-slice operations.",
+                   TimeValue (Seconds (5)),
+                   MakeTimeAccessor (&BackhaulController::m_sliceTimeout),
+                   MakeTimeChecker ())
     .AddAttribute ("MeterStep",
                    "Default meter bit rate adjustment step.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
