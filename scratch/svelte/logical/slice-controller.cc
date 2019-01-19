@@ -298,6 +298,14 @@ SliceController::GetSliceId (void) const
   return m_sliceId;
 }
 
+int
+SliceController::GetPriority (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_slicePrio;
+}
+
 void
 SliceController::NotifyPgwAttach (
   Ptr<PgwInfo> pgwInfo, Ptr<NetDevice> webSgiDev)

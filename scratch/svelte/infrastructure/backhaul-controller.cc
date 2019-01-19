@@ -282,12 +282,19 @@ BackhaulController::NotifyEpcAttach (
   }
 }
 
+// Comparator for slice priorities.
+bool
+SlicePrioComp (Ptr<SliceController> ctrl1, Ptr<SliceController> ctrl2)
+{
+  return ctrl1->GetPriority () > ctrl2->GetPriority ();
+}
+
 void
 BackhaulController::NotifySlicesBuilt (ApplicationContainer &controllers)
 {
   NS_LOG_FUNCTION (this);
 
-  // Update the slice controller map with configured controller applications.
+  // Saving controller application pointers.
   ApplicationContainer::Iterator it;
   for (it = controllers.Begin (); it != controllers.End (); ++it)
     {
@@ -297,7 +304,12 @@ BackhaulController::NotifySlicesBuilt (ApplicationContainer &controllers)
       auto it = m_sliceCtrlById.find (slice);
       NS_ASSERT_MSG (it != m_sliceCtrlById.end (), "Invalid slice ID.");
       it->second = ctrl;
+
+      m_sliceCtrlPrio.push_back (ctrl);
     }
+
+  // Sort m_sliceCtrlPrio in decreasing controller priority order.
+  std::sort (m_sliceCtrlPrio.begin (), m_sliceCtrlPrio.end (), SlicePrioComp);
 
   // Configure initial link slice quotas for each slice.
   for (auto const &it : m_sliceCtrlById)

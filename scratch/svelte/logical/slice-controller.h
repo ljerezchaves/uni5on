@@ -133,6 +133,12 @@ public:
   SliceId GetSliceId (void) const;
 
   /**
+   * Get the slice priority for this controller.
+   * \return The slice priority;
+   */
+  int GetPriority (void) const;
+
+  /**
    * Notify this controller of the P-GW connected to the OpenFlow backhaul
    * network over the S5 interface, and to the web server over the SGi
    * interface.

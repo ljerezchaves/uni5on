@@ -272,6 +272,10 @@ private:
   SliceMode             m_sliceMode;      //!< Inter-slicing operation mode.
   Time                  m_sliceTimeout;   //!< Inter-slicing timeout interval.
 
+  /** A list of slice controller applications. */
+  typedef std::vector<Ptr<SliceController> > CtrlAppList_t;
+  CtrlAppList_t         m_sliceCtrlPrio;  //!< Slice controllers by priority.
+
   /** Map saving Slice ID / Slice controller application. */
   typedef std::map<SliceId, Ptr<SliceController> > SliceIdCtrlAppMap_t;
   SliceIdCtrlAppMap_t   m_sliceCtrlById;  //!< Slice controller mapped values.
