@@ -90,7 +90,7 @@ BackhaulController::GetTypeId (void)
     .AddAttribute ("MeterStep",
                    "Default meter bit rate adjustment step.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   DataRateValue (DataRate ("5Mbps")),
+                   DataRateValue (DataRate ("2Mbps")),
                    MakeDataRateAccessor (&BackhaulController::m_meterStep),
                    MakeDataRateChecker ())
     .AddAttribute ("PriorityQueues",
