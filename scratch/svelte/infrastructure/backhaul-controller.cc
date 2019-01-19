@@ -637,7 +637,7 @@ BackhaulController::SlicingMeterAdjusted (
       int64_t meteBitRate = lInfo->GetMeterBitRate (dir, slice);
       int64_t freeBitRate = lInfo->GetFreeBitRate (dir, QosType::NON, slice);
       uint64_t diffBitRate = std::abs (meteBitRate - freeBitRate);
-      NS_LOG_DEBUG ("Slice " << SliceIdStr (slice) << 
+      NS_LOG_DEBUG ("Slice " << SliceIdStr (slice) <<
                     " direction " << LinkInfo::LinkDirStr (dir) <<
                     " free bitrate " << freeBitRate <<
                     " diff bitrate " << diffBitRate <<
@@ -649,7 +649,7 @@ BackhaulController::SlicingMeterAdjusted (
           bool success = lInfo->SetMeterBitRate (dir, slice, freeKbps * 1000);
           NS_ASSERT_MSG (success, "Error when setting meter bit rate.");
 
-          NS_LOG_INFO ("Update slice " << SliceIdStr (slice) << 
+          NS_LOG_INFO ("Update slice " << SliceIdStr (slice) <<
                        " direction " << LinkInfo::LinkDirStr (dir) <<
                        " meter ID " << GetUint32Hex (meterId) <<
                        " bitrate " << freeKbps << " Kbps");
@@ -679,7 +679,7 @@ BackhaulController::SlicingMeterInstall (Ptr<LinkInfo> lInfo, SliceId slice)
       bool success = lInfo->SetMeterBitRate (dir, slice, freeKbps * 1000);
       NS_ASSERT_MSG (success, "Error when setting meter bit rate.");
 
-      NS_LOG_INFO ("Created slice " << SliceIdStr (slice) << 
+      NS_LOG_INFO ("Created slice " << SliceIdStr (slice) <<
                    " direction " << LinkInfo::LinkDirStr (dir) <<
                    " meter ID " << GetUint32Hex (meterId) <<
                    " bitrate " << freeKbps << " Kbps");
