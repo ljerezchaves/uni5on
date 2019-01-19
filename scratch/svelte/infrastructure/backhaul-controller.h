@@ -234,7 +234,7 @@ protected:
    * \param lInfo The link information.
    * \param dir The link direction.
    */
-  void SlicingExtraAdjusted (Ptr<LinkInfo> lInfo, LinkInfo::LinkDir dir);
+  void SlicingExtraAdjust (Ptr<LinkInfo> lInfo, LinkInfo::LinkDir dir);
 
   /**
    * Adjust the infrastructure inter-slicing OpenFlow meter, depending on the
@@ -242,7 +242,7 @@ protected:
    * \param lInfo The link information.
    * \param slice The network slice.
    */
-  void SlicingMeterAdjusted (Ptr<LinkInfo> lInfo, SliceId slice);
+  void SlicingMeterAdjust (Ptr<LinkInfo> lInfo, SliceId slice);
 
   /**
    * Install the infrastructure inter-slicing OpenFlow meters.

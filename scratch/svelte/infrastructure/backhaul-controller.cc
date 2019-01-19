@@ -612,7 +612,7 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 }
 
 void
-BackhaulController::SlicingExtraAdjusted (
+BackhaulController::SlicingExtraAdjust (
   Ptr<LinkInfo> lInfo, LinkInfo::LinkDir dir)
 {
   NS_LOG_FUNCTION (this << lInfo << dir);
@@ -646,7 +646,7 @@ BackhaulController::SlicingExtraAdjusted (
           // Increase the extra bit rate by one step.
           NS_LOG_DEBUG ("Increase extra bit rate.");
           lInfo->UpdateExtraBitRate (dir, slice, stepRate);
-          SlicingMeterAdjusted (lInfo, slice);
+          SlicingMeterAdjust (lInfo, slice);
           numSteps--;
         }
       else if (numSteps < 0 || ((idle > stepRate * 2) && (extra >= stepRate)))
@@ -654,13 +654,13 @@ BackhaulController::SlicingExtraAdjusted (
           // Descrease the extra bit rate by one step.
           NS_LOG_DEBUG ("Decrease extra bit rate.");
           lInfo->UpdateExtraBitRate (dir, slice, (-1) * stepRate);
-          SlicingMeterAdjusted (lInfo, slice);
+          SlicingMeterAdjust (lInfo, slice);
         }
     }
 }
 
 void
-BackhaulController::SlicingMeterAdjusted (
+BackhaulController::SlicingMeterAdjust (
   Ptr<LinkInfo> lInfo, SliceId slice)
 {
   NS_LOG_FUNCTION (this << lInfo << slice);
@@ -764,7 +764,7 @@ BackhaulController::SlicingTimeout (void)
         {
           for (int d = 0; d <= LinkInfo::BWD; d++)
             {
-              SlicingExtraAdjusted (lInfo, static_cast<LinkInfo::LinkDir> (d));
+              SlicingExtraAdjust (lInfo, static_cast<LinkInfo::LinkDir> (d));
             }
         }
     }
