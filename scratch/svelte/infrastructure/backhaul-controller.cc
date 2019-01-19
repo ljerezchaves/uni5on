@@ -620,6 +620,43 @@ BackhaulController::SlicingExtraAdjusted (
   NS_ASSERT_MSG (GetInterSliceMode () == SliceMode::DYNA,
                  "Invalid inter-slice operation mode.");
 
+  // Get the total link idle bit rate that can be
+  // shared among slices as extra bit rate.
+  int64_t stepRate = static_cast<int64_t> (m_extraStep.GetBitRate ());
+  int numSteps = lInfo->GetIdleBitRate (
+      LinkInfo::LTERM, dir, SliceId::ALL, QosType::BOTH) / stepRate;
+  NS_LOG_DEBUG ("Number of extra bitrate steps: " << numSteps);
+
+  // Iterate over slices in decreasing priority order, increasing
+  // or decreasing the extra bit rate as necessary.
+  int64_t quota, use, idle, extra;
+  NS_UNUSED (quota);   NS_UNUSED (use);
+  for (auto const &ctrl : m_sliceCtrlPrio)
+    {
+      SliceId slice = ctrl->GetSliceId ();
+      quota = lInfo->GetQuotaBitRate (dir, slice);
+      use   = lInfo->GetUseBitRate (LinkInfo::LTERM, dir, slice, QosType::BOTH);
+      idle  = lInfo->GetIdleBitRate (LinkInfo::LTERM, dir, slice, QosType::NON);
+      extra = lInfo->GetExtraBitRate (dir, slice);
+      NS_LOG_DEBUG ("Slice " << SliceIdStr (slice) <<
+                    " direction " << LinkInfo::LinkDirStr (dir) <<
+                    " extra bitrate " << extra << " idle bitrate " << idle);
+      if (numSteps > 0 && (idle < stepRate / 2))
+        {
+          // Increase the extra bit rate by one step.
+          NS_LOG_DEBUG ("Increase extra bit rate.");
+          lInfo->UpdateExtraBitRate (dir, slice, stepRate);
+          SlicingMeterAdjusted (lInfo, slice);
+          numSteps--;
+        }
+      else if (numSteps < 0 || ((idle > stepRate * 2) && (extra >= stepRate)))
+        {
+          // Descrease the extra bit rate by one step.
+          NS_LOG_DEBUG ("Decrease extra bit rate.");
+          lInfo->UpdateExtraBitRate (dir, slice, (-1) * stepRate);
+          SlicingMeterAdjusted (lInfo, slice);
+        }
+    }
 }
 
 void
