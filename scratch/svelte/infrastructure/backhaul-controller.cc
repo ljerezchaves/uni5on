@@ -69,6 +69,12 @@ BackhaulController::GetTypeId (void)
                    DoubleValue (0.9),
                    MakeDoubleAccessor (&BackhaulController::m_blockThs),
                    MakeDoubleChecker<double> (0.8, 1.0))
+    .AddAttribute ("ExtraStep",
+                   "Default extra bit rate adjustment step.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   DataRateValue (DataRate ("4Mbps")),
+                   MakeDataRateAccessor (&BackhaulController::m_extraStep),
+                   MakeDataRateChecker ())
     .AddAttribute ("InterSliceMode",
                    "Inter-slice operation mode.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
