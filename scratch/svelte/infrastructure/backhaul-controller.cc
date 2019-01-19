@@ -623,21 +623,22 @@ BackhaulController::SlicingExtraAdjusted (
   // Get the total link idle bit rate that can be
   // shared among slices as extra bit rate.
   int64_t stepRate = static_cast<int64_t> (m_extraStep.GetBitRate ());
-  int numSteps = lInfo->GetIdleBitRate (
+  int numSteps = lInfo->GetIdlBitRate (
       LinkInfo::LTERM, dir, SliceId::ALL, QosType::BOTH) / stepRate;
   NS_LOG_DEBUG ("Number of extra bitrate steps: " << numSteps);
 
   // Iterate over slices in decreasing priority order, increasing
   // or decreasing the extra bit rate as necessary.
   int64_t quota, use, idle, extra;
-  NS_UNUSED (quota);   NS_UNUSED (use);
+  NS_UNUSED (quota);
+  NS_UNUSED (use);
   for (auto const &ctrl : m_sliceCtrlPrio)
     {
       SliceId slice = ctrl->GetSliceId ();
-      quota = lInfo->GetQuotaBitRate (dir, slice);
+      quota = lInfo->GetQuoBitRate (dir, slice);
       use   = lInfo->GetUseBitRate (LinkInfo::LTERM, dir, slice, QosType::BOTH);
-      idle  = lInfo->GetIdleBitRate (LinkInfo::LTERM, dir, slice, QosType::NON);
-      extra = lInfo->GetExtraBitRate (dir, slice);
+      idle  = lInfo->GetIdlBitRate (LinkInfo::LTERM, dir, slice, QosType::NON);
+      extra = lInfo->GetExtBitRate (dir, slice);
       NS_LOG_DEBUG ("Slice " << SliceIdStr (slice) <<
                     " direction " << LinkInfo::LinkDirStr (dir) <<
                     " extra bitrate " << extra << " idle bitrate " << idle);
@@ -693,8 +694,8 @@ BackhaulController::SlicingMeterAdjusted (
     {
       LinkInfo::LinkDir dir = static_cast<LinkInfo::LinkDir> (d);
 
-      int64_t meteBitRate = lInfo->GetMeterBitRate (dir, slice);
-      int64_t freeBitRate = lInfo->GetFreeBitRate (dir, slice, QosType::NON);
+      int64_t meteBitRate = lInfo->GetMetBitRate (dir, slice);
+      int64_t freeBitRate = lInfo->GetFreBitRate (dir, slice, QosType::NON);
       uint64_t diffBitRate = std::abs (meteBitRate - freeBitRate);
       NS_LOG_DEBUG ("Slice " << SliceIdStr (slice) <<
                     " direction " << LinkInfo::LinkDirStr (dir) <<
@@ -734,7 +735,7 @@ BackhaulController::SlicingMeterInstall (Ptr<LinkInfo> lInfo, SliceId slice)
       LinkInfo::LinkDir dir = static_cast<LinkInfo::LinkDir> (d);
       uint32_t meterId = GetSvelteMeterId (slice, d);
       int64_t freeKbps = Bps2Kbps (
-          lInfo->GetFreeBitRate (dir, slice, QosType::NON));
+          lInfo->GetFreBitRate (dir, slice, QosType::NON));
       bool success = lInfo->SetMeterBitRate (dir, slice, freeKbps * 1000);
       NS_ASSERT_MSG (success, "Error when setting meter bit rate.");
 

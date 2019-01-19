@@ -149,7 +149,7 @@ public:
    * \param slice The network slice.
    * \return The maximum bit rate.
    */
-  int64_t GetQuotaBitRate (
+  int64_t GetQuoBitRate (
     LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**
@@ -182,7 +182,7 @@ public:
    * \param type Traffic QoS type.
    * \return The available bit rate.
    */
-  int64_t GetFreeBitRate (
+  int64_t GetFreBitRate (
     LinkDir dir, SliceId slice = SliceId::ALL,
     QosType type = QosType::BOTH) const;
 
@@ -208,7 +208,7 @@ public:
    * \param type Traffic QoS type.
    * \return The EWMA throughput.
    */
-  int64_t GetIdleBitRate (
+  int64_t GetIdlBitRate (
     EwmaTerm term, LinkDir dir, SliceId slice = SliceId::ALL,
     QosType type = QosType::BOTH) const;
 
@@ -219,7 +219,7 @@ public:
    * \param slice The network slice.
    * \return The extra bit rate.
    */
-  int64_t GetExtraBitRate (
+  int64_t GetExtBitRate (
     LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**
@@ -229,7 +229,7 @@ public:
    * \param slice The network slice.
    * \return The available bit rate.
    */
-  int64_t GetMeterBitRate (
+  int64_t GetMetBitRate (
     LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**
