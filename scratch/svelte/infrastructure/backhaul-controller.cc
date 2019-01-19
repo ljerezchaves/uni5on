@@ -623,8 +623,7 @@ BackhaulController::SlicingExtraAdjusted (
   // Get the total link idle bit rate that can be
   // shared among slices as extra bit rate.
   int64_t stepRate = static_cast<int64_t> (m_extraStep.GetBitRate ());
-  int numSteps = lInfo->GetIdlBitRate (
-      LinkInfo::LTERM, dir, SliceId::ALL, QosType::BOTH) / stepRate;
+  int numSteps = lInfo->GetIdlBitRate (LinkInfo::LTERM, dir, SliceId::ALL) / stepRate;
   NS_LOG_DEBUG ("Number of extra bitrate steps: " << numSteps);
 
   // Iterate over slices in decreasing priority order, increasing
@@ -637,7 +636,7 @@ BackhaulController::SlicingExtraAdjusted (
       SliceId slice = ctrl->GetSliceId ();
       quota = lInfo->GetQuoBitRate (dir, slice);
       use   = lInfo->GetUseBitRate (LinkInfo::LTERM, dir, slice, QosType::BOTH);
-      idle  = lInfo->GetIdlBitRate (LinkInfo::LTERM, dir, slice, QosType::NON);
+      idle  = lInfo->GetIdlBitRate (LinkInfo::LTERM, dir, slice);
       extra = lInfo->GetExtBitRate (dir, slice);
       NS_LOG_DEBUG ("Slice " << SliceIdStr (slice) <<
                     " direction " << LinkInfo::LinkDirStr (dir) <<

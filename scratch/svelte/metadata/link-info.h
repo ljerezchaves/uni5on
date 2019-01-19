@@ -201,16 +201,14 @@ public:
 
   /**
    * Get the EWMA idle (not used) bit rate for this link on the given direction,
-   * optionally filtered by the network slice and QoS traffic type.
+   * optionally filtered by the network slice.
    * \param term The EWMA period of evaluation.
    * \param dir The link direction.
    * \param slice The network slice.
-   * \param type Traffic QoS type.
    * \return The EWMA throughput.
    */
   int64_t GetIdlBitRate (
-    EwmaTerm term, LinkDir dir, SliceId slice = SliceId::ALL,
-    QosType type = QosType::BOTH) const;
+    EwmaTerm term, LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**
    * Get the extra bit rate for this link on the given direction,

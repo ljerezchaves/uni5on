@@ -198,7 +198,7 @@ LinkInfo::GetMaxBitRate (LinkDir dir, SliceId slice, QosType type) const
   NS_LOG_FUNCTION (this << dir << slice << type);
 
   int64_t bitRate = GetQuoBitRate (dir, slice);
-  if (type == QosType::NON)
+  if (type != QosType::GBR)
     {
       bitRate += GetExtBitRate (dir, slice);
     }
@@ -231,13 +231,12 @@ LinkInfo::GetUseBitRate (EwmaTerm term, LinkDir dir, SliceId slice,
 }
 
 int64_t
-LinkInfo::GetIdlBitRate (EwmaTerm term, LinkDir dir, SliceId slice,
-                         QosType type) const
+LinkInfo::GetIdlBitRate (EwmaTerm term, LinkDir dir, SliceId slice) const
 {
-  NS_LOG_FUNCTION (this << term << dir << slice << type);
+  NS_LOG_FUNCTION (this << term << dir << slice);
 
-  return GetMaxBitRate (dir, slice, type) -
-         GetUseBitRate (term, dir, slice, type);
+  return GetMaxBitRate (dir, slice, QosType::BOTH) -
+         GetUseBitRate (term, dir, slice, QosType::BOTH);
 }
 
 int64_t
@@ -293,12 +292,10 @@ LinkInfo::PrintValues (std::ostream &os, LinkDir dir, SliceId slice) const
      << " " << setw (11) << Bps2Kbps (GetFreBitRate (dir, slice, NT))
      << " " << setw (11) << Bps2Kbps (GetUseBitRate (ST, dir, slice, GT))
      << " " << setw (11) << Bps2Kbps (GetUseBitRate (ST, dir, slice, NT))
-     << " " << setw (11) << Bps2Kbps (GetIdlBitRate (ST, dir, slice, GT))
-     << " " << setw (11) << Bps2Kbps (GetIdlBitRate (ST, dir, slice, NT))
+     << " " << setw (11) << Bps2Kbps (GetIdlBitRate (ST, dir, slice))
      << " " << setw (11) << Bps2Kbps (GetUseBitRate (LT, dir, slice, GT))
      << " " << setw (11) << Bps2Kbps (GetUseBitRate (LT, dir, slice, NT))
-     << " " << setw (11) << Bps2Kbps (GetIdlBitRate (LT, dir, slice, GT))
-     << " " << setw (11) << Bps2Kbps (GetIdlBitRate (LT, dir, slice, NT));
+     << " " << setw (11) << Bps2Kbps (GetIdlBitRate (LT, dir, slice));
   return os;
 }
 
@@ -360,12 +357,10 @@ LinkInfo::PrintHeader (std::ostream &os)
      << " " << setw (11) << "FreeNon"
      << " " << setw (11) << "UseGbrSt"
      << " " << setw (11) << "UseNonSt"
-     << " " << setw (11) << "IdlGbrSt"
-     << " " << setw (11) << "IdlNonSt"
+     << " " << setw (11) << "IdleSt"
      << " " << setw (11) << "UseGbrLt"
      << " " << setw (11) << "UseNonLt"
-     << " " << setw (11) << "IdlGbrLt"
-     << " " << setw (11) << "IdlNonLt";
+     << " " << setw (11) << "IdleLt";
   return os;
 }
 
