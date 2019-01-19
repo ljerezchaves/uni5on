@@ -197,7 +197,6 @@ LinkInfo::GetMaxBitRate (LinkDir dir, QosType type, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << type << slice);
 
-  NS_ASSERT_MSG (type != QosType::BOTH, "Invalid type for this operation.");
   int64_t bitRate = GetQuotaBitRate (dir, slice);
   if (type == QosType::NON)
     {
