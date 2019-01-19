@@ -144,7 +144,8 @@ BackhaulStatsCalculator::NotifyConstructionCompleted (void)
       // Print the headers in output files.
       *slData.bwdWrapper->GetStream ()
         << boolalpha << right << fixed << setprecision (3)
-        << " " << setw (8) << "TimeSec";
+        << " " << setw (8) << "TimeSec"
+        << " " << setw (7) << "LinkDir";
       LinkInfo::PrintHeader (*slData.bwdWrapper->GetStream ());
       *slData.bwdWrapper->GetStream () << std::endl;
 
@@ -179,10 +180,16 @@ BackhaulStatsCalculator::DumpStatistics (Time nextDump)
       // Dump slice bandwidth usage for each link.
       for (auto const &lInfo : LinkInfo::GetList ())
         {
-          *slData.bwdWrapper->GetStream ()
-            << " " << setw (8) << Simulator::Now ().GetSeconds ();
-          lInfo->PrintSliceValues (*slData.bwdWrapper->GetStream (), slice);
-          *slData.bwdWrapper->GetStream () << std::endl;
+          for (int d = 0; d <= LinkInfo::BWD; d++)
+            {
+              LinkInfo::LinkDir dir = static_cast<LinkInfo::LinkDir> (d);
+
+              *slData.bwdWrapper->GetStream ()
+                << " " << setw (8) << Simulator::Now ().GetSeconds ()
+                << " " << setw (7) << LinkInfo::LinkDirStr (dir);
+              lInfo->PrintValues (*slData.bwdWrapper->GetStream (), dir, slice);
+              *slData.bwdWrapper->GetStream () << std::endl;
+            }
         }
       *slData.bwdWrapper->GetStream () << std::endl;
 

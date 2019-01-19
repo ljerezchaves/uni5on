@@ -244,13 +244,14 @@ public:
     LinkDir dir, SliceId slice, int64_t bitRate) const;
 
   /**
-   * Print the link metadata for a specific network slice.
+   * Print the link metadata for a specific link direction and network slice.
    * \param os The output stream.
+   * \param dir The link direction.
    * \param slice The network slice.
    * \return The output stream.
    * \internal Keep this method consistent with the PrintHeader () method.
    */
-  std::ostream & PrintSliceValues (std::ostream &os, SliceId slice) const;
+  std::ostream & PrintValues (std::ostream &os, LinkDir dir, SliceId slice) const;
 
   /**
    * Get the string representing the given direction.
