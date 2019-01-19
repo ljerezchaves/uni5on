@@ -153,15 +153,16 @@ public:
     LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**
-   * Get the maximum bit rate for this link on the given direction that can be
-   * used by a specific traffic type, optionally filtered by the network slice.
+   * Get the maximum bit rate for this link on the given direction,
+   * optionally filtered by the network slice and QoS traffic type.
    * \param dir The link direction.
-   * \param type Traffic QoS type.
    * \param slice The network slice.
+   * \param type Traffic QoS type.
    * \return The reserved bit rate.
    */
   int64_t GetMaxBitRate (
-    LinkDir dir, QosType type, SliceId slice = SliceId::ALL) const;
+    LinkDir dir, SliceId slice = SliceId::ALL,
+    QosType type = QosType::BOTH) const;
 
   /**
    * Get the reserved bit rate for this link on the given direction,
@@ -174,41 +175,42 @@ public:
     LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**
-   * Get the free bit rate for this link on the given direction that can be used
-   * by a specific traffic type, optionally filtered by the network slice.
+   * Get the free (not reserved) bit rate for this link on the given direction,
+   * optionally filtered by the network slice and QoS traffic type.
    * \param dir The link direction.
-   * \param type Traffic QoS type.
    * \param slice The network slice.
+   * \param type Traffic QoS type.
    * \return The available bit rate.
    */
   int64_t GetFreeBitRate (
-    LinkDir dir, QosType type, SliceId slice = SliceId::ALL) const;
+    LinkDir dir, SliceId slice = SliceId::ALL,
+    QosType type = QosType::BOTH) const;
 
   /**
    * Get the EWMA throughput bit rate for this link on the given direction,
    * optionally filtered by the network slice and QoS traffic type.
    * \param term The EWMA period of evaluation.
    * \param dir The link direction.
-   * \param type Traffic QoS type.
    * \param slice The network slice.
+   * \param type Traffic QoS type.
    * \return The EWMA throughput.
    */
   int64_t GetUseBitRate (
-    EwmaTerm term, LinkDir dir, QosType type = QosType::BOTH,
-    SliceId slice = SliceId::ALL) const;
+    EwmaTerm term, LinkDir dir, SliceId slice = SliceId::ALL,
+    QosType type = QosType::BOTH) const;
 
   /**
-   * Get the EWMA throughput bit rate for this link on the given direction,
+   * Get the EWMA idle (not used) bit rate for this link on the given direction,
    * optionally filtered by the network slice and QoS traffic type.
    * \param term The EWMA period of evaluation.
    * \param dir The link direction.
-   * \param type Traffic QoS type.
    * \param slice The network slice.
+   * \param type Traffic QoS type.
    * \return The EWMA throughput.
    */
   int64_t GetIdleBitRate (
-    EwmaTerm term, LinkDir dir, QosType type = QosType::BOTH,
-    SliceId slice = SliceId::ALL) const;
+    EwmaTerm term, LinkDir dir, SliceId slice = SliceId::ALL,
+    QosType type = QosType::BOTH) const;
 
   /**
    * Get the extra bit rate for this link on the given direction,

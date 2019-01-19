@@ -657,7 +657,7 @@ BackhaulController::SlicingMeterAdjusted (
       LinkInfo::LinkDir dir = static_cast<LinkInfo::LinkDir> (d);
 
       int64_t meteBitRate = lInfo->GetMeterBitRate (dir, slice);
-      int64_t freeBitRate = lInfo->GetFreeBitRate (dir, QosType::NON, slice);
+      int64_t freeBitRate = lInfo->GetFreeBitRate (dir, slice, QosType::NON);
       uint64_t diffBitRate = std::abs (meteBitRate - freeBitRate);
       NS_LOG_DEBUG ("Slice " << SliceIdStr (slice) <<
                     " direction " << LinkInfo::LinkDirStr (dir) <<
@@ -697,7 +697,7 @@ BackhaulController::SlicingMeterInstall (Ptr<LinkInfo> lInfo, SliceId slice)
       LinkInfo::LinkDir dir = static_cast<LinkInfo::LinkDir> (d);
       uint32_t meterId = GetSvelteMeterId (slice, d);
       int64_t freeKbps = Bps2Kbps (
-          lInfo->GetFreeBitRate (dir, QosType::NON, slice));
+          lInfo->GetFreeBitRate (dir, slice, QosType::NON));
       bool success = lInfo->SetMeterBitRate (dir, slice, freeKbps * 1000);
       NS_ASSERT_MSG (success, "Error when setting meter bit rate.");
 
