@@ -601,6 +601,17 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 }
 
 void
+BackhaulController::SlicingExtraAdjusted (
+  Ptr<LinkInfo> lInfo, LinkInfo::LinkDir dir)
+{
+  NS_LOG_FUNCTION (this << lInfo << dir);
+
+  NS_ASSERT_MSG (GetInterSliceMode () == SliceMode::DYNA,
+                 "Invalid inter-slice operation mode.");
+
+}
+
+void
 BackhaulController::SlicingMeterAdjusted (
   Ptr<LinkInfo> lInfo, SliceId slice)
 {
@@ -700,10 +711,13 @@ BackhaulController::SlicingTimeout (void)
 
   if (GetInterSliceMode () == SliceMode::DYNA)
     {
+      // Adjust the extra bit rates in both directions for each backhaul link.
       for (auto &lInfo : LinkInfo::GetList ())
         {
-          // Check link usage and update extra bit rates.
-          NS_UNUSED (lInfo);
+          for (int d = 0; d <= LinkInfo::BWD; d++)
+            {
+              SlicingExtraAdjusted (lInfo, static_cast<LinkInfo::LinkDir> (d));
+            }
         }
     }
 

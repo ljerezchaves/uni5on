@@ -229,6 +229,14 @@ protected:
   // Inherited from OFSwitch13Controller.
 
   /**
+   * Adjust the infrastructure inter-slicing extra bit rate, depending on the
+   * ExtraStep attribute value and current link configuration.
+   * \param lInfo The link information.
+   * \param dir The link direction.
+   */
+  void SlicingExtraAdjusted (Ptr<LinkInfo> lInfo, LinkInfo::LinkDir dir);
+
+  /**
    * Adjust the infrastructure inter-slicing OpenFlow meter, depending on the
    * MeterStep attribute value and current link configuration.
    * \param lInfo The link information.
@@ -244,8 +252,8 @@ protected:
   void SlicingMeterInstall (Ptr<LinkInfo> lInfo, SliceId slice);
 
   /**
-   * Periodically check for slice bandwidth utilization over backhaul links to
-   * update the extra bit rate when operating in the dynamic inter-slice mode.
+   * Periodically check for infrastructure bandwidth utilization over backhaul
+   * links to adjust slice configuration when in dynamic inter-slice mode.
    */
   void SlicingTimeout (void);
 
