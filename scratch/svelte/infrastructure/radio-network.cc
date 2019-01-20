@@ -259,9 +259,12 @@ RadioNetwork::PrintRadioEnvironmentMap (void)
   Ptr<OutputStreamWrapper> fileWrapper;
   fileWrapper = Create<OutputStreamWrapper> (filename + ".gpi", std::ios::out);
 
+  std::string localname = filename;
   size_t begin = filename.rfind ("/");
-  size_t end = filename.length ();
-  std::string localname = filename.substr (begin + 1, end - 1);
+  if (begin != std::string::npos)
+    {
+      localname = filename.substr (begin + 1, filename.length () - 1);
+    }
 
   *fileWrapper->GetStream ()
     << "set term pdfcairo enhanced color dashed rounded" << std::endl
