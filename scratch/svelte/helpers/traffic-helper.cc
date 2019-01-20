@@ -623,12 +623,12 @@ TrafficHelper::InstallApplications ()
             m_livVideoHelper.SetServerAttribute (
               "TraceFilename", StringValue (GetVideoFilename (videoIdx)));
             m_livVideoHelper.SetClientAttribute (
-              "TraceFilename", StringValue (std::string ()));
+              "TraceFilename", StringValue (GetVideoFilename (videoIdx)));
             EpsBearer bearer (EpsBearer::NGBR_VOICE_VIDEO_GAMING);
 
             // Downlink UDP traffic.
             EpcTft::PacketFilter filter;
-            filter.direction = EpcTft::DOWNLINK;
+            filter.direction = EpcTft::BIDIRECTIONAL;
             filter.protocol = UdpL4Protocol::PROT_NUMBER;
             InstallAppDedicated (m_livVideoHelper, bearer, filter);
           }
