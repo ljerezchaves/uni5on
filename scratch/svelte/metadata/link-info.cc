@@ -254,15 +254,6 @@ LinkInfo::GetMetBitRate (LinkDir dir, SliceId slice) const
   return m_slices [dir][slice].meter;
 }
 
-bool
-LinkInfo::HasBitRate (LinkDir dir, SliceId slice, int64_t bitRate) const
-{
-  NS_LOG_FUNCTION (this << dir << slice << bitRate);
-
-  NS_ASSERT_MSG (slice < SliceId::ALL, "Invalid slice for this operation.");
-  return (GetFreBitRate (dir, slice) >= bitRate);
-}
-
 std::ostream &
 LinkInfo::PrintValues (std::ostream &os, LinkDir dir, SliceId slice) const
 {

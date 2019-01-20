@@ -157,6 +157,18 @@ protected:
   uint16_t GetSliceTable (SliceId slice) const;
 
   /**
+   * Check for available GBR bit rate.
+   * \param lInfo The link information.
+   * \param dir The link direction.
+   * \param slice The network slice.
+   * \param bitRate The bit rate to check.
+   * \param blockThs The GBR block threshold.
+   * \return True if there is available bit rate, false otherwise.
+   */
+  bool HasGbrBitRate (Ptr<const LinkInfo> lInfo, LinkInfo::LinkDir dir,
+                      SliceId slice, int64_t bitRate, double blockThs) const;
+
+  /**
    * Notify this controller of a new bearer context created.
    * \param rInfo The routing information to process.
    */

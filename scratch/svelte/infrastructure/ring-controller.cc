@@ -20,6 +20,7 @@
 
 #include <string>
 #include "ring-controller.h"
+#include "../logical/slice-controller.h"
 #include "../metadata/enb-info.h"
 #include "../metadata/routing-info.h"
 #include "backhaul-network.h"
@@ -792,6 +793,7 @@ RingController::HasAvailableResources (Ptr<RingInfo> ringInfo)
 
   int64_t dlRate = rInfo->GetGbrDlBitRate ();
   int64_t ulRate = rInfo->GetGbrUlBitRate ();
+  double blockThs = GetSliceController (slice)->GetGbrBlockThs ();
 
   Ptr<LinkInfo> lInfo;
   LinkInfo::LinkDir dlDir, ulDir;
@@ -803,8 +805,8 @@ RingController::HasAvailableResources (Ptr<RingInfo> ringInfo)
     {
       uint16_t next = NextSwitchIndex (curr, downPath);
       std::tie (lInfo, dlDir, ulDir) = GetLinkInfo (curr, next);
-      success &= lInfo->HasBitRate (dlDir, slice, dlRate);
-      success &= lInfo->HasBitRate (ulDir, slice, ulRate);
+      success &= HasGbrBitRate (lInfo, dlDir, slice, dlRate, blockThs);
+      success &= HasGbrBitRate (lInfo, ulDir, slice, ulRate, blockThs);
       curr = next;
 
       // Save this link as used by S5 interface.
@@ -826,13 +828,15 @@ RingController::HasAvailableResources (Ptr<RingInfo> ringInfo)
           // When checking for downlink resources for S1-U interface we also
           // must ensure that the link has uplink resources for S5 interface,
           // and vice-versa.
-          success &= lInfo->HasBitRate (dlDir, slice, dlRate + ulRate);
-          success &= lInfo->HasBitRate (ulDir, slice, ulRate + dlRate);
+          success &= HasGbrBitRate (lInfo, dlDir, slice,
+                                    dlRate + ulRate, blockThs);
+          success &= HasGbrBitRate (lInfo, ulDir, slice,
+                                    ulRate + dlRate, blockThs);
         }
       else
         {
-          success &= lInfo->HasBitRate (dlDir, slice, dlRate);
-          success &= lInfo->HasBitRate (ulDir, slice, ulRate);
+          success &= HasGbrBitRate (lInfo, dlDir, slice, dlRate, blockThs);
+          success &= HasGbrBitRate (lInfo, ulDir, slice, ulRate, blockThs);
         }
       curr = next;
     }
