@@ -325,7 +325,7 @@ void ForceDefaults ()
     "ns3::CsmaChannel::FullDuplex", BooleanValue (true));
 
   //
-  // Fix the number of output priority queues on every switch port to 3.
+  // Fix the number of output queues on every switch port to 3.
   //
   Config::SetDefault (
     "ns3::OFSwitch13Queue::NumQueues", UintegerValue (3));

@@ -96,9 +96,9 @@ private:
   /**
    * Install a traffic manager into each UE and configure the EPS bearers and
    * TFT packet filters for enable applications
-   * \attention The QCIs used here for each application are strongly related to
-   *     the DSCP mapping, which will reflect on the priority queues used by
-   *     both OpenFlow switches and traffic control module. Be careful if you
+   * \attention The QCIs used here for each application are strongly related
+   *     to the DSCP mapping, which will reflect on the queues used by both
+   *     OpenFlow switches and traffic control module. Be careful if you
    *     intend to change it.
    * \internal Some notes about internal GbrQosInformation usage:
    * \li The Maximum Bit Rate field is used by controller to install meter

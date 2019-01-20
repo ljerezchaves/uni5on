@@ -87,7 +87,7 @@ public:
   OpMode    GetBlockPolicy        (void) const;
   double    GetBlockThreshold     (void) const;
   SliceMode GetInterSliceMode     (void) const;
-  OpMode    GetPriorityQueuesMode (void) const;
+  OpMode    GetQosQueuesMode      (void) const;
   //\}
 
 protected:
@@ -266,7 +266,7 @@ private:
   // Internal mechanisms metadata.
   OpMode                m_blockPolicy;    //!< Switch overload block policy.
   double                m_blockThs;       //!< Switch block threshold.
-  OpMode                m_priorityQueues; //!< DSCP priority queues mechanism.
+  OpMode                m_qosQueues;      //!< QoS output queues mechanism.
   DataRate              m_extraStep;      //!< Extra adjustment step.
   DataRate              m_meterStep;      //!< Meter adjustment step.
   SliceMode             m_sliceMode;      //!< Inter-slicing operation mode.

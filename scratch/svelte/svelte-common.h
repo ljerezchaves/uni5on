@@ -222,8 +222,8 @@ double Bps2Kbps (DataRate datarate);
  * We are mapping the DSCP value (RFC 2474) to the IP Type of Service (ToS)
  * (RFC 1349) field because the pfifo_fast queue discipline from the traffic
  * control module still uses the old IP ToS definition. Thus, we are
- * 'translating' the DSCP values so we can keep the priority queuing
- * consistency both on traffic control module and OpenFlow port queues.
+ * 'translating' the DSCP values so we can keep the queuing consistency
+ * both on traffic control module and OpenFlow port queues.
  * \verbatim
  * DSCP_EF   --> ToS 0x10 --> prio 6 --> band 0 --> queue 0 (high).
  * DSCP_AF41 --> ToS 0x18 --> prio 4 --> band 1 --> queue 1 (normal).

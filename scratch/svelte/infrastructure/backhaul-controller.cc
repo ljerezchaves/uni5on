@@ -99,11 +99,11 @@ BackhaulController::GetTypeId (void)
                    DataRateValue (DataRate ("2Mbps")),
                    MakeDataRateAccessor (&BackhaulController::m_meterStep),
                    MakeDataRateChecker ())
-    .AddAttribute ("PriorityQueues",
-                   "Priority output queues mechanism operation mode.",
+    .AddAttribute ("QosQueues",
+                   "QoS output queues mechanism operation mode.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    EnumValue (OpMode::ON),
-                   MakeEnumAccessor (&BackhaulController::m_priorityQueues),
+                   MakeEnumAccessor (&BackhaulController::m_qosQueues),
                    MakeEnumChecker (OpMode::OFF, OpModeStr (OpMode::OFF),
                                     OpMode::ON,  OpModeStr (OpMode::ON)))
   ;
@@ -152,11 +152,11 @@ BackhaulController::GetInterSliceMode (void) const
 }
 
 OpMode
-BackhaulController::GetPriorityQueuesMode (void) const
+BackhaulController::GetQosQueuesMode (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_priorityQueues;
+  return m_qosQueues;
 }
 
 void
@@ -586,9 +586,9 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // -------------------------------------------------------------------------
   // Output table -- [from higher to lower priority]
   //
-  if (GetPriorityQueuesMode () == OpMode::ON)
+  if (GetQosQueuesMode () == OpMode::ON)
     {
-      // Priority output queues rules.
+      // QoS output queues rules.
       for (auto const &it : m_queueByDscp)
         {
           std::ostringstream cmd;

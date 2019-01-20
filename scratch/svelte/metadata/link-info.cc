@@ -289,7 +289,7 @@ LinkInfo::PrintValues (std::ostream &os, LinkDir dir, SliceId slice) const
      << " " << setw (11) << Bps2Kbps (GetQuoBitRate (dir, slice))
      << " " << setw (11) << Bps2Kbps (GetResBitRate (dir, slice))
      << " " << setw (11) << Bps2Kbps (GetExtBitRate (dir, slice))
-     << " " << setw (11) << Bps2Kbps (GetMetBitRate (dir, slice))    
+     << " " << setw (11) << Bps2Kbps (GetMetBitRate (dir, slice))
      << " " << setw (11) << Bps2Kbps (GetMaxBitRate (dir, slice, GT))
      << " " << setw (11) << Bps2Kbps (GetMaxBitRate (dir, slice, NT))
      << " " << setw (11) << Bps2Kbps (GetFreBitRate (dir, slice, GT))
