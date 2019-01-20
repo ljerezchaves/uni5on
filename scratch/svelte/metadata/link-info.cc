@@ -87,14 +87,18 @@ LinkInfo::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::LinkInfo")
     .SetParent<Object> ()
+    //
+    // For sufficiently large N, the first N data points represent about 86%
+    // of the total weight in the calculation when EWMA alpha = 2 / (N + 1).
+    //
     .AddAttribute ("EwmaLongAlpha",
                    "The EWMA alpha parameter for long-term link throughput.",
-                   DoubleValue (0.04),  // Last 5 seconds
+                   DoubleValue (0.04),  // Last 5 seconds (N ~= 50)
                    MakeDoubleAccessor (&LinkInfo::m_ewmaLtAlpha),
                    MakeDoubleChecker<double> (0.0, 1.0))
     .AddAttribute ("EwmaShortAlpha",
                    "The EWMA alpha parameter for short-term link throughput.",
-                   DoubleValue (0.2),   // Last 1 second
+                   DoubleValue (0.2),   // Last 1 second (N ~= 10)
                    MakeDoubleAccessor (&LinkInfo::m_ewmaStAlpha),
                    MakeDoubleChecker<double> (0.0, 1.0))
     .AddAttribute ("EwmaTimeout",
