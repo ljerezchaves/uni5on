@@ -154,15 +154,14 @@ public:
 
   /**
    * Get the maximum bit rate for this link on the given direction,
-   * optionally filtered by the network slice and QoS traffic type.
+   * optionally filtered by the network slice.
    * \param dir The link direction.
    * \param slice The network slice.
    * \param type Traffic QoS type.
    * \return The reserved bit rate.
    */
   int64_t GetMaxBitRate (
-    LinkDir dir, SliceId slice = SliceId::ALL,
-    QosType type = QosType::BOTH) const;
+    LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**
    * Get the reserved bit rate for this link on the given direction,
@@ -176,15 +175,14 @@ public:
 
   /**
    * Get the free (not reserved) bit rate for this link on the given direction,
-   * optionally filtered by the network slice and QoS traffic type.
+   * optionally filtered by the network slice.
    * \param dir The link direction.
    * \param slice The network slice.
    * \param type Traffic QoS type.
    * \return The available bit rate.
    */
   int64_t GetFreBitRate (
-    LinkDir dir, SliceId slice = SliceId::ALL,
-    QosType type = QosType::BOTH) const;
+    LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**
    * Get the EWMA throughput bit rate for this link on the given direction,

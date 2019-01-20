@@ -197,16 +197,11 @@ LinkInfo::GetQuoBitRate (LinkDir dir, SliceId slice) const
 }
 
 int64_t
-LinkInfo::GetMaxBitRate (LinkDir dir, SliceId slice, QosType type) const
+LinkInfo::GetMaxBitRate (LinkDir dir, SliceId slice) const
 {
-  NS_LOG_FUNCTION (this << dir << slice << type);
+  NS_LOG_FUNCTION (this << dir << slice);
 
-  int64_t bitRate = GetQuoBitRate (dir, slice);
-  if (type != QosType::GBR)
-    {
-      bitRate += GetExtBitRate (dir, slice);
-    }
-  return bitRate;
+  return GetQuoBitRate (dir, slice) + GetExtBitRate (dir, slice);
 }
 
 int64_t
@@ -218,11 +213,11 @@ LinkInfo::GetResBitRate (LinkDir dir, SliceId slice) const
 }
 
 int64_t
-LinkInfo::GetFreBitRate (LinkDir dir, SliceId slice, QosType type) const
+LinkInfo::GetFreBitRate (LinkDir dir, SliceId slice) const
 {
-  NS_LOG_FUNCTION (this << dir << slice << type);
+  NS_LOG_FUNCTION (this << dir << slice);
 
-  return GetMaxBitRate (dir, slice, type) - GetResBitRate (dir, slice);
+  return GetMaxBitRate (dir, slice) - GetResBitRate (dir, slice);
 }
 
 int64_t
@@ -239,7 +234,7 @@ LinkInfo::GetIdlBitRate (EwmaTerm term, LinkDir dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << term << dir << slice);
 
-  return GetMaxBitRate (dir, slice, QosType::BOTH) -
+  return GetMaxBitRate (dir, slice) -
          GetUseBitRate (term, dir, slice, QosType::BOTH);
 }
 
@@ -265,7 +260,7 @@ LinkInfo::HasBitRate (LinkDir dir, SliceId slice, int64_t bitRate) const
   NS_LOG_FUNCTION (this << dir << slice << bitRate);
 
   NS_ASSERT_MSG (slice < SliceId::ALL, "Invalid slice for this operation.");
-  return (GetFreBitRate (dir, slice, QosType::GBR) >= bitRate);
+  return (GetFreBitRate (dir, slice) >= bitRate);
 }
 
 std::ostream &
@@ -287,13 +282,11 @@ LinkInfo::PrintValues (std::ostream &os, LinkDir dir, SliceId slice) const
      << " " << setw (11) << Bps2Kbps (GetLinkBitRate ())
      << " " << setw (8)  << GetQuota (dir, slice)
      << " " << setw (11) << Bps2Kbps (GetQuoBitRate (dir, slice))
-     << " " << setw (11) << Bps2Kbps (GetResBitRate (dir, slice))
      << " " << setw (11) << Bps2Kbps (GetExtBitRate (dir, slice))
+     << " " << setw (11) << Bps2Kbps (GetMaxBitRate (dir, slice))
+     << " " << setw (11) << Bps2Kbps (GetResBitRate (dir, slice))
      << " " << setw (11) << Bps2Kbps (GetMetBitRate (dir, slice))
-     << " " << setw (11) << Bps2Kbps (GetMaxBitRate (dir, slice, GT))
-     << " " << setw (11) << Bps2Kbps (GetMaxBitRate (dir, slice, NT))
-     << " " << setw (11) << Bps2Kbps (GetFreBitRate (dir, slice, GT))
-     << " " << setw (11) << Bps2Kbps (GetFreBitRate (dir, slice, NT))
+     << " " << setw (11) << Bps2Kbps (GetFreBitRate (dir, slice))
      << " " << setw (11) << Bps2Kbps (GetUseBitRate (ST, dir, slice, GT))
      << " " << setw (11) << Bps2Kbps (GetUseBitRate (ST, dir, slice, NT))
      << " " << setw (11) << Bps2Kbps (GetIdlBitRate (ST, dir, slice))
@@ -352,13 +345,11 @@ LinkInfo::PrintHeader (std::ostream &os)
      << " " << setw (11) << "LinkKbps"
      << " " << setw (8)  << "Quota"
      << " " << setw (11) << "QuoKbps"
-     << " " << setw (11) << "ResKpbs"
      << " " << setw (11) << "ExtKbps"
+     << " " << setw (11) << "MaxKbps"
+     << " " << setw (11) << "ResKpbs"
      << " " << setw (11) << "MetKbps"
-     << " " << setw (11) << "MaxGbr"
-     << " " << setw (11) << "MaxNon"
-     << " " << setw (11) << "FreeGbr"
-     << " " << setw (11) << "FreeNon"
+     << " " << setw (11) << "FreKbps"
      << " " << setw (11) << "UseGbrSt"
      << " " << setw (11) << "UseNonSt"
      << " " << setw (11) << "IdleSt"
@@ -451,7 +442,7 @@ LinkInfo::ReserveBitRate (
 
   // Check for available bit rate.
   NS_ASSERT_MSG (slice < SliceId::ALL, "Invalid slice for this operation.");
-  if (GetFreBitRate (dir, slice, QosType::GBR) < bitRate)
+  if (GetFreBitRate (dir, slice) < bitRate)
     {
       NS_LOG_WARN ("No bandwidth available to reserve.");
       return false;
@@ -525,7 +516,7 @@ LinkInfo::SetMeterBitRate (LinkDir dir, SliceId slice, int64_t bitRate)
 {
   NS_LOG_FUNCTION (this << dir << slice << bitRate);
 
-  if (bitRate < 0 || bitRate > GetMaxBitRate (dir, slice, QosType::NON))
+  if (bitRate < 0 || bitRate > GetFreBitRate (dir, slice))
     {
       NS_LOG_WARN ("Invalid meter bit rate.");
       return false;
