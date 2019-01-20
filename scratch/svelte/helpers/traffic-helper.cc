@@ -723,6 +723,9 @@ TrafficHelper::InstallApplications ()
             filter.direction = EpcTft::BIDIRECTIONAL;
             filter.protocol = UdpL4Protocol::PROT_NUMBER;
             InstallAppDedicated (m_voipCallHelper, bearer, filter);
+            InstallAppDedicated (m_voipCallHelper, bearer, filter);
+            InstallAppDedicated (m_voipCallHelper, bearer, filter);
+            InstallAppDedicated (m_voipCallHelper, bearer, filter);
           }
           {
             // HTTP webpage traffic over dedicated Non-GBR EPS bearer.
