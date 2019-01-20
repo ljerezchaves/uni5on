@@ -551,22 +551,24 @@ TrafficHelper::InstallApplications ()
             InstallAppDedicated (m_gameTeamHelper, bearer, filter);
           }
           {
-            // Live video streaming over dedicated GBR EPS bearer.
-            // QCI 4 is typically associated with non-conversational video
+            // Video call over dedicated GBR EPS bearer.
+            // QCI 2 is typically associated with conversational live video
             // streaming.
             int videoIdx = m_gbrVidRng->GetInteger ();
             m_livVideoHelper.SetServerAttribute (
               "TraceFilename", StringValue (GetVideoFilename (videoIdx)));
             m_livVideoHelper.SetClientAttribute (
-              "TraceFilename", StringValue (std::string ()));
+              "TraceFilename", StringValue (GetVideoFilename (videoIdx)));
             GbrQosInformation qos;
             qos.gbrDl = GetVideoGbr (videoIdx).GetBitRate ();
+            qos.gbrUl = GetVideoGbr (videoIdx).GetBitRate ();
             qos.mbrDl = GetVideoMbr (videoIdx).GetBitRate ();
-            EpsBearer bearer (EpsBearer::GBR_NON_CONV_VIDEO, qos);
+            qos.mbrUl = GetVideoMbr (videoIdx).GetBitRate ();
+            EpsBearer bearer (EpsBearer::GBR_CONV_VIDEO, qos);
 
             // Downlink UDP traffic.
             EpcTft::PacketFilter filter;
-            filter.direction = EpcTft::DOWNLINK;
+            filter.direction = EpcTft::BIDIRECTIONAL;
             filter.protocol = UdpL4Protocol::PROT_NUMBER;
             InstallAppDedicated (m_livVideoHelper, bearer, filter);
           }
