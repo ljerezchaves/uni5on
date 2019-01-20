@@ -693,9 +693,9 @@ BackhaulController::SlicingMeterAdjust (
     {
       LinkInfo::LinkDir dir = static_cast<LinkInfo::LinkDir> (d);
 
-      int64_t meteBitRate = lInfo->GetMetBitRate (dir, slice);
+      int64_t meterBitRate = lInfo->GetMetBitRate (dir, slice);
       int64_t freeBitRate = lInfo->GetFreBitRate (dir, slice);
-      uint64_t diffBitRate = std::abs (meteBitRate - freeBitRate);
+      uint64_t diffBitRate = std::abs (meterBitRate - freeBitRate);
       NS_LOG_DEBUG ("Slice " << SliceIdStr (slice) <<
                     " direction " << LinkInfo::LinkDirStr (dir) <<
                     " free bitrate " << freeBitRate <<
