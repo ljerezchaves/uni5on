@@ -139,6 +139,12 @@ public:
   int GetPriority (void) const;
 
   /**
+   * Get the backhaul GBR block threshold for this slice.
+   * \return The block threshold.
+   */
+  double GetGbrBlockThs (void) const;
+
+  /**
    * Notify this controller of the P-GW connected to the OpenFlow backhaul
    * network over the S5 interface, and to the web server over the SGi
    * interface.
@@ -347,6 +353,7 @@ private:
 
   // Infrastructure interface.
   Ptr<BackhaulController> m_backhaulCtrl;   //!< OpenFlow backhaul controller.
+  double                  m_gbrBlockThs;    //!< Backhaul GBR block threshold.
 
   // MME interface.
   Ptr<SvelteMme>          m_mme;            //!< MME element.

@@ -83,6 +83,11 @@ SliceController::GetTypeId (void)
                    PointerValue (),
                    MakePointerAccessor (&SliceController::m_backhaulCtrl),
                    MakePointerChecker<BackhaulController> ())
+    .AddAttribute ("GbrBlockThs",
+                   "The backhaul bandwidth GBR block threshold.",
+                   DoubleValue (0.5),
+                   MakeDoubleAccessor (&SliceController::m_gbrBlockThs),
+                   MakeDoubleChecker<double> (0.0, 1.0))
 
     // MME.
     .AddAttribute ("Mme", "The SVELTE MME pointer.",
@@ -304,6 +309,14 @@ SliceController::GetPriority (void) const
   NS_LOG_FUNCTION (this);
 
   return m_slicePrio;
+}
+
+double
+SliceController::GetGbrBlockThs (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_gbrBlockThs;
 }
 
 void
