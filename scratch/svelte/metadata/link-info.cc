@@ -442,7 +442,7 @@ LinkInfo::ReserveBitRate (
 
   // Check for available bit rate.
   NS_ASSERT_MSG (slice < SliceId::ALL, "Invalid slice for this operation.");
-  if (GetFreBitRate (dir, slice) < bitRate)
+  if (GetResBitRate (dir, slice) + bitRate > GetQuoBitRate (dir, slice))
     {
       NS_LOG_WARN ("No bandwidth available to reserve.");
       return false;
