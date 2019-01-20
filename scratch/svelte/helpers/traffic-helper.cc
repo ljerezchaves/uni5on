@@ -650,7 +650,6 @@ TrafficHelper::InstallApplications ()
             filter.direction = EpcTft::BIDIRECTIONAL;
             filter.protocol = UdpL4Protocol::PROT_NUMBER;
             InstallAppDedicated (m_autPilotHelper, bearer, filter);
-            InstallAppDedicated (m_autPilotHelper, bearer, filter);
           }
           {
             // Auto-pilot traffic over dedicated Non-GBR EPS bearer.
@@ -664,6 +663,7 @@ TrafficHelper::InstallApplications ()
             EpcTft::PacketFilter filter;
             filter.direction = EpcTft::BIDIRECTIONAL;
             filter.protocol = UdpL4Protocol::PROT_NUMBER;
+            InstallAppDedicated (m_autPilotHelper, bearer, filter);
             InstallAppDedicated (m_autPilotHelper, bearer, filter);
             InstallAppDedicated (m_autPilotHelper, bearer, filter);
           }
