@@ -523,6 +523,7 @@ TrafficHelper::InstallApplications ()
             InstallAppDefault (m_httpPageHelper);
           }
           {
+            // TODO Move this game app to a Non-GBR QCI.
             // Open Arena game over dedicated GBR EPS bearer.
             // QCI 3 is typically associated with real-time gaming.
             GbrQosInformation qos;
@@ -537,6 +538,7 @@ TrafficHelper::InstallApplications ()
             InstallAppDedicated (m_gameOpenHelper, bearer, filter);
           }
           {
+            // TODO Move this game app to a Non-GBR QCI.
             // Team Fortress game over dedicated GBR EPS bearer.
             // QCI 3 is typically associated with real-time gaming.
             GbrQosInformation qos;
@@ -638,6 +640,7 @@ TrafficHelper::InstallApplications ()
       if (m_sliceId == SliceId::MTC)
         {
           {
+            // TODO Move this auto-pilot app to QCI 3 (game?).
             // Auto-pilot traffic over dedicated GBR EPS bearer.
             // QCI 2 is typically associated with conversational live video
             // streaming. This is not the best QCI for this application, but it
@@ -654,6 +657,7 @@ TrafficHelper::InstallApplications ()
             InstallAppDedicated (m_autPilotHelper, bearer, filter);
           }
           {
+            // TODO Increase priority to this traffic using anoter Non-GBR QCI.
             // Auto-pilot traffic over dedicated Non-GBR EPS bearer.
             // QCI 8 is typically associated with buffered video streaming and
             // TCP-based applications. It could be used for a dedicated
