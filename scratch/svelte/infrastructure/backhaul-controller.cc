@@ -720,7 +720,7 @@ BackhaulController::SlicingMeterAdjust (
         {
           uint32_t meterId = GetSvelteMeterId (slice, d);
           int64_t freeKbps = Bps2Kbps (freeBitRate);
-          bool success = lInfo->SetMeterBitRate (dir, slice, freeKbps * 1000);
+          bool success = lInfo->SetMetBitRate (dir, slice, freeKbps * 1000);
           NS_ASSERT_MSG (success, "Error when setting meter bit rate.");
 
           NS_LOG_INFO ("Update slice " << SliceIdStr (slice) <<
@@ -749,7 +749,7 @@ BackhaulController::SlicingMeterInstall (Ptr<LinkInfo> lInfo, SliceId slice)
       LinkInfo::LinkDir dir = static_cast<LinkInfo::LinkDir> (d);
       uint32_t meterId = GetSvelteMeterId (slice, d);
       int64_t freeKbps = Bps2Kbps (lInfo->GetFreBitRate (dir, slice));
-      bool success = lInfo->SetMeterBitRate (dir, slice, freeKbps * 1000);
+      bool success = lInfo->SetMetBitRate (dir, slice, freeKbps * 1000);
       NS_ASSERT_MSG (success, "Error when setting meter bit rate.");
 
       NS_LOG_INFO ("Created slice " << SliceIdStr (slice) <<

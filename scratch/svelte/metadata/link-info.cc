@@ -503,7 +503,7 @@ LinkInfo::UpdateExtraBitRate (LinkDir dir, SliceId slice, int64_t bitRate)
 }
 
 bool
-LinkInfo::SetMeterBitRate (LinkDir dir, SliceId slice, int64_t bitRate)
+LinkInfo::SetMetBitRate (LinkDir dir, SliceId slice, int64_t bitRate)
 {
   NS_LOG_FUNCTION (this << dir << slice << bitRate);
 

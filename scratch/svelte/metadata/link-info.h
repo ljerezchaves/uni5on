@@ -339,7 +339,7 @@ private:
    * \param bitRate The value to set.
    * \return True if succeeded, false otherwise.
    */
-  bool SetMeterBitRate (
+  bool SetMetBitRate (
     LinkDir dir, SliceId slice, int64_t bitRate);
 
   /**
