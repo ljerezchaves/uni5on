@@ -239,6 +239,16 @@ LinkInfo::GetIdlBitRate (EwmaTerm term, LinkDir dir, SliceId slice) const
 }
 
 int64_t
+LinkInfo::GetOveBitRate (EwmaTerm term, LinkDir dir, SliceId slice) const
+{
+  NS_LOG_FUNCTION (this << term << dir << slice);
+
+  return std::max (static_cast<int64_t> (0),
+                   GetUseBitRate (term, dir, slice, QosType::BOTH) -
+                   GetQuoBitRate (dir, slice));
+}
+
+int64_t
 LinkInfo::GetExtBitRate (LinkDir dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
@@ -280,9 +290,11 @@ LinkInfo::PrintValues (std::ostream &os, LinkDir dir, SliceId slice) const
      << " " << setw (11) << Bps2Kbps (GetMetBitRate (dir, slice))
      << " " << setw (11) << Bps2Kbps (GetUseBitRate (ST, dir, slice, GT))
      << " " << setw (11) << Bps2Kbps (GetUseBitRate (ST, dir, slice, NT))
+     << " " << setw (11) << Bps2Kbps (GetOveBitRate (ST, dir, slice))
      << " " << setw (11) << Bps2Kbps (GetIdlBitRate (ST, dir, slice))
      << " " << setw (11) << Bps2Kbps (GetUseBitRate (LT, dir, slice, GT))
      << " " << setw (11) << Bps2Kbps (GetUseBitRate (LT, dir, slice, NT))
+     << " " << setw (11) << Bps2Kbps (GetOveBitRate (LT, dir, slice))
      << " " << setw (11) << Bps2Kbps (GetIdlBitRate (LT, dir, slice));
   return os;
 }
@@ -343,9 +355,11 @@ LinkInfo::PrintHeader (std::ostream &os)
      << " " << setw (11) << "MetKbps"
      << " " << setw (11) << "UseGbrSt"
      << " " << setw (11) << "UseNonSt"
+     << " " << setw (11) << "OverSt"
      << " " << setw (11) << "IdleSt"
      << " " << setw (11) << "UseGbrLt"
      << " " << setw (11) << "UseNonLt"
+     << " " << setw (11) << "OverLt"
      << " " << setw (11) << "IdleLt";
   return os;
 }

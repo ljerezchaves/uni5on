@@ -209,6 +209,17 @@ public:
     EwmaTerm term, LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**
+   * Get the EWMA over (after quota) bit rate for this link on the given
+   * direction, optionally filtered by the network slice.
+   * \param term The EWMA period of evaluation.
+   * \param dir The link direction.
+   * \param slice The network slice.
+   * \return The EWMA throughput.
+   */
+  int64_t GetOveBitRate (
+    EwmaTerm term, LinkDir dir, SliceId slice = SliceId::ALL) const;
+
+  /**
    * Get the extra bit rate for this link on the given direction,
    * optionally filtered by the network slice.
    * \param dir The link direction.
