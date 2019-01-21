@@ -519,8 +519,40 @@ TrafficHelper::InstallApplications ()
       if (m_sliceId == SliceId::HTC)
         {
           {
-            // HTTP webpage traffic over default Non-GBR EPS bearer.
-            InstallAppDefault (m_httpPageHelper);
+            // VoIP call over dedicated GBR EPS bearer.
+            // QCI 1 is typically associated with conversational voice.
+            GbrQosInformation qos;
+            qos.gbrDl = 45000;  // 45 Kbps
+            qos.gbrUl = 45000;  // 45 Kbps
+            EpsBearer bearer (EpsBearer::GBR_CONV_VOICE, qos);
+
+            // Bidirectional UDP traffic.
+            EpcTft::PacketFilter filter;
+            filter.direction = EpcTft::BIDIRECTIONAL;
+            filter.protocol = UdpL4Protocol::PROT_NUMBER;
+            InstallAppDedicated (m_voipCallHelper, bearer, filter);
+          }
+          {
+            // Video call over dedicated GBR EPS bearer.
+            // QCI 2 is typically associated with conversational live video
+            // streaming.
+            int videoIdx = m_gbrVidRng->GetInteger ();
+            m_livVideoHelper.SetServerAttribute (
+              "TraceFilename", StringValue (GetVideoFilename (videoIdx)));
+            m_livVideoHelper.SetClientAttribute (
+              "TraceFilename", StringValue (GetVideoFilename (videoIdx)));
+            GbrQosInformation qos;
+            qos.gbrDl = GetVideoGbr (videoIdx).GetBitRate ();
+            qos.gbrUl = GetVideoGbr (videoIdx).GetBitRate ();
+            qos.mbrDl = GetVideoMbr (videoIdx).GetBitRate ();
+            qos.mbrUl = GetVideoMbr (videoIdx).GetBitRate ();
+            EpsBearer bearer (EpsBearer::GBR_CONV_VIDEO, qos);
+
+            // Downlink UDP traffic.
+            EpcTft::PacketFilter filter;
+            filter.direction = EpcTft::BIDIRECTIONAL;
+            filter.protocol = UdpL4Protocol::PROT_NUMBER;
+            InstallAppDedicated (m_livVideoHelper, bearer, filter);
           }
           {
             // TODO Move this game app to a Non-GBR QCI.
@@ -553,42 +585,6 @@ TrafficHelper::InstallApplications ()
             InstallAppDedicated (m_gameTeamHelper, bearer, filter);
           }
           {
-            // Video call over dedicated GBR EPS bearer.
-            // QCI 2 is typically associated with conversational live video
-            // streaming.
-            int videoIdx = m_gbrVidRng->GetInteger ();
-            m_livVideoHelper.SetServerAttribute (
-              "TraceFilename", StringValue (GetVideoFilename (videoIdx)));
-            m_livVideoHelper.SetClientAttribute (
-              "TraceFilename", StringValue (GetVideoFilename (videoIdx)));
-            GbrQosInformation qos;
-            qos.gbrDl = GetVideoGbr (videoIdx).GetBitRate ();
-            qos.gbrUl = GetVideoGbr (videoIdx).GetBitRate ();
-            qos.mbrDl = GetVideoMbr (videoIdx).GetBitRate ();
-            qos.mbrUl = GetVideoMbr (videoIdx).GetBitRate ();
-            EpsBearer bearer (EpsBearer::GBR_CONV_VIDEO, qos);
-
-            // Downlink UDP traffic.
-            EpcTft::PacketFilter filter;
-            filter.direction = EpcTft::BIDIRECTIONAL;
-            filter.protocol = UdpL4Protocol::PROT_NUMBER;
-            InstallAppDedicated (m_livVideoHelper, bearer, filter);
-          }
-          {
-            // VoIP call over dedicated GBR EPS bearer.
-            // QCI 1 is typically associated with conversational voice.
-            GbrQosInformation qos;
-            qos.gbrDl = 45000;  // 45 Kbps
-            qos.gbrUl = 45000;  // 45 Kbps
-            EpsBearer bearer (EpsBearer::GBR_CONV_VOICE, qos);
-
-            // Bidirectional UDP traffic.
-            EpcTft::PacketFilter filter;
-            filter.direction = EpcTft::BIDIRECTIONAL;
-            filter.protocol = UdpL4Protocol::PROT_NUMBER;
-            InstallAppDedicated (m_voipCallHelper, bearer, filter);
-          }
-          {
             // Buffered video streaming over dedicated Non-GBR EPS bearer.
             // QCI 6 is typically associated with voice, buffered video
             // streaming and TCP-based applications. It could be used for
@@ -603,19 +599,6 @@ TrafficHelper::InstallApplications ()
             filter.direction = EpcTft::BIDIRECTIONAL;
             filter.protocol = TcpL4Protocol::PROT_NUMBER;
             InstallAppDedicated (m_bufVideoHelper, bearer, filter);
-          }
-          {
-            // HTTP webpage traffic over dedicated Non-GBR EPS bearer.
-            // QCI 9 is typically associated with buffered video streaming and
-            // TCP-based applications. It is typically used for the default
-            // bearer of a UE for non privileged subscribers.
-            EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_DEFAULT);
-
-            // Bidirectional TCP traffic.
-            EpcTft::PacketFilter filter;
-            filter.direction = EpcTft::BIDIRECTIONAL;
-            filter.protocol = TcpL4Protocol::PROT_NUMBER;
-            InstallAppDedicated (m_httpPageHelper, bearer, filter);
           }
           {
             // Live video streaming over dedicated Non-GBR EPS bearer.
@@ -633,6 +616,23 @@ TrafficHelper::InstallApplications ()
             filter.direction = EpcTft::BIDIRECTIONAL;
             filter.protocol = UdpL4Protocol::PROT_NUMBER;
             InstallAppDedicated (m_livVideoHelper, bearer, filter);
+          }
+          {
+            // HTTP webpage traffic over dedicated Non-GBR EPS bearer.
+            // QCI 9 is typically associated with buffered video streaming and
+            // TCP-based applications. It is typically used for the default
+            // bearer of a UE for non privileged subscribers.
+            EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_DEFAULT);
+
+            // Bidirectional TCP traffic.
+            EpcTft::PacketFilter filter;
+            filter.direction = EpcTft::BIDIRECTIONAL;
+            filter.protocol = TcpL4Protocol::PROT_NUMBER;
+            InstallAppDedicated (m_httpPageHelper, bearer, filter);
+          }
+          {
+            // HTTP webpage traffic over default Non-GBR EPS bearer.
+            InstallAppDefault (m_httpPageHelper);
           }
           continue;
         }
@@ -711,10 +711,6 @@ TrafficHelper::InstallApplications ()
       if (m_sliceId == SliceId::TMP)
         {
           {
-            // HTTP webpage traffic over default Non-GBR EPS bearer.
-            InstallAppDefault (m_httpPageHelper);
-          }
-          {
             // VoIP call over dedicated GBR EPS bearer.
             // QCI 1 is typically associated with conversational voice.
             GbrQosInformation qos;
@@ -730,19 +726,6 @@ TrafficHelper::InstallApplications ()
             InstallAppDedicated (m_voipCallHelper, bearer, filter);
             InstallAppDedicated (m_voipCallHelper, bearer, filter);
             InstallAppDedicated (m_voipCallHelper, bearer, filter);
-          }
-          {
-            // HTTP webpage traffic over dedicated Non-GBR EPS bearer.
-            // QCI 9 is typically associated with buffered video streaming and
-            // TCP-based applications. It is typically used for the default
-            // bearer of a UE for non privileged subscribers.
-            EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_DEFAULT);
-
-            // Bidirectional TCP traffic.
-            EpcTft::PacketFilter filter;
-            filter.direction = EpcTft::BIDIRECTIONAL;
-            filter.protocol = TcpL4Protocol::PROT_NUMBER;
-            InstallAppDedicated (m_httpPageHelper, bearer, filter);
           }
           {
             // Live video streaming over dedicated Non-GBR EPS bearer.
@@ -761,6 +744,23 @@ TrafficHelper::InstallApplications ()
             filter.direction = EpcTft::BIDIRECTIONAL;
             filter.protocol = UdpL4Protocol::PROT_NUMBER;
             InstallAppDedicated (m_livVideoHelper, bearer, filter);
+          }
+          {
+            // HTTP webpage traffic over dedicated Non-GBR EPS bearer.
+            // QCI 9 is typically associated with buffered video streaming and
+            // TCP-based applications. It is typically used for the default
+            // bearer of a UE for non privileged subscribers.
+            EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_DEFAULT);
+
+            // Bidirectional TCP traffic.
+            EpcTft::PacketFilter filter;
+            filter.direction = EpcTft::BIDIRECTIONAL;
+            filter.protocol = TcpL4Protocol::PROT_NUMBER;
+            InstallAppDedicated (m_httpPageHelper, bearer, filter);
+          }
+          {
+            // HTTP webpage traffic over default Non-GBR EPS bearer.
+            InstallAppDefault (m_httpPageHelper);
           }
         }
     }
