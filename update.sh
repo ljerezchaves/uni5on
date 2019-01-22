@@ -40,8 +40,8 @@ function PrintHelp () {
   echo "  ${bold}checkout-sim <ref>${normal}:"
   echo "    Checkout the simulator repository using the git reference [${SIMDIR}]."
   echo
-  echo "  ${bold}pull-logs${normal}:"
-  echo "    Pull changes for the logs output git repository [${LOGDIR}]."
+  echo "  ${bold}pull-logs <dir>${normal}:"
+  echo "    Pull changes for the logs git repository [${LOGDIR}/<dir>]."
   echo
   echo "  ${bold}pull-sim${normal}:"
   echo "    Pull changes for the simulator git repository [${SIMDIR}]."
@@ -144,8 +144,19 @@ case "${ACTION}" in
       ;;
 
       pull-logs)
-        cd ${LOGDIR}
-        git pull
+	    # Parsing positional arguments
+	    if [ $# -lt 1 ];
+	    then
+	      echo "Missing <dir> argument"
+	      PrintHelp
+	    fi;
+	    DIR=$1
+	    shift
+        cd ${LOGDIR}/${DIR}
+        if [ $? -eq 0 ];
+        then
+          git pull
+        fi;
       ;;
 
       pull-sim)
