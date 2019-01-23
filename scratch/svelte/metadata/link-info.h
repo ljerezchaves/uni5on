@@ -47,6 +47,22 @@ typedef std::vector<Ptr<LinkInfo> > LinkInfoList_t;
  * - The transmitted bytes, updated by NotifyTxPacket method;
  * - The average throughput, for both short-term and long-term periods of
  *   evaluation, periodically updated by EwmaUpdate method;
+ *
+ * The figure below shows the relationship among link and slice bit rates:
+ * \verbatim
+ *
+ * |------------------------- Link bit rate -------------------------|
+ *
+ * |------------ Slice quota ------------|----- Extra -----|
+ *                                       :                 :
+ * |----------------------- Maximum -----------------------|
+ *                                       :                 :
+ * |-- Reserved --|----------------- Free -----------------|
+ *                                       :                 :
+ * |-- GBR use --|---------- Non-GBR use ---------|        :
+ *                                       :        :        :
+ *                                       |- Over -|- Idle -|
+ * \endverbatim
  */
 class LinkInfo : public Object
 {
