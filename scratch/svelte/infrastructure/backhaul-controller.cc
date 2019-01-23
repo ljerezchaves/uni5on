@@ -650,8 +650,8 @@ BackhaulController::SlicingExtraAdjust (
       // assigning one new extra bit rate step for those slices that may
       // benefit from it.
       int maxSteps = linkIdle / stepRate;
-      for (auto it = m_sliceCtrlPrio.end ();
-           it != m_sliceCtrlPrio.begin (); --it)
+      for (auto it = m_sliceCtrlPrio.rbegin ();
+           it != m_sliceCtrlPrio.rend (); ++it)
         {
           SliceId slice = (*it)->GetSliceId ();
           int64_t sliceIdle = lInfo->GetIdlBitRate (longTerm, dir, slice);
