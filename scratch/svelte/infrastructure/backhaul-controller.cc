@@ -635,41 +635,107 @@ BackhaulController::SlicingExtraAdjust (
   NS_ASSERT_MSG (GetInterSliceMode () == SliceMode::DYNA,
                  "Invalid inter-slice operation mode.");
 
-  // Get the total link idle bit rate that can be
-  // shared among slices as extra bit rate.
+  const LinkInfo::EwmaTerm longTerm = LinkInfo::LTERM;
   int64_t stepRate = static_cast<int64_t> (m_extraStep.GetBitRate ());
-  int numSteps = lInfo->GetIdlBitRate (LinkInfo::LTERM, dir, SliceId::ALL) / stepRate;
-  NS_LOG_DEBUG ("Number of extra bitrate steps: " << numSteps);
 
-  // Iterate over slices in decreasing priority order, increasing
-  // or decreasing the extra bit rate as necessary.
-  int64_t quota, use, idle, extra;
-  NS_UNUSED (quota);
-  NS_UNUSED (use);
-  for (auto const &ctrl : m_sliceCtrlPrio)
+  // Check for the link bit rate statistics.
+  int64_t linkRate = lInfo->GetLinkBitRate ();
+  int64_t linkUsag = lInfo->GetUseBitRate (longTerm, dir);
+  int64_t linkIdle = linkRate - linkUsag;
+  int64_t linkGuar = linkRate * 0.9; // FIXME This is the safeguard value.
+
+  if (linkIdle >= linkGuar)
     {
-      SliceId slice = ctrl->GetSliceId ();
-      quota = lInfo->GetQuoBitRate (dir, slice);
-      use   = lInfo->GetUseBitRate (LinkInfo::LTERM, dir, slice, QosType::BOTH);
-      idle  = lInfo->GetIdlBitRate (LinkInfo::LTERM, dir, slice);
-      extra = lInfo->GetExtBitRate (dir, slice);
-      NS_LOG_DEBUG ("Slice " << SliceIdStr (slice) <<
-                    " direction " << LinkInfo::LinkDirStr (dir) <<
-                    " extra bitrate " << extra << " idle bitrate " << idle);
-      if (numSteps > 0 && (idle < stepRate / 2))
+      // Link usage is OK. Iterate over slices in decreasing priority order,
+      // assigning one new extra bit rate step for those slices that may
+      // benefit from it.
+      int maxSteps = linkIdle / stepRate;
+      for (auto it = m_sliceCtrlPrio.end ();
+           it != m_sliceCtrlPrio.begin (); --it)
         {
-          // Increase the extra bit rate by one step.
-          NS_LOG_DEBUG ("Increase extra bit rate.");
-          lInfo->UpdateExtraBitRate (dir, slice, stepRate);
-          SlicingMeterAdjust (lInfo, slice);
-          numSteps--;
+          SliceId slice = (*it)->GetSliceId ();
+          int64_t sliceIdle = lInfo->GetIdlBitRate (longTerm, dir, slice);
+          int64_t sliceOver = lInfo->GetOveBitRate (longTerm, dir, slice);
+          int64_t sliceExtra = lInfo->GetExtBitRate (dir, slice);
+          NS_LOG_DEBUG ("Slice " << SliceIdStr (slice) <<
+                        " direction " << LinkInfo::LinkDirStr (dir) <<
+                        " extra bitrate " << sliceExtra <<
+                        " over bitrate " << sliceOver <<
+                        " idle bitrate " << sliceIdle);
+
+          if (maxSteps > 0 && (sliceIdle < (stepRate / 2)))
+            {
+              // Increase the extra bit rate by one step.
+              NS_LOG_DEBUG ("Increase extra bit rate.");
+              bool success = lInfo->UpdateExtraBitRate (dir, slice, stepRate);
+              NS_ASSERT_MSG (success, "Error when updating extra bit rate.");
+              SlicingMeterAdjust (lInfo, slice);
+              maxSteps--;
+            }
+          else if ((sliceIdle > (stepRate * 2)) && (sliceExtra >= stepRate))
+            {
+              // Decrease one extra bit rate step from those slices that are
+              // not using it to reduce unnecessary bit rate overbooking.
+              NS_LOG_DEBUG ("Decrease extra bit rate overbooking.");
+              bool success = lInfo->UpdateExtraBitRate (dir, slice, -stepRate);
+              NS_ASSERT_MSG (success, "Error when updating extra bit rate.");
+              SlicingMeterAdjust (lInfo, slice);
+            }
         }
-      else if (numSteps < 0 || ((idle > stepRate * 2) && (extra >= stepRate)))
+    }
+  else
+    {
+      // Link usage is exceeding the safeguard threshold. Iterate over slices
+      // in increasing priority order, removing some extra bit rate in use from
+      // one (or more) slice to get the link usage below the safeguard
+      // threshold again.
+      int64_t getBack = linkGuar - linkIdle;
+
+      for (auto it = m_sliceCtrlPrio.begin ();
+           it != m_sliceCtrlPrio.end (); ++it)
         {
-          // Descrease the extra bit rate by one step.
-          NS_LOG_DEBUG ("Decrease extra bit rate.");
-          lInfo->UpdateExtraBitRate (dir, slice, (-1) * stepRate);
-          SlicingMeterAdjust (lInfo, slice);
+          SliceId slice = (*it)->GetSliceId ();
+          int64_t sliceIdle = lInfo->GetIdlBitRate (longTerm, dir, slice);
+          int64_t sliceOver = lInfo->GetOveBitRate (longTerm, dir, slice);
+          int64_t sliceExtra = lInfo->GetExtBitRate (dir, slice);
+          NS_LOG_DEBUG ("Slice " << SliceIdStr (slice) <<
+                        " direction " << LinkInfo::LinkDirStr (dir) <<
+                        " extra bitrate " << sliceExtra <<
+                        " over bitrate " << sliceOver <<
+                        " idle bitrate " << sliceIdle);
+
+          bool removed = false;
+          while ((sliceExtra >= stepRate) && (getBack > 0))
+            {
+              removed = true;
+              NS_LOG_DEBUG ("Decrease extra bit rate for congested link.");
+              bool success = lInfo->UpdateExtraBitRate (dir, slice, -stepRate);
+              NS_ASSERT_MSG (success, "Error when updating extra bit rate.");
+              sliceExtra -= stepRate;
+              if (sliceIdle > stepRate)
+                {
+                  sliceIdle -= stepRate;
+                }
+              else
+                {
+                  getBack -= stepRate - sliceIdle;
+                  sliceIdle = 0;
+                }
+            }
+
+          if (removed)
+            {
+              SlicingMeterAdjust (lInfo, slice);
+            }
+          else if ((sliceIdle > (stepRate * 2)) && (sliceExtra >= stepRate))
+            {
+              // Decrease one extra bit rate step from those slices that are
+              // not using it to reduce unnecessary bit rate overbooking.
+              NS_LOG_DEBUG ("Decrease extra bit rate overbooking.");
+              bool success = lInfo->UpdateExtraBitRate (dir, slice, -stepRate);
+              NS_ASSERT_MSG (success, "Error when updating extra bit rate.");
+              SlicingMeterAdjust (lInfo, slice);
+            }
         }
     }
 }
