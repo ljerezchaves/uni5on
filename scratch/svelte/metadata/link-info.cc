@@ -93,7 +93,7 @@ LinkInfo::GetTypeId (void)
     //
     .AddAttribute ("EwmaLongAlpha",
                    "The EWMA alpha parameter for long-term link throughput.",
-                   DoubleValue (0.04),  // Last 5 seconds (N ~= 50)
+                   DoubleValue (0.01),  // Last 20 seconds (N ~= 200)
                    MakeDoubleAccessor (&LinkInfo::m_ewmaLtAlpha),
                    MakeDoubleChecker<double> (0.0, 1.0))
     .AddAttribute ("EwmaShortAlpha",
