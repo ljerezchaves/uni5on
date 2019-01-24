@@ -283,6 +283,7 @@ private:
   DataRate              m_meterStep;      //!< Meter adjustment step.
   SliceMode             m_sliceMode;      //!< Inter-slicing operation mode.
   Time                  m_sliceTimeout;   //!< Inter-slicing timeout interval.
+  double                m_sliceLinkThs;   //!< Inter-slicing link threshold.
 
   /** A list of slice controller applications. */
   typedef std::vector<Ptr<SliceController> > CtrlAppList_t;

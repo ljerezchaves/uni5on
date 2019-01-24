@@ -75,6 +75,11 @@ BackhaulController::GetTypeId (void)
                    DataRateValue (DataRate ("4Mbps")),
                    MakeDataRateAccessor (&BackhaulController::m_extraStep),
                    MakeDataRateChecker ())
+    .AddAttribute ("InterSliceLinkThs",
+                   "Inter-slice link usage threshold in dynamic operation.",
+                   DoubleValue (0.9),
+                   MakeDoubleAccessor (&BackhaulController::m_sliceLinkThs),
+                   MakeDoubleChecker<double> (0.8, 1.0))
     .AddAttribute ("InterSliceMode",
                    "Inter-slice operation mode.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -642,7 +647,7 @@ BackhaulController::SlicingExtraAdjust (
   int64_t linkRate = lInfo->GetLinkBitRate ();
   int64_t linkUsag = lInfo->GetUseBitRate (longTerm, dir);
   int64_t linkIdle = linkRate - linkUsag;
-  int64_t linkGuar = linkRate * 0.9; // FIXME This is the safeguard value.
+  int64_t linkGuar = linkRate * (1.0 - m_sliceLinkThs);
 
   if (linkIdle >= linkGuar)
     {
