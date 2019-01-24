@@ -58,17 +58,6 @@ BackhaulController::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::BackhaulController")
     .SetParent<OFSwitch13Controller> ()
-    .AddAttribute ("BlockPolicy",
-                   "Switch overloaded block policy.",
-                   EnumValue (OpMode::ON),
-                   MakeEnumAccessor (&BackhaulController::m_blockPolicy),
-                   MakeEnumChecker (OpMode::OFF, OpModeStr (OpMode::OFF),
-                                    OpMode::ON,  OpModeStr (OpMode::ON)))
-    .AddAttribute ("BlockThs",
-                   "Switch overloaded block threshold.",
-                   DoubleValue (0.9),
-                   MakeDoubleAccessor (&BackhaulController::m_blockThs),
-                   MakeDoubleChecker<double> (0.8, 1.0))
     .AddAttribute ("ExtraStep",
                    "Default extra bit rate adjustment step.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -111,6 +100,17 @@ BackhaulController::GetTypeId (void)
                    MakeEnumAccessor (&BackhaulController::m_qosQueues),
                    MakeEnumChecker (OpMode::OFF, OpModeStr (OpMode::OFF),
                                     OpMode::ON,  OpModeStr (OpMode::ON)))
+    .AddAttribute ("SwBlockPolicy",
+                   "Switch overloaded block policy.",
+                   EnumValue (OpMode::ON),
+                   MakeEnumAccessor (&BackhaulController::m_swBlockPolicy),
+                   MakeEnumChecker (OpMode::OFF, OpModeStr (OpMode::OFF),
+                                    OpMode::ON,  OpModeStr (OpMode::ON)))
+    .AddAttribute ("SwBlockThs",
+                   "Switch overloaded block threshold.",
+                   DoubleValue (0.9),
+                   MakeDoubleAccessor (&BackhaulController::m_swBlockThs),
+                   MakeDoubleChecker<double> (0.8, 1.0))
   ;
   return tid;
 }
@@ -133,19 +133,19 @@ BackhaulController::GetNSwitches (void) const
 }
 
 OpMode
-BackhaulController::GetBlockPolicy (void) const
+BackhaulController::GetSwBlockPolicy (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_blockPolicy;
+  return m_swBlockPolicy;
 }
 
 double
-BackhaulController::GetBlockThreshold (void) const
+BackhaulController::GetSwBlockThreshold (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_blockThs;
+  return m_swBlockThs;
 }
 
 SliceMode

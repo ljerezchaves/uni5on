@@ -84,8 +84,8 @@ public:
    * \return The requested information.
    */
   //\{
-  OpMode    GetBlockPolicy        (void) const;
-  double    GetBlockThreshold     (void) const;
+  OpMode    GetSwBlockPolicy      (void) const;
+  double    GetSwBlockThreshold   (void) const;
   SliceMode GetInterSliceMode     (void) const;
   OpMode    GetQosQueuesMode      (void) const;
   //\}
@@ -276,8 +276,8 @@ private:
   OFSwitch13DeviceContainer m_switchDevices;  //!< OpenFlow switch devices.
 
   // Internal mechanisms metadata.
-  OpMode                m_blockPolicy;    //!< Switch overload block policy.
-  double                m_blockThs;       //!< Switch block threshold.
+  OpMode                m_swBlockPolicy;  //!< Switch overload block policy.
+  double                m_swBlockThs;     //!< Switch block threshold.
   OpMode                m_qosQueues;      //!< QoS output queues mechanism.
   DataRate              m_extraStep;      //!< Extra adjustment step.
   DataRate              m_meterStep;      //!< Meter adjustment step.

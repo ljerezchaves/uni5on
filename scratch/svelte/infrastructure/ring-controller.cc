@@ -725,9 +725,9 @@ RingController::HasAvailableResources (Ptr<RingInfo> ringInfo)
   double sgwTabUse = GetFlowTableUse (rInfo->GetSgwInfraSwIdx (), sliceTable);
   double pgwTabUse = GetFlowTableUse (rInfo->GetPgwInfraSwIdx (), sliceTable);
   double enbTabUse = GetFlowTableUse (rInfo->GetEnbInfraSwIdx (), sliceTable);
-  if ((rInfo->HasTraffic () && sgwTabUse >= GetBlockThreshold ())
-      || (rInfo->HasDlTraffic () && pgwTabUse >= GetBlockThreshold ())
-      || (rInfo->HasUlTraffic () && enbTabUse >= GetBlockThreshold ()))
+  if ((rInfo->HasTraffic () && sgwTabUse >= GetSwBlockThreshold ())
+      || (rInfo->HasDlTraffic () && pgwTabUse >= GetSwBlockThreshold ())
+      || (rInfo->HasUlTraffic () && enbTabUse >= GetSwBlockThreshold ()))
     {
       rInfo->SetBlocked (true, RoutingInfo::BACKTABLE);
       return false;
@@ -739,14 +739,14 @@ RingController::HasAvailableResources (Ptr<RingInfo> ringInfo)
   // the BlockPolicy attribute:
   // - If OFF : don't block the request.
   // - If ON  : block the request.
-  if (GetBlockPolicy () == OpMode::ON)
+  if (GetSwBlockPolicy () == OpMode::ON)
     {
       // S5 interface (from P-GW to S-GW).
       curr = rInfo->GetPgwInfraSwIdx ();
       downPath = ringInfo->GetDlPath (LteIface::S5);
       while (success && curr != rInfo->GetSgwInfraSwIdx ())
         {
-          success &= (GetEwmaCpuUse (curr) < GetBlockThreshold ());
+          success &= (GetEwmaCpuUse (curr) < GetSwBlockThreshold ());
           curr = NextSwitchIndex (curr, downPath);
         }
 
@@ -754,12 +754,12 @@ RingController::HasAvailableResources (Ptr<RingInfo> ringInfo)
       downPath = ringInfo->GetDlPath (LteIface::S1U);
       while (success && curr != rInfo->GetEnbInfraSwIdx ())
         {
-          success &= (GetEwmaCpuUse (curr) < GetBlockThreshold ());
+          success &= (GetEwmaCpuUse (curr) < GetSwBlockThreshold ());
           curr = NextSwitchIndex (curr, downPath);
         }
 
       // The last switch (eNB).
-      success &= (GetEwmaCpuUse (curr) < GetBlockThreshold ());
+      success &= (GetEwmaCpuUse (curr) < GetSwBlockThreshold ());
 
       if (!success)
         {
