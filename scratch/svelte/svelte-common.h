@@ -225,13 +225,13 @@ double Bps2Kbps (DataRate datarate);
  * 'translating' the DSCP values so we can keep the queuing consistency
  * both on traffic control module and OpenFlow port queues.
  * \verbatim
- * DSCP_EF   --> ToS 0x10 --> prio 6 --> band 0 --> queue 0 (high).
- * DSCP_AF41 --> ToS 0x18 --> prio 4 --> band 1 --> queue 1 (normal).
- * DSCP_AF31 --> ToS 0x00 --> prio 0 --> band 1 --> queue 1 (normal).
- * DSCP_AF32 --> ToS 0x00 --> prio 0 --> band 1 --> queue 1 (normal).
- * DSCP_AF11 --> ToS 0x00 --> prio 0 --> band 1 --> queue 1 (normal).
- * DSCP_AF11 --> ToS 0x00 --> prio 0 --> band 1 --> queue 1 (normal).
- * DSCP_BE   --> ToS 0x08 --> prio 2 --> band 2 --> queue 2 (low).
+ * DSCP_EF   --> ToS 0x10 --> prio 6 --> pfifo band 0
+ * DSCP_AF41 --> ToS 0x18 --> prio 4 --> pfifo band 1
+ * DSCP_AF31 --> ToS 0x00 --> prio 0 --> pfifo band 1
+ * DSCP_AF32 --> ToS 0x00 --> prio 0 --> pfifo band 1
+ * DSCP_AF21 --> ToS 0x00 --> prio 0 --> pfifo band 1
+ * DSCP_AF11 --> ToS 0x00 --> prio 0 --> pfifo band 1
+ * DSCP_BE   --> ToS 0x08 --> prio 2 --> pfifo band 2
  * \endverbatim
  * \see See the ns3::Socket::IpTos2Priority for details.
  */
