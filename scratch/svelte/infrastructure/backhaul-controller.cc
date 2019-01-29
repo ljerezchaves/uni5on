@@ -870,27 +870,27 @@ BackhaulController::StaticInitialize ()
       initialized = true;
 
       // Populating the IP DSCP --> OpenFlow queue id mapping table.
-      // DSCP_EF   --> OpenFlow queue 0 (high priority)
-      // DSCP_AF41 --> OpenFlow queue 1 (normal priority)
-      // DSCP_AF32 --> OpenFlow queue 1 (normal priority)
-      // DSCP_AF31 --> OpenFlow queue 1 (normal priority)
-      // DSCP_AF21 --> OpenFlow queue 1 (normal priority)
-      // DSCP_AF11 --> OpenFlow queue 1 (normal priority)
-      // DSCP_BE   --> OpenFlow queue 2 (low priority)
+      // DSCP_EF   --> OpenFlow queue 0 (priority)
+      // DSCP_AF41 --> OpenFlow queue 1 (WRR)
+      // DSCP_AF31 --> OpenFlow queue 2 (WRR)
+      // DSCP_AF32 --> OpenFlow queue 2 (WRR)
+      // DSCP_AF21 --> OpenFlow queue 3 (WRR)
+      // DSCP_AF11 --> OpenFlow queue 4 (WRR)
+      // DSCP_BE   --> OpenFlow queue 5 (WRR)
       BackhaulController::m_queueByDscp.insert (
         std::make_pair (Ipv4Header::DSCP_EF, 0));
       BackhaulController::m_queueByDscp.insert (
         std::make_pair (Ipv4Header::DSCP_AF41, 1));
       BackhaulController::m_queueByDscp.insert (
-        std::make_pair (Ipv4Header::DSCP_AF32, 1));
+        std::make_pair (Ipv4Header::DSCP_AF31, 2));
       BackhaulController::m_queueByDscp.insert (
-        std::make_pair (Ipv4Header::DSCP_AF31, 1));
+        std::make_pair (Ipv4Header::DSCP_AF32, 2));
       BackhaulController::m_queueByDscp.insert (
-        std::make_pair (Ipv4Header::DSCP_AF21, 1));
+        std::make_pair (Ipv4Header::DSCP_AF21, 3));
       BackhaulController::m_queueByDscp.insert (
-        std::make_pair (Ipv4Header::DSCP_AF11, 1));
+        std::make_pair (Ipv4Header::DSCP_AF11, 4));
       BackhaulController::m_queueByDscp.insert (
-        std::make_pair (Ipv4Header::DscpDefault, 2));
+        std::make_pair (Ipv4Header::DscpDefault, 5));
     }
 }
 
