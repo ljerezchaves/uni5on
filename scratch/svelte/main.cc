@@ -325,10 +325,10 @@ void ForceDefaults ()
     "ns3::CsmaChannel::FullDuplex", BooleanValue (true));
 
   //
-  // Fix the number of output queues on every switch port to 3.
+  // Customizing the OpenFlow queue type on switch ports.
   //
   Config::SetDefault (
-    "ns3::OFSwitch13Queue::NumQueues", UintegerValue (3));
+    "ns3::OFSwitch13Port::QueueFactory", StringValue ("ns3::SvelteQosQueue"));
 
   //
   // Enable detailed OpenFlow datapath statistics.
@@ -384,6 +384,7 @@ EnableVerbose (bool enable)
       LogComponentEnable ("RingController",           logLevelInfo);
       LogComponentEnable ("RingNetwork",              logLevelWarnInfo);
       LogComponentEnable ("SvelteEnbApplication",     logLevelWarnInfo);
+      LogComponentEnable ("SvelteQosQueue",           logLevelAll);
 
       // Logical components.
       LogComponentEnable ("GtpTunnelApp",             logLevelWarnInfo);
