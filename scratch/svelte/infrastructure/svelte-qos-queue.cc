@@ -29,36 +29,12 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("SvelteQosQueue");
 NS_OBJECT_ENSURE_REGISTERED (SvelteQosQueue);
 
-static ObjectFactory
-GetDefaultQueueFactory ()
-{
-  // Setting default internal queue configuration.
-  ObjectFactory queueFactory;
-  queueFactory.SetTypeId ("ns3::DropTailQueue<Packet>");
-  queueFactory.Set ("MaxSize", StringValue ("100p"));
-  return queueFactory;
-}
-
 TypeId
 SvelteQosQueue::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::SvelteQosQueue")
     .SetParent<OFSwitch13Queue> ()
     .AddConstructor<SvelteQosQueue> ()
-    .AddAttribute ("NumQueues",
-                   "The number of internal priority queues.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   UintegerValue (3),
-                   MakeUintegerAccessor (
-                     &SvelteQosQueue::m_numQueues),
-                   MakeUintegerChecker<int> (1, NETDEV_MAX_QUEUES))
-    .AddAttribute ("QueueFactory",
-                   "The object factory for internal priority queues.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   ObjectFactoryValue (GetDefaultQueueFactory ()),
-                   MakeObjectFactoryAccessor (
-                     &SvelteQosQueue::m_facQueues),
-                   MakeObjectFactoryChecker ())
   ;
   return tid;
 }
@@ -80,7 +56,7 @@ SvelteQosQueue::Dequeue (void)
 {
   NS_LOG_FUNCTION (this);
 
-  int queueId = GetNonEmptyQueue ();
+  int queueId = GetNextQueueToServe ();
   if (queueId >= 0)
     {
       NS_LOG_DEBUG ("Packet to be dequeued from queue " << queueId);
@@ -98,7 +74,7 @@ SvelteQosQueue::Remove (void)
 {
   NS_LOG_FUNCTION (this);
 
-  int queueId = GetNonEmptyQueue ();
+  int queueId = GetNextQueueToServe ();
   if (queueId >= 0)
     {
       NS_LOG_DEBUG ("Packet to be removed from queue " << queueId);
@@ -116,15 +92,7 @@ SvelteQosQueue::Peek (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  int queueId = GetNonEmptyQueue ();
-  if (queueId >= 0)
-    {
-      NS_LOG_DEBUG ("Packet to be peeked from queue " << queueId);
-      return GetQueue (queueId)->Peek ();
-    }
-
-  NS_LOG_DEBUG ("Queue empty");
-  return 0;
+  NS_ABORT_MSG ("Unimplemented method.");
 }
 
 void
@@ -132,27 +100,58 @@ SvelteQosQueue::DoInitialize ()
 {
   NS_LOG_FUNCTION (this);
 
-  // Creating the internal priority queues.
-  for (int queueId = 0; queueId < m_numQueues; queueId++)
+  // Configuring the factory for internal queues.
+  ObjectFactory queueFactory;
+  queueFactory.SetTypeId ("ns3::DropTailQueue<Packet>");
+  queueFactory.Set ("MaxSize", StringValue ("100p"));
+
+  // Creating the internal queues.
+  for (int queueId = 0; queueId < 6; queueId++)
     {
-      AddQueue (m_facQueues.Create<Queue<Packet> > ());
+      AddQueue (queueFactory.Create<Queue<Packet> > ());
     }
+
+  // Assigning weights for the WRR algorithm.
+  m_queueWeight = {0, 5, 4, 3, 2, 1};
+  m_queueTokens = m_queueWeight;
 
   // Chain up.
   OFSwitch13Queue::DoInitialize ();
 }
 
 int
-SvelteQosQueue::GetNonEmptyQueue (void) const
+SvelteQosQueue::GetNextQueueToServe (void)
 {
   NS_LOG_FUNCTION (this);
 
-  for (int queueId = 0; queueId < GetNQueues (); queueId++)
+  // Always check for packets in the priority queue.
+  if (GetQueue (0)->IsEmpty () == false)
+    {
+      return 0;
+    }
+
+  // Check for packets in other queues, respecting the WRR algorithm.
+  bool hasPackets = false;
+  for (int queueId = 1; queueId < GetNQueues (); queueId++)
     {
       if (GetQueue (queueId)->IsEmpty () == false)
         {
-          return queueId;
+          hasPackets = true;
+          if (m_queueTokens [queueId] > 0)
+            {
+              m_queueTokens [queueId] -= 1;
+              return queueId;
+            }
         }
+    }
+
+  // If we get here it is because we have at least one non-empty queue and no
+  // more tokens for non-empty queues. Let's reset the tokens and start again.
+  if (hasPackets)
+    {
+      NS_LOG_DEBUG ("Reseting weights.");
+      m_queueTokens = m_queueWeight;
+      return GetNextQueueToServe ();
     }
 
   NS_LOG_DEBUG ("All internal queues are empty.");
