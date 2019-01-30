@@ -18,8 +18,8 @@ function PrintHelp () {
   echo "Usage: $0 <action>"
   echo
   echo "Available ${bold}actions${normal}:"
-  echo "  ${bold}--all <-b|-i> <command>${normal}:"
-  echo "    Execute the command on all remote machines in -b (background) or -i (interactive) mode."
+  echo "  ${bold}--exec <target> <mode> <command>${normal}:"
+  echo "    Execute the command."
   echo
   echo "  ${bold}--help${normal}:"
   echo "    Print this help message and exit."
@@ -27,27 +27,20 @@ function PrintHelp () {
   echo "  ${bold}--info${normal}:"
   echo "    List current configured information."
   echo
-  echo "  ${bold}--local <command>${normal}:"
-  echo "    Execute the command on this local machine."
+  echo "Available ${bold}targets${normal}:"
+  echo -e "  ${bold}all${normal}:  \tExecute the command on all remote machines."
+  echo -e "  ${bold}local${normal}:\tExecute the command on this local machine."
+  echo -e "  ${bold}name${normal}: \tExecute the command on the named remote machine."
+  echo
+  echo "Available ${bold}modes${normal}:"
+  echo -e "  ${bold}bg${normal}:   \tExecute the command in background mode."
+  echo -e "  ${bold}fg${normal}:   \tExecute the command in foreground mode."
   echo
   echo "Available ${bold}commands${normal}:"
-  echo "  ${bold}build-lib${normal}:"
-  echo "    Compile the switch library [${LIBDIR}]."
-  echo
-  echo "  ${bold}build-sim [waf args]${normal}:"
-  echo "    Compile the simulator with optional waf arguments [${SIMDIR}]."
-  echo
-  echo "  ${bold}checkout-sim <ref>${normal}:"
-  echo "    Checkout the simulator repository using the git reference [${SIMDIR}]."
-  echo
-  echo "  ${bold}pull-logs <dir>${normal}:"
-  echo "    Pull changes for the logs git repository [${LOGDIR}/<dir>]."
-  echo
-  echo "  ${bold}pull-sim${normal}:"
-  echo "    Pull changes for the simulator git repository [${SIMDIR}]."
-  echo
-  echo "  ${bold}stats-sim${normal}:"
-  echo "    Show the status for the simulator git repository [${SIMDIR}]."
+  echo -e "  ${bold}make${normal}:     \tExecute the make [args] command on the simulator directory."
+  echo -e "  ${bold}pull-logs${normal}:\tPull changes for the logs/<dir> git repository."
+  echo -e "  ${bold}pull-sim${normal}: \tPull changes for the simulator git repository."
+  echo -e "  ${bold}stats-sim${normal}:\tShow the status for the simulator git repository."
   exit 1
 }
 
@@ -61,6 +54,126 @@ ACTION=$1
 shift
 
 case "${ACTION}" in
+  --exec)
+    # Parsing positional arguments
+    if [ $# -lt 1 ];
+    then
+      echo "Missing <target> argument"
+      PrintHelp
+    fi;
+    TARGET=$1
+    shift
+
+    if [ $# -lt 1 ];
+    then
+      echo "Missing <mode> argument"
+      PrintHelp
+    fi;
+    MODE=$1
+    shift
+
+    if [ "${MODE}" != "fg" ] && [ "${MODE}" != "bg" ];
+    then
+      echo "Invalid <mode> argument"
+      PrintHelp
+    fi;
+
+    if [ $# -lt 1 ];
+    then
+      echo "Missing <command> argument"
+      PrintHelp
+    fi;
+    COMMAND=$1
+    shift
+
+    case "${TARGET}" in
+      local)
+        OLDPWD=$(pwd)
+        case "${COMMAND}" in
+          make)
+            cd ${SIMDIR}
+            make $@
+          ;;
+
+          pull-logs)
+	          # Parsing positional arguments
+	          if [ $# -lt 1 ];
+	          then
+	            echo "Missing <dir> argument"
+	            PrintHelp
+	          fi;
+	          DIR=$1
+	          shift
+
+            cd ${LOGDIR}/${DIR}
+            if [ $? -eq 0 ];
+            then
+              git pull
+            fi;
+          ;;
+
+          pull-sim)
+            cd ${SIMDIR}
+            git pull --recurse-submodules && git submodule update --recursive
+          ;;
+
+          stats-sim)
+            cd ${SIMDIR}
+            if [ $? -eq 0 ];
+            then
+              echo "${yellow}** Simulator${normal}"
+              git log -n1
+              echo
+
+              cd src/ofswitch13
+              echo "${yellow}** Switch module:${normal}"
+              git log -n1
+              echo
+
+              cd ${LIBDIR}
+              echo "${yellow}** Switch library::${normal}"
+              git log -n1
+              echo
+            fi;
+            echo
+          ;;
+
+          *)
+            echo "Invalid <command> argument"
+            PrintHelp
+          ;;
+        esac
+        cd ${OLDPWD}
+      ;;
+
+      all)
+        for MACHINE in ${MACHINELIST};
+        do
+          echo "${green}Connecting to ${MACHINE}:${normal}"
+          ssh -q ${MACHINE} exit
+          if [ $? -eq 0 ];
+          then
+            EXECMD="ssh -t ${MACHINE} $0 --exec local ${MODE} ${COMMAND} $@"
+            if [ "${MODE}" == "bg" ];
+            then
+              EXECMD+=" &>> /dev/null &"
+            fi;
+            echo "Executing command: ${EXECMD}"
+            eval ${EXECMD}
+            sleep 0.5
+          else
+            echo "${red}Connection to ${MACHINE} failed${normal}"
+          fi;
+          echo
+        done
+      ;;
+
+      *)
+        echo "TODO"
+      ;;
+    esac
+  ;;
+
   --help)
     PrintHelp
   ;;
@@ -73,127 +186,10 @@ case "${ACTION}" in
     echo "${green}LRC machines:    ${normal}${MACHINELIST}"
   ;;
 
-  --all)
-    # Parsing positional arguments
-    if [ $# -lt 1 ];
-    then
-      echo "Missing <-b|-i> argument"
-      PrintHelp
-    fi;
-    if [ "$1" != "-b" ] && [ "$1" != "-i" ];
-    then
-      echo "Invalid <-b|-i> argument"
-      PrintHelp
-    fi;
-    MODE=$1
-    shift
-
-    for MACHINE in ${MACHINELIST};
-      do
-        echo "${green}Connecting to ${MACHINE}:${normal}"
-        ssh -q ${MACHINE} exit
-        if [ $? -eq 0 ];
-        then
-          EXECMD="ssh -t ${MACHINE} $0 --local $@"
-          if [ "${MODE}" == "-b" ];
-          then
-            EXECMD+=" &>> /dev/null &"
-          fi;
-          echo "Executing command: ${EXECMD}"
-          eval ${EXECMD}
-          sleep 0.5
-        else
-          echo "${red}Connection to ${MACHINE} failed${normal}"
-        fi;
-        echo
-      done
-  ;;
-
-  --local)
-    # Parsing positional arguments
-    if [ $# -lt 1 ];
-    then
-      echo "Missing <command> argument"
-      PrintHelp
-    fi;
-    COMMAND=$1
-    shift
-
-    OLDPWD=$(pwd)
-    case "${COMMAND}" in
-
-      build-lib)
-        cd ${LIBDIR}
-        git clean -fxd
-        ./boot.sh
-        ./configure --enable-ns3-lib
-        make
-
-        cd ${SIMDIR}
-        rm build/lib/libns3*-ofswitch13-*.so
-      ;;
-
-      build-sim)
-        cd ${SIMDIR}
-        ./waf $@
-      ;;
-
-      checkout-sim)
-        cd ${SIMDIR}
-        git checkout $@ && git submodule update --recursive
-      ;;
-
-      pull-logs)
-	    # Parsing positional arguments
-	    if [ $# -lt 1 ];
-	    then
-	      echo "Missing <dir> argument"
-	      PrintHelp
-	    fi;
-	    DIR=$1
-	    shift
-        cd ${LOGDIR}/${DIR}
-        if [ $? -eq 0 ];
-        then
-          git pull
-        fi;
-      ;;
-
-      pull-sim)
-        cd ${SIMDIR}
-        git pull --recurse-submodules && git submodule update --recursive
-      ;;
-
-      stats-sim)
-        cd ${SIMDIR}
-        echo "${yellow}** Simulator${normal}"
-        git log -n1
-        echo
-
-        cd src/ofswitch13
-        echo "${yellow}** Switch module:${normal}"
-        git log -n1
-        echo
-
-        cd ${LIBDIR}
-        echo "${yellow}** Switch library::${normal}"
-        git log -n1
-        echo
-        echo
-      ;;
-
-      *)
-        echo "Invalid <command> argument"
-        PrintHelp
-      ;;
-    esac
-    cd ${OLDPWD}
-  ;;
-
   *)
-    echo "Invalid <action> argument"
-    PrintHelp
-  ;;
+     echo "Invalid <action> argument"
+     PrintHelp
+   ;;
 esac
 
 exit 0;
