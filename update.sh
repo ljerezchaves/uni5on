@@ -41,7 +41,7 @@ function PrintHelp () {
   echo -e "  ${bold}pull-logs${normal}:\tPull changes for the logs/<dir> git repository."
   echo -e "  ${bold}pull-sim${normal}: \tPull changes for the simulator git repository."
   echo -e "  ${bold}stats-sim${normal}:\tShow the status for the simulator git repository."
-  exit 1
+  exit 0
 }
 
 # Parsing positional arguments
@@ -103,6 +103,7 @@ case "${ACTION}" in
 	          if [ $# -lt 1 ];
 	          then
 	            echo "Specify the logs/<directory>"
+	            PrintHelp;
 	          fi;
 	          DIR=$1
 	          shift
@@ -184,11 +185,11 @@ case "${ACTION}" in
   ;;
 
   --info)
-    echo "${green}Simulator name:  ${normal}${SIMNAME}"
-    echo "${green}Simulator path:  ${normal}${SIMDIR}"
-    echo "${green}Switch lib path: ${normal}${LIBDIR}"
-    echo "${green}Log output path: ${normal}${LOGDIR}"
-    echo "${green}LRC machines:    ${normal}${MACHINELIST}"
+    echo "${yellow}Simulator name:  ${normal}${SIMNAME}"
+    echo "${yellow}Simulator path:  ${normal}${SIMDIR}"
+    echo "${yellow}Switch lib path: ${normal}${LIBDIR}"
+    echo "${yellow}Log output path: ${normal}${LOGDIR}"
+    echo "${yellow}LRC machines:    ${normal}${MACHINELIST}"
   ;;
 
   *)
