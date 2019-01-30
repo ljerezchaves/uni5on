@@ -90,6 +90,12 @@ SliceController::GetTypeId (void)
                    IntegerValue (0),
                    MakeIntegerAccessor (&SliceController::m_linkQuota),
                    MakeIntegerChecker<int> (0, 100))
+    .AddAttribute ("Sharing",
+                   "Enable backhaul bandwidth sharing.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   BooleanValue (true),
+                   MakeBooleanAccessor (&SliceController::m_linkSharing),
+                   MakeBooleanChecker ())
 
     // MME.
     .AddAttribute ("Mme", "The SVELTE MME pointer.",
