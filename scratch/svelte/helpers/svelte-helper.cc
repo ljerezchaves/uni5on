@@ -403,7 +403,6 @@ SvelteHelper::NotifyConstructionCompleted (void)
 
   Ptr<BackhaulController> backahulCtrl = m_backhaul->GetControllerApp ();
   ApplicationContainer sliceControllers;
-  IntegerValue quotaValue;
   int sumQuota = 0;
 
   // Create the HTC logical slice controller, network, and traffic helper.
@@ -415,8 +414,7 @@ SvelteHelper::NotifyConstructionCompleted (void)
       m_htcController = m_htcControllerFac.Create<SliceController> ();
 
       sliceControllers.Add (m_htcController);
-      m_htcController->GetAttribute ("Quota", quotaValue);
-      sumQuota += quotaValue.Get ();
+      sumQuota += m_htcController->GetQuota ();
 
       m_htcNetworkFac.Set ("SliceId", EnumValue (SliceId::HTC));
       m_htcNetworkFac.Set ("SliceCtrl", PointerValue (m_htcController));
@@ -448,8 +446,7 @@ SvelteHelper::NotifyConstructionCompleted (void)
       m_mtcController = m_mtcControllerFac.Create<SliceController> ();
 
       sliceControllers.Add (m_mtcController);
-      m_mtcController->GetAttribute ("Quota", quotaValue);
-      sumQuota += quotaValue.Get ();
+      sumQuota += m_mtcController->GetQuota ();
 
       m_mtcNetworkFac.Set ("SliceId", EnumValue (SliceId::MTC));
       m_mtcNetworkFac.Set ("SliceCtrl", PointerValue (m_mtcController));
@@ -481,8 +478,7 @@ SvelteHelper::NotifyConstructionCompleted (void)
       m_tmpController = m_tmpControllerFac.Create<SliceController> ();
 
       sliceControllers.Add (m_tmpController);
-      m_tmpController->GetAttribute ("Quota", quotaValue);
-      sumQuota += quotaValue.Get ();
+      sumQuota += m_tmpController->GetQuota ();
 
       m_tmpNetworkFac.Set ("SliceId", EnumValue (SliceId::TMP));
       m_tmpNetworkFac.Set ("SliceCtrl", PointerValue (m_tmpController));
