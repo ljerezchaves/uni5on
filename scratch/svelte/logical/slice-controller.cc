@@ -65,12 +65,6 @@ SliceController::GetTypeId (void)
                    MakeEnumChecker (SliceId::HTC, SliceIdStr (SliceId::HTC),
                                     SliceId::MTC, SliceIdStr (SliceId::MTC),
                                     SliceId::TMP, SliceIdStr (SliceId::TMP)))
-    .AddAttribute ("Priority",
-                   "The priority for this slice.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   IntegerValue (1),
-                   MakeIntegerAccessor (&SliceController::m_slicePrio),
-                   MakeIntegerChecker<int> ())
 
     // Infrastructure.
     .AddAttribute ("BackhaulCtrl",
@@ -84,6 +78,12 @@ SliceController::GetTypeId (void)
                    DoubleValue (0.5),
                    MakeDoubleAccessor (&SliceController::m_gbrBlockThs),
                    MakeDoubleChecker<double> (0.0, 1.0))
+    .AddAttribute ("Priority",
+                   "The priority for this slice.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   IntegerValue (1),
+                   MakeIntegerAccessor (&SliceController::m_slicePrio),
+                   MakeIntegerChecker<int> ())
     .AddAttribute ("Quota",
                    "The backhaul bandwidth quota for this slice.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
