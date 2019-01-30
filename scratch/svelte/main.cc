@@ -389,13 +389,13 @@ EnableVerbose (bool enable)
       LogComponentEnable ("TrafficHelper",            logLevelWarnInfo);
 
       // Infrastructure components.
-      LogComponentEnable ("BackhaulController",       logLevelInfo);
+      LogComponentEnable ("BackhaulController",       logLevelWarnInfo);
       LogComponentEnable ("BackhaulNetwork",          logLevelWarnInfo);
       LogComponentEnable ("RadioNetwork",             logLevelWarnInfo);
-      LogComponentEnable ("RingController",           logLevelInfo);
+      LogComponentEnable ("RingController",           logLevelWarnInfo);
       LogComponentEnable ("RingNetwork",              logLevelWarnInfo);
       LogComponentEnable ("SvelteEnbApplication",     logLevelWarnInfo);
-      LogComponentEnable ("SvelteQosQueue",           logLevelAll);
+      LogComponentEnable ("SvelteQosQueue",           logLevelWarnInfo);
 
       // Logical components.
       LogComponentEnable ("GtpTunnelApp",             logLevelWarnInfo);
@@ -407,7 +407,7 @@ EnableVerbose (bool enable)
 
       // Metadata components.
       LogComponentEnable ("EnbInfo",                  logLevelWarnInfo);
-      LogComponentEnable ("LinkInfo",                 logLevelInfo);
+      LogComponentEnable ("LinkInfo",                 logLevelWarnInfo);
       LogComponentEnable ("PgwInfo",                  logLevelWarnInfo);
       LogComponentEnable ("RingInfo",                 logLevelWarnInfo);
       LogComponentEnable ("RoutingInfo",              logLevelWarnInfo);
