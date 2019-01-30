@@ -92,15 +92,17 @@ case "${ACTION}" in
         case "${COMMAND}" in
           make)
             cd ${SIMDIR}
-            make $@
+            if [ $? -eq 0 ];
+            then
+              make $@
+            fi;
           ;;
 
           pull-logs)
 	          # Parsing positional arguments
 	          if [ $# -lt 1 ];
 	          then
-	            echo "Missing <dir> argument"
-	            PrintHelp
+	            echo "Specify the logs/<directory>"
 	          fi;
 	          DIR=$1
 	          shift
@@ -114,7 +116,10 @@ case "${ACTION}" in
 
           pull-sim)
             cd ${SIMDIR}
-            git pull --recurse-submodules && git submodule update --recursive
+            if [ $? -eq 0 ];
+            then
+              git pull --recurse-submodules && git submodule update --recursive
+            fi;
           ;;
 
           stats-sim)
@@ -149,27 +154,27 @@ case "${ACTION}" in
       all)
         for MACHINE in ${MACHINELIST};
         do
-          echo "${green}Connecting to ${MACHINE}:${normal}"
-          ssh -q ${MACHINE} exit
-          if [ $? -eq 0 ];
-          then
-            EXECMD="ssh -t ${MACHINE} $0 --exec local ${MODE} ${COMMAND} $@"
-            if [ "${MODE}" == "bg" ];
-            then
-              EXECMD+=" &>> /dev/null &"
-            fi;
-            echo "Executing command: ${EXECMD}"
-            eval ${EXECMD}
-            sleep 0.5
-          else
-            echo "${red}Connection to ${MACHINE} failed${normal}"
-          fi;
-          echo
+          $0 --exec ${MACHINE} ${MODE} ${COMMAND} $@
         done
       ;;
 
       *)
-        echo "TODO"
+        echo "${green}Connecting to ${TARGET}:${normal}"
+        ssh -q ${TARGET} exit
+        if [ $? -eq 0 ];
+        then
+          EXECMD="ssh -t ${TARGET} $0 --exec local ${MODE} ${COMMAND} $@"
+          if [ "${MODE}" == "bg" ];
+          then
+            EXECMD+=" &>> /dev/null &"
+          fi;
+          echo "Executing command: ${EXECMD}"
+          eval ${EXECMD}
+          sleep 0.5
+        else
+          echo "${red}Connection to ${TARGET} failed${normal}"
+        fi;
+        echo
       ;;
     esac
   ;;
