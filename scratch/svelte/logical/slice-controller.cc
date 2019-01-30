@@ -239,6 +239,46 @@ SliceController::DedicatedBearerRelease (
   return BearerRemove (rInfo);
 }
 
+SliceId
+SliceController::GetSliceId (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_sliceId;
+}
+
+double
+SliceController::GetGbrBlockThs (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_gbrBlockThs;
+}
+
+int
+SliceController::GetPriority (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_slicePrio;
+}
+
+int
+SliceController::GetQuota (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_linkQuota;
+}
+
+bool
+SliceController::GetSharing (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_linkSharing;
+}
+
 OpMode
 SliceController::GetPgwBlockPolicy (void) const
 {
@@ -301,30 +341,6 @@ SliceController::GetS11SapSgw (void) const
   NS_LOG_FUNCTION (this);
 
   return m_s11SapSgw;
-}
-
-SliceId
-SliceController::GetSliceId (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_sliceId;
-}
-
-int
-SliceController::GetPriority (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_slicePrio;
-}
-
-double
-SliceController::GetGbrBlockThs (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_gbrBlockThs;
 }
 
 void

@@ -100,6 +100,23 @@ public:
                                        uint32_t teid);
 
   /**
+   * Get the slice ID for this controller.
+   * \return The slice ID.
+   */
+  SliceId GetSliceId (void) const;
+
+  /**
+   * \name Private member accessors for backhaul interface metadata.
+   * \return The requested information.
+   */
+  //\{
+  double    GetGbrBlockThs            (void) const;
+  int       GetPriority               (void) const;
+  int       GetQuota                  (void) const;
+  bool      GetSharing                (void) const;
+  //\}
+
+  /**
    * \name Private member accessors for P-GW metadata.
    * \return The requested information.
    */
@@ -125,24 +142,6 @@ public:
    * \return The S-GW side of the S11 SAP.
    */
   EpcS11SapSgw* GetS11SapSgw (void) const;
-
-  /**
-   * Get the slice ID for this controller.
-   * \return The slice ID.
-   */
-  SliceId GetSliceId (void) const;
-
-  /**
-   * Get the slice priority for this controller.
-   * \return The slice priority;
-   */
-  int GetPriority (void) const;
-
-  /**
-   * Get the backhaul GBR block threshold for this slice.
-   * \return The block threshold.
-   */
-  double GetGbrBlockThs (void) const;
 
   /**
    * Notify this controller of the P-GW connected to the OpenFlow backhaul
