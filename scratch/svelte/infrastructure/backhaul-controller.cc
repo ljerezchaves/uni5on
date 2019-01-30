@@ -247,12 +247,14 @@ BackhaulController::HasGbrBitRate (
 {
   NS_LOG_FUNCTION (this << lInfo << dir << slice << bitRate << blockThs);
 
-  // Can't reserve more GBR bit rate thant the minimum between the slice
+  NS_ASSERT_MSG (slice < SliceId::ALL, "Invalid slice for this operation.");
+
+  // Can't reserve more GBR bit rate than the minimum between the slice
   // quota bit rate and the slice maximum bit rate * GBR block threshold.
   int64_t blkBitRate = lInfo->GetMaxBitRate (dir, slice) * blockThs;
   int64_t quoBitRate = lInfo->GetQuoBitRate (dir, slice);
   int64_t resBitRate = lInfo->GetResBitRate (dir, slice);
-  return (resBitRate + bitRate < std::min (blkBitRate, quoBitRate));
+  return (resBitRate + bitRate <= std::min (blkBitRate, quoBitRate));
 }
 
 void
