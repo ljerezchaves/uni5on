@@ -62,8 +62,14 @@ private:
    */
   int GetNextQueueToServe (void);
 
-  std::vector<int>  m_queueWeight;  //!< Weight for each queue.
-  std::vector<int>  m_queueTokens;  //!< Tokens for WRR scheduling.
+  /**
+   * This is the WRR weight assigned to each internal queue, representing the
+   * maximum number of packets to serve before reseting the weights. Note that
+   * the first weight is zero as this is not used by the priority queue.
+   */
+  const std::vector<int> m_queueWeight = {0, 3, 3, 3, 2, 1};
+  const int              m_queueNum = 6; //!< Total number of queues.
+  std::vector<int>       m_queueTokens;  //!< Tokens for WRR scheduling.
 
   NS_LOG_TEMPLATE_DECLARE;          //!< Redefinition of the log component.
 };

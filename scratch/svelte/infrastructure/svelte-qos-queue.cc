@@ -106,13 +106,12 @@ SvelteQosQueue::DoInitialize ()
   queueFactory.Set ("MaxSize", StringValue ("100p"));
 
   // Creating the internal queues.
-  for (int queueId = 0; queueId < 6; queueId++)
+  for (int queueId = 0; queueId < m_queueNum; queueId++)
     {
       AddQueue (queueFactory.Create<Queue<Packet> > ());
     }
 
-  // Assigning weights for the WRR algorithm.
-  m_queueWeight = {0, 5, 4, 3, 2, 1};
+  // Reseting weights for the WRR algorithm.
   m_queueTokens = m_queueWeight;
 
   // Chain up.
