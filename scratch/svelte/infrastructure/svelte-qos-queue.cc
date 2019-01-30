@@ -111,7 +111,7 @@ SvelteQosQueue::DoInitialize ()
       AddQueue (queueFactory.Create<Queue<Packet> > ());
     }
 
-  // Reseting weights for the WRR algorithm.
+  // Initializing weights for the WRR algorithm.
   m_queueTokens = m_queueWeight;
 
   // Chain up.
@@ -148,12 +148,12 @@ SvelteQosQueue::GetNextQueueToServe (void)
   // more tokens for non-empty queues. Let's reset the tokens and start again.
   if (hasPackets)
     {
-      NS_LOG_DEBUG ("Reseting weights.");
+      NS_LOG_DEBUG ("Reseting queue tokens.");
       m_queueTokens = m_queueWeight;
       return GetNextQueueToServe ();
     }
 
-  NS_LOG_DEBUG ("All internal queues are empty.");
+  // All queues are empty.
   return -1;
 }
 
