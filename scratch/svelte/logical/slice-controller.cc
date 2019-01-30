@@ -57,7 +57,8 @@ SliceController::GetTypeId (void)
     .AddConstructor<SliceController> ()
 
     // Slice.
-    .AddAttribute ("SliceId", "The LTE logical slice identification.",
+    .AddAttribute ("SliceId",
+                   "The LTE logical slice identification.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    EnumValue (SliceId::UNKN),
                    MakeEnumAccessor (&SliceController::m_sliceId),
@@ -65,29 +66,30 @@ SliceController::GetTypeId (void)
                                     SliceId::MTC, SliceIdStr (SliceId::MTC),
                                     SliceId::TMP, SliceIdStr (SliceId::TMP)))
     .AddAttribute ("Priority",
-                   "Priority for this slice.",
+                   "The priority for this slice.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    IntegerValue (1),
                    MakeIntegerAccessor (&SliceController::m_slicePrio),
                    MakeIntegerChecker<int> ())
-    .AddAttribute ("Quota",
-                   "Infrastructure quota for this slice.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   IntegerValue (0),
-                   MakeIntegerAccessor (&SliceController::m_sliceQuota),
-                   MakeIntegerChecker<int> (0, 100))
 
     // Infrastructure.
-    .AddAttribute ("BackhaulCtrl", "The OpenFlow backhaul controller pointer.",
+    .AddAttribute ("BackhaulCtrl",
+                   "The OpenFlow backhaul controller pointer.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    PointerValue (),
                    MakePointerAccessor (&SliceController::m_backhaulCtrl),
                    MakePointerChecker<BackhaulController> ())
     .AddAttribute ("GbrBlockThs",
-                   "The backhaul bandwidth GBR block threshold.",
+                   "The backhaul GBR bandwidth block threshold.",
                    DoubleValue (0.5),
                    MakeDoubleAccessor (&SliceController::m_gbrBlockThs),
                    MakeDoubleChecker<double> (0.0, 1.0))
+    .AddAttribute ("Quota",
+                   "The backhaul bandwidth quota for this slice.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   IntegerValue (0),
+                   MakeIntegerAccessor (&SliceController::m_linkQuota),
+                   MakeIntegerChecker<int> (0, 100))
 
     // MME.
     .AddAttribute ("Mme", "The SVELTE MME pointer.",

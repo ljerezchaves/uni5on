@@ -349,11 +349,11 @@ private:
   SliceId                 m_sliceId;        //!< Logical slice ID.
   std::string             m_sliceIdStr;     //!< Slice ID string.
   int                     m_slicePrio;      //!< slice priority.
-  int                     m_sliceQuota;     //!< Initial infrastructure quota.
 
   // Infrastructure interface.
   Ptr<BackhaulController> m_backhaulCtrl;   //!< OpenFlow backhaul controller.
   double                  m_gbrBlockThs;    //!< Backhaul GBR block threshold.
+  int                     m_linkQuota;      //!< Initial bandwitdh quota.
 
   // MME interface.
   Ptr<SvelteMme>          m_mme;            //!< MME element.
