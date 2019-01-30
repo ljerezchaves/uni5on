@@ -93,9 +93,10 @@ SliceController::GetTypeId (void)
     .AddAttribute ("Sharing",
                    "Enable backhaul bandwidth sharing.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   BooleanValue (true),
-                   MakeBooleanAccessor (&SliceController::m_linkSharing),
-                   MakeBooleanChecker ())
+                   EnumValue (OpMode::ON),
+                   MakeEnumAccessor (&SliceController::m_linkSharing),
+                   MakeEnumChecker (OpMode::OFF, OpModeStr (OpMode::OFF),
+                                    OpMode::ON,  OpModeStr (OpMode::ON)))
 
     // MME.
     .AddAttribute ("Mme", "The SVELTE MME pointer.",
@@ -271,7 +272,7 @@ SliceController::GetQuota (void) const
   return m_linkQuota;
 }
 
-bool
+OpMode
 SliceController::GetSharing (void) const
 {
   NS_LOG_FUNCTION (this);

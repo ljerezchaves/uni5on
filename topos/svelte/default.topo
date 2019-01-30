@@ -42,7 +42,7 @@ default ns3::SliceController::SgwBlockPolicy "on"
 default ns3::SliceController::SgwBlockThs "0.9"
 default ns3::SliceController::Priority "1"
 default ns3::SliceController::Quota "0"
-default ns3::SliceController::Sharing "true"
+default ns3::SliceController::Sharing "on"
 
 default ns3::SliceNetwork::NumUes "0"
 default ns3::SliceNetwork::UeAddress "7.0.0.0"

@@ -113,7 +113,7 @@ public:
   double    GetGbrBlockThs            (void) const;
   int       GetPriority               (void) const;
   int       GetQuota                  (void) const;
-  bool      GetSharing                (void) const;
+  OpMode    GetSharing                (void) const;
   //\}
 
   /**
@@ -353,7 +353,7 @@ private:
   double                  m_gbrBlockThs;    //!< Backhaul GBR block threshold.
   int                     m_slicePrio;      //!< slice priority.
   int                     m_linkQuota;      //!< Initial bandwitdh quota.
-  bool                    m_linkSharing;    //!< Enable bandwitdh sharing.
+  OpMode                  m_linkSharing;    //!< Bandwitdh sharing mode.
 
   // MME interface.
   Ptr<SvelteMme>          m_mme;            //!< MME element.
