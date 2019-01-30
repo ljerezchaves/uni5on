@@ -37,10 +37,12 @@ function PrintHelp () {
   echo -e "  ${bold}fg${normal}:   \tExecute the command in foreground mode."
   echo
   echo "Available ${bold}commands${normal}:"
+  echo -e "  ${bold}git${normal}:      \tExecute the git [args] command on the simulator directory."
   echo -e "  ${bold}make${normal}:     \tExecute the make [args] command on the simulator directory."
   echo -e "  ${bold}pull-logs${normal}:\tPull changes for the logs/<dir> git repository."
   echo -e "  ${bold}pull-sim${normal}: \tPull changes for the simulator git repository."
   echo -e "  ${bold}stats-sim${normal}:\tShow the status for the simulator git repository."
+  echo -e "  ${bold}waf${normal}:      \tExecute the ./waf [args] command on the simulator directory."
   exit 0
 }
 
@@ -90,6 +92,14 @@ case "${ACTION}" in
       local)
         OLDPWD=$(pwd)
         case "${COMMAND}" in
+          git)
+            cd ${SIMDIR}
+            if [ $? -eq 0 ];
+            then
+              git $@
+            fi;
+          ;;
+
           make)
             cd ${SIMDIR}
             if [ $? -eq 0 ];
@@ -142,6 +152,14 @@ case "${ACTION}" in
               echo
             fi;
             echo
+          ;;
+
+          waf)
+            cd ${SIMDIR}
+            if [ $? -eq 0 ];
+            then
+              ./waf $@
+            fi;
           ;;
 
           *)
