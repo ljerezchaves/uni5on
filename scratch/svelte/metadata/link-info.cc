@@ -480,23 +480,22 @@ LinkInfo::UpdateQuota (LinkDir dir, SliceId slice, int quota)
   // Check for valid slice quota.
   NS_ASSERT_MSG (slice < SliceId::ALL, "Invalid slice for this operation.");
   int newSliQuota = GetQuota (dir, slice) + quota;
-  int newAggQuota = GetQuota (dir, SliceId::ALL) + quota;
+  int newAllQuota = GetQuota (dir, SliceId::ALL) + quota;
   if ((GetResBitRate (dir, slice) > ((GetLinkBitRate () * newSliQuota) / 100))
       || (newSliQuota < 0 || newSliQuota > 100)
-      || (newAggQuota < 0 || newAggQuota > 100))
+      || (newAllQuota < 0 || newAllQuota > 100))
     {
       NS_LOG_WARN ("Can't change the slice quota.");
       return false;
     }
 
   // Update the slice quota.
-  NS_LOG_DEBUG ("Slice " << SliceIdStr (slice) <<
-                " with new quota " << newSliQuota <<
-                " in " << LinkDirStr (dir) << " direction.");
-
   m_slices [dir][slice].quota += quota;
   m_slices [dir][SliceId::ALL].quota += quota;
   m_slices [dir][SliceId::UNKN].quota -= quota;
+  NS_LOG_DEBUG ("Slice " << SliceIdStr (slice) <<
+                " with new quota " << m_slices [dir][slice].quota <<
+                " in " << LinkDirStr (dir) << " direction.");
   return true;
 }
 
@@ -508,20 +507,19 @@ LinkInfo::UpdateExtBitRate (LinkDir dir, SliceId slice, int64_t bitRate)
   // Check for valid slice extra bit rate.
   NS_ASSERT_MSG (slice < SliceId::ALL, "Invalid slice for this operation.");
   int64_t newSliExtra = GetExtBitRate (dir, slice) + bitRate;
-  int64_t newAggExtra = GetExtBitRate (dir, SliceId::ALL) + bitRate;
-  if ((newSliExtra < 0) || (newAggExtra < 0))
+  int64_t newAllExtra = GetExtBitRate (dir, SliceId::ALL) + bitRate;
+  if ((newSliExtra < 0) || (newAllExtra < 0))
     {
       NS_LOG_WARN ("Can't change the slice extra bit rate.");
       return false;
     }
 
   // Update the slice extra bit rate.
-  NS_LOG_DEBUG ("Slice " << SliceIdStr (slice) <<
-                " with new extra bit rate " << newSliExtra <<
-                " in " << LinkDirStr (dir) << " direction.");
-
   m_slices [dir][slice].extra += bitRate;
   m_slices [dir][SliceId::ALL].extra += bitRate;
+  NS_LOG_DEBUG ("Slice " << SliceIdStr (slice) <<
+                " with new extra bit rate " << m_slices [dir][slice].extra <<
+                " in " << LinkDirStr (dir) << " direction.");
   return true;
 }
 
@@ -537,7 +535,12 @@ LinkInfo::SetMetBitRate (LinkDir dir, SliceId slice, int64_t bitRate)
       NS_LOG_WARN ("Can't set the slice meter bit rate.");
       return false;
     }
+
+  // Set the slice meter bit rate.
   m_slices [dir][slice].meter = bitRate;
+  NS_LOG_DEBUG ("Slice " << SliceIdStr (slice) <<
+                " with new meter bit rate " << m_slices [dir][slice].meter <<
+                " in " << LinkDirStr (dir) << " direction.");
   return true;
 }
 
