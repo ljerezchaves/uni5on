@@ -399,7 +399,7 @@ private:
   Ptr<OFSwitch13Port>   m_ports [2];            //!< OpenFlow ports.
 
   /** Metadata for each network slice in each link direction. */
-  SliceMetadata         m_slices [N_LINK_DIRS][N_SLICE_IDS];
+  SliceMetadata         m_slices [N_LINK_DIRS][N_SLICE_IDS_UNKN];
 
   // EWMA throughput calculation.
   double                m_ewmaLtAlpha;          //!< EWMA long-term alpha.

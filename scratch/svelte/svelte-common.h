@@ -130,11 +130,12 @@ typedef enum
   MTC  = 1,  //!< Slice for MTC UEs.
   TMP  = 2,  //!< Slice for TMP UEs.
   ALL  = 3,  //!< ALL previous slices.
-  UNKN = 15  //!< Unknown slice.
+  UNKN = 4   //!< Unknown slice.
 } SliceId;
 
 // Total number of valid SliceId items + 1.
 #define N_SLICE_IDS (static_cast<int> (SliceId::ALL) + 1)
+#define N_SLICE_IDS_UNKN (static_cast<int> (SliceId::UNKN) + 1)
 
 /**
  * \ingroup svelte
