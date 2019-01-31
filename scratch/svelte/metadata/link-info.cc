@@ -500,6 +500,30 @@ LinkInfo::UpdateQuota (LinkDir dir, SliceId slice, int quota)
 }
 
 bool
+LinkInfo::UpdateResBitRate (
+  LinkDir dir, SliceId slice, int64_t bitRate)
+{
+  NS_LOG_FUNCTION (this << dir << slice << bitRate);
+
+  // Check for valid slice reserved bit rate.
+  NS_ASSERT_MSG (slice < SliceId::ALL, "Invalid slice for this operation.");
+  int64_t newSliReserved = GetResBitRate (dir, slice) + bitRate;
+  if (newSliReserved < 0 || newSliReserved > GetQuoBitRate (dir, slice))
+    {
+      NS_LOG_WARN ("Can't change the slice reserved bit rate.");
+      return false;
+    }
+
+  // Reserving the bit rate.
+  m_slices [dir][slice].reserved += bitRate;
+  m_slices [dir][SliceId::ALL].reserved += bitRate;
+  NS_LOG_DEBUG ("Slice " << SliceIdStr (slice) <<
+                " with new reserved bit rate " << GetResBitRate (dir, slice) <<
+                " in " << LinkDirStr (dir) << " direction.");
+  return true;
+}
+
+bool
 LinkInfo::UpdateExtBitRate (LinkDir dir, SliceId slice, int64_t bitRate)
 {
   NS_LOG_FUNCTION (this << dir << slice << bitRate);

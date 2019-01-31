@@ -350,6 +350,16 @@ private:
     LinkDir dir, SliceId slice, int quota);
 
   /**
+   * Update the reserved bit rate for this link on the given direction.
+   * \param dir The link direction.
+   * \param slice The network slice.
+   * \param bitRate The value to update.
+   * \return True if succeeded, false otherwise.
+   */
+  bool UpdateResBitRate (
+    LinkDir dir, SliceId slice, int64_t bitRate);
+
+  /**
    * Update the extra bit rate for this link on the given direction.
    * \param dir The link direction.
    * \param slice The network slice.
