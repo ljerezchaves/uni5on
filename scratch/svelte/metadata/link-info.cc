@@ -233,6 +233,7 @@ LinkInfo::GetUseBitRate (EwmaTerm term, LinkDir dir, SliceId slice,
 {
   NS_LOG_FUNCTION (this << term << dir << slice << type);
 
+  NS_ASSERT_MSG (slice <= SliceId::ALL, "Invalid slice for this operation.");
   return m_slices [dir][slice].ewmaThp [type][term];
 }
 
@@ -241,6 +242,7 @@ LinkInfo::GetIdlBitRate (EwmaTerm term, LinkDir dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << term << dir << slice);
 
+  NS_ASSERT_MSG (slice <= SliceId::ALL, "Invalid slice for this operation.");
   return GetMaxBitRate (dir, slice) -
          GetUseBitRate (term, dir, slice, QosType::BOTH);
 }
@@ -250,6 +252,7 @@ LinkInfo::GetOveBitRate (EwmaTerm term, LinkDir dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << term << dir << slice);
 
+  NS_ASSERT_MSG (slice <= SliceId::ALL, "Invalid slice for this operation.");
   return std::max (static_cast<int64_t> (0),
                    GetUseBitRate (term, dir, slice, QosType::BOTH) -
                    GetQuoBitRate (dir, slice));
@@ -474,9 +477,8 @@ LinkInfo::UpdateQuota (LinkDir dir, SliceId slice, int quota)
 {
   NS_LOG_FUNCTION (this << dir << slice << quota);
 
-  NS_ASSERT_MSG (slice < SliceId::ALL, "Invalid slice for this operation.");
-
   // Check for valid slice quota.
+  NS_ASSERT_MSG (slice < SliceId::ALL, "Invalid slice for this operation.");
   int newSliQuota = GetQuota (dir, slice) + quota;
   int newAggQuota = GetQuota (dir, SliceId::ALL) + quota;
   if ((GetResBitRate (dir, slice) > ((GetLinkBitRate () * newSliQuota) / 100))
@@ -503,9 +505,8 @@ LinkInfo::UpdateExtBitRate (LinkDir dir, SliceId slice, int64_t bitRate)
 {
   NS_LOG_FUNCTION (this << dir << slice << bitRate);
 
-  NS_ASSERT_MSG (slice < SliceId::ALL, "Invalid slice for this operation.");
-
   // Check for valid slice extra bit rate.
+  NS_ASSERT_MSG (slice < SliceId::ALL, "Invalid slice for this operation.");
   int64_t newSliExtra = GetExtBitRate (dir, slice) + bitRate;
   int64_t newAggExtra = GetExtBitRate (dir, SliceId::ALL) + bitRate;
   if ((newSliExtra < 0) || (newAggExtra < 0))
@@ -529,9 +530,11 @@ LinkInfo::SetMetBitRate (LinkDir dir, SliceId slice, int64_t bitRate)
 {
   NS_LOG_FUNCTION (this << dir << slice << bitRate);
 
-  if (bitRate < 0 || bitRate > GetFreBitRate (dir, slice))
+  // Check for valid slice meter bit rate.
+  NS_ASSERT_MSG (slice <= SliceId::ALL, "Invalid slice for this operation.");
+  if (bitRate < 0)
     {
-      NS_LOG_WARN ("Invalid meter bit rate.");
+      NS_LOG_WARN ("Can't set the slice meter bit rate.");
       return false;
     }
   m_slices [dir][slice].meter = bitRate;
