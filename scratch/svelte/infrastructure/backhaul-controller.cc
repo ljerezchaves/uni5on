@@ -868,7 +868,7 @@ BackhaulController::SlicingMeterInstall (Ptr<LinkInfo> lInfo, SliceId slice)
   for (int d = 0; d <= LinkInfo::BWD; d++)
     {
       LinkInfo::LinkDir dir = static_cast<LinkInfo::LinkDir> (d);
-      int64_t meterBitRate = lInfo->GetQuoBitRate (dir, slice);
+      int64_t meterBitRate = lInfo->GetFreBitRate (dir, slice);
       if (slice == SliceId::ALL)
         {
           NS_ASSERT_MSG (GetInterSliceMode () == SliceMode::SHAR,
