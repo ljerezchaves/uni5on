@@ -619,7 +619,6 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // -------------------------------------------------------------------------
   // Bandwidth table -- [from higher to lower priority]
   //
-  // We are using the IP DSCP field to identify Non-GBR traffic.
   // Apply Non-GBR meter band.
   // Send the packet to the output table.
   switch (GetInterSliceMode ())
@@ -629,114 +628,30 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
       break;
 
     case SliceMode::SHAR:
-      {
-        // Apply high-priority individual Non-GBR meter entries for slices with
-        // disabled bandwidth sharing on each port direction (FWD and BWD).
-        for (int s = 0; s < SliceId::ALL; s++)
-          {
-            SliceId slice = static_cast<SliceId> (s);
-            if (GetSliceController (slice)->GetSharing () == OpMode::OFF)
-              {
-                for (int d = 0; d <= LinkInfo::BWD; d++)
-                  {
-                    LinkInfo::LinkDir dir = static_cast<LinkInfo::LinkDir> (d);
-                    RingInfo::RingPath path = RingInfo::LinkDirToRingPath (dir);
-                    uint32_t meterId = GetSvelteMeterId (slice, d);
+      // Apply high-priority individual Non-GBR meter entries for slices with
+      // disabled bandwidth sharing and the low-priority shared Non-GBR meter
+      // entry for other slices.
+      SlicingMeterApply (swtch, SliceId::ALL);
+      for (int s = 0; s < SliceId::ALL; s++)
+        {
+          SliceId slice = static_cast<SliceId> (s);
+          if (GetSliceController (slice)->GetSharing () == OpMode::OFF)
+            {
+              SlicingMeterApply (swtch, slice);
+            }
+        }
+      break;
 
-                    // Non-GBR QCIs range is [5, 9].
-                    for (int q = 5; q <= 9; q++)
-                      {
-                        EpsBearer::Qci qci = static_cast<EpsBearer::Qci> (q);
-                        Ipv4Header::DscpType dscp = Qci2Dscp (qci);
-
-                        // Apply this meter to the traffic of this slice only.
-                        std::ostringstream cmd;
-                        cmd << "flow-mod cmd=add,prio=64"
-                            << ",table="      << BANDW_TAB
-                            << ",flags="      << FLAGS_REMOVED_OVERLAP_RESET
-                            << " eth_type="   << IPV4_PROT_NUM
-                            << ",meta="       << path
-                            << ",ip_dscp="    << static_cast<uint16_t> (dscp)
-                            << ",ip_proto="   << UDP_PROT_NUM
-                            << ",gtpu_teid="  << (meterId & TEID_SLICE_MASK)
-                            << "/"            << TEID_SLICE_MASK
-                            << " meter:"      << meterId
-                            << " goto:"       << OUTPT_TAB;
-                        DpctlExecute (swtch, cmd.str ());
-                      }
-                  }
-              }
-          }
-
-        // Apply low-priority shared Non-GBR meter entry for other slices on
-        // each port direction (FWD and BWD).
-        SliceId slice = SliceId::ALL;
-        for (int d = 0; d <= LinkInfo::BWD; d++)
-          {
-            LinkInfo::LinkDir dir = static_cast<LinkInfo::LinkDir> (d);
-            RingInfo::RingPath path = RingInfo::LinkDirToRingPath (dir);
-            uint32_t meterId = GetSvelteMeterId (slice, d);
-
-            // Non-GBR QCIs range is [5, 9].
-            for (int q = 5; q <= 9; q++)
-              {
-                EpsBearer::Qci qci = static_cast<EpsBearer::Qci> (q);
-                Ipv4Header::DscpType dscp = Qci2Dscp (qci);
-
-                // Apply this meter to the traffic of all slices.
-                std::ostringstream cmd;
-                cmd << "flow-mod cmd=add,prio=32"
-                    << ",table="      << BANDW_TAB
-                    << ",flags="      << FLAGS_REMOVED_OVERLAP_RESET
-                    << " eth_type="   << IPV4_PROT_NUM
-                    << ",meta="       << path
-                    << ",ip_dscp="    << static_cast<uint16_t> (dscp)
-                    << " meter:"      << meterId
-                    << " goto:"       << OUTPT_TAB;
-                DpctlExecute (swtch, cmd.str ());
-              }
-          }
-        break;
-      }
     case SliceMode::STAT:
     case SliceMode::DYNA:
-      {
-        // Apply individual Non-GBR meter entries for each slice on each port
-        // direction (FWD and BWD).
-        for (int s = 0; s < SliceId::ALL; s++)
-          {
-            SliceId slice = static_cast<SliceId> (s);
-            for (int d = 0; d <= LinkInfo::BWD; d++)
-              {
-                LinkInfo::LinkDir dir = static_cast<LinkInfo::LinkDir> (d);
-                RingInfo::RingPath path = RingInfo::LinkDirToRingPath (dir);
-                uint32_t meterId = GetSvelteMeterId (slice, d);
+      // Apply individual Non-GBR meter entries for each slice.
+      for (int s = 0; s < SliceId::ALL; s++)
+        {
+          SliceId slice = static_cast<SliceId> (s);
+          SlicingMeterApply (swtch, slice);
+        }
+      break;
 
-                // Non-GBR QCIs range is [5, 9].
-                for (int q = 5; q <= 9; q++)
-                  {
-                    EpsBearer::Qci qci = static_cast<EpsBearer::Qci> (q);
-                    Ipv4Header::DscpType dscp = Qci2Dscp (qci);
-
-                    // Apply this meter to the traffic of this slice only.
-                    std::ostringstream cmd;
-                    cmd << "flow-mod cmd=add,prio=64"
-                        << ",table="      << BANDW_TAB
-                        << ",flags="      << FLAGS_REMOVED_OVERLAP_RESET
-                        << " eth_type="   << IPV4_PROT_NUM
-                        << ",meta="       << path
-                        << ",ip_dscp="    << static_cast<uint16_t> (dscp)
-                        << ",ip_proto="   << UDP_PROT_NUM
-                        << ",gtpu_teid="  << (meterId & TEID_SLICE_MASK)
-                        << "/"            << TEID_SLICE_MASK
-                        << " meter:"      << meterId
-                        << " goto:"       << OUTPT_TAB;
-                    DpctlExecute (swtch, cmd.str ());
-                  }
-              }
-          }
-        break;
-      }
     default:
       NS_LOG_WARN ("Undefined inter-slicing operation mode.");
       break;
@@ -1100,6 +1015,57 @@ RingController::NextSwitchIndex (uint16_t idx, RingInfo::RingPath path) const
   return path == RingInfo::CLOCK ?
          (idx + 1) % GetNSwitches () :
          (idx == 0 ? GetNSwitches () - 1 : (idx - 1));
+}
+
+void
+RingController::SlicingMeterApply (Ptr<const RemoteSwitch> swtch,
+                                   SliceId slice)
+{
+  NS_LOG_FUNCTION (this << swtch << slice);
+
+  // Build the command string.
+  // Using a low-priority rule for ALL slice.
+  std::ostringstream cmd;
+  cmd << "flow-mod cmd=add"
+      << ",prio="       << (slice == SliceId::ALL ? 32 : 64)
+      << ",table="      << BANDW_TAB
+      << ",flags="      << FLAGS_REMOVED_OVERLAP_RESET;
+
+  // Install rules on each port direction (FWD and BWD).
+  for (int d = 0; d <= LinkInfo::BWD; d++)
+    {
+      LinkInfo::LinkDir dir = static_cast<LinkInfo::LinkDir> (d);
+      RingInfo::RingPath path = RingInfo::LinkDirToRingPath (dir);
+      uint32_t meterId = GetSvelteMeterId (slice, d);
+
+      // We are using the IP DSCP field to identify Non-GBR traffic.
+      // Non-GBR QCIs range is [5, 9].
+      for (int q = 5; q <= 9; q++)
+        {
+          EpsBearer::Qci qci = static_cast<EpsBearer::Qci> (q);
+          Ipv4Header::DscpType dscp = Qci2Dscp (qci);
+
+          // Build the match string.
+          std::ostringstream mtc;
+          mtc << " eth_type="   << IPV4_PROT_NUM
+              << ",meta="       << path
+              << ",ip_dscp="    << static_cast<uint16_t> (dscp)
+              << ",ip_proto="   << UDP_PROT_NUM;
+          if (slice != SliceId::ALL)
+            {
+              // Filter traffic for individual slices.
+              mtc << ",gtpu_teid="  << (meterId & TEID_SLICE_MASK)
+                  << "/"            << TEID_SLICE_MASK;
+            }
+
+          // Build the instructions string.
+          std::ostringstream act;
+          act << " meter:"      << meterId
+              << " goto:"       << OUTPT_TAB;
+
+          DpctlExecute (swtch, cmd.str () + mtc.str () + act.str ());
+        }
+    }
 }
 
 } // namespace ns3

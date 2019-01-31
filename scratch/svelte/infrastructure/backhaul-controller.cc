@@ -366,8 +366,10 @@ BackhaulController::NotifySlicesBuilt (ApplicationContainer &controllers)
     case SliceMode::SHAR:
       for (auto &lInfo : LinkInfo::GetList ())
         {
-          // Install high-priority individual Non-GBR meter entries
-          // for slices with disabled bandwidth sharing.
+          // Install high-priority individual Non-GBR meter entries for slices
+          // with disabled bandwidth sharing and the low-priority shared
+          // Non-GBR meter entry for other slices.
+          SlicingMeterInstall (lInfo, SliceId::ALL);
           for (int s = 0; s < SliceId::ALL; s++)
             {
               SliceId slice = static_cast<SliceId> (s);
@@ -376,17 +378,14 @@ BackhaulController::NotifySlicesBuilt (ApplicationContainer &controllers)
                   SlicingMeterInstall (lInfo, slice);
                 }
             }
-          // Install the low-priority shared Non-GBR meter entry
-          // for other slices.
-          SlicingMeterInstall (lInfo, SliceId::ALL);
         }
       break;
 
     case SliceMode::STAT:
     case SliceMode::DYNA:
-      // Install individual Non-GBR meter entries.
       for (auto &lInfo : LinkInfo::GetList ())
         {
+          // Install individual Non-GBR meter entries.
           for (int s = 0; s < SliceId::ALL; s++)
             {
               SliceId slice = static_cast<SliceId> (s);
