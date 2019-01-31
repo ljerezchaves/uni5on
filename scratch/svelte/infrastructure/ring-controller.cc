@@ -682,7 +682,7 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 
                     // Apply this meter to the traffic of this slice only.
                     std::ostringstream cmd;
-                    cmd << "flow-mod cmd=add,prio=32"
+                    cmd << "flow-mod cmd=add,prio=64"
                         << ",table="      << BANDW_TAB
                         << ",flags="      << FLAGS_REMOVED_OVERLAP_RESET
                         << " eth_type="   << IPV4_PROT_NUM
