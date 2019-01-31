@@ -250,6 +250,12 @@ protected:
   void SlicingExtraAdjust (Ptr<LinkInfo> lInfo, LinkInfo::LinkDir dir);
 
   /**
+   * Periodically check for infrastructure bandwidth utilization over backhaul
+   * links to adjust extra bit rate when in dynamic inter-slice operation mode.
+   */
+  void SlicingExtraTimeout (void);
+
+  /**
    * Adjust the infrastructure inter-slicing OpenFlow meter, depending on the
    * MeterStep attribute value and current link configuration.
    * \param lInfo The link information.
@@ -264,12 +270,6 @@ protected:
    */
   void SlicingMeterInstall (Ptr<LinkInfo> lInfo, SliceId slice);
 
-  /**
-   * Periodically check for infrastructure bandwidth utilization over backhaul
-   * links to adjust slice configuration when in dynamic inter-slice mode.
-   */
-  void SlicingTimeout (void);
-
 private:
   /** Initialize static attributes only once. */
   static void StaticInitialize (void);
@@ -277,15 +277,15 @@ private:
   OFSwitch13DeviceContainer m_switchDevices;  //!< OpenFlow switch devices.
 
   // Internal mechanisms metadata.
-  OpMode                m_swBlockPolicy;  //!< Switch overload block policy.
-  double                m_swBlockThs;     //!< Switch block threshold.
-  OpMode                m_qosQueues;      //!< QoS output queues mechanism.
   DataRate              m_extraStep;      //!< Extra adjustment step.
+  Time                  m_extraTimeout;   //!< Extra adjustment interval.
   DataRate              m_meterStep;      //!< Meter adjustment step.
+  OpMode                m_qosQueues;      //!< QoS output queues mechanism.
   SliceMode             m_sliceMode;      //!< Inter-slicing operation mode.
-  Time                  m_sliceTimeout;   //!< Inter-slicing timeout interval.
   double                m_sliceLinkThs;   //!< Inter-slicing link threshold.
   OpMode                m_spareUse;       //!< Spare bit rate sharing mode.
+  OpMode                m_swBlockPolicy;  //!< Switch overload block policy.
+  double                m_swBlockThs;     //!< Switch block threshold.
 
   /** A list of slice controller applications. */
   typedef std::vector<Ptr<SliceController> > CtrlAppList_t;

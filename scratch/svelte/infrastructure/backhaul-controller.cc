@@ -59,14 +59,17 @@ BackhaulController::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::BackhaulController")
     .SetParent<OFSwitch13Controller> ()
     .AddAttribute ("ExtraStep",
-                   "Default extra bit rate adjustment step.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   "Extra bit rate adjustment step.",
                    DataRateValue (DataRate ("4Mbps")),
                    MakeDataRateAccessor (&BackhaulController::m_extraStep),
                    MakeDataRateChecker ())
+    .AddAttribute ("ExtraTimeout",
+                   "Extra bit rate adjustment timeout.",
+                   TimeValue (Seconds (5)),
+                   MakeTimeAccessor (&BackhaulController::m_extraTimeout),
+                   MakeTimeChecker ())
     .AddAttribute ("MeterStep",
-                   "Default meter bit rate adjustment step.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   "Meter bit rate adjustment step.",
                    DataRateValue (DataRate ("2Mbps")),
                    MakeDataRateAccessor (&BackhaulController::m_meterStep),
                    MakeDataRateChecker ())
@@ -95,11 +98,6 @@ BackhaulController::GetTypeId (void)
                                     SliceModeStr (SliceMode::STAT),
                                     SliceMode::DYNA,
                                     SliceModeStr (SliceMode::DYNA)))
-    .AddAttribute ("SliceTimeout",
-                   "Inter-slice timeout execution.",
-                   TimeValue (Seconds (5)),
-                   MakeTimeAccessor (&BackhaulController::m_sliceTimeout),
-                   MakeTimeChecker ())
     .AddAttribute ("SpareUse",
                    "Use spare link bit rate for sharing purposes.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -193,9 +191,9 @@ BackhaulController::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
-  // Schedule the first inter-slicing timeout operation.
+  // Schedule the first slicing extra timeout operation.
   Simulator::Schedule (
-    m_sliceTimeout, &BackhaulController::SlicingTimeout, this);
+    m_extraTimeout, &BackhaulController::SlicingExtraTimeout, this);
 
   OFSwitch13Controller::NotifyConstructionCompleted ();
 }
@@ -772,6 +770,28 @@ BackhaulController::SlicingExtraAdjust (
 }
 
 void
+BackhaulController::SlicingExtraTimeout (void)
+{
+  NS_LOG_FUNCTION (this);
+
+  if (GetInterSliceMode () == SliceMode::DYNA)
+    {
+      // Adjust the extra bit rates in both directions for each backhaul link.
+      for (auto &lInfo : LinkInfo::GetList ())
+        {
+          for (int d = 0; d <= LinkInfo::BWD; d++)
+            {
+              SlicingExtraAdjust (lInfo, static_cast<LinkInfo::LinkDir> (d));
+            }
+        }
+    }
+
+  // Schedule the next slicing extra timeout operation.
+  Simulator::Schedule (
+    m_extraTimeout, &BackhaulController::SlicingExtraTimeout, this);
+}
+
+void
 BackhaulController::SlicingMeterAdjust (
   Ptr<LinkInfo> lInfo, SliceId slice)
 {
@@ -887,28 +907,6 @@ BackhaulController::SlicingMeterInstall (Ptr<LinkInfo> lInfo, SliceId slice)
           << " drop:rate="  << meterKbps;
       DpctlSchedule (lInfo->GetSwDpId (d), cmd.str ());
     }
-}
-
-void
-BackhaulController::SlicingTimeout (void)
-{
-  NS_LOG_FUNCTION (this);
-
-  if (GetInterSliceMode () == SliceMode::DYNA)
-    {
-      // Adjust the extra bit rates in both directions for each backhaul link.
-      for (auto &lInfo : LinkInfo::GetList ())
-        {
-          for (int d = 0; d <= LinkInfo::BWD; d++)
-            {
-              SlicingExtraAdjust (lInfo, static_cast<LinkInfo::LinkDir> (d));
-            }
-        }
-    }
-
-  // Schedule the next inter-slicing timeout operation.
-  Simulator::Schedule (
-    m_sliceTimeout, &BackhaulController::SlicingTimeout, this);
 }
 
 void
