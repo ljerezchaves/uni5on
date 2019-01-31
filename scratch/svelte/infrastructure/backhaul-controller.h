@@ -88,6 +88,7 @@ public:
   double    GetSwBlockThreshold   (void) const;
   SliceMode GetInterSliceMode     (void) const;
   OpMode    GetQosQueuesMode      (void) const;
+  OpMode    GetSpareUseMode       (void) const;
   //\}
 
 protected:
@@ -284,6 +285,7 @@ private:
   SliceMode             m_sliceMode;      //!< Inter-slicing operation mode.
   Time                  m_sliceTimeout;   //!< Inter-slicing timeout interval.
   double                m_sliceLinkThs;   //!< Inter-slicing link threshold.
+  OpMode                m_spareUse;       //!< Spare bit rate sharing mode.
 
   /** A list of slice controller applications. */
   typedef std::vector<Ptr<SliceController> > CtrlAppList_t;

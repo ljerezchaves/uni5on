@@ -100,6 +100,13 @@ BackhaulController::GetTypeId (void)
                    TimeValue (Seconds (5)),
                    MakeTimeAccessor (&BackhaulController::m_sliceTimeout),
                    MakeTimeChecker ())
+    .AddAttribute ("SpareUse",
+                   "Use spare link bit rate for sharing purposes.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   EnumValue (OpMode::ON),
+                   MakeEnumAccessor (&BackhaulController::m_spareUse),
+                   MakeEnumChecker (OpMode::OFF, OpModeStr (OpMode::OFF),
+                                    OpMode::ON,  OpModeStr (OpMode::ON)))
     .AddAttribute ("SwBlockPolicy",
                    "Switch overloaded block policy.",
                    EnumValue (OpMode::ON),
@@ -162,6 +169,14 @@ BackhaulController::GetQosQueuesMode (void) const
   NS_LOG_FUNCTION (this);
 
   return m_qosQueues;
+}
+
+OpMode
+BackhaulController::GetSpareUseMode (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_spareUse;
 }
 
 void
