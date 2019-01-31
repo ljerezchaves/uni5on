@@ -356,7 +356,7 @@ private:
    * \param bitRate The value to update.
    * \return True if succeeded, false otherwise.
    */
-  bool UpdateExtraBitRate (
+  bool UpdateExtBitRate (
     LinkDir dir, SliceId slice, int64_t bitRate);
 
   /**

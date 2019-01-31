@@ -684,7 +684,7 @@ BackhaulController::SlicingExtraAdjust (
             {
               // Increase the extra bit rate by one step.
               NS_LOG_DEBUG ("Increase extra bit rate.");
-              bool success = lInfo->UpdateExtraBitRate (dir, slice, stepRate);
+              bool success = lInfo->UpdateExtBitRate (dir, slice, stepRate);
               NS_ASSERT_MSG (success, "Error when updating extra bit rate.");
               SlicingMeterAdjust (lInfo, slice);
               maxSteps--;
@@ -694,7 +694,7 @@ BackhaulController::SlicingExtraAdjust (
               // Decrease one extra bit rate step from those slices that are
               // not using it to reduce unnecessary bit rate overbooking.
               NS_LOG_DEBUG ("Decrease extra bit rate overbooking.");
-              bool success = lInfo->UpdateExtraBitRate (dir, slice, -stepRate);
+              bool success = lInfo->UpdateExtBitRate (dir, slice, -stepRate);
               NS_ASSERT_MSG (success, "Error when updating extra bit rate.");
               SlicingMeterAdjust (lInfo, slice);
             }
@@ -726,7 +726,7 @@ BackhaulController::SlicingExtraAdjust (
             {
               removed = true;
               NS_LOG_DEBUG ("Decrease extra bit rate for congested link.");
-              bool success = lInfo->UpdateExtraBitRate (dir, slice, -stepRate);
+              bool success = lInfo->UpdateExtBitRate (dir, slice, -stepRate);
               NS_ASSERT_MSG (success, "Error when updating extra bit rate.");
               sliceExtra -= stepRate;
               if (sliceIdle > stepRate)
@@ -749,7 +749,7 @@ BackhaulController::SlicingExtraAdjust (
               // Decrease one extra bit rate step from those slices that are
               // not using it to reduce unnecessary bit rate overbooking.
               NS_LOG_DEBUG ("Decrease extra bit rate overbooking.");
-              bool success = lInfo->UpdateExtraBitRate (dir, slice, -stepRate);
+              bool success = lInfo->UpdateExtBitRate (dir, slice, -stepRate);
               NS_ASSERT_MSG (success, "Error when updating extra bit rate.");
               SlicingMeterAdjust (lInfo, slice);
             }

@@ -499,7 +499,7 @@ LinkInfo::UpdateQuota (LinkDir dir, SliceId slice, int quota)
 }
 
 bool
-LinkInfo::UpdateExtraBitRate (LinkDir dir, SliceId slice, int64_t bitRate)
+LinkInfo::UpdateExtBitRate (LinkDir dir, SliceId slice, int64_t bitRate)
 {
   NS_LOG_FUNCTION (this << dir << slice << bitRate);
 
