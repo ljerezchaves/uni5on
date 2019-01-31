@@ -840,25 +840,51 @@ BackhaulController::SlicingMeterInstall (Ptr<LinkInfo> lInfo, SliceId slice)
 {
   NS_LOG_FUNCTION (this << lInfo << slice);
 
+  NS_ASSERT_MSG (GetInterSliceMode () != SliceMode::NONE,
+                 "Invalid inter-slice operation mode.");
+
   // Install slicing meters in both link directions.
   for (int d = 0; d <= LinkInfo::BWD; d++)
     {
       LinkInfo::LinkDir dir = static_cast<LinkInfo::LinkDir> (d);
+      int64_t meterBitRate = lInfo->GetQuoBitRate (dir, slice);
+      if (slice == SliceId::ALL)
+        {
+          NS_ASSERT_MSG (GetInterSliceMode () == SliceMode::SHAR,
+                         "Invalid inter-slice operation mode.");
+
+          // Add the spare bit rate when enabled.
+          if (GetSpareUseMode () == OpMode::ON)
+            {
+              meterBitRate += lInfo->GetQuoBitRate (dir, SliceId::UNKN);
+            }
+
+          // Remove the bit rate from slices with disabled bandwidth sharing.
+          for (int s = 0; s < SliceId::ALL; s++)
+            {
+              SliceId outSlice = static_cast<SliceId> (s);
+              if (GetSliceController (outSlice)->GetSharing () == OpMode::OFF)
+                {
+                  meterBitRate -= lInfo->GetQuoBitRate (dir, outSlice);
+                }
+            }
+        }
+
       uint32_t meterId = GetSvelteMeterId (slice, d);
-      int64_t freeKbps = Bps2Kbps (lInfo->GetFreBitRate (dir, slice));
-      bool success = lInfo->SetMetBitRate (dir, slice, freeKbps * 1000);
+      int64_t meterKbps = Bps2Kbps (meterBitRate);
+      bool success = lInfo->SetMetBitRate (dir, slice, meterKbps * 1000);
       NS_ASSERT_MSG (success, "Error when setting meter bit rate.");
 
       NS_LOG_INFO ("Created slice " << SliceIdStr (slice) <<
                    " direction " << LinkInfo::LinkDirStr (dir) <<
                    " meter ID " << GetUint32Hex (meterId) <<
-                   " bitrate " << freeKbps << " Kbps");
+                   " bitrate " << meterKbps << " Kbps");
 
       std::ostringstream cmd;
       cmd << "meter-mod cmd=add"
           << ",flags="      << OFPMF_KBPS
           << ",meter="      << meterId
-          << " drop:rate="  << freeKbps;
+          << " drop:rate="  << meterKbps;
       DpctlSchedule (lInfo->GetSwDpId (d), cmd.str ());
     }
 }
