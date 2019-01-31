@@ -191,9 +191,13 @@ BackhaulController::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
-  // Schedule the first slicing extra timeout operation.
-  Simulator::Schedule (
-    m_extraTimeout, &BackhaulController::SlicingExtraTimeout, this);
+  // Schedule the first slicing extra timeout operation only when in
+  // dynamic inter-slicing operation mode.
+  if (GetInterSliceMode () == SliceMode::DYNA)
+    {
+      Simulator::Schedule (
+        m_extraTimeout, &BackhaulController::SlicingExtraTimeout, this);
+    }
 
   OFSwitch13Controller::NotifyConstructionCompleted ();
 }
@@ -774,15 +778,12 @@ BackhaulController::SlicingExtraTimeout (void)
 {
   NS_LOG_FUNCTION (this);
 
-  if (GetInterSliceMode () == SliceMode::DYNA)
+  // Adjust the extra bit rates in both directions for each backhaul link.
+  for (auto &lInfo : LinkInfo::GetList ())
     {
-      // Adjust the extra bit rates in both directions for each backhaul link.
-      for (auto &lInfo : LinkInfo::GetList ())
+      for (int d = 0; d <= LinkInfo::BWD; d++)
         {
-          for (int d = 0; d <= LinkInfo::BWD; d++)
-            {
-              SlicingExtraAdjust (lInfo, static_cast<LinkInfo::LinkDir> (d));
-            }
+          SlicingExtraAdjust (lInfo, static_cast<LinkInfo::LinkDir> (d));
         }
     }
 
