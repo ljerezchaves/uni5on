@@ -364,9 +364,20 @@ BackhaulController::NotifySlicesBuilt (ApplicationContainer &controllers)
       return;
 
     case SliceMode::SHAR:
-      // Install the shared Non-GBR meter entry.
       for (auto &lInfo : LinkInfo::GetList ())
         {
+          // Install high-priority individual Non-GBR meter entries
+          // for slices with disabled bandwidth sharing.
+          for (int s = 0; s < SliceId::ALL; s++)
+            {
+              SliceId slice = static_cast<SliceId> (s);
+              if (GetSliceController (slice)->GetSharing () == OpMode::OFF)
+                {
+                  SlicingMeterInstall (lInfo, slice);
+                }
+            }
+          // Install the low-priority shared Non-GBR meter entry
+          // for other slices.
           SlicingMeterInstall (lInfo, SliceId::ALL);
         }
       break;

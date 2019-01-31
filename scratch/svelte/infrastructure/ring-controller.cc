@@ -630,8 +630,46 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 
     case SliceMode::SHAR:
       {
-        // Apply the shared Non-GBR meter entriy for all slices on each port
-        // direction (FWD and BWD).
+        // Apply high-priority individual Non-GBR meter entries for slices with
+        // disabled bandwidth sharing on each port direction (FWD and BWD).
+        for (int s = 0; s < SliceId::ALL; s++)
+          {
+            SliceId slice = static_cast<SliceId> (s);
+            if (GetSliceController (slice)->GetSharing () == OpMode::OFF)
+              {
+                for (int d = 0; d <= LinkInfo::BWD; d++)
+                  {
+                    LinkInfo::LinkDir dir = static_cast<LinkInfo::LinkDir> (d);
+                    RingInfo::RingPath path = RingInfo::LinkDirToRingPath (dir);
+                    uint32_t meterId = GetSvelteMeterId (slice, d);
+
+                    // Non-GBR QCIs range is [5, 9].
+                    for (int q = 5; q <= 9; q++)
+                      {
+                        EpsBearer::Qci qci = static_cast<EpsBearer::Qci> (q);
+                        Ipv4Header::DscpType dscp = Qci2Dscp (qci);
+
+                        // Apply this meter to the traffic of this slice only.
+                        std::ostringstream cmd;
+                        cmd << "flow-mod cmd=add,prio=64"
+                            << ",table="      << BANDW_TAB
+                            << ",flags="      << FLAGS_REMOVED_OVERLAP_RESET
+                            << " eth_type="   << IPV4_PROT_NUM
+                            << ",meta="       << path
+                            << ",ip_dscp="    << static_cast<uint16_t> (dscp)
+                            << ",ip_proto="   << UDP_PROT_NUM
+                            << ",gtpu_teid="  << (meterId & TEID_SLICE_MASK)
+                            << "/"            << TEID_SLICE_MASK
+                            << " meter:"      << meterId
+                            << " goto:"       << OUTPT_TAB;
+                        DpctlExecute (swtch, cmd.str ());
+                      }
+                  }
+              }
+          }
+
+        // Apply low-priority shared Non-GBR meter entry for other slices on
+        // each port direction (FWD and BWD).
         SliceId slice = SliceId::ALL;
         for (int d = 0; d <= LinkInfo::BWD; d++)
           {
