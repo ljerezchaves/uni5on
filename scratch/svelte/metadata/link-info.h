@@ -42,8 +42,8 @@ typedef std::vector<Ptr<LinkInfo> > LinkInfoList_t;
  * following metadata information associated to it:
  * - The slice quota, updated by the backhaul controller;
  * - The extra (over quota) bit rate, updated by the backhaul controller;
- * - The OpenFlow meter bit rate, updated by the backhaul controller;
- * - The reserved bit rate, updated by Reserve/ReleaseBitRate methods;
+ * - The meter bit rate, updated by the backhaul controller;
+ * - The reserved bit rate, updated by the backhaul controller;
  * - The transmitted bytes, updated by NotifyTxPacket method;
  * - The average throughput, for both short-term and long-term periods of
  *   evaluation, periodically updated by EwmaUpdate method;
@@ -316,28 +316,6 @@ private:
    * \param packet The transmitted packet.
    */
   void NotifyTxPacket (std::string context, Ptr<const Packet> packet);
-
-  /**
-   * Release the requested bit rate on the given direction for the given
-   * network slice.
-   * \param dir The link direction.
-   * \param slice The network slice.
-   * \param bitRate The bit rate to release.
-   * \return True if succeeded, false otherwise.
-   */
-  bool ReleaseBitRate (
-    LinkDir dir, SliceId slice, int64_t bitRate);
-
-  /**
-   * Reserve the requested bit rate on the given direction for the given
-   * network slice.
-   * \param dir The link direction.
-   * \param slice The network slice.
-   * \param bitRate The bit rate to reserve.
-   * \return True if succeeded, false otherwise.
-   */
-  bool ReserveBitRate (
-    LinkDir dir, SliceId slice, int64_t bitRate);
 
   /**
    * Update the slice quota for this link on the given direction.

@@ -427,52 +427,6 @@ LinkInfo::NotifyTxPacket (std::string context, Ptr<const Packet> packet)
 }
 
 bool
-LinkInfo::ReleaseBitRate (
-  LinkDir dir, SliceId slice, int64_t bitRate)
-{
-  NS_LOG_FUNCTION (this << dir << slice << bitRate);
-
-  // Check for reserved bit rate.
-  NS_ASSERT_MSG (slice < SliceId::ALL, "Invalid slice for this operation.");
-  if (GetResBitRate (dir, slice) < bitRate)
-    {
-      NS_LOG_WARN ("No bandwidth available to release.");
-      return false;
-    }
-
-  // Releasing the bit rate.
-  m_slices [dir][slice].reserved -= bitRate;
-  m_slices [dir][SliceId::ALL].reserved -= bitRate;
-  NS_LOG_DEBUG ("Slice " << SliceIdStr (slice) <<
-                " with new reserved bit rate " << GetResBitRate (dir, slice) <<
-                " in " << LinkDirStr (dir) << " direction.");
-  return true;
-}
-
-bool
-LinkInfo::ReserveBitRate (
-  LinkDir dir, SliceId slice, int64_t bitRate)
-{
-  NS_LOG_FUNCTION (this << dir << slice << bitRate);
-
-  // Check for available bit rate.
-  NS_ASSERT_MSG (slice < SliceId::ALL, "Invalid slice for this operation.");
-  if (GetResBitRate (dir, slice) + bitRate > GetQuoBitRate (dir, slice))
-    {
-      NS_LOG_WARN ("No bandwidth available to reserve.");
-      return false;
-    }
-
-  // Reserving the bit rate.
-  m_slices [dir][slice].reserved += bitRate;
-  m_slices [dir][SliceId::ALL].reserved += bitRate;
-  NS_LOG_DEBUG ("Slice " << SliceIdStr (slice) <<
-                " with new reserved bit rate " << GetResBitRate (dir, slice) <<
-                " in " << LinkDirStr (dir) << " direction.");
-  return true;
-}
-
-bool
 LinkInfo::UpdateQuota (LinkDir dir, SliceId slice, int quota)
 {
   NS_LOG_FUNCTION (this << dir << slice << quota);

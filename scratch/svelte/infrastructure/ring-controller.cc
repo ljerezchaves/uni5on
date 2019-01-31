@@ -934,8 +934,8 @@ RingController::BitRateReserve (Ptr<RingInfo> ringInfo)
     {
       uint16_t next = NextSwitchIndex (curr, downPath);
       std::tie (lInfo, dlDir, ulDir) = GetLinkInfo (curr, next);
-      success &= lInfo->ReserveBitRate (dlDir, slice, dlRate);
-      success &= lInfo->ReserveBitRate (ulDir, slice, ulRate);
+      success &= lInfo->UpdateResBitRate (dlDir, slice, dlRate);
+      success &= lInfo->UpdateResBitRate (ulDir, slice, ulRate);
       SlicingMeterAdjust (lInfo, slice);
       curr = next;
     }
@@ -946,8 +946,8 @@ RingController::BitRateReserve (Ptr<RingInfo> ringInfo)
     {
       uint16_t next = NextSwitchIndex (curr, downPath);
       std::tie (lInfo, dlDir, ulDir) = GetLinkInfo (curr, next);
-      success &= lInfo->ReserveBitRate (dlDir, slice, dlRate);
-      success &= lInfo->ReserveBitRate (ulDir, slice, ulRate);
+      success &= lInfo->UpdateResBitRate (dlDir, slice, dlRate);
+      success &= lInfo->UpdateResBitRate (ulDir, slice, ulRate);
       SlicingMeterAdjust (lInfo, slice);
       curr = next;
     }
@@ -981,8 +981,8 @@ RingController::BitRateRelease (Ptr<RingInfo> ringInfo)
     {
       uint16_t next = NextSwitchIndex (curr, downPath);
       std::tie (lInfo, dlDir, ulDir) = GetLinkInfo (curr, next);
-      success &= lInfo->ReleaseBitRate (dlDir, slice, dlRate);
-      success &= lInfo->ReleaseBitRate (ulDir, slice, ulRate);
+      success &= lInfo->UpdateResBitRate (dlDir, slice, -dlRate);
+      success &= lInfo->UpdateResBitRate (ulDir, slice, -ulRate);
       SlicingMeterAdjust (lInfo, slice);
       curr = next;
     }
@@ -993,8 +993,8 @@ RingController::BitRateRelease (Ptr<RingInfo> ringInfo)
     {
       uint16_t next = NextSwitchIndex (curr, downPath);
       std::tie (lInfo, dlDir, ulDir) = GetLinkInfo (curr, next);
-      success &= lInfo->ReleaseBitRate (dlDir, slice, dlRate);
-      success &= lInfo->ReleaseBitRate (ulDir, slice, ulRate);
+      success &= lInfo->UpdateResBitRate (dlDir, slice, -dlRate);
+      success &= lInfo->UpdateResBitRate (ulDir, slice, -ulRate);
       SlicingMeterAdjust (lInfo, slice);
       curr = next;
     }
