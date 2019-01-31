@@ -443,8 +443,8 @@ LinkInfo::ReleaseBitRate (
   // Releasing the bit rate.
   m_slices [dir][slice].reserved -= bitRate;
   m_slices [dir][SliceId::ALL].reserved -= bitRate;
-  NS_LOG_DEBUG ("Releasing " << bitRate <<
-                " bit rate on slice " << SliceIdStr (slice) <<
+  NS_LOG_DEBUG ("Slice " << SliceIdStr (slice) <<
+                " with new reserved bit rate " << GetResBitRate (dir, slice) <<
                 " in " << LinkDirStr (dir) << " direction.");
   return true;
 }
@@ -466,8 +466,8 @@ LinkInfo::ReserveBitRate (
   // Reserving the bit rate.
   m_slices [dir][slice].reserved += bitRate;
   m_slices [dir][SliceId::ALL].reserved += bitRate;
-  NS_LOG_DEBUG ("Reserving " << bitRate <<
-                " bit rate on slice " << SliceIdStr (slice) <<
+  NS_LOG_DEBUG ("Slice " << SliceIdStr (slice) <<
+                " with new reserved bit rate " << GetResBitRate (dir, slice) <<
                 " in " << LinkDirStr (dir) << " direction.");
   return true;
 }
@@ -494,7 +494,7 @@ LinkInfo::UpdateQuota (LinkDir dir, SliceId slice, int quota)
   m_slices [dir][SliceId::ALL].quota += quota;
   m_slices [dir][SliceId::UNKN].quota -= quota;
   NS_LOG_DEBUG ("Slice " << SliceIdStr (slice) <<
-                " with new quota " << m_slices [dir][slice].quota <<
+                " with new quota " << GetQuota (dir, slice) <<
                 " in " << LinkDirStr (dir) << " direction.");
   return true;
 }
@@ -518,7 +518,7 @@ LinkInfo::UpdateExtBitRate (LinkDir dir, SliceId slice, int64_t bitRate)
   m_slices [dir][slice].extra += bitRate;
   m_slices [dir][SliceId::ALL].extra += bitRate;
   NS_LOG_DEBUG ("Slice " << SliceIdStr (slice) <<
-                " with new extra bit rate " << m_slices [dir][slice].extra <<
+                " with new extra bit rate " << GetExtBitRate (dir, slice) <<
                 " in " << LinkDirStr (dir) << " direction.");
   return true;
 }
@@ -539,7 +539,7 @@ LinkInfo::SetMetBitRate (LinkDir dir, SliceId slice, int64_t bitRate)
   // Set the slice meter bit rate.
   m_slices [dir][slice].meter = bitRate;
   NS_LOG_DEBUG ("Slice " << SliceIdStr (slice) <<
-                " with new meter bit rate " << m_slices [dir][slice].meter <<
+                " with new meter bit rate " << GetMetBitRate (dir, slice) <<
                 " in " << LinkDirStr (dir) << " direction.");
   return true;
 }
