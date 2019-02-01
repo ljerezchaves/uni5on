@@ -323,7 +323,7 @@ BackhaulController::NotifyEpcAttach (
 }
 
 // Comparator for slice priorities.
-bool
+static bool
 SlicePrioComp (Ptr<SliceController> ctrl1, Ptr<SliceController> ctrl2)
 {
   return ctrl1->GetPriority () < ctrl2->GetPriority ();
@@ -349,7 +349,8 @@ BackhaulController::NotifySlicesBuilt (ApplicationContainer &controllers)
     }
 
   // Sort m_sliceCtrlPrio in increasing controller priority order.
-  std::sort (m_sliceCtrlPrio.begin (), m_sliceCtrlPrio.end (), SlicePrioComp);
+  std::stable_sort (
+    m_sliceCtrlPrio.begin (), m_sliceCtrlPrio.end (), SlicePrioComp);
 
   // Configure initial link slice quotas for each slice.
   for (auto const &it : m_sliceCtrlById)
