@@ -67,6 +67,9 @@ typedef EpcS11SapMme::BearerContextModified BearerModified_t;
 /** List of EPS bearer contexts modified. */
 typedef std::list<BearerModified_t> BearerModifiedList_t;
 
+/** Map saving IP DSCP value / OpenFlow queue id. */
+typedef std::map<Ipv4Header::DscpType, uint32_t> DscpQueueMap_t;
+
 /**
  * \ingroup svelte
  * Enumeration of available traffic directions.
@@ -212,6 +215,25 @@ double Bps2Kbps (int64_t bitrate);
  * \return The bitrate in KBPS.
  */
 double Bps2Kbps (DataRate datarate);
+
+/**
+ * \ingroup svelte
+ * Get the mapped OpenFlow output queue ID for all DSCP used values.
+ * \return The OpenFlow queue ID mapped values.
+ *
+ * \internal
+ * Mapping the IP DSCP to the OpenFlow output queue ID.
+ * \verbatim
+ * DSCP_EF   --> OpenFlow queue 0 (priority)
+ * DSCP_AF41 --> OpenFlow queue 1 (WRR)
+ * DSCP_AF31 --> OpenFlow queue 2 (WRR)
+ * DSCP_AF32 --> OpenFlow queue 2 (WRR)
+ * DSCP_AF21 --> OpenFlow queue 3 (WRR)
+ * DSCP_AF11 --> OpenFlow queue 4 (WRR)
+ * DSCP_BE   --> OpenFlow queue 5 (WRR)
+ * \endverbatim
+ */
+const DscpQueueMap_t& Dscp2QueueMap (void);
 
 /**
  * \ingroup svelte

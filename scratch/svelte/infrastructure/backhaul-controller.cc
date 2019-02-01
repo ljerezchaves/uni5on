@@ -29,14 +29,9 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("BackhaulController");
 NS_OBJECT_ENSURE_REGISTERED (BackhaulController);
 
-// Initializing BackhaulController static members.
-BackhaulController::DscpQueueMap_t BackhaulController::m_queueByDscp;
-
 BackhaulController::BackhaulController ()
 {
   NS_LOG_FUNCTION (this);
-
-  StaticInitialize ();
 }
 
 BackhaulController::~BackhaulController ()
@@ -617,7 +612,7 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   if (GetQosQueuesMode () == OpMode::ON)
     {
       // QoS output queues rules.
-      for (auto const &it : m_queueByDscp)
+      for (auto const &it : Dscp2QueueMap ())
         {
           std::ostringstream cmd;
           cmd << "flow-mod cmd=add,prio=32"
@@ -913,41 +908,6 @@ BackhaulController::SlicingMeterInstall (Ptr<LinkInfo> lInfo, SliceId slice)
           << ",meter="      << meterId
           << " drop:rate="  << meterKbps;
       DpctlSchedule (lInfo->GetSwDpId (d), cmd.str ());
-    }
-}
-
-void
-BackhaulController::StaticInitialize ()
-{
-  NS_LOG_FUNCTION_NOARGS ();
-
-  static bool initialized = false;
-  if (!initialized)
-    {
-      initialized = true;
-
-      // Populating the IP DSCP --> OpenFlow queue id mapping table.
-      // DSCP_EF   --> OpenFlow queue 0 (priority)
-      // DSCP_AF41 --> OpenFlow queue 1 (WRR)
-      // DSCP_AF31 --> OpenFlow queue 2 (WRR)
-      // DSCP_AF32 --> OpenFlow queue 2 (WRR)
-      // DSCP_AF21 --> OpenFlow queue 3 (WRR)
-      // DSCP_AF11 --> OpenFlow queue 4 (WRR)
-      // DSCP_BE   --> OpenFlow queue 5 (WRR)
-      BackhaulController::m_queueByDscp.insert (
-        std::make_pair (Ipv4Header::DSCP_EF, 0));
-      BackhaulController::m_queueByDscp.insert (
-        std::make_pair (Ipv4Header::DSCP_AF41, 1));
-      BackhaulController::m_queueByDscp.insert (
-        std::make_pair (Ipv4Header::DSCP_AF31, 2));
-      BackhaulController::m_queueByDscp.insert (
-        std::make_pair (Ipv4Header::DSCP_AF32, 2));
-      BackhaulController::m_queueByDscp.insert (
-        std::make_pair (Ipv4Header::DSCP_AF21, 3));
-      BackhaulController::m_queueByDscp.insert (
-        std::make_pair (Ipv4Header::DSCP_AF11, 4));
-      BackhaulController::m_queueByDscp.insert (
-        std::make_pair (Ipv4Header::DscpDefault, 5));
     }
 }
 

@@ -152,6 +152,26 @@ Bps2Kbps (DataRate datarate)
   return Bps2Kbps (datarate.GetBitRate ());
 }
 
+const DscpQueueMap_t&
+Dscp2QueueMap ()
+{
+  static DscpQueueMap_t queueByDscp;
+
+  // Populating the map at the first time.
+  if (queueByDscp.empty ())
+    {
+      queueByDscp.insert (std::make_pair (Ipv4Header::DSCP_EF,     0));
+      queueByDscp.insert (std::make_pair (Ipv4Header::DSCP_AF41,   1));
+      queueByDscp.insert (std::make_pair (Ipv4Header::DSCP_AF31,   2));
+      queueByDscp.insert (std::make_pair (Ipv4Header::DSCP_AF32,   2));
+      queueByDscp.insert (std::make_pair (Ipv4Header::DSCP_AF21,   3));
+      queueByDscp.insert (std::make_pair (Ipv4Header::DSCP_AF11,   4));
+      queueByDscp.insert (std::make_pair (Ipv4Header::DscpDefault, 5));
+    }
+
+  return queueByDscp;
+}
+
 uint8_t
 Dscp2Tos (Ipv4Header::DscpType dscp)
 {

@@ -275,9 +275,6 @@ protected:
   CtrlAppList_t         m_sliceCtrlPrio;  //!< Slice controllers by priority.
 
 private:
-  /** Initialize static attributes only once. */
-  static void StaticInitialize (void);
-
   OFSwitch13DeviceContainer m_switchDevices;  //!< OpenFlow switch devices.
 
   // Internal mechanisms metadata.
@@ -294,10 +291,6 @@ private:
   /** Map saving Slice ID / Slice controller application. */
   typedef std::map<SliceId, Ptr<SliceController> > SliceIdCtrlAppMap_t;
   SliceIdCtrlAppMap_t   m_sliceCtrlById;  //!< Slice controller mapped values.
-
-  /** Map saving IP DSCP value / OpenFlow queue id. */
-  typedef std::map<Ipv4Header::DscpType, uint32_t> DscpQueueMap_t;
-  static DscpQueueMap_t m_queueByDscp;    //!< OpenFlow queue id mapped values.
 };
 
 } // namespace ns3
