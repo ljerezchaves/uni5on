@@ -58,16 +58,22 @@ BackhaulController::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::BackhaulController")
     .SetParent<OFSwitch13Controller> ()
+
+    .AddAttribute ("DynamicLinkThs",
+                   "Dynamic inter-slice link usage threshold.",
+                   DoubleValue (0.9),
+                   MakeDoubleAccessor (&BackhaulController::m_dynLinkThs),
+                   MakeDoubleChecker<double> (0.8, 1.0))
+    .AddAttribute ("DynamicTimeout",
+                   "Dynamic inter-slice adjustment timeout.",
+                   TimeValue (Seconds (5)),
+                   MakeTimeAccessor (&BackhaulController::m_dynTimeout),
+                   MakeTimeChecker ())
     .AddAttribute ("ExtraStep",
                    "Extra bit rate adjustment step.",
                    DataRateValue (DataRate ("4Mbps")),
                    MakeDataRateAccessor (&BackhaulController::m_extraStep),
                    MakeDataRateChecker ())
-    .AddAttribute ("ExtraTimeout",
-                   "Extra bit rate adjustment timeout.",
-                   TimeValue (Seconds (5)),
-                   MakeTimeAccessor (&BackhaulController::m_extraTimeout),
-                   MakeTimeChecker ())
     .AddAttribute ("MeterStep",
                    "Meter bit rate adjustment step.",
                    DataRateValue (DataRate ("2Mbps")),
@@ -80,11 +86,6 @@ BackhaulController::GetTypeId (void)
                    MakeEnumAccessor (&BackhaulController::m_qosQueues),
                    MakeEnumChecker (OpMode::OFF, OpModeStr (OpMode::OFF),
                                     OpMode::ON,  OpModeStr (OpMode::ON)))
-    .AddAttribute ("SliceLinkThs",
-                   "Inter-slice link usage threshold.",
-                   DoubleValue (0.9),
-                   MakeDoubleAccessor (&BackhaulController::m_sliceLinkThs),
-                   MakeDoubleChecker<double> (0.8, 1.0))
     .AddAttribute ("SliceMode",
                    "Inter-slice operation mode.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -196,7 +197,7 @@ BackhaulController::NotifyConstructionCompleted (void)
   if (GetInterSliceMode () == SliceMode::DYNA)
     {
       Simulator::Schedule (
-        m_extraTimeout, &BackhaulController::SlicingExtraTimeout, this);
+        m_dynTimeout, &BackhaulController::SlicingDynamicTimeout, this);
     }
 
   OFSwitch13Controller::NotifyConstructionCompleted ();
@@ -660,6 +661,25 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 }
 
 void
+BackhaulController::SlicingDynamicTimeout (void)
+{
+  NS_LOG_FUNCTION (this);
+
+  // Adjust the extra bit rates in both directions for each backhaul link.
+  for (auto &lInfo : LinkInfo::GetList ())
+    {
+      for (int d = 0; d <= LinkInfo::BWD; d++)
+        {
+          SlicingExtraAdjust (lInfo, static_cast<LinkInfo::LinkDir> (d));
+        }
+    }
+
+  // Schedule the next slicing extra timeout operation.
+  Simulator::Schedule (
+    m_dynTimeout, &BackhaulController::SlicingDynamicTimeout, this);
+}
+
+void
 BackhaulController::SlicingExtraAdjust (
   Ptr<LinkInfo> lInfo, LinkInfo::LinkDir dir)
 {
@@ -675,7 +695,7 @@ BackhaulController::SlicingExtraAdjust (
   int64_t linkRate = lInfo->GetLinkBitRate ();
   int64_t linkUsag = lInfo->GetUseBitRate (longTerm, dir);
   int64_t linkIdle = linkRate - linkUsag;
-  int64_t linkGuar = linkRate * (1.0 - m_sliceLinkThs);
+  int64_t linkGuar = linkRate * (1.0 - m_dynLinkThs);
 
   if (linkIdle >= linkGuar)
     {
@@ -771,25 +791,6 @@ BackhaulController::SlicingExtraAdjust (
             }
         }
     }
-}
-
-void
-BackhaulController::SlicingExtraTimeout (void)
-{
-  NS_LOG_FUNCTION (this);
-
-  // Adjust the extra bit rates in both directions for each backhaul link.
-  for (auto &lInfo : LinkInfo::GetList ())
-    {
-      for (int d = 0; d <= LinkInfo::BWD; d++)
-        {
-          SlicingExtraAdjust (lInfo, static_cast<LinkInfo::LinkDir> (d));
-        }
-    }
-
-  // Schedule the next slicing extra timeout operation.
-  Simulator::Schedule (
-    m_extraTimeout, &BackhaulController::SlicingExtraTimeout, this);
 }
 
 void

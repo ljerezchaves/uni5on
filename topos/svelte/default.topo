@@ -1,11 +1,11 @@
 global DumpStatsTimeout "1s"
 global SimTime "0s"
 
+default ns3::BackhaulController::DynamicLinkThs "0.9"
+default ns3::BackhaulController::DynamicTimeout "5s"
 default ns3::BackhaulController::ExtraStep "4Mbps"
-default ns3::BackhaulController::ExtraTimeout "5s"
 default ns3::BackhaulController::MeterStep "2Mbps"
 default ns3::BackhaulController::QosQueues "on"
-default ns3::BackhaulController::SliceLinkThs "0.9"
 default ns3::BackhaulController::SliceMode "none"
 default ns3::BackhaulController::SpareUse "on"
 default ns3::BackhaulController::SwBlockPolicy "on"

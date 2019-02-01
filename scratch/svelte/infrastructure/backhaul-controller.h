@@ -242,18 +242,18 @@ protected:
   // Inherited from OFSwitch13Controller.
 
   /**
+   * Periodically check for infrastructure bandwidth utilization over backhaul
+   * links to adjust extra bit rate when in dynamic inter-slice operation mode.
+   */
+  void SlicingDynamicTimeout (void);
+
+  /**
    * Adjust the infrastructure inter-slicing extra bit rate, depending on the
    * ExtraStep attribute value and current link configuration.
    * \param lInfo The link information.
    * \param dir The link direction.
    */
   void SlicingExtraAdjust (Ptr<LinkInfo> lInfo, LinkInfo::LinkDir dir);
-
-  /**
-   * Periodically check for infrastructure bandwidth utilization over backhaul
-   * links to adjust extra bit rate when in dynamic inter-slice operation mode.
-   */
-  void SlicingExtraTimeout (void);
 
   /**
    * Adjust the infrastructure inter-slicing OpenFlow meter, depending on the
@@ -277,12 +277,12 @@ private:
   OFSwitch13DeviceContainer m_switchDevices;  //!< OpenFlow switch devices.
 
   // Internal mechanisms metadata.
+  double                m_dynLinkThs;     //!< Dynamic slice link threshold.
+  Time                  m_dynTimeout;     //!< Dynamic slice timeout interval.
   DataRate              m_extraStep;      //!< Extra adjustment step.
-  Time                  m_extraTimeout;   //!< Extra adjustment interval.
   DataRate              m_meterStep;      //!< Meter adjustment step.
   OpMode                m_qosQueues;      //!< QoS output queues mechanism.
   SliceMode             m_sliceMode;      //!< Inter-slicing operation mode.
-  double                m_sliceLinkThs;   //!< Inter-slicing link threshold.
   OpMode                m_spareUse;       //!< Spare bit rate sharing mode.
   OpMode                m_swBlockPolicy;  //!< Switch overload block policy.
   double                m_swBlockThs;     //!< Switch block threshold.
