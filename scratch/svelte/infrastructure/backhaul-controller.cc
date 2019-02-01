@@ -807,8 +807,11 @@ BackhaulController::SlicingMeterAdjust (
       return;
 
     case SliceMode::SHAR:
-      // Update the shared Non-GBR meter entry.
-      slice = SliceId::ALL;
+      // Identify the Non-GBR meter entry to adjust: individual or shared.
+      if (GetSliceController (slice)->GetSharing () == OpMode::ON)
+        {
+          slice = SliceId::ALL;
+        }
       break;
 
     case SliceMode::STAT:
@@ -826,31 +829,52 @@ BackhaulController::SlicingMeterAdjust (
     {
       LinkInfo::LinkDir dir = static_cast<LinkInfo::LinkDir> (d);
 
-      int64_t meterBitRate = lInfo->GetMetBitRate (dir, slice);
-      int64_t freeBitRate = lInfo->GetFreBitRate (dir, slice);
-      uint64_t diffBitRate = std::abs (meterBitRate - freeBitRate);
-      NS_LOG_DEBUG ("Slice " << SliceIdStr (slice) <<
-                    " direction " << LinkInfo::LinkDirStr (dir) <<
-                    " free bitrate " << freeBitRate <<
-                    " diff bitrate " << diffBitRate <<
-                    " step bitrate " << m_meterStep.GetBitRate ());
+      int64_t freeBitRate = 0;
+      if (slice == SliceId::ALL)
+        {
+          // Sum the bit rate from slices with enabled bandwidth sharing.
+          for (int s = 0; s < SliceId::ALL; s++)
+            {
+              SliceId tmpSlice = static_cast<SliceId> (s);
+              if (GetSliceController (tmpSlice)->GetSharing () == OpMode::ON)
+                {
+                  freeBitRate += lInfo->GetFreBitRate (dir, tmpSlice);
+                }
+            }
+          // Sum the spare bit rate when enabled.
+          if (GetSpareUseMode () == OpMode::ON)
+            {
+              freeBitRate += lInfo->GetFreBitRate (dir, SliceId::UNKN);
+            }
+        }
+      else
+        {
+          freeBitRate = lInfo->GetFreBitRate (dir, slice);
+        }
+
+      uint64_t diffBitRate = std::abs (
+          lInfo->GetMetBitRate (dir, slice) - freeBitRate);
+      NS_LOG_DEBUG ("Current slice " << SliceIdStr (slice) <<
+                    " direction "    << LinkInfo::LinkDirStr (dir) <<
+                    " diff rate "    << diffBitRate);
+
       if (diffBitRate >= m_meterStep.GetBitRate ())
         {
           uint32_t meterId = GetSvelteMeterId (slice, d);
-          int64_t freeKbps = Bps2Kbps (freeBitRate);
-          bool success = lInfo->SetMetBitRate (dir, slice, freeKbps * 1000);
+          int64_t meterKbps = Bps2Kbps (freeBitRate);
+          bool success = lInfo->SetMetBitRate (dir, slice, meterKbps * 1000);
           NS_ASSERT_MSG (success, "Error when setting meter bit rate.");
 
           NS_LOG_INFO ("Update slice " << SliceIdStr (slice) <<
-                       " direction " << LinkInfo::LinkDirStr (dir) <<
-                       " meter ID " << GetUint32Hex (meterId) <<
-                       " bitrate " << freeKbps << " Kbps");
+                       " direction "   << LinkInfo::LinkDirStr (dir) <<
+                       " meter ID "    << GetUint32Hex (meterId) <<
+                       " bitrate "     << meterKbps << " Kbps");
 
           std::ostringstream cmd;
           cmd << "meter-mod cmd=mod"
               << ",flags="      << OFPMF_KBPS
               << ",meter="      << meterId
-              << " drop:rate="  << freeKbps;
+              << " drop:rate="  << meterKbps;
           DpctlExecute (lInfo->GetSwDpId (d), cmd.str ());
         }
     }
@@ -900,10 +924,10 @@ BackhaulController::SlicingMeterInstall (Ptr<LinkInfo> lInfo, SliceId slice)
       bool success = lInfo->SetMetBitRate (dir, slice, meterKbps * 1000);
       NS_ASSERT_MSG (success, "Error when setting meter bit rate.");
 
-      NS_LOG_INFO ("Created slice " << SliceIdStr (slice) <<
-                   " direction " << LinkInfo::LinkDirStr (dir) <<
-                   " meter ID " << GetUint32Hex (meterId) <<
-                   " bitrate " << meterKbps << " Kbps");
+      NS_LOG_INFO ("Create slice " << SliceIdStr (slice) <<
+                   " direction "   << LinkInfo::LinkDirStr (dir) <<
+                   " meter ID "    << GetUint32Hex (meterId) <<
+                   " bitrate "     << meterKbps << " Kbps");
 
       std::ostringstream cmd;
       cmd << "meter-mod cmd=add"
