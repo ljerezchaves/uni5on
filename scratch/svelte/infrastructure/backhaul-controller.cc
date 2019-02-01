@@ -37,15 +37,6 @@ BackhaulController::BackhaulController ()
   NS_LOG_FUNCTION (this);
 
   StaticInitialize ();
-
-  // Populating slice controllers map.
-  for (int s = 0; s < SliceId::ALL; s++)
-    {
-      SliceId slice = static_cast<SliceId> (s);
-      std::pair<SliceId, Ptr<SliceController> > entry (slice, 0);
-      auto ret = m_sliceCtrlById.insert (entry);
-      NS_ABORT_MSG_IF (ret.second == false, "Existing slice controller.");
-    }
 }
 
 BackhaulController::~BackhaulController ()
@@ -334,43 +325,32 @@ BackhaulController::NotifySlicesBuilt (ApplicationContainer &controllers)
 {
   NS_LOG_FUNCTION (this);
 
-  // Saving controller application pointers.
   ApplicationContainer::Iterator it;
   for (it = controllers.Begin (); it != controllers.End (); ++it)
     {
-      Ptr<SliceController> ctrl = DynamicCast<SliceController> (*it);
-      SliceId slice = ctrl->GetSliceId ();
+      Ptr<SliceController> controller = DynamicCast<SliceController> (*it);
+      SliceId slice = controller->GetSliceId ();
+      int quota = controller->GetQuota ();
 
-      auto it = m_sliceCtrlById.find (slice);
-      NS_ASSERT_MSG (it != m_sliceCtrlById.end (), "Invalid slice ID.");
-      it->second = ctrl;
+      // Saving controller application pointers.
+      m_sliceCtrlPrio.push_back (controller);
+      std::pair<SliceId, Ptr<SliceController> > entry (slice, controller);
+      auto ret = m_sliceCtrlById.insert (entry);
+      NS_ABORT_MSG_IF (ret.second == false, "Existing slice controller.");
 
-      m_sliceCtrlPrio.push_back (ctrl);
+      // Iterate over links configuring the initial quotas.
+      for (auto const &lInfo : LinkInfo::GetList ())
+        {
+          bool success = true;
+          success &= lInfo->UpdateQuota (LinkInfo::FWD, slice, quota);
+          success &= lInfo->UpdateQuota (LinkInfo::BWD, slice, quota);
+          NS_ASSERT_MSG (success, "Error when setting slice quotas.");
+        }
     }
 
   // Sort m_sliceCtrlPrio in increasing controller priority order.
   std::stable_sort (
     m_sliceCtrlPrio.begin (), m_sliceCtrlPrio.end (), SlicePrioComp);
-
-  // Configure initial link slice quotas for each slice.
-  for (auto const &it : m_sliceCtrlById)
-    {
-      SliceId sliceId = it.first;
-      int quota = 0;
-      if (it.second)
-        {
-          quota = it.second->GetQuota ();
-        }
-
-      // Iterate over links setting the initial quotas.
-      for (auto const &lInfo : LinkInfo::GetList ())
-        {
-          bool success = true;
-          success &= lInfo->UpdateQuota (LinkInfo::FWD, sliceId, quota);
-          success &= lInfo->UpdateQuota (LinkInfo::BWD, sliceId, quota);
-          NS_ASSERT_MSG (success, "Error when setting slice quotas.");
-        }
-    }
 
   // ---------------------------------------------------------------------
   // Meter table
@@ -389,12 +369,11 @@ BackhaulController::NotifySlicesBuilt (ApplicationContainer &controllers)
           // with disabled bandwidth sharing and the low-priority shared
           // Non-GBR meter entry for other slices.
           SlicingMeterInstall (lInfo, SliceId::ALL);
-          for (int s = 0; s < SliceId::ALL; s++)
+          for (auto const &ctrl : m_sliceCtrlPrio)
             {
-              SliceId slice = static_cast<SliceId> (s);
-              if (GetSliceController (slice)->GetSharing () == OpMode::OFF)
+              if (ctrl->GetSharing () == OpMode::OFF)
                 {
-                  SlicingMeterInstall (lInfo, slice);
+                  SlicingMeterInstall (lInfo, ctrl->GetSliceId ());
                 }
             }
         }
@@ -405,10 +384,9 @@ BackhaulController::NotifySlicesBuilt (ApplicationContainer &controllers)
       for (auto &lInfo : LinkInfo::GetList ())
         {
           // Install individual Non-GBR meter entries.
-          for (int s = 0; s < SliceId::ALL; s++)
+          for (auto const &ctrl : m_sliceCtrlPrio)
             {
-              SliceId slice = static_cast<SliceId> (s);
-              SlicingMeterInstall (lInfo, slice);
+              SlicingMeterInstall (lInfo, ctrl->GetSliceId ());
             }
         }
       break;
@@ -835,12 +813,11 @@ BackhaulController::SlicingMeterAdjust (
       if (slice == SliceId::ALL)
         {
           // Sum the bit rate from slices with enabled bandwidth sharing.
-          for (int s = 0; s < SliceId::ALL; s++)
+          for (auto const &ctrl : m_sliceCtrlPrio)
             {
-              SliceId tmpSlice = static_cast<SliceId> (s);
-              if (GetSliceController (tmpSlice)->GetSharing () == OpMode::ON)
+              if (ctrl->GetSharing () == OpMode::ON)
                 {
-                  freeBitRate += lInfo->GetFreBitRate (dir, tmpSlice);
+                  freeBitRate += lInfo->GetFreBitRate (dir, ctrl->GetSliceId ());
                 }
             }
           // Sum the spare bit rate when enabled.
@@ -902,12 +879,11 @@ BackhaulController::SlicingMeterInstall (Ptr<LinkInfo> lInfo, SliceId slice)
                          "Invalid inter-slice operation mode.");
 
           // Sum the bit rate from slices with enabled bandwidth sharing.
-          for (int s = 0; s < SliceId::ALL; s++)
+          for (auto const &ctrl : m_sliceCtrlPrio)
             {
-              SliceId tmpSlice = static_cast<SliceId> (s);
-              if (GetSliceController (tmpSlice)->GetSharing () == OpMode::ON)
+              if (ctrl->GetSharing () == OpMode::ON)
                 {
-                  quotaBitRate += lInfo->GetQuoBitRate (dir, tmpSlice);
+                  quotaBitRate += lInfo->GetQuoBitRate (dir, ctrl->GetSliceId ());
                 }
             }
           // Sum the spare bit rate when enabled.

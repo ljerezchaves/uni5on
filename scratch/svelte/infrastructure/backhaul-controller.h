@@ -270,6 +270,10 @@ protected:
    */
   void SlicingMeterInstall (Ptr<LinkInfo> lInfo, SliceId slice);
 
+  /** A list of slice controller applications. */
+  typedef std::vector<Ptr<SliceController> > CtrlAppList_t;
+  CtrlAppList_t         m_sliceCtrlPrio;  //!< Slice controllers by priority.
+
 private:
   /** Initialize static attributes only once. */
   static void StaticInitialize (void);
@@ -286,10 +290,6 @@ private:
   OpMode                m_spareUse;       //!< Spare bit rate sharing mode.
   OpMode                m_swBlockPolicy;  //!< Switch overload block policy.
   double                m_swBlockThs;     //!< Switch block threshold.
-
-  /** A list of slice controller applications. */
-  typedef std::vector<Ptr<SliceController> > CtrlAppList_t;
-  CtrlAppList_t         m_sliceCtrlPrio;  //!< Slice controllers by priority.
 
   /** Map saving Slice ID / Slice controller application. */
   typedef std::map<SliceId, Ptr<SliceController> > SliceIdCtrlAppMap_t;
