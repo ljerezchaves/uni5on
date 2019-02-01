@@ -868,7 +868,7 @@ BackhaulController::SlicingMeterInstall (Ptr<LinkInfo> lInfo, SliceId slice)
   for (int d = 0; d <= LinkInfo::BWD; d++)
     {
       LinkInfo::LinkDir dir = static_cast<LinkInfo::LinkDir> (d);
-      int64_t meterBitRate = lInfo->GetFreBitRate (dir, slice);
+      int64_t quotaBitRate = lInfo->GetQuoBitRate (dir, slice);
       if (slice == SliceId::ALL)
         {
           NS_ASSERT_MSG (GetInterSliceMode () == SliceMode::SHAR,
@@ -877,7 +877,7 @@ BackhaulController::SlicingMeterInstall (Ptr<LinkInfo> lInfo, SliceId slice)
           // Add the spare bit rate when enabled.
           if (GetSpareUseMode () == OpMode::ON)
             {
-              meterBitRate += lInfo->GetQuoBitRate (dir, SliceId::UNKN);
+              quotaBitRate += lInfo->GetQuoBitRate (dir, SliceId::UNKN);
             }
 
           // Remove the bit rate from slices with disabled bandwidth sharing.
@@ -886,13 +886,13 @@ BackhaulController::SlicingMeterInstall (Ptr<LinkInfo> lInfo, SliceId slice)
               SliceId outSlice = static_cast<SliceId> (s);
               if (GetSliceController (outSlice)->GetSharing () == OpMode::OFF)
                 {
-                  meterBitRate -= lInfo->GetQuoBitRate (dir, outSlice);
+                  quotaBitRate -= lInfo->GetQuoBitRate (dir, outSlice);
                 }
             }
         }
 
       uint32_t meterId = GetSvelteMeterId (slice, d);
-      int64_t meterKbps = Bps2Kbps (meterBitRate);
+      int64_t meterKbps = Bps2Kbps (quotaBitRate);
       bool success = lInfo->SetMetBitRate (dir, slice, meterKbps * 1000);
       NS_ASSERT_MSG (success, "Error when setting meter bit rate.");
 
