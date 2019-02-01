@@ -868,27 +868,31 @@ BackhaulController::SlicingMeterInstall (Ptr<LinkInfo> lInfo, SliceId slice)
   for (int d = 0; d <= LinkInfo::BWD; d++)
     {
       LinkInfo::LinkDir dir = static_cast<LinkInfo::LinkDir> (d);
-      int64_t quotaBitRate = lInfo->GetQuoBitRate (dir, slice);
+
+      int64_t quotaBitRate = 0;
       if (slice == SliceId::ALL)
         {
           NS_ASSERT_MSG (GetInterSliceMode () == SliceMode::SHAR,
                          "Invalid inter-slice operation mode.");
 
-          // Add the spare bit rate when enabled.
+          // Sum the bit rate from slices with enabled bandwidth sharing.
+          for (int s = 0; s < SliceId::ALL; s++)
+            {
+              SliceId tmpSlice = static_cast<SliceId> (s);
+              if (GetSliceController (tmpSlice)->GetSharing () == OpMode::ON)
+                {
+                  quotaBitRate += lInfo->GetQuoBitRate (dir, tmpSlice);
+                }
+            }
+          // Sum the spare bit rate when enabled.
           if (GetSpareUseMode () == OpMode::ON)
             {
               quotaBitRate += lInfo->GetQuoBitRate (dir, SliceId::UNKN);
             }
-
-          // Remove the bit rate from slices with disabled bandwidth sharing.
-          for (int s = 0; s < SliceId::ALL; s++)
-            {
-              SliceId outSlice = static_cast<SliceId> (s);
-              if (GetSliceController (outSlice)->GetSharing () == OpMode::OFF)
-                {
-                  quotaBitRate -= lInfo->GetQuoBitRate (dir, outSlice);
-                }
-            }
+        }
+      else
+        {
+          quotaBitRate = lInfo->GetQuoBitRate (dir, slice);
         }
 
       uint32_t meterId = GetSvelteMeterId (slice, d);
