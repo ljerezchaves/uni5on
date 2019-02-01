@@ -276,17 +276,6 @@ void ConfigureDefaults ()
     "ns3::LteHexGridEnbTopologyHelper::MinY", DoubleValue (250));
   Config::SetDefault (
     "ns3::LteHexGridEnbTopologyHelper::GridWidth", UintegerValue (2));
-
-  //
-  // Reducing the OpenFlow datapath timeout interval from 100ms to 50ms to
-  // get a more precise token refill operation at meter entries. This change
-  // requires reducing the EWMA alpha attribute at OpenFlow stats calculator
-  // to continue getting consistent average values for 1s interval.
-  //
-  Config::SetDefault (
-    "ns3::OFSwitch13Device::TimeoutInterval", TimeValue (MilliSeconds (50)));
-  Config::SetDefault (
-    "ns3::OFSwitch13StatsCalculator::EwmaAlpha", DoubleValue (0.1));
 }
 
 void ForceDefaults ()
@@ -340,6 +329,17 @@ void ForceDefaults ()
   //
   Config::SetDefault (
     "ns3::OFSwitch13Port::QueueFactory", StringValue ("ns3::SvelteQosQueue"));
+
+  //
+  // Reducing the OpenFlow datapath timeout interval from 100ms to 50ms to
+  // get a more precise token refill operation at meter entries. This change
+  // requires reducing the EWMA alpha attribute at OpenFlow stats calculator
+  // to continue getting consistent average values for 1s interval.
+  //
+  Config::SetDefault (
+    "ns3::OFSwitch13Device::TimeoutInterval", TimeValue (MilliSeconds (50)));
+  Config::SetDefault (
+    "ns3::OFSwitch13StatsCalculator::EwmaAlpha", DoubleValue (0.1));
 
   //
   // Enable detailed OpenFlow datapath statistics.
