@@ -45,6 +45,9 @@ class SvelteMme;
 class SgwInfo;
 class PgwInfo;
 
+/** A list of slice controller applications. */
+typedef std::vector<Ptr<SliceController> > SliceControllerList_t;
+
 /**
  * \ingroup svelteLogical
  * This is the abstract base class for a logical LTE slice controller, which
