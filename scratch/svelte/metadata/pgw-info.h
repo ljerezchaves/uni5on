@@ -208,11 +208,8 @@ private:
    */
   void SetTftLevel (uint16_t value);
 
-  /** Vector of OFSwitch13Devices */
-  typedef std::vector<Ptr<OFSwitch13Device> > DevicesVector_t;
-
   // P-GW metadata.
-  DevicesVector_t           m_devices;            //!< OpenFlow switch devices.
+  OFSwitch13DeviceContainer m_devices;            //!< OpenFlow switch devices.
   uint16_t                  m_infraSwIdx;         //!< Backhaul switch index.
   std::vector<uint32_t>     m_infraSwS5PortNos;   //!< Back switch S5 port nos.
   std::vector<uint32_t>     m_mainToTftPortNos;   //!< Main port nos to TFTs.

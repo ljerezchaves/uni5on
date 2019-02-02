@@ -116,8 +116,8 @@ PgwInfo::GetFlowTableCur (uint16_t idx, uint8_t tableId) const
 {
   NS_LOG_FUNCTION (this << idx);
 
-  NS_ASSERT_MSG (idx < m_devices.size (), "Invalid index.");
-  return m_devices.at (idx)->GetFlowTableEntries (tableId);
+  NS_ASSERT_MSG (idx < m_devices.GetN (), "Invalid index.");
+  return m_devices.Get (idx)->GetFlowTableEntries (tableId);
 }
 
 uint32_t
@@ -125,8 +125,8 @@ PgwInfo::GetFlowTableMax (uint16_t idx, uint8_t tableId) const
 {
   NS_LOG_FUNCTION (this << idx);
 
-  NS_ASSERT_MSG (idx < m_devices.size (), "Invalid index.");
-  return m_devices.at (idx)->GetFlowTableSize (tableId);
+  NS_ASSERT_MSG (idx < m_devices.GetN (), "Invalid index.");
+  return m_devices.Get (idx)->GetFlowTableSize (tableId);
 }
 
 double
@@ -134,8 +134,8 @@ PgwInfo::GetFlowTableUse (uint16_t idx, uint8_t tableId) const
 {
   NS_LOG_FUNCTION (this << idx);
 
-  NS_ASSERT_MSG (idx < m_devices.size (), "Invalid index.");
-  return m_devices.at (idx)->GetFlowTableUsage (tableId);
+  NS_ASSERT_MSG (idx < m_devices.GetN (), "Invalid index.");
+  return m_devices.Get (idx)->GetFlowTableUsage (tableId);
 }
 
 DataRate
@@ -143,7 +143,7 @@ PgwInfo::GetEwmaCpuCur (uint16_t idx) const
 {
   NS_LOG_FUNCTION (this << idx);
 
-  NS_ASSERT_MSG (idx < m_devices.size (), "Invalid index.");
+  NS_ASSERT_MSG (idx < m_devices.GetN (), "Invalid index.");
   return GetStats (idx)->GetEwmaCpuLoad ();
 }
 
@@ -152,8 +152,8 @@ PgwInfo::GetCpuMax (uint16_t idx) const
 {
   NS_LOG_FUNCTION (this << idx);
 
-  NS_ASSERT_MSG (idx < m_devices.size (), "Invalid index.");
-  return m_devices.at (idx)->GetCpuCapacity ();
+  NS_ASSERT_MSG (idx < m_devices.GetN (), "Invalid index.");
+  return m_devices.Get (idx)->GetCpuCapacity ();
 }
 
 double
@@ -171,7 +171,7 @@ PgwInfo::GetMainDpId (void) const
   NS_LOG_FUNCTION (this);
 
   NS_ASSERT_MSG (m_infraSwS5PortNos.size (), "No P-GW main switch registered");
-  return m_devices.at (0)->GetDatapathId ();
+  return m_devices.Get (0)->GetDatapathId ();
 }
 
 uint32_t
@@ -225,8 +225,8 @@ PgwInfo::GetTftDpId (uint16_t idx) const
   NS_LOG_FUNCTION (this << idx);
 
   NS_ASSERT_MSG (idx > 0, "Invalid TFT index.");
-  NS_ASSERT_MSG (idx < m_devices.size (), "Invalid TFT index.");
-  return m_devices.at (idx)->GetDatapathId ();
+  NS_ASSERT_MSG (idx < m_devices.GetN (), "Invalid TFT index.");
+  return m_devices.Get (idx)->GetDatapathId ();
 }
 
 uint32_t
@@ -451,7 +451,6 @@ PgwInfo::DoDispose ()
   NS_LOG_FUNCTION (this);
 
   m_sliceCtrl = 0;
-  m_devices.clear ();
   Object::DoDispose ();
 }
 
@@ -459,7 +458,7 @@ Ptr<OFSwitch13StatsCalculator>
 PgwInfo::GetStats (uint16_t idx) const
 {
   Ptr<OFSwitch13StatsCalculator> stats;
-  stats = m_devices.at (idx)->GetObject<OFSwitch13StatsCalculator> ();
+  stats = m_devices.Get (idx)->GetObject<OFSwitch13StatsCalculator> ();
   NS_ABORT_MSG_IF (!stats, "Enable OFSwitch13 datapath stats.");
   return stats;
 }
@@ -471,7 +470,7 @@ PgwInfo::SaveSwitchInfo (Ptr<OFSwitch13Device> device, Ipv4Address s5Addr,
 {
   NS_LOG_FUNCTION (this << device << s5Addr << s5PortNo << infraSwS5PortNo);
 
-  m_devices.push_back (device);
+  m_devices.Add (device);
   m_s5Addrs.push_back (s5Addr);
   m_s5PortNos.push_back (s5PortNo);
   m_infraSwS5PortNos.push_back (infraSwS5PortNo);
