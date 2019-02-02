@@ -291,7 +291,7 @@ private:
   double                m_swBlockThs;     //!< Switch block threshold.
 
   /** Slice controllers sorted by increasing priority. */
-  SliceControllerList_t m_controllers;
+  SliceControllerList_t m_sliceCtrls;
 
   /** Map saving Slice ID / Slice controller application. */
   typedef std::map<SliceId, Ptr<SliceController> > SliceIdCtrlAppMap_t;

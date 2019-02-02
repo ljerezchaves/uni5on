@@ -240,7 +240,7 @@ BackhaulController::GetSliceControllerList (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_controllers;
+  return m_sliceCtrls;
 }
 
 uint16_t
@@ -335,7 +335,7 @@ BackhaulController::NotifySlicesBuilt (ApplicationContainer &controllers)
       int quota = controller->GetQuota ();
 
       // Saving controller application pointers.
-      m_controllers.push_back (controller);
+      m_sliceCtrls.push_back (controller);
       std::pair<SliceId, Ptr<SliceController> > entry (slice, controller);
       auto ret = m_sliceCtrlById.insert (entry);
       NS_ABORT_MSG_IF (ret.second == false, "Existing slice controller.");
@@ -350,8 +350,8 @@ BackhaulController::NotifySlicesBuilt (ApplicationContainer &controllers)
         }
     }
 
-  // Sort m_controllers in increasing priority order.
-  std::stable_sort (m_controllers.begin (), m_controllers.end (), PriorityComp);
+  // Sort m_sliceCtrls in increasing priority order.
+  std::stable_sort (m_sliceCtrls.begin (), m_sliceCtrls.end (), PriorityComp);
 
   // ---------------------------------------------------------------------
   // Meter table
@@ -698,8 +698,7 @@ BackhaulController::SlicingExtraAdjust (
       int64_t idlShareBitRate = quoShareBitRate - useShareBitRate;
       int maxSteps = idlShareBitRate / stepRate;
 
-      for (auto it = m_controllers.rbegin ();
-           it != m_controllers.rend (); ++it)
+      for (auto it = m_sliceCtrls.rbegin (); it != m_sliceCtrls.rend (); ++it)
         {
           SliceId slice = (*it)->GetSliceId ();
           int64_t sliceIdl = lInfo->GetIdlBitRate (longTerm, dir, slice);
@@ -739,8 +738,7 @@ BackhaulController::SlicingExtraAdjust (
       // the safeguard threshold again.
       int64_t getBackBitRate = useShareBitRate - thsShareBitRate;
 
-      for (auto it = m_controllers.begin ();
-           it != m_controllers.end (); ++it)
+      for (auto it = m_sliceCtrls.begin (); it != m_sliceCtrls.end (); ++it)
         {
           SliceId slice = (*it)->GetSliceId ();
           int64_t sliceIdl = lInfo->GetIdlBitRate (longTerm, dir, slice);
