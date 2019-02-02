@@ -632,7 +632,7 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
       // disabled bandwidth sharing and the low-priority shared Non-GBR meter
       // entry for other slices.
       SlicingMeterApply (swtch, SliceId::ALL);
-      for (auto const &ctrl : m_sliceCtrlPrio)
+      for (auto const &ctrl : GetSliceControllerList ())
         {
           if (ctrl->GetSharing () == OpMode::OFF)
             {
@@ -644,7 +644,7 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
     case SliceMode::STAT:
     case SliceMode::DYNA:
       // Apply individual Non-GBR meter entries for each slice.
-      for (auto const &ctrl : m_sliceCtrlPrio)
+      for (auto const &ctrl : GetSliceControllerList ())
         {
           SlicingMeterApply (swtch, ctrl->GetSliceId ());
         }

@@ -20,7 +20,6 @@
 
 #include <algorithm>
 #include "backhaul-controller.h"
-#include "../logical/slice-controller.h"
 #include "../metadata/link-info.h"
 #include "backhaul-network.h"
 
@@ -236,6 +235,14 @@ BackhaulController::GetSliceController (SliceId slice) const
   return it->second;
 }
 
+const SliceControllerList_t&
+BackhaulController::GetSliceControllerList (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_controllers;
+}
+
 uint16_t
 BackhaulController::GetSliceTable (SliceId slice) const
 {
@@ -310,7 +317,7 @@ BackhaulController::NotifyEpcAttach (
 
 // Comparator for slice priorities.
 static bool
-SlicePrioComp (Ptr<SliceController> ctrl1, Ptr<SliceController> ctrl2)
+PriorityComp (Ptr<SliceController> ctrl1, Ptr<SliceController> ctrl2)
 {
   return ctrl1->GetPriority () < ctrl2->GetPriority ();
 }
@@ -328,7 +335,7 @@ BackhaulController::NotifySlicesBuilt (ApplicationContainer &controllers)
       int quota = controller->GetQuota ();
 
       // Saving controller application pointers.
-      m_sliceCtrlPrio.push_back (controller);
+      m_controllers.push_back (controller);
       std::pair<SliceId, Ptr<SliceController> > entry (slice, controller);
       auto ret = m_sliceCtrlById.insert (entry);
       NS_ABORT_MSG_IF (ret.second == false, "Existing slice controller.");
@@ -343,9 +350,8 @@ BackhaulController::NotifySlicesBuilt (ApplicationContainer &controllers)
         }
     }
 
-  // Sort m_sliceCtrlPrio in increasing controller priority order.
-  std::stable_sort (
-    m_sliceCtrlPrio.begin (), m_sliceCtrlPrio.end (), SlicePrioComp);
+  // Sort m_controllers in increasing priority order.
+  std::stable_sort (m_controllers.begin (), m_controllers.end (), PriorityComp);
 
   // ---------------------------------------------------------------------
   // Meter table
@@ -364,7 +370,7 @@ BackhaulController::NotifySlicesBuilt (ApplicationContainer &controllers)
           // with disabled bandwidth sharing and the low-priority shared
           // Non-GBR meter entry for other slices.
           SlicingMeterInstall (lInfo, SliceId::ALL);
-          for (auto const &ctrl : m_sliceCtrlPrio)
+          for (auto const &ctrl : GetSliceControllerList ())
             {
               if (ctrl->GetSharing () == OpMode::OFF)
                 {
@@ -379,7 +385,7 @@ BackhaulController::NotifySlicesBuilt (ApplicationContainer &controllers)
       for (auto &lInfo : LinkInfo::GetList ())
         {
           // Install individual Non-GBR meter entries.
-          for (auto const &ctrl : m_sliceCtrlPrio)
+          for (auto const &ctrl : GetSliceControllerList ())
             {
               SlicingMeterInstall (lInfo, ctrl->GetSliceId ());
             }
@@ -668,7 +674,7 @@ BackhaulController::SlicingExtraAdjust (
   // Sum the quota and use bit rate from slices with enabled bandwidth sharing.
   int64_t quoShareBitRate = 0;
   int64_t useShareBitRate = 0;
-  for (auto const &ctrl : m_sliceCtrlPrio)
+  for (auto const &ctrl : GetSliceControllerList ())
     {
       if (ctrl->GetSharing () == OpMode::ON)
         {
@@ -692,8 +698,8 @@ BackhaulController::SlicingExtraAdjust (
       int64_t idlShareBitRate = quoShareBitRate - useShareBitRate;
       int maxSteps = idlShareBitRate / stepRate;
 
-      for (auto it = m_sliceCtrlPrio.rbegin ();
-           it != m_sliceCtrlPrio.rend (); ++it)
+      for (auto it = m_controllers.rbegin ();
+           it != m_controllers.rend (); ++it)
         {
           SliceId slice = (*it)->GetSliceId ();
           int64_t sliceIdl = lInfo->GetIdlBitRate (longTerm, dir, slice);
@@ -733,8 +739,8 @@ BackhaulController::SlicingExtraAdjust (
       // the safeguard threshold again.
       int64_t getBackBitRate = useShareBitRate - thsShareBitRate;
 
-      for (auto it = m_sliceCtrlPrio.begin ();
-           it != m_sliceCtrlPrio.end (); ++it)
+      for (auto it = m_controllers.begin ();
+           it != m_controllers.end (); ++it)
         {
           SliceId slice = (*it)->GetSliceId ();
           int64_t sliceIdl = lInfo->GetIdlBitRate (longTerm, dir, slice);
@@ -823,7 +829,7 @@ BackhaulController::SlicingMeterAdjust (
       if (slice == SliceId::ALL)
         {
           // Sum the bit rate from slices with enabled bandwidth sharing.
-          for (auto const &ctrl : m_sliceCtrlPrio)
+          for (auto const &ctrl : GetSliceControllerList ())
             {
               if (ctrl->GetSharing () == OpMode::ON)
                 {
@@ -889,7 +895,7 @@ BackhaulController::SlicingMeterInstall (Ptr<LinkInfo> lInfo, SliceId slice)
                          "Invalid inter-slice operation mode.");
 
           // Sum the bit rate from slices with enabled bandwidth sharing.
-          for (auto const &ctrl : m_sliceCtrlPrio)
+          for (auto const &ctrl : GetSliceControllerList ())
             {
               if (ctrl->GetSharing () == OpMode::ON)
                 {

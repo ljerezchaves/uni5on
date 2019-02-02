@@ -33,6 +33,7 @@
 #include <ns3/lte-module.h>
 #include <ns3/network-module.h>
 #include <ns3/ofswitch13-module.h>
+#include "../logical/slice-controller.h"
 #include "../metadata/link-info.h"
 #include "../metadata/routing-info.h"
 #include "../svelte-common.h"
@@ -41,7 +42,6 @@ namespace ns3 {
 
 class EnbInfo;
 class LinkInfo;
-class SliceController;
 
 /**
  * \ingroup svelteInfra
@@ -148,6 +148,12 @@ protected:
    * \return The slice controller application.
    */
   Ptr<SliceController> GetSliceController (SliceId slice) const;
+
+  /**
+   * Get the list of slice controller applications.
+   * \return The list of controller applications.
+   */
+  const SliceControllerList_t& GetSliceControllerList (void) const;
 
   /**
    * Get the number of the OpenFlow pipeline table exclusively used by this
@@ -270,10 +276,6 @@ protected:
    */
   void SlicingMeterInstall (Ptr<LinkInfo> lInfo, SliceId slice);
 
-  /** A list of slice controller applications. */
-  typedef std::vector<Ptr<SliceController> > CtrlAppList_t;
-  CtrlAppList_t         m_sliceCtrlPrio;  //!< Slice controllers by priority.
-
 private:
   OFSwitch13DeviceContainer m_switchDevices;  //!< OpenFlow switch devices.
 
@@ -287,6 +289,9 @@ private:
   OpMode                m_spareUse;       //!< Spare bit rate sharing mode.
   OpMode                m_swBlockPolicy;  //!< Switch overload block policy.
   double                m_swBlockThs;     //!< Switch block threshold.
+
+  /** Slice controllers sorted by increasing priority. */
+  SliceControllerList_t m_controllers;
 
   /** Map saving Slice ID / Slice controller application. */
   typedef std::map<SliceId, Ptr<SliceController> > SliceIdCtrlAppMap_t;
