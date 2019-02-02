@@ -700,6 +700,12 @@ BackhaulController::SlicingExtraAdjust (
 
       for (auto it = m_sliceCtrls.rbegin (); it != m_sliceCtrls.rend (); ++it)
         {
+          // Ignoring slices with disabled bandwidth sharing.
+          if ((*it)->GetSharing () == OpMode::OFF)
+            {
+              continue;
+            }
+
           SliceId slice = (*it)->GetSliceId ();
           int64_t sliceIdl = lInfo->GetIdlBitRate (longTerm, dir, slice);
           int64_t sliceOve = lInfo->GetOveBitRate (longTerm, dir, slice);
@@ -740,6 +746,12 @@ BackhaulController::SlicingExtraAdjust (
 
       for (auto it = m_sliceCtrls.begin (); it != m_sliceCtrls.end (); ++it)
         {
+          // Ignoring slices with disabled bandwidth sharing.
+          if ((*it)->GetSharing () == OpMode::OFF)
+            {
+              continue;
+            }
+
           SliceId slice = (*it)->GetSliceId ();
           int64_t sliceIdl = lInfo->GetIdlBitRate (longTerm, dir, slice);
           int64_t sliceOve = lInfo->GetOveBitRate (longTerm, dir, slice);
