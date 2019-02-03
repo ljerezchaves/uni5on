@@ -280,7 +280,7 @@ private:
   OFSwitch13DeviceContainer m_switchDevices;  //!< OpenFlow switch devices.
 
   // Internal mechanisms metadata.
-  double                m_dynLinkThs;     //!< Dynamic slice link threshold.
+  DataRate              m_dynGuard;       //!< Dynamic slice link guard.
   Time                  m_dynTimeout;     //!< Dynamic slice timeout interval.
   DataRate              m_extraStep;      //!< Extra adjustment step.
   DataRate              m_meterStep;      //!< Meter adjustment step.

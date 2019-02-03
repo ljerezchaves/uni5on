@@ -1,7 +1,7 @@
 global DumpStatsTimeout "1s"
 global SimTime "0s"
 
-default ns3::BackhaulController::DynamicLinkThs "0.9"
+default ns3::BackhaulController::DynamicGuard "4Mbps"
 default ns3::BackhaulController::DynamicTimeout "5s"
 default ns3::BackhaulController::ExtraStep "4Mbps"
 default ns3::BackhaulController::MeterStep "2Mbps"

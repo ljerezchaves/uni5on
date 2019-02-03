@@ -44,11 +44,11 @@ BackhaulController::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::BackhaulController")
     .SetParent<OFSwitch13Controller> ()
 
-    .AddAttribute ("DynamicLinkThs",
-                   "Dynamic inter-slice link usage threshold.",
-                   DoubleValue (0.9),
-                   MakeDoubleAccessor (&BackhaulController::m_dynLinkThs),
-                   MakeDoubleChecker<double> (0.8, 1.0))
+    .AddAttribute ("DynamicGuard",
+                   "Dynamic inter-slice link guard bit rate.",
+                   DataRateValue (DataRate ("4Mbps")),
+                   MakeDataRateAccessor (&BackhaulController::m_dynGuard),
+                   MakeDataRateChecker ())
     .AddAttribute ("DynamicTimeout",
                    "Dynamic inter-slice adjustment timeout.",
                    TimeValue (Seconds (5)),
@@ -669,6 +669,7 @@ BackhaulController::SlicingExtraAdjust (
                  "Invalid inter-slice operation mode.");
 
   const LinkInfo::EwmaTerm longTerm = LinkInfo::LTERM;
+  int64_t guardRate = static_cast<int64_t> (m_dynGuard.GetBitRate ());
   int64_t stepRate = static_cast<int64_t> (m_extraStep.GetBitRate ());
 
   // Sum the quota and use bit rate from slices with enabled bandwidth sharing.
@@ -689,7 +690,7 @@ BackhaulController::SlicingExtraAdjust (
       quoShareBitRate += lInfo->GetQuoBitRate (dir, SliceId::UNKN);
     }
 
-  int64_t thsShareBitRate = quoShareBitRate * m_dynLinkThs;
+  int64_t thsShareBitRate = quoShareBitRate - guardRate;
   if (useShareBitRate <= thsShareBitRate)
     {
       // Link usage is below the safeguard threshold. Iterate over slices in
