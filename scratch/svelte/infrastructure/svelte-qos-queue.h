@@ -67,7 +67,7 @@ private:
    * maximum number of packets to serve before reseting the weights. Note that
    * the first weight is zero as this is not used by the priority queue.
    */
-  const std::vector<int> m_queueWeight = {0, 3, 3, 3, 2, 1};
+  const std::vector<int> m_queueWeight = {0, 1, 3, 4, 2, 2};
   const int              m_queueNum = 6; //!< Total number of queues.
   std::vector<int>       m_queueTokens;  //!< Tokens for WRR scheduling.
 
