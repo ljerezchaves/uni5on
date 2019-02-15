@@ -50,13 +50,13 @@ public:
   /** The reason for any blocked request. */
   enum BlockReason
   {
-    PGWTABLE  = 0,  //!< P-GW TFT flow table is full.
-    PGWLOAD   = 1,  //!< P-GW TFT pipeline load is full.
-    SGWTABLE  = 2,  //!< P-GW flow table is full.
-    SGWLOAD   = 3,  //!< P-GW pipeline load is full.
-    BACKTABLE = 4,  //!< At least one backhaul flow table is full.
-    BACKLOAD  = 5,  //!< At least one backhaul pipeline load is full.
-    BACKBAND  = 6   //!< At least one backhaul link has no bandwidth.
+    BACKBAND  = 0,  //!< At least one backhaul link has no bandwidth.
+    BACKTABLE = 1,  //!< At least one backhaul flow table is full.
+    BACKLOAD  = 2,  //!< At least one backhaul pipeline load is full.
+    PGWTABLE  = 4,  //!< P-GW TFT flow table is full.
+    PGWLOAD   = 5,  //!< P-GW TFT pipeline load is full.
+    SGWTABLE  = 8,  //!< P-GW flow table is full.
+    SGWLOAD   = 9   //!< P-GW pipeline load is full.
   };
 
   /**
@@ -81,6 +81,7 @@ public:
    * \return The requested information.
    */
   //\{
+  uint16_t    GetBlockReason    (void) const;
   std::string GetBlockReasonHex (void) const;
   uint16_t    GetPgwTftIdx      (void) const;
   uint16_t    GetPriority       (void) const;

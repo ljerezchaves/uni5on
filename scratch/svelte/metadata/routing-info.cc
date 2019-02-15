@@ -88,6 +88,14 @@ RoutingInfo::GetTypeId (void)
   return tid;
 }
 
+uint16_t
+RoutingInfo::GetBlockReason (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_blockReason;
+}
+
 std::string
 RoutingInfo::GetBlockReasonHex (void) const
 {
