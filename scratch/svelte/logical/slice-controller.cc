@@ -660,7 +660,7 @@ SliceController::BearerInstall (Ptr<RoutingInfo> rInfo)
   bool success = true;
   success &= PgwRulesInstall (rInfo);
   success &= SgwRulesInstall (rInfo);
-  success &= m_backhaulCtrl->TopologyRoutingInstall (rInfo);
+  success &= m_backhaulCtrl->BearerInstall (rInfo);
   rInfo->SetInstalled (success);
   return success;
 }
@@ -677,7 +677,7 @@ SliceController::BearerRemove (Ptr<RoutingInfo> rInfo)
   bool success = true;
   success &= PgwRulesRemove (rInfo);
   success &= SgwRulesRemove (rInfo);
-  success &= m_backhaulCtrl->TopologyRoutingRemove (rInfo);
+  success &= m_backhaulCtrl->BearerRemove (rInfo);
   rInfo->SetInstalled (!success);
   return success;
 }
@@ -833,7 +833,7 @@ SliceController::DoModifyBearerRequest (
           // the eNB. Thus, we need to modify the S-GW and backhaul S1-U rules.
           bool success = true;
           success &= SgwRulesUpdate (rInfo, dstEnbInfo);
-          success &= m_backhaulCtrl->TopologyRoutingUpdate (rInfo, dstEnbInfo);
+          success &= m_backhaulCtrl->BearerUpdate (rInfo, dstEnbInfo);
           NS_ASSERT_MSG (success, "Error in OpenFlow rules after handover.");
         }
     }

@@ -287,7 +287,7 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices)
 }
 
 bool
-RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
+RingController::BearerInstall (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
@@ -376,7 +376,7 @@ RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
 }
 
 bool
-RingController::TopologyRoutingRemove (Ptr<RoutingInfo> rInfo)
+RingController::BearerRemove (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
@@ -399,14 +399,13 @@ RingController::TopologyRoutingRemove (Ptr<RoutingInfo> rInfo)
 }
 
 bool
-RingController::TopologyRoutingUpdate (Ptr<RoutingInfo> rInfo,
-                                       Ptr<EnbInfo> dstEnbInfo)
+RingController::BearerUpdate (Ptr<RoutingInfo> rInfo, Ptr<EnbInfo> dstEnbInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
   NS_ASSERT_MSG (rInfo->IsInstalled (), "Rules must be installed.");
   NS_ASSERT_MSG (rInfo->GetEnbCellId () != dstEnbInfo->GetCellId (),
-                 "Don't update UE's eNB info before TopologyRoutingUpdate.");
+                 "Don't update UE's eNB info before BearerUpdate.");
 
   NS_LOG_INFO ("Updating ring rules for teid " << rInfo->GetTeidHex ());
 

@@ -115,6 +115,35 @@ protected:
   virtual bool BearerRelease (Ptr<RoutingInfo> rInfo) = 0;
 
   /**
+   * Install TEID routing OpenFlow match rules into backhaul switches.
+   * \attention To avoid conflicts with old entries, increase the routing
+   *            priority before installing OpenFlow rules.
+   * \param rInfo The routing information to process.
+   * \return True if succeeded, false otherwise.
+   */
+  virtual bool BearerInstall (Ptr<RoutingInfo> rInfo) = 0;
+
+  /**
+   * Remove TEID routing OpenFlow match rules from backhaul switches.
+   * \param rInfo The routing information to process.
+   * \return True if succeeded, false otherwise.
+   */
+  virtual bool BearerRemove (Ptr<RoutingInfo> rInfo) = 0;
+
+  /**
+   * Update TEID routing OpenFlow match rules from backhaul switches after a
+   * successful handover procedure.
+   * \attention Don't increase the routing priority and don't update the
+   *            rInfo->GetEnbInfo () to the destination eNB metadata before
+   *            invoking this method.
+   * \param rInfo The routing information to process.
+   * \param dstEnbInfo The destination eNB after the handover procedure.
+   * \return True if succeeded, false otherwise.
+   */
+  virtual bool BearerUpdate (Ptr<RoutingInfo> rInfo,
+                             Ptr<EnbInfo> dstEnbInfo) = 0;
+
+  /**
    * Get the pipeline flow table usage for the given backhaul switch index
    * and pipeline flow table ID.
    * \param idx The switch index.
@@ -204,35 +233,6 @@ protected:
    * \param devices The OpenFlow switch devices.
    */
   virtual void NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices);
-
-  /**
-   * Install TEID routing OpenFlow match rules into backhaul switches.
-   * \attention To avoid conflicts with old entries, increase the routing
-   *            priority before installing OpenFlow rules.
-   * \param rInfo The routing information to process.
-   * \return True if succeeded, false otherwise.
-   */
-  virtual bool TopologyRoutingInstall (Ptr<RoutingInfo> rInfo) = 0;
-
-  /**
-   * Remove TEID routing OpenFlow match rules from backhaul switches.
-   * \param rInfo The routing information to process.
-   * \return True if succeeded, false otherwise.
-   */
-  virtual bool TopologyRoutingRemove (Ptr<RoutingInfo> rInfo) = 0;
-
-  /**
-   * Update TEID routing OpenFlow match rules from backhaul switches after a
-   * successful handover procedure.
-   * \attention Don't increase the routing priority and don't update the
-   *            rInfo->GetEnbInfo () to the destination eNB metadata before
-   *            invoking this method.
-   * \param rInfo The routing information to process.
-   * \param dstEnbInfo The destination eNB after the handover procedure.
-   * \return True if succeeded, false otherwise.
-   */
-  virtual bool TopologyRoutingUpdate (Ptr<RoutingInfo> rInfo,
-                                      Ptr<EnbInfo> dstEnbInfo) = 0;
 
   // Inherited from OFSwitch13Controller.
   virtual ofl_err HandleError (

@@ -578,7 +578,7 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // -------------------------------------------------------------------------
   // Slice tables (one for each slice) -- [from higher to lower priority]
   //
-  // Entries will be installed here by TopologyRoutingInstall function.
+  // Entries will be installed here by BearerInstall function.
 
   // -------------------------------------------------------------------------
   // Routing table -- [from higher to lower priority]
