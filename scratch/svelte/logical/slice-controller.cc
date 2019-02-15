@@ -209,8 +209,11 @@ SliceController::DedicatedBearerRequest (
   NS_LOG_INFO ("Bearer request accepted by controller.");
 
   // Reserve infrastructure resources and install the bearer.
-  success &= m_backhaulCtrl->BearerReserve (rInfo);
-  success &= BearerInstall (rInfo);
+  if (!rInfo->IsAggregated ())
+    {
+      success &= m_backhaulCtrl->BearerReserve (rInfo);
+      success &= BearerInstall (rInfo);
+    }
   m_bearerRequestTrace (rInfo);
   return success;
 }
@@ -230,8 +233,11 @@ SliceController::DedicatedBearerRelease (
 
   // Release infrastructure resources and remove the bearer.
   bool success = true;
-  success &= m_backhaulCtrl->BearerRelease (rInfo);
-  success &= BearerRemove (rInfo);
+  if (!rInfo->IsAggregated ())
+    {
+      success &= m_backhaulCtrl->BearerRelease (rInfo);
+      success &= BearerRemove (rInfo);
+    }
   m_bearerReleaseTrace (rInfo);
   return success;
 }
@@ -648,6 +654,7 @@ SliceController::BearerInstall (Ptr<RoutingInfo> rInfo)
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
   NS_ASSERT_MSG (!rInfo->IsInstalled (), "Rules should not be installed.");
+  NS_ASSERT_MSG (!rInfo->IsAggregated (), "Bearer should not be aggregated.");
 
   // Increasing the priority every time we (re)install routing rules. Doing
   // this, we avoid problems with old 'expiring' rules, and we can even use new
@@ -669,6 +676,7 @@ SliceController::BearerRemove (Ptr<RoutingInfo> rInfo)
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
   NS_ASSERT_MSG (rInfo->IsInstalled (), "Rules should be installed.");
+  NS_ASSERT_MSG (!rInfo->IsAggregated (), "Bearer should not be aggregated.");
   NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should not be active.");
 
   // Remove the rules.

@@ -173,6 +173,7 @@ RingController::BearerReserve (Ptr<RoutingInfo> rInfo)
   NS_LOG_FUNCTION (this << rInfo);
 
   NS_ASSERT_MSG (!rInfo->IsBlocked (), "Bearer should not be blocked.");
+  NS_ASSERT_MSG (!rInfo->IsAggregated (), "Bearer should not be aggregated.");
 
   Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
   NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
@@ -192,6 +193,8 @@ bool
 RingController::BearerRelease (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo);
+
+  NS_ASSERT_MSG (!rInfo->IsAggregated (), "Bearer should not be aggregated.");
 
   // For bearers without reserved resources: nothing to release.
   if (!rInfo->IsGbrReserved ())
