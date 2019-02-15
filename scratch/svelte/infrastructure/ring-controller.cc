@@ -819,8 +819,7 @@ RingController::BearerReserve (Ptr<RingInfo> ringInfo)
   // For Non-GBR bearers (which includes the default bearer) and for bearers
   // that only transverse local switch (local routing for both S1-U and S5
   // interfaces): there's nothing to reserve.
-  if (!rInfo->IsGbr () || (ringInfo->IsLocalPath (LteIface::S1U)
-                           && ringInfo->IsLocalPath (LteIface::S5)))
+  if (!rInfo->IsGbr () || ringInfo->AreBothLocalPaths ())
     {
       return true;
     }
