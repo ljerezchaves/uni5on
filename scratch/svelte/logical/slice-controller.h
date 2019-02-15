@@ -117,6 +117,7 @@ public:
   int       GetPriority               (void) const;
   int       GetQuota                  (void) const;
   OpMode    GetSharing                (void) const;
+  OpMode    GetAggregation            (void) const;
   //\}
 
   /**
@@ -361,6 +362,7 @@ private:
   int                     m_slicePrio;      //!< slice priority.
   int                     m_linkQuota;      //!< Initial bandwitdh quota.
   OpMode                  m_linkSharing;    //!< Bandwitdh sharing mode.
+  OpMode                  m_aggregation;    //!< Bearer traffic aggregation.
 
   // MME interface.
   Ptr<SvelteMme>          m_mme;            //!< MME element.

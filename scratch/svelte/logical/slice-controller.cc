@@ -67,6 +67,14 @@ SliceController::GetTypeId (void)
                                     SliceId::TMP, SliceIdStr (SliceId::TMP)))
 
     // Infrastructure.
+    .AddAttribute ("Aggregation",
+                   "Enable bearer traffic aggregation.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   EnumValue (OpMode::OFF),
+                   MakeEnumAccessor (&SliceController::m_aggregation),
+                   MakeEnumChecker (OpMode::OFF,  OpModeStr (OpMode::OFF),
+                                    OpMode::ON,   OpModeStr (OpMode::ON),
+                                    OpMode::AUTO, OpModeStr (OpMode::AUTO)))
     .AddAttribute ("BackhaulCtrl",
                    "The OpenFlow backhaul controller pointer.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -280,6 +288,14 @@ SliceController::GetSharing (void) const
   NS_LOG_FUNCTION (this);
 
   return m_linkSharing;
+}
+
+OpMode
+SliceController::GetAggregation (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_aggregation;
 }
 
 OpMode
