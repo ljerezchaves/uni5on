@@ -573,7 +573,6 @@ RoutingInfo::BlockReasonStr (BlockReason reason)
       return "BackLoad";
     case RoutingInfo::BACKBAND:
       return "BackBand";
-    case RoutingInfo::NONE:
     default:
       return "-";
     }
@@ -722,7 +721,7 @@ RoutingInfo::IncreasePriority (void)
 }
 
 bool
-RoutingInfo::IsBlocked (BlockReason reason)
+RoutingInfo::IsBlocked (BlockReason reason) const
 {
   NS_LOG_FUNCTION (this << reason);
 

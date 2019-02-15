@@ -266,7 +266,7 @@ protected:
   bool IsBlocked (BlockReason reason) const;
 
   /**
-   * Reset the blocked status to NONE.
+   * Clear the blocked status.
    */
   void ResetBlocked (void);
 
