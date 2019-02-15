@@ -680,7 +680,9 @@ RingController::BwBearerRequest (Ptr<RingInfo> ringInfo) const
     }
 
   SliceId slice = rInfo->GetSliceId ();
+  LinkInfo::LinkDir dlDir, ulDir;
   RingInfo::RingPath downPath;
+  Ptr<LinkInfo> lInfo;
   uint16_t curr = 0;
   bool ok = true;
 
@@ -695,9 +697,6 @@ RingController::BwBearerRequest (Ptr<RingInfo> ringInfo) const
   int64_t dlRate = rInfo->GetGbrDlBitRate ();
   int64_t ulRate = rInfo->GetGbrUlBitRate ();
   double blockThs = GetSliceController (slice)->GetGbrBlockThs ();
-
-  Ptr<LinkInfo> lInfo;
-  LinkInfo::LinkDir dlDir, ulDir;
 
   // S5 interface (from P-GW to S-GW)
   curr = rInfo->GetPgwInfraSwIdx ();
