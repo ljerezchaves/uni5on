@@ -652,84 +652,37 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 }
 
 bool
-RingController::HasAvailableResources (Ptr<RingInfo> ringInfo)
+RingController::HasAvailableResources (Ptr<RingInfo> ringInfo) const
+{
+  NS_LOG_FUNCTION (this << ringInfo);
+
+  bool success = true;
+  success &= BwBearerRequest (ringInfo);
+  success &= SwBearerRequest (ringInfo);
+  return success;
+}
+
+bool
+RingController::BwBearerRequest (Ptr<RingInfo> ringInfo) const
 {
   NS_LOG_FUNCTION (this << ringInfo);
 
   Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
-  SliceId slice = rInfo->GetSliceId ();
-  RingInfo::RingPath downPath;
-  bool success = true;
-  uint16_t curr = 0;
 
-  // First check: OpenFlow switch table usage.
-  // Block the bearer if the slice pipeline table usage is exceeding the block
-  // threshold at any backhaul switch connected to EPC serving entities.
-  uint8_t sliceTable = GetSliceTable (slice);
-  double sgwTabUse = GetFlowTableUse (rInfo->GetSgwInfraSwIdx (), sliceTable);
-  double pgwTabUse = GetFlowTableUse (rInfo->GetPgwInfraSwIdx (), sliceTable);
-  double enbTabUse = GetFlowTableUse (rInfo->GetEnbInfraSwIdx (), sliceTable);
-  if ((rInfo->HasTraffic () && sgwTabUse >= GetSwBlockThreshold ())
-      || (rInfo->HasDlTraffic () && pgwTabUse >= GetSwBlockThreshold ())
-      || (rInfo->HasUlTraffic () && enbTabUse >= GetSwBlockThreshold ()))
-    {
-      rInfo->SetBlocked (RoutingInfo::BACKTABLE);
-      NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
-                   " because the backhaul switch table is full.");
-      return false;
-    }
-
-  // Second check: OpenFlow switch processing load.
-  // Block the bearer if the processing load is exceeding the block threshold
-  // at any backhaul switch over the routing path for this bearer, respecting
-  // the BlockPolicy attribute:
-  // - If OFF : don't block the request.
-  // - If ON  : block the request.
-  if (GetSwBlockPolicy () == OpMode::ON)
-    {
-      // S5 interface (from P-GW to S-GW).
-      curr = rInfo->GetPgwInfraSwIdx ();
-      downPath = ringInfo->GetDlPath (LteIface::S5);
-      while (success && curr != rInfo->GetSgwInfraSwIdx ())
-        {
-          success &= (GetEwmaCpuUse (curr) < GetSwBlockThreshold ());
-          curr = NextSwitchIndex (curr, downPath);
-        }
-
-      // S1-U interface (from S-GW to eNB).
-      downPath = ringInfo->GetDlPath (LteIface::S1U);
-      while (success && curr != rInfo->GetEnbInfraSwIdx ())
-        {
-          success &= (GetEwmaCpuUse (curr) < GetSwBlockThreshold ());
-          curr = NextSwitchIndex (curr, downPath);
-        }
-
-      // The last switch (eNB).
-      success &= (GetEwmaCpuUse (curr) < GetSwBlockThreshold ());
-
-      if (!success)
-        {
-          rInfo->SetBlocked (RoutingInfo::BACKLOAD);
-          NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
-                       " because the backhaul switch is overloaded.");
-          return false;
-        }
-    }
-
-  // Third check: Available bandwidth over backhaul links.
+  // Single check: available bandwidth over backhaul links.
   // The only resource that is reserved is the GBR bit rate over links.
   // For Non-GBR bearers (which includes the default bearer) and for bearers
   // that only transverse local switch (local routing for both S1-U and S5
   // interfaces): let's accept it without bandwidth guarantees.
-  if (!rInfo->IsGbr () || (ringInfo->IsLocalPath (LteIface::S1U)
-                           && ringInfo->IsLocalPath (LteIface::S5)))
+  if (!rInfo->IsGbr () || ringInfo->AreBothLocalPaths ())
     {
-      NS_ASSERT_MSG (!rInfo->IsBlocked (), "Bearer should not be blocked.");
       return true;
     }
 
-  // It only makes sense to check for available bandwidth for GBR bearers.
-  NS_ASSERT_MSG (rInfo->IsGbr (), "Invalid request for Non-GBR bearer.");
+  SliceId slice = rInfo->GetSliceId ();
+  RingInfo::RingPath downPath;
+  uint16_t curr = 0;
+  bool ok = true;
 
   // When checking for the available bit rate on backhaul links, the S5 and
   // S1-U routing paths may overlap if one of them is CLOCK and the other is
@@ -749,12 +702,12 @@ RingController::HasAvailableResources (Ptr<RingInfo> ringInfo)
   // S5 interface (from P-GW to S-GW)
   curr = rInfo->GetPgwInfraSwIdx ();
   downPath = ringInfo->GetDlPath (LteIface::S5);
-  while (success && curr != rInfo->GetSgwInfraSwIdx ())
+  while (ok && curr != rInfo->GetSgwInfraSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, downPath);
       std::tie (lInfo, dlDir, ulDir) = GetLinkInfo (curr, next);
-      success &= HasGbrBitRate (lInfo, dlDir, slice, dlRate, blockThs);
-      success &= HasGbrBitRate (lInfo, ulDir, slice, ulRate, blockThs);
+      ok &= HasGbrBitRate (lInfo, dlDir, slice, dlRate, blockThs);
+      ok &= HasGbrBitRate (lInfo, ulDir, slice, ulRate, blockThs);
       curr = next;
 
       // Save this link as used by S5 interface.
@@ -764,7 +717,7 @@ RingController::HasAvailableResources (Ptr<RingInfo> ringInfo)
 
   // S1-U interface (from S-GW to eNB)
   downPath = ringInfo->GetDlPath (LteIface::S1U);
-  while (success && curr != rInfo->GetEnbInfraSwIdx ())
+  while (ok && curr != rInfo->GetEnbInfraSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, downPath);
       std::tie (lInfo, dlDir, ulDir) = GetLinkInfo (curr, next);
@@ -776,20 +729,18 @@ RingController::HasAvailableResources (Ptr<RingInfo> ringInfo)
           // When checking for downlink resources for S1-U interface we also
           // must ensure that the link has uplink resources for S5 interface,
           // and vice-versa.
-          success &= HasGbrBitRate (lInfo, dlDir, slice,
-                                    dlRate + ulRate, blockThs);
-          success &= HasGbrBitRate (lInfo, ulDir, slice,
-                                    ulRate + dlRate, blockThs);
+          ok &= HasGbrBitRate (lInfo, dlDir, slice, dlRate + ulRate, blockThs);
+          ok &= HasGbrBitRate (lInfo, ulDir, slice, ulRate + dlRate, blockThs);
         }
       else
         {
-          success &= HasGbrBitRate (lInfo, dlDir, slice, dlRate, blockThs);
-          success &= HasGbrBitRate (lInfo, ulDir, slice, ulRate, blockThs);
+          ok &= HasGbrBitRate (lInfo, dlDir, slice, dlRate, blockThs);
+          ok &= HasGbrBitRate (lInfo, ulDir, slice, ulRate, blockThs);
         }
       curr = next;
     }
 
-  if (!success)
+  if (!ok)
     {
       rInfo->SetBlocked (RoutingInfo::BACKBAND);
       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
@@ -797,8 +748,76 @@ RingController::HasAvailableResources (Ptr<RingInfo> ringInfo)
       return false;
     }
 
-  // If we get here it's because all the resources are available.
-  NS_ASSERT_MSG (success, "Error when checking resources.");
+  return true;
+}
+
+bool
+RingController::SwBearerRequest (Ptr<RingInfo> ringInfo) const
+{
+  NS_LOG_FUNCTION (this << ringInfo);
+
+  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
+  SliceId slice = rInfo->GetSliceId ();
+  bool success = true;
+
+  // First check: OpenFlow switch table usage.
+  // Block the bearer if the slice pipeline table usage is exceeding the block
+  // threshold at any backhaul switch connected to EPC serving entities.
+  uint8_t sliceTable = GetSliceTable (slice);
+  double sgwTabUse = GetFlowTableUse (rInfo->GetSgwInfraSwIdx (), sliceTable);
+  double pgwTabUse = GetFlowTableUse (rInfo->GetPgwInfraSwIdx (), sliceTable);
+  double enbTabUse = GetFlowTableUse (rInfo->GetEnbInfraSwIdx (), sliceTable);
+  if ((rInfo->HasTraffic () && sgwTabUse >= GetSwBlockThreshold ())
+      || (rInfo->HasDlTraffic () && pgwTabUse >= GetSwBlockThreshold ())
+      || (rInfo->HasUlTraffic () && enbTabUse >= GetSwBlockThreshold ()))
+    {
+      success = false;
+      rInfo->SetBlocked (RoutingInfo::BACKTABLE);
+      NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
+                   " because the backhaul switch table is full.");
+    }
+
+  // Second check: OpenFlow switch processing load.
+  // Block the bearer if the processing load is exceeding the block threshold
+  // at any backhaul switch over the routing path for this bearer, respecting
+  // the BlockPolicy attribute:
+  // - If OFF : don't block the request.
+  // - If ON  : block the request.
+  if (GetSwBlockPolicy () == OpMode::ON)
+    {
+      RingInfo::RingPath downPath;
+      uint16_t curr = 0;
+      bool ok = true;
+
+      // S5 interface (from P-GW to S-GW).
+      curr = rInfo->GetPgwInfraSwIdx ();
+      downPath = ringInfo->GetDlPath (LteIface::S5);
+      while (ok && curr != rInfo->GetSgwInfraSwIdx ())
+        {
+          ok &= (GetEwmaCpuUse (curr) < GetSwBlockThreshold ());
+          curr = NextSwitchIndex (curr, downPath);
+        }
+
+      // S1-U interface (from S-GW to eNB).
+      downPath = ringInfo->GetDlPath (LteIface::S1U);
+      while (ok && curr != rInfo->GetEnbInfraSwIdx ())
+        {
+          ok &= (GetEwmaCpuUse (curr) < GetSwBlockThreshold ());
+          curr = NextSwitchIndex (curr, downPath);
+        }
+
+      // The last switch (eNB).
+      ok &= (GetEwmaCpuUse (curr) < GetSwBlockThreshold ());
+
+      if (!ok)
+        {
+          success = false;
+          rInfo->SetBlocked (RoutingInfo::BACKLOAD);
+          NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
+                       " because the backhaul switch is overloaded.");
+        }
+    }
+
   return success;
 }
 

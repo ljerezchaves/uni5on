@@ -87,9 +87,27 @@ private:
    * any of the requested resources is not available, this method must set
    * the routing information with the block reason.
    * \param ringInfo The ring routing information.
-   * \return True if there's available resources, false otherwise.
+   * \return True if succeeded, false otherwise.
    */
-  bool HasAvailableResources (Ptr<RingInfo> ringInfo);
+  bool HasAvailableResources (Ptr<RingInfo> ringInfo) const;
+
+  /**
+   * Check for available resources on backhaul switches for this bearer
+   * request. When any of the requested resources is not available, this method
+   * must set the routing information with the block reason.
+   * \param ringInfo The ring routing information.
+   * \return True if succeeded, false otherwise.
+   */
+  bool SwBearerRequest (Ptr<RingInfo> ringInfo) const;
+
+  /**
+   * Check for available resources on backhaul links for this bearer request.
+   * When any of the requested resources is not available, this method must set
+   * the routing information with the block reason.
+   * \param ringInfo The ring routing information.
+   * \return True if succeeded, false otherwise.
+   */
+  bool BwBearerRequest (Ptr<RingInfo> ringInfo) const;
 
   /**
    * Reserve the resources for this bearer.
