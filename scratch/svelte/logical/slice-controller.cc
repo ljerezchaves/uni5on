@@ -193,7 +193,7 @@ SliceController::DedicatedBearerRequest (
   // Update the P-GW TFT index (the load balancing level may have changed
   // since the last time this bearer was active) and the blocked flag.
   rInfo->SetPgwTftIdx (GetTftIdx (rInfo));
-  rInfo->SetBlocked (false);
+  rInfo->ResetBlocked ();
 
   // Check for available resources on P-GW and backhaul network and then
   // reserve the requested bandwidth (don't change the order!).
@@ -974,9 +974,9 @@ SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo)
   double tabUse = m_pgwInfo->GetFlowTableUse (rInfo->GetPgwTftIdx (), 0);
   if (tabUse >= m_pgwBlockThs)
     {
-      rInfo->SetBlocked (true, RoutingInfo::PGWTABLE);
+      rInfo->SetBlocked (RoutingInfo::PGWTABLE);
       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
-                   " with the reason " << rInfo->GetBlockReasonStr ());
+                   " because the P-GW table is full.");
       return false;
     }
 
@@ -990,9 +990,9 @@ SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo)
       double cpuUse = m_pgwInfo->GetEwmaCpuUse (rInfo->GetPgwTftIdx ());
       if (cpuUse >= m_pgwBlockThs)
         {
-          rInfo->SetBlocked (true, RoutingInfo::PGWLOAD);
+          rInfo->SetBlocked (RoutingInfo::PGWLOAD);
           NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
-                       " with the reason " << rInfo->GetBlockReasonStr ());
+                       " because the P-GW is overloaded.");
           return false;
         }
     }
@@ -1142,9 +1142,9 @@ SliceController::SgwBearerRequest (Ptr<RoutingInfo> rInfo)
   double ulTabUse = sgwInfo->GetFlowTableUse (2);
   if (dlTabUse >= m_sgwBlockThs || ulTabUse >= m_sgwBlockThs)
     {
-      rInfo->SetBlocked (true, RoutingInfo::SGWTABLE);
+      rInfo->SetBlocked (RoutingInfo::SGWTABLE);
       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
-                   " with the reason " << rInfo->GetBlockReasonStr ());
+                   " because the S-GW table is full.");
       return false;
     }
 
@@ -1158,9 +1158,9 @@ SliceController::SgwBearerRequest (Ptr<RoutingInfo> rInfo)
       double cpuUse = sgwInfo->GetEwmaCpuUse ();
       if (cpuUse >= m_sgwBlockThs)
         {
-          rInfo->SetBlocked (true, RoutingInfo::SGWLOAD);
+          rInfo->SetBlocked (RoutingInfo::SGWLOAD);
           NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
-                       " with the reason " << rInfo->GetBlockReasonStr ());
+                       " because the S-GW is overloaded.");
           return false;
         }
     }

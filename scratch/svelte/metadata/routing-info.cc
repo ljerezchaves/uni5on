@@ -40,10 +40,9 @@ RoutingInfo::TeidRoutingMap_t RoutingInfo::m_routingInfoByTeid;
 RoutingInfo::RoutingInfo (uint32_t teid, BearerCreated_t bearer,
                           Ptr<UeInfo> ueInfo, bool isDefault)
   : m_bearer (bearer),
-  m_blockReason (RoutingInfo::NONE),
+  m_blockReason (0x00),
   m_isActive (false),
   m_isAggregated (false),
-  m_isBlocked (false),
   m_isDefault (isDefault),
   m_isGbrRes (false),
   m_isMbrDlInst (false),
@@ -90,11 +89,13 @@ RoutingInfo::GetTypeId (void)
 }
 
 std::string
-RoutingInfo::GetBlockReasonStr (void) const
+RoutingInfo::GetBlockReasonHex (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return BlockReasonStr (m_blockReason);
+  char valueStr [5];
+  sprintf (valueStr, "0x%02x", m_blockReason);
+  return std::string (valueStr);
 }
 
 uint16_t
@@ -174,7 +175,7 @@ RoutingInfo::IsBlocked (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_isBlocked;
+  return m_blockReason != 0x00;
 }
 
 bool
@@ -721,17 +722,22 @@ RoutingInfo::IncreasePriority (void)
 }
 
 void
-RoutingInfo::SetBlocked (bool value, BlockReason reason)
+RoutingInfo::ResetBlocked (void)
 {
-  NS_LOG_FUNCTION (this << value << reason);
+  NS_LOG_FUNCTION (this);
 
-  NS_ASSERT_MSG (IsDefault () == false || value == false,
-                 "Can't block the default bearer traffic.");
-  NS_ASSERT_MSG (value == false || reason != RoutingInfo::NONE,
-                 "Specify the reason why this bearer was blocked.");
+  m_blockReason = 0x00;
+}
 
-  m_isBlocked = value;
-  m_blockReason = reason;
+void
+RoutingInfo::SetBlocked (BlockReason reason)
+{
+  NS_LOG_FUNCTION (this << reason);
+
+  NS_ASSERT_MSG (IsDefault () == false, "Can't block the default bearer.");
+  NS_ASSERT_MSG (reason != RoutingInfo::NONE, "Specify the block reason.");
+
+  m_blockReason |= static_cast<uint8_t> (reason);
 }
 
 void
@@ -784,7 +790,7 @@ std::ostream & operator << (std::ostream &os, const RoutingInfo &rInfo)
      << " " << setw (6)  << rInfo.IsInstalled ()
      << " " << setw (6)  << rInfo.IsAggregated ()
      << " " << setw (6)  << rInfo.IsBlocked ()
-     << " " << setw (9)  << rInfo.GetBlockReasonStr ()
+     << " " << setw (9)  << rInfo.GetBlockReasonHex ()
      << " " << setw (4)  << rInfo.GetQciInfo ()
      << " " << setw (8)  << rInfo.GetQosTypeStr ()
      << " " << setw (5)  << rInfo.GetDscpStr ()

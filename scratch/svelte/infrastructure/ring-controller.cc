@@ -119,7 +119,7 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
       // Let's try inverting only the S1-U interface.
       if (!ringInfo->IsLocalPath (LteIface::S1U))
         {
-          rInfo->SetBlocked (false);
+          rInfo->ResetBlocked (); // FIXME Remove this.
           ringInfo->ResetToDefaults ();
           ringInfo->InvertIfacePath (LteIface::S1U);
           if (HasAvailableResources (ringInfo))
@@ -133,7 +133,7 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
       // Let's try inverting only the S5 interface.
       if (!ringInfo->IsLocalPath (LteIface::S5))
         {
-          rInfo->SetBlocked (false);
+          rInfo->ResetBlocked (); // FIXME Remove this.
           ringInfo->ResetToDefaults ();
           ringInfo->InvertIfacePath (LteIface::S5);
           if (HasAvailableResources (ringInfo))
@@ -148,7 +148,7 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
       if (!ringInfo->IsLocalPath (LteIface::S1U)
           && !ringInfo->IsLocalPath (LteIface::S5))
         {
-          rInfo->SetBlocked (false);
+          rInfo->ResetBlocked (); // FIXME Remove this.
           ringInfo->ResetToDefaults ();
           ringInfo->InvertIfacePath (LteIface::S1U);
           ringInfo->InvertIfacePath (LteIface::S5);
@@ -164,8 +164,6 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
   // If we get here it's because at leas one of the resources is not available.
   // It is expected that the HasAvailableResources method set the block reason.
   NS_ASSERT_MSG (rInfo->IsBlocked (), "This bearer should be blocked.");
-  NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
-               " with the reason " << rInfo->GetBlockReasonStr ());
   return false;
 }
 
@@ -680,7 +678,9 @@ RingController::HasAvailableResources (Ptr<RingInfo> ringInfo)
       || (rInfo->HasDlTraffic () && pgwTabUse >= GetSwBlockThreshold ())
       || (rInfo->HasUlTraffic () && enbTabUse >= GetSwBlockThreshold ()))
     {
-      rInfo->SetBlocked (true, RoutingInfo::BACKTABLE);
+      rInfo->SetBlocked (RoutingInfo::BACKTABLE);
+      NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
+                   " because the backhaul switch table is full.");
       return false;
     }
 
@@ -714,7 +714,9 @@ RingController::HasAvailableResources (Ptr<RingInfo> ringInfo)
 
       if (!success)
         {
-          rInfo->SetBlocked (true, RoutingInfo::BACKLOAD);
+          rInfo->SetBlocked (RoutingInfo::BACKLOAD);
+          NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
+                       " because the backhaul switch is overloaded.");
           return false;
         }
     }
@@ -794,7 +796,9 @@ RingController::HasAvailableResources (Ptr<RingInfo> ringInfo)
 
   if (!success)
     {
-      rInfo->SetBlocked (true, RoutingInfo::BACKBAND);
+      rInfo->SetBlocked (RoutingInfo::BACKBAND);
+      NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
+                   " because at least one backhaul link is overloaded.");
       return false;
     }
 

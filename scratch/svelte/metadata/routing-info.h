@@ -50,14 +50,14 @@ public:
   /** The reason for any blocked request. */
   enum BlockReason
   {
-    NONE      = 0,  //!< This bearer id not blocked.
-    PGWTABLE  = 1,  //!< P-GW TFT flow table is full.
-    PGWLOAD   = 2,  //!< P-GW TFT pipeline load is full.
-    SGWTABLE  = 3,  //!< P-GW flow table is full.
-    SGWLOAD   = 4,  //!< P-GW pipeline load is full.
-    BACKTABLE = 5,  //!< At least one backhaul flow table is full.
-    BACKLOAD  = 6,  //!< At least one backhaul pipeline load is full.
-    BACKBAND  = 7   //!< At least one backahul link has no available bandwidth.
+    NONE      = 0x00, //!< This bearer id not blocked.
+    PGWTABLE  = 0x01, //!< P-GW TFT flow table is full.
+    PGWLOAD   = 0x02, //!< P-GW TFT pipeline load is full.
+    SGWTABLE  = 0x04, //!< P-GW flow table is full.
+    SGWLOAD   = 0x08, //!< P-GW pipeline load is full.
+    BACKTABLE = 0x10, //!< At least one backhaul flow table is full.
+    BACKLOAD  = 0x20, //!< At least one backhaul pipeline load is full.
+    BACKBAND  = 0x40  //!< At least one backahul link has no bandwidth.
   };
 
   /**
@@ -82,7 +82,7 @@ public:
    * \return The requested information.
    */
   //\{
-  std::string GetBlockReasonStr (void) const;
+  std::string GetBlockReasonHex (void) const;
   uint16_t    GetPgwTftIdx      (void) const;
   uint16_t    GetPriority       (void) const;
   SliceId     GetSliceId        (void) const;
@@ -260,11 +260,15 @@ protected:
   void IncreasePriority (void);
 
   /**
-   * Set the blocked status including the reason.
-   * \param value The value to set.
-   * \param reason The reason for this value.
+   * Reset the blocked status to NONE.
    */
-  void SetBlocked (bool value, BlockReason reason = RoutingInfo::NONE);
+  void ResetBlocked (void);
+
+  /**
+   * Set the blocked status with the following reason.
+   * \param reason The block reason.
+   */
+  void SetBlocked (BlockReason reason);
 
   /**
    * Get a list of the installed bearer routing information, optionally
@@ -285,10 +289,9 @@ private:
   static void RegisterRoutingInfo (Ptr<RoutingInfo> rInfo);
 
   BearerCreated_t      m_bearer;       //!< EPS bearer context created.
-  BlockReason          m_blockReason;  //!< Reason for blocked request.
+  uint8_t              m_blockReason;  //!< Reason for blocked request.
   bool                 m_isActive;     //!< True for active bearer.
   bool                 m_isAggregated; //!< True for aggregated bearer.
-  bool                 m_isBlocked;    //!< True for blocked request.
   bool                 m_isDefault;    //!< True for default bearer.
   bool                 m_isGbrRes;     //!< True for GBR resources reserved.
   bool                 m_isMbrDlInst;  //!< True fir downlink meter installed.
