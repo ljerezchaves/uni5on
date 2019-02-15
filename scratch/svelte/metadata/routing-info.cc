@@ -721,6 +721,14 @@ RoutingInfo::IncreasePriority (void)
   m_priority++;
 }
 
+bool
+RoutingInfo::IsBlocked (BlockReason reason)
+{
+  NS_LOG_FUNCTION (this << reason);
+
+  return (m_blockReason & (1U << static_cast<int> (reason)));
+}
+
 void
 RoutingInfo::ResetBlocked (void)
 {
@@ -735,9 +743,16 @@ RoutingInfo::SetBlocked (BlockReason reason)
   NS_LOG_FUNCTION (this << reason);
 
   NS_ASSERT_MSG (IsDefault () == false, "Can't block the default bearer.");
-  NS_ASSERT_MSG (reason != RoutingInfo::NONE, "Specify the block reason.");
 
-  m_blockReason |= static_cast<uint8_t> (reason);
+  m_blockReason |= (1U << static_cast<int> (reason));
+}
+
+void
+RoutingInfo::UnsetBlocked (BlockReason reason)
+{
+  NS_LOG_FUNCTION (this << reason);
+
+  m_blockReason &= ~(1U << static_cast<int> (reason));
 }
 
 void

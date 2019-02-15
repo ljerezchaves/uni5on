@@ -50,14 +50,13 @@ public:
   /** The reason for any blocked request. */
   enum BlockReason
   {
-    NONE      = 0x00, //!< This bearer id not blocked.
-    PGWTABLE  = 0x01, //!< P-GW TFT flow table is full.
-    PGWLOAD   = 0x02, //!< P-GW TFT pipeline load is full.
-    SGWTABLE  = 0x04, //!< P-GW flow table is full.
-    SGWLOAD   = 0x08, //!< P-GW pipeline load is full.
-    BACKTABLE = 0x10, //!< At least one backhaul flow table is full.
-    BACKLOAD  = 0x20, //!< At least one backhaul pipeline load is full.
-    BACKBAND  = 0x40  //!< At least one backahul link has no bandwidth.
+    PGWTABLE  = 0,  //!< P-GW TFT flow table is full.
+    PGWLOAD   = 1,  //!< P-GW TFT pipeline load is full.
+    SGWTABLE  = 2,  //!< P-GW flow table is full.
+    SGWLOAD   = 3,  //!< P-GW pipeline load is full.
+    BACKTABLE = 4,  //!< At least one backhaul flow table is full.
+    BACKLOAD  = 5,  //!< At least one backhaul pipeline load is full.
+    BACKBAND  = 6   //!< At least one backhaul link has no bandwidth.
   };
 
   /**
@@ -260,15 +259,28 @@ protected:
   void IncreasePriority (void);
 
   /**
+   * Check the blocked status for the following reason.
+   * \param reason The block reason.
+   * \return True if the bearer is blocked for this reason, false otherwise.
+   */
+  bool IsBlocked (BlockReason reason) const;
+
+  /**
    * Reset the blocked status to NONE.
    */
   void ResetBlocked (void);
 
   /**
-   * Set the blocked status with the following reason.
+   * Set the blocked status for the following reason.
    * \param reason The block reason.
    */
   void SetBlocked (BlockReason reason);
+
+  /**
+   * Unset the blocked status for the following reason.
+   * \param reason The block reason.
+   */
+  void UnsetBlocked (BlockReason reason);
 
   /**
    * Get a list of the installed bearer routing information, optionally
