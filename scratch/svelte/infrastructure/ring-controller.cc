@@ -199,114 +199,6 @@ RingController::BearerRelease (Ptr<RoutingInfo> rInfo)
   return BitRateRelease (ringInfo);
 }
 
-void
-RingController::NotifyBearerCreated (Ptr<RoutingInfo> rInfo)
-{
-  NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
-
-  // Let's create its ring routing metadata.
-  Ptr<RingInfo> ringInfo = CreateObject<RingInfo> (rInfo);
-
-  // Set default paths to those with lower hops.
-  RingInfo::RingPath s5DownPath = FindShortestPath (
-      rInfo->GetPgwInfraSwIdx (), rInfo->GetSgwInfraSwIdx ());
-  ringInfo->SetDefaultPath (s5DownPath, LteIface::S5);
-
-  RingInfo::RingPath s1uDownPath = FindShortestPath (
-      rInfo->GetSgwInfraSwIdx (), rInfo->GetEnbInfraSwIdx ());
-  ringInfo->SetDefaultPath (s1uDownPath, LteIface::S1U);
-
-  NS_LOG_DEBUG ("Bearer teid " << rInfo->GetTeidHex () << " default downlink "
-                "S1-U path to " << RingInfo::RingPathStr (s1uDownPath) <<
-                " and S5 path to " << RingInfo::RingPathStr (s5DownPath));
-
-  BackhaulController::NotifyBearerCreated (rInfo);
-}
-
-void
-RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices)
-{
-  NS_LOG_FUNCTION (this);
-
-  // Chain up first, as we need to save the switch devices.
-  BackhaulController::NotifyTopologyBuilt (devices);
-
-  // Create the spanning tree for this topology.
-  CreateSpanningTree ();
-
-  // The following commands works as LINKS ARE CREATED IN CLOCKWISE DIRECTION.
-  // Do not merge the two following loops. Groups must be created first to
-  // avoid OpenFlow error messages with BAD_OUT_GROUP code.
-
-  // Iterate over links configuring the groups.
-  for (auto const &lInfo : LinkInfo::GetList ())
-    {
-      // ---------------------------------------------------------------------
-      // Group table
-      //
-      // Configure groups to forward packets in both ring directions.
-      {
-        // Routing group for clockwise packet forwarding.
-        std::ostringstream cmd;
-        cmd << "group-mod cmd=add,type=ind,group="    << RingInfo::CLOCK
-            << " weight=0,port=any,group=any output=" << lInfo->GetPortNo (0);
-        DpctlSchedule (lInfo->GetSwDpId (0), cmd.str ());
-      }
-      {
-        // Routing group for counterclockwise packet forwarding.
-        std::ostringstream cmd;
-        cmd << "group-mod cmd=add,type=ind,group="    << RingInfo::COUNTER
-            << " weight=0,port=any,group=any output=" << lInfo->GetPortNo (1);
-        DpctlSchedule (lInfo->GetSwDpId (1), cmd.str ());
-      }
-    }
-
-  // Iterate over links configuring the forwarding rules.
-  for (auto const &lInfo : LinkInfo::GetList ())
-    {
-      // ---------------------------------------------------------------------
-      // Routing table -- [from higher to lower priority]
-      //
-      // IP packets being forwarded by this switch, except for those addressed
-      // to EPC elements connected to EPC ports (a high-priority match rule was
-      // installed by NotifyEpcAttach function for this case) and for those
-      // just classified by the corresponding slice table (a high-priority
-      // match rule was installed by HandshakeSuccessful function for this
-      // case). Write the output group into action set based on the input port,
-      // forwarding the packet in the same ring direction so it can reach the
-      // destination switch. Write the same group number into metadata field.
-      // Send the packet to the bandwidth table.
-      {
-        // Counterclockwise packet forwarding.
-        std::ostringstream cmd;
-        cmd << "flow-mod cmd=add,prio=64"
-            << ",table="        << ROUTE_TAB
-            << ",flags="        << FLAGS_REMOVED_OVERLAP_RESET
-            << " eth_type="     << IPV4_PROT_NUM
-            << ",meta=0x0"
-            << ",in_port="      << lInfo->GetPortNo (0)
-            << " write:group="  << RingInfo::COUNTER
-            << " meta:"         << RingInfo::COUNTER
-            << " goto:"         << BANDW_TAB;
-        DpctlSchedule (lInfo->GetSwDpId (0), cmd.str ());
-      }
-      {
-        // Clockwise packet forwarding.
-        std::ostringstream cmd;
-        cmd << "flow-mod cmd=add,prio=64"
-            << ",table="        << ROUTE_TAB
-            << ",flags="        << FLAGS_REMOVED_OVERLAP_RESET
-            << " eth_type="     << IPV4_PROT_NUM
-            << ",meta=0x0"
-            << ",in_port="      << lInfo->GetPortNo (1)
-            << " write:group="  << RingInfo::CLOCK
-            << " meta:"         << RingInfo::CLOCK
-            << " goto:"         << BANDW_TAB;
-        DpctlSchedule (lInfo->GetSwDpId (1), cmd.str ());
-      }
-    }
-}
-
 bool
 RingController::BearerInstall (Ptr<RoutingInfo> rInfo)
 {
@@ -572,6 +464,114 @@ RingController::BearerUpdate (Ptr<RoutingInfo> rInfo, Ptr<EnbInfo> dstEnbInfo)
       }
   }
   return true;
+}
+
+void
+RingController::NotifyBearerCreated (Ptr<RoutingInfo> rInfo)
+{
+  NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
+
+  // Let's create its ring routing metadata.
+  Ptr<RingInfo> ringInfo = CreateObject<RingInfo> (rInfo);
+
+  // Set default paths to those with lower hops.
+  RingInfo::RingPath s5DownPath = FindShortestPath (
+      rInfo->GetPgwInfraSwIdx (), rInfo->GetSgwInfraSwIdx ());
+  ringInfo->SetDefaultPath (s5DownPath, LteIface::S5);
+
+  RingInfo::RingPath s1uDownPath = FindShortestPath (
+      rInfo->GetSgwInfraSwIdx (), rInfo->GetEnbInfraSwIdx ());
+  ringInfo->SetDefaultPath (s1uDownPath, LteIface::S1U);
+
+  NS_LOG_DEBUG ("Bearer teid " << rInfo->GetTeidHex () << " default downlink "
+                "S1-U path to " << RingInfo::RingPathStr (s1uDownPath) <<
+                " and S5 path to " << RingInfo::RingPathStr (s5DownPath));
+
+  BackhaulController::NotifyBearerCreated (rInfo);
+}
+
+void
+RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices)
+{
+  NS_LOG_FUNCTION (this);
+
+  // Chain up first, as we need to save the switch devices.
+  BackhaulController::NotifyTopologyBuilt (devices);
+
+  // Create the spanning tree for this topology.
+  CreateSpanningTree ();
+
+  // The following commands works as LINKS ARE CREATED IN CLOCKWISE DIRECTION.
+  // Do not merge the two following loops. Groups must be created first to
+  // avoid OpenFlow error messages with BAD_OUT_GROUP code.
+
+  // Iterate over links configuring the groups.
+  for (auto const &lInfo : LinkInfo::GetList ())
+    {
+      // ---------------------------------------------------------------------
+      // Group table
+      //
+      // Configure groups to forward packets in both ring directions.
+      {
+        // Routing group for clockwise packet forwarding.
+        std::ostringstream cmd;
+        cmd << "group-mod cmd=add,type=ind,group="    << RingInfo::CLOCK
+            << " weight=0,port=any,group=any output=" << lInfo->GetPortNo (0);
+        DpctlSchedule (lInfo->GetSwDpId (0), cmd.str ());
+      }
+      {
+        // Routing group for counterclockwise packet forwarding.
+        std::ostringstream cmd;
+        cmd << "group-mod cmd=add,type=ind,group="    << RingInfo::COUNTER
+            << " weight=0,port=any,group=any output=" << lInfo->GetPortNo (1);
+        DpctlSchedule (lInfo->GetSwDpId (1), cmd.str ());
+      }
+    }
+
+  // Iterate over links configuring the forwarding rules.
+  for (auto const &lInfo : LinkInfo::GetList ())
+    {
+      // ---------------------------------------------------------------------
+      // Routing table -- [from higher to lower priority]
+      //
+      // IP packets being forwarded by this switch, except for those addressed
+      // to EPC elements connected to EPC ports (a high-priority match rule was
+      // installed by NotifyEpcAttach function for this case) and for those
+      // just classified by the corresponding slice table (a high-priority
+      // match rule was installed by HandshakeSuccessful function for this
+      // case). Write the output group into action set based on the input port,
+      // forwarding the packet in the same ring direction so it can reach the
+      // destination switch. Write the same group number into metadata field.
+      // Send the packet to the bandwidth table.
+      {
+        // Counterclockwise packet forwarding.
+        std::ostringstream cmd;
+        cmd << "flow-mod cmd=add,prio=64"
+            << ",table="        << ROUTE_TAB
+            << ",flags="        << FLAGS_REMOVED_OVERLAP_RESET
+            << " eth_type="     << IPV4_PROT_NUM
+            << ",meta=0x0"
+            << ",in_port="      << lInfo->GetPortNo (0)
+            << " write:group="  << RingInfo::COUNTER
+            << " meta:"         << RingInfo::COUNTER
+            << " goto:"         << BANDW_TAB;
+        DpctlSchedule (lInfo->GetSwDpId (0), cmd.str ());
+      }
+      {
+        // Clockwise packet forwarding.
+        std::ostringstream cmd;
+        cmd << "flow-mod cmd=add,prio=64"
+            << ",table="        << ROUTE_TAB
+            << ",flags="        << FLAGS_REMOVED_OVERLAP_RESET
+            << " eth_type="     << IPV4_PROT_NUM
+            << ",meta=0x0"
+            << ",in_port="      << lInfo->GetPortNo (1)
+            << " write:group="  << RingInfo::CLOCK
+            << " meta:"         << RingInfo::CLOCK
+            << " goto:"         << BANDW_TAB;
+        DpctlSchedule (lInfo->GetSwDpId (1), cmd.str ());
+      }
+    }
 }
 
 void
