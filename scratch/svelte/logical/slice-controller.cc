@@ -195,8 +195,7 @@ SliceController::DedicatedBearerRequest (
   rInfo->SetPgwTftIdx (GetTftIdx (rInfo));
   rInfo->ResetBlocked ();
 
-  // Check for available resources on P-GW and backhaul network and then
-  // reserve the requested bandwidth (don't change the order!).
+  // Check for available resources on logical and infrastructure networks.
   bool success = true;
   success &= PgwBearerRequest (rInfo);
   success &= SgwBearerRequest (rInfo);
@@ -207,17 +206,13 @@ SliceController::DedicatedBearerRequest (
       m_bearerRequestTrace (rInfo);
       return false;
     }
-
-  // Every time the application starts using an (old) existing bearer, let's
-  // reinstall the rules on the switches, which will increase the bearer
-  // priority. Doing this, we avoid problems with old 'expiring' rules, and
-  // we can even use new routing paths when necessary.
   NS_LOG_INFO ("Bearer request accepted by controller.");
 
-  // Install the bearer.
-  bool installed = BearerInstall (rInfo);
+  // Reserve infrastructure resources and install the bearer.
+  success &= m_backhaulCtrl->BearerReserve (rInfo);
+  success &= BearerInstall (rInfo);
   m_bearerRequestTrace (rInfo);
-  return installed;
+  return success;
 }
 
 bool
@@ -231,13 +226,14 @@ SliceController::DedicatedBearerRelease (
   // This bearer must be active.
   NS_ASSERT_MSG (!rInfo->IsDefault (), "Can't release the default bearer.");
   NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should not be active.");
-
-  m_backhaulCtrl->BearerRelease (rInfo);
-  m_bearerReleaseTrace (rInfo);
   NS_LOG_INFO ("Bearer released by controller.");
 
-  // Remove the bearer.
-  return BearerRemove (rInfo);
+  // Release infrastructure resources and remove the bearer.
+  bool success = true;
+  success &= m_backhaulCtrl->BearerRelease (rInfo);
+  success &= BearerRemove (rInfo);
+  m_bearerReleaseTrace (rInfo);
+  return success;
 }
 
 SliceId
@@ -653,7 +649,9 @@ SliceController::BearerInstall (Ptr<RoutingInfo> rInfo)
 
   NS_ASSERT_MSG (!rInfo->IsInstalled (), "Rules should not be installed.");
 
-  // Increasing the priority every time we (re)install routing rules.
+  // Increasing the priority every time we (re)install routing rules. Doing
+  // this, we avoid problems with old 'expiring' rules, and we can even use new
+  // routing paths when necessary.
   rInfo->IncreasePriority ();
 
   // Install the rules.

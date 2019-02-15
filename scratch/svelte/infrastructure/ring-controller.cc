@@ -102,7 +102,7 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
     {
       NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
                    " over the shortest path");
-      return BearerReserve (ringInfo);
+      return true;
     }
 
   // FIXME This part is not working by now because we can't reset blocked status.
@@ -160,6 +160,27 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
   // It is expected that the HasAvailableResources method set the block reason.
   NS_ASSERT_MSG (rInfo->IsBlocked (), "This bearer should be blocked.");
   return false;
+}
+
+bool
+RingController::BearerReserve (Ptr<RoutingInfo> rInfo)
+{
+  NS_LOG_FUNCTION (this << rInfo);
+
+  NS_ASSERT_MSG (!rInfo->IsBlocked (), "Bearer should not be blocked.");
+
+  Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
+  NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
+
+  // The only resource that is reserved is the GBR bit rate over links.
+  // For Non-GBR bearers (which includes the default bearer) and for bearers
+  // that only transverse local switch (local routing for both S1-U and S5
+  // interfaces): there's nothing to reserve.
+  if (!rInfo->IsGbr () || ringInfo->AreBothLocalPaths ())
+    {
+      return true;
+    }
+  return BitRateReserve (ringInfo);
 }
 
 bool
@@ -817,25 +838,6 @@ RingController::SwBearerRequest (Ptr<RingInfo> ringInfo) const
     }
 
   return success;
-}
-
-bool
-RingController::BearerReserve (Ptr<RingInfo> ringInfo)
-{
-  NS_LOG_FUNCTION (this << ringInfo);
-
-  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
-  NS_ASSERT_MSG (!rInfo->IsBlocked (), "Bearer should not be blocked.");
-
-  // The only resource that is reserved is the GBR bit rate over links.
-  // For Non-GBR bearers (which includes the default bearer) and for bearers
-  // that only transverse local switch (local routing for both S1-U and S5
-  // interfaces): there's nothing to reserve.
-  if (!rInfo->IsGbr () || ringInfo->AreBothLocalPaths ())
-    {
-      return true;
-    }
-  return BitRateReserve (ringInfo);
 }
 
 bool

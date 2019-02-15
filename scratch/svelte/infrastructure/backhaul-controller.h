@@ -99,16 +99,22 @@ protected:
   virtual void NotifyConstructionCompleted (void);
 
   /**
-   * Process the bearer request, checking for the available resources in the
-   * backhaul network, deciding for the best routing path, and reserving the
-   * resources when necessary.
+   * Process the bearer request, deciding for the best routing path and
+   * checking for the available resources in the backhaul network.
    * \param rInfo The routing information to process.
    * \return True if succeeded, false otherwise.
    */
   virtual bool BearerRequest (Ptr<RoutingInfo> rInfo) = 0;
 
   /**
-   * Release the resources for this bearer
+   * Reserve the resources for this bearer.
+   * \param rInfo The ring routing information.
+   * \return True if succeeded, false otherwise.
+   */
+  virtual bool BearerReserve (Ptr<RoutingInfo> rInfo) = 0;
+
+  /**
+   * Release the resources for this bearer.
    * \param rInfo The routing information to process.
    * \return True if succeeded, false otherwise.
    */

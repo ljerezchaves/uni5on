@@ -70,6 +70,7 @@ protected:
 
   // Inherited from BackhaulController.
   bool BearerRequest (Ptr<RoutingInfo> rInfo);
+  bool BearerReserve (Ptr<RoutingInfo> rInfo);
   bool BearerRelease (Ptr<RoutingInfo> rInfo);
   bool BearerInstall (Ptr<RoutingInfo> rInfo);
   bool BearerRemove  (Ptr<RoutingInfo> rInfo);
@@ -108,13 +109,6 @@ private:
    * \return True if succeeded, false otherwise.
    */
   bool BwBearerRequest (Ptr<RingInfo> ringInfo) const;
-
-  /**
-   * Reserve the resources for this bearer.
-   * \param ringInfo The ring routing information.
-   * \return True if succeeded, false otherwise.
-   */
-  bool BearerReserve (Ptr<RingInfo> ringInfo);
 
   /**
    * Reserve the bit rate for this bearer.
