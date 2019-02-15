@@ -92,12 +92,6 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
-  // If the bearer is already blocked, there's nothing more to do.
-  if (rInfo->IsBlocked ())
-    {
-      return false;
-    }
-
   // Reset the ring routing info to the shortest path.
   Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
   NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
@@ -111,57 +105,58 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
       return BearerReserve (ringInfo);
     }
 
-  // The requested resources are not available over the shortest path. When
-  // using the SPF routing strategy, invert the path for S1/S5 interfaces and
-  // check for available resources again.
-  if (m_strategy == RingController::SPF)
-    {
-      // Let's try inverting only the S1-U interface.
-      if (!ringInfo->IsLocalPath (LteIface::S1U))
-        {
-          rInfo->ResetBlocked (); // FIXME Remove this.
-          ringInfo->ResetToDefaults ();
-          ringInfo->InvertIfacePath (LteIface::S1U);
-          if (HasAvailableResources (ringInfo))
-            {
-              NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
-                           " over the inverted S1-U path");
-              return BearerReserve (ringInfo);
-            }
-        }
+  // FIXME This part is not working by now because we can't reset blocked status.
+  // // The requested resources are not available over the shortest path. When
+  // // using the SPF routing strategy, invert the path for S1/S5 interfaces and
+  // // check for available resources again.
+  // if (m_strategy == RingController::SPF)
+  //   {
+  //     // Let's try inverting only the S1-U interface.
+  //     if (!ringInfo->IsLocalPath (LteIface::S1U))
+  //       {
+  //         rInfo->ResetBlocked (); // FIXME Remove this.
+  //         ringInfo->ResetToDefaults ();
+  //         ringInfo->InvertIfacePath (LteIface::S1U);
+  //         if (HasAvailableResources (ringInfo))
+  //           {
+  //             NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
+  //                          " over the inverted S1-U path");
+  //             return BearerReserve (ringInfo);
+  //           }
+  //       }
 
-      // Let's try inverting only the S5 interface.
-      if (!ringInfo->IsLocalPath (LteIface::S5))
-        {
-          rInfo->ResetBlocked (); // FIXME Remove this.
-          ringInfo->ResetToDefaults ();
-          ringInfo->InvertIfacePath (LteIface::S5);
-          if (HasAvailableResources (ringInfo))
-            {
-              NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
-                           " over the inverted S5 path");
-              return BearerReserve (ringInfo);
-            }
-        }
+  //     // Let's try inverting only the S5 interface.
+  //     if (!ringInfo->IsLocalPath (LteIface::S5))
+  //       {
+  //         rInfo->ResetBlocked (); // FIXME Remove this.
+  //         ringInfo->ResetToDefaults ();
+  //         ringInfo->InvertIfacePath (LteIface::S5);
+  //         if (HasAvailableResources (ringInfo))
+  //           {
+  //             NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
+  //                          " over the inverted S5 path");
+  //             return BearerReserve (ringInfo);
+  //           }
+  //       }
 
-      // Let's try inverting both the S1-U and S5 interface.
-      if (!ringInfo->IsLocalPath (LteIface::S1U)
-          && !ringInfo->IsLocalPath (LteIface::S5))
-        {
-          rInfo->ResetBlocked (); // FIXME Remove this.
-          ringInfo->ResetToDefaults ();
-          ringInfo->InvertIfacePath (LteIface::S1U);
-          ringInfo->InvertIfacePath (LteIface::S5);
-          if (HasAvailableResources (ringInfo))
-            {
-              NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
-                           " over the inverted S1-U and S5 paths");
-              return BearerReserve (ringInfo);
-            }
-        }
-    }
+  //     // Let's try inverting both the S1-U and S5 interface.
+  //     if (!ringInfo->IsLocalPath (LteIface::S1U)
+  //         && !ringInfo->IsLocalPath (LteIface::S5))
+  //       {
+  //         rInfo->ResetBlocked (); // FIXME Remove this.
+  //         ringInfo->ResetToDefaults ();
+  //         ringInfo->InvertIfacePath (LteIface::S1U);
+  //         ringInfo->InvertIfacePath (LteIface::S5);
+  //         if (HasAvailableResources (ringInfo))
+  //           {
+  //             NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
+  //                          " over the inverted S1-U and S5 paths");
+  //             return BearerReserve (ringInfo);
+  //           }
+  //       }
+  //   }
 
-  // If we get here it's because at leas one of the resources is not available.
+  // If we get here it's because one of the resources is not available.
   // It is expected that the HasAvailableResources method set the block reason.
   NS_ASSERT_MSG (rInfo->IsBlocked (), "This bearer should be blocked.");
   return false;
