@@ -962,11 +962,7 @@ SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo) const
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
-  // If the bearer is already blocked, there's nothing more to do.
-  if (rInfo->IsBlocked ())
-    {
-      return false;
-    }
+  bool success = true;
 
   // First check: OpenFlow switch table usage.
   // Block the bearer if the P-GW TFT switch table (#1) usage is exceeding the
@@ -974,10 +970,10 @@ SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo) const
   double tabUse = m_pgwInfo->GetFlowTableUse (rInfo->GetPgwTftIdx (), 0);
   if (tabUse >= m_pgwBlockThs)
     {
+      success = false;
       rInfo->SetBlocked (RoutingInfo::PGWTABLE);
       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
                    " because the P-GW table is full.");
-      return false;
     }
 
   // Second check: OpenFlow switch CPU load.
@@ -990,16 +986,14 @@ SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo) const
       double cpuUse = m_pgwInfo->GetEwmaCpuUse (rInfo->GetPgwTftIdx ());
       if (cpuUse >= m_pgwBlockThs)
         {
+          success = false;
           rInfo->SetBlocked (RoutingInfo::PGWLOAD);
           NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
                        " because the P-GW is overloaded.");
-          return false;
         }
     }
 
-  // If we get here it's because all the resources are available.
-  NS_ASSERT_MSG (!rInfo->IsBlocked (), "Error with P-GW resources request.");
-  return true;
+  return success;
 }
 
 bool
@@ -1128,11 +1122,7 @@ SliceController::SgwBearerRequest (Ptr<RoutingInfo> rInfo) const
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
-  // If the bearer is already blocked, there's nothing more to do.
-  if (rInfo->IsBlocked ())
-    {
-      return false;
-    }
+  bool success = true;
 
   // First check: OpenFlow switch table usage.
   // Block the bearer if the S-GW switch dl/ul tables (#1 and #2) usage is
@@ -1142,10 +1132,10 @@ SliceController::SgwBearerRequest (Ptr<RoutingInfo> rInfo) const
   double ulTabUse = sgwInfo->GetFlowTableUse (2);
   if (dlTabUse >= m_sgwBlockThs || ulTabUse >= m_sgwBlockThs)
     {
+      success = false;
       rInfo->SetBlocked (RoutingInfo::SGWTABLE);
       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
                    " because the S-GW table is full.");
-      return false;
     }
 
   // Second check: OpenFlow switch CPU load.
@@ -1158,16 +1148,14 @@ SliceController::SgwBearerRequest (Ptr<RoutingInfo> rInfo) const
       double cpuUse = sgwInfo->GetEwmaCpuUse ();
       if (cpuUse >= m_sgwBlockThs)
         {
+          success = false;
           rInfo->SetBlocked (RoutingInfo::SGWLOAD);
           NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
                        " because the S-GW is overloaded.");
-          return false;
         }
     }
 
-  // If we get here it's because all the resources are available.
-  NS_ASSERT_MSG (!rInfo->IsBlocked (), "Error with S-GW resources request.");
-  return true;
+  return success;
 }
 
 bool
