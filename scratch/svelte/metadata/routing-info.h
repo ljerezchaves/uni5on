@@ -289,7 +289,7 @@ private:
   static void RegisterRoutingInfo (Ptr<RoutingInfo> rInfo);
 
   BearerCreated_t      m_bearer;       //!< EPS bearer context created.
-  uint8_t              m_blockReason;  //!< Reason for blocked request.
+  uint16_t             m_blockReason;  //!< Bitmap for blocked reasons.
   bool                 m_isActive;     //!< True for active bearer.
   bool                 m_isAggregated; //!< True for aggregated bearer.
   bool                 m_isDefault;    //!< True for default bearer.

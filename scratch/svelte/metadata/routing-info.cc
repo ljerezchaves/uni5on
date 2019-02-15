@@ -40,7 +40,7 @@ RoutingInfo::TeidRoutingMap_t RoutingInfo::m_routingInfoByTeid;
 RoutingInfo::RoutingInfo (uint32_t teid, BearerCreated_t bearer,
                           Ptr<UeInfo> ueInfo, bool isDefault)
   : m_bearer (bearer),
-  m_blockReason (0x00),
+  m_blockReason (0),
   m_isActive (false),
   m_isAggregated (false),
   m_isDefault (isDefault),
@@ -93,8 +93,8 @@ RoutingInfo::GetBlockReasonHex (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  char valueStr [5];
-  sprintf (valueStr, "0x%02x", m_blockReason);
+  char valueStr [7];
+  sprintf (valueStr, "0x%04x", m_blockReason);
   return std::string (valueStr);
 }
 
@@ -175,7 +175,7 @@ RoutingInfo::IsBlocked (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_blockReason != 0x00;
+  return m_blockReason;
 }
 
 bool
@@ -726,7 +726,7 @@ RoutingInfo::ResetBlocked (void)
 {
   NS_LOG_FUNCTION (this);
 
-  m_blockReason = 0x00;
+  m_blockReason = 0;
 }
 
 void
