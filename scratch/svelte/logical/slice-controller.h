@@ -265,10 +265,12 @@ private:
 
   /**
    * Check for available resources on P-GW TFT switch for this bearer request.
+   * When any of the requested resources is not available, this method must set
+   * the routing information with the block reason.
    * \param rInfo The routing information to process.
    * \return True if succeeded, false otherwise.
    */
-  bool PgwBearerRequest (Ptr<RoutingInfo> rInfo);
+  bool PgwBearerRequest (Ptr<RoutingInfo> rInfo) const;
 
   /**
    * Install downlink packet filtering rules on the P-GW TFT OpenFlow switch.
@@ -299,11 +301,13 @@ private:
                        bool moveFlag = false);
 
   /**
-   * Check for available resources on S-GW switch for this bearer request.
+   * Check for available resources on S-GW switch for this bearer request. When
+   * any of the requested resources is not available, this method must set
+   * the routing information with the block reason.
    * \param rInfo The routing information to process.
    * \return True if succeeded, false otherwise.
    */
-  bool SgwBearerRequest (Ptr<RoutingInfo> rInfo);
+  bool SgwBearerRequest (Ptr<RoutingInfo> rInfo) const;
 
   /**
    * Install packet forwarding rules on the S-GW OpenFlow switch.

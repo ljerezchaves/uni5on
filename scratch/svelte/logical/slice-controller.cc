@@ -958,7 +958,7 @@ SliceController::PgwTftLoadBalancing (void)
 }
 
 bool
-SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo)
+SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo) const
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
@@ -1124,7 +1124,7 @@ SliceController::PgwRulesRemove (
 }
 
 bool
-SliceController::SgwBearerRequest (Ptr<RoutingInfo> rInfo)
+SliceController::SgwBearerRequest (Ptr<RoutingInfo> rInfo) const
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
