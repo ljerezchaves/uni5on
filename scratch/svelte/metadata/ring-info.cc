@@ -102,6 +102,14 @@ RingInfo::IsLocalPath (LteIface iface) const
   return m_isLocalPath [iface];
 }
 
+bool
+RingInfo::AreBothLocalPaths (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return (IsLocalPath (LteIface::S1U) && IsLocalPath (LteIface::S5));
+}
+
 std::string
 RingInfo::GetPathStr (void) const
 {

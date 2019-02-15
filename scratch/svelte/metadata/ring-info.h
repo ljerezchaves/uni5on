@@ -73,6 +73,12 @@ public:
   //\}
 
   /**
+   * Check whether both LTE logical interfaces are routed over local paths.
+   * \return True for local paths, false otherwise.
+   */
+  bool AreBothLocalPaths (void) const;
+
+  /**
    * Summarize the ring routing path into a single string.
    * \return The ring routing path.
    */
