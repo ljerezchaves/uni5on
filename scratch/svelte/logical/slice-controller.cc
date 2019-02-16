@@ -203,7 +203,7 @@ SliceController::DedicatedBearerRequest (
   rInfo->SetPgwTftIdx (GetTftIdx (rInfo));
   rInfo->ResetBlocked ();
 
-  // Reseting the aggregation status, depeding on the aggregation mode in use.
+  // Activating the traffic aggregation, respecting the operation mode.
   rInfo->SetAggregated (false);
   if (GetAggregation () == OpMode::ON)
     {
@@ -217,6 +217,7 @@ SliceController::DedicatedBearerRequest (
   success &= m_backhaulCtrl->BearerRequest (rInfo);
   if (success)
     {
+      NS_ASSERT_MSG (!rInfo->IsBlocked (), "Bearer can't be blocked.");
       NS_LOG_INFO ("Bearer request accepted by controller.");
       if (!rInfo->IsAggregated ())
         {
@@ -230,34 +231,21 @@ SliceController::DedicatedBearerRequest (
     }
 
   // If we get here it's because the bearer request was blocked. When the
-  // aggregation is in auto mode, check wether it can revert this.
+  // aggregation is in auto mode, check whether it can revert this.
   if (GetAggregation () == OpMode::AUTO && !rInfo->IsAggregated ())
     {
-      // Bitmap of block reasons that the traffic aggregation can solve.
-      uint16_t aggBitmap = 0;
-      aggBitmap |= static_cast<uint16_t> (RoutingInfo::PGWTABLE);
-      aggBitmap |= static_cast<uint16_t> (RoutingInfo::SGWTABLE);
-      aggBitmap |= static_cast<uint16_t> (RoutingInfo::BACKTABLE);
-      aggBitmap |= static_cast<uint16_t> (RoutingInfo::BACKBAND);
+      // Reseting the blocked status and activating the traffic aggregation.
+      rInfo->ResetBlocked ();
+      rInfo->SetAggregated (true);
 
-      if (!(rInfo->GetBlockReason () & ~aggBitmap))
+      // Check for available resources again.
+      success = true;
+      success &= PgwBearerRequest (rInfo);
+      success &= SgwBearerRequest (rInfo);
+      success &= m_backhaulCtrl->BearerRequest (rInfo);
+      if (success)
         {
-          rInfo->UnsetBlocked (RoutingInfo::PGWTABLE);
-          rInfo->UnsetBlocked (RoutingInfo::SGWTABLE);
-          rInfo->UnsetBlocked (RoutingInfo::BACKTABLE);
-          rInfo->UnsetBlocked (RoutingInfo::BACKBAND);
           NS_ASSERT_MSG (!rInfo->IsBlocked (), "Bearer can't be blocked.");
-
-          // Set the aggregation status.
-          rInfo->SetAggregated (true);
-
-          // For logic consistence, let's check for available resources again.
-          success = true;
-          success &= PgwBearerRequest (rInfo);
-          success &= SgwBearerRequest (rInfo);
-          success &= m_backhaulCtrl->BearerRequest (rInfo);
-
-          NS_ASSERT_MSG (success, "Bearer should be accepted.");
           NS_LOG_INFO ("Bearer request accepted by controller with "
                        "automatic traffic aggregation.");
           m_bearerRequestTrace (rInfo);
@@ -265,8 +253,9 @@ SliceController::DedicatedBearerRequest (
         }
     }
 
+  // If we get here it's because the bearer request was definitely blocked.
+  NS_ASSERT_MSG (rInfo->IsBlocked (), "Bearer should be blocked.");
   NS_LOG_INFO ("Bearer request blocked by controller.");
-  NS_ASSERT_MSG (!success && rInfo->IsBlocked (), "Bearer should be blocked.");
   m_bearerRequestTrace (rInfo);
   return success;
 }
