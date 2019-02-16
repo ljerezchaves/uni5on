@@ -199,11 +199,16 @@ SliceController::DedicatedBearerRequest (
   NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should be inactive.");
 
   // Reseting the P-GW TFT index (the load balancing level may have changed
-  // since the last time this bearer was active), the aggregation mode and the
-  // blocked status.
+  // since the last time this bearer was active) and the blocked status.
   rInfo->SetPgwTftIdx (GetTftIdx (rInfo));
-  rInfo->SetAggregated (false);
   rInfo->ResetBlocked ();
+
+  // Reseting the aggregation status, depeding on the aggregation mode in use.
+  rInfo->SetAggregated (false);
+  if (GetAggregation () == OpMode::ON)
+    {
+      rInfo->SetAggregated (true);
+    }
 
   // Check for available resources on logical and infrastructure networks.
   bool success = true;
