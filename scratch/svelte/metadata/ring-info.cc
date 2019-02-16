@@ -103,7 +103,7 @@ RingInfo::IsLocalPath (LteIface iface) const
 }
 
 bool
-RingInfo::AreBothLocalPaths (void) const
+RingInfo::AreLocalPaths (void) const
 {
   NS_LOG_FUNCTION (this);
 

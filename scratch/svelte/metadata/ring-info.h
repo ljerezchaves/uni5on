@@ -73,10 +73,10 @@ public:
   //\}
 
   /**
-   * Check whether both LTE logical interfaces are routed over local paths.
+   * Check whether both LTE S1-U and S5 interfaces are routed over local paths.
    * \return True for local paths, false otherwise.
    */
-  bool AreBothLocalPaths (void) const;
+  bool AreLocalPaths (void) const;
 
   /**
    * Summarize the ring routing path into a single string.
