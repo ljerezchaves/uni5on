@@ -994,16 +994,19 @@ SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo) const
 
   bool success = true;
 
-  // First check: OpenFlow switch table usage.
+  // First check: OpenFlow switch table usage (only non-aggregated bearers).
   // Block the bearer if the P-GW TFT switch table (#1) usage is exceeding the
   // block threshold.
-  double tabUse = m_pgwInfo->GetFlowTableUse (rInfo->GetPgwTftIdx (), 0);
-  if (tabUse >= m_pgwBlockThs)
+  if (!rInfo->IsAggregated ())
     {
-      success = false;
-      rInfo->SetBlocked (RoutingInfo::PGWTABLE);
-      NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
-                   " because the P-GW table is full.");
+      double tabUse = m_pgwInfo->GetFlowTableUse (rInfo->GetPgwTftIdx (), 0);
+      if (tabUse >= m_pgwBlockThs)
+        {
+          success = false;
+          rInfo->SetBlocked (RoutingInfo::PGWTABLE);
+          NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
+                       " because the P-GW table is full.");
+        }
     }
 
   // Second check: OpenFlow switch CPU load.
@@ -1154,18 +1157,21 @@ SliceController::SgwBearerRequest (Ptr<RoutingInfo> rInfo) const
 
   bool success = true;
 
-  // First check: OpenFlow switch table usage.
+  // First check: OpenFlow switch table usage (only non-aggregated bearers).
   // Block the bearer if the S-GW switch dl/ul tables (#1 and #2) usage is
   // exceeding the block threshold.
   Ptr<SgwInfo> sgwInfo = rInfo->GetUeInfo ()->GetSgwInfo ();
-  double dlTabUse = sgwInfo->GetFlowTableUse (1);
-  double ulTabUse = sgwInfo->GetFlowTableUse (2);
-  if (dlTabUse >= m_sgwBlockThs || ulTabUse >= m_sgwBlockThs)
+  if (!rInfo->IsAggregated ())
     {
-      success = false;
-      rInfo->SetBlocked (RoutingInfo::SGWTABLE);
-      NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
-                   " because the S-GW table is full.");
+      double dlTabUse = sgwInfo->GetFlowTableUse (1);
+      double ulTabUse = sgwInfo->GetFlowTableUse (2);
+      if (dlTabUse >= m_sgwBlockThs || ulTabUse >= m_sgwBlockThs)
+        {
+          success = false;
+          rInfo->SetBlocked (RoutingInfo::SGWTABLE);
+          NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
+                       " because the S-GW table is full.");
+        }
     }
 
   // Second check: OpenFlow switch CPU load.

@@ -180,8 +180,8 @@ RingController::BearerReserve (Ptr<RoutingInfo> rInfo)
 
   // The only resource that is reserved is the GBR bit rate over links.
   // For Non-GBR bearers (which includes the default bearer) and for bearers
-  // that only transverse local switch (local routing for both S1-U and S5
-  // interfaces): there's nothing to reserve.
+  // that only transverse the local switch (local routing for both S1-U and S5
+  // interfaces): there's no GBR bit rate to reserve.
   if (rInfo->IsNonGbr () || ringInfo->AreLocalPaths ())
     {
       return true;
@@ -697,12 +697,10 @@ RingController::BwBearerRequest (Ptr<RingInfo> ringInfo) const
 
   Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
 
-  // Single check: available bandwidth over backhaul links.
-  // The only resource that is reserved is the GBR bit rate over links.
-  // For Non-GBR bearers (which includes the default bearer) and for bearers
-  // that only transverse local switch (local routing for both S1-U and S5
-  // interfaces): let's accept it without bandwidth guarantees.
-  if (rInfo->IsNonGbr () || ringInfo->AreLocalPaths ())
+  // Single check: available bandwidth over backhaul links (only GBR
+  // non-agregated bearers transversing at least one backhaul link).
+  if (rInfo->IsNonGbr () || rInfo->IsAggregated ()
+      || ringInfo->AreLocalPaths ())
     {
       return true;
     }
@@ -787,21 +785,24 @@ RingController::SwBearerRequest (Ptr<RingInfo> ringInfo) const
   SliceId slice = rInfo->GetSliceId ();
   bool success = true;
 
-  // First check: OpenFlow switch table usage.
+  // First check: OpenFlow switch table usage (only non-aggregated bearers).
   // Block the bearer if the slice pipeline table usage is exceeding the block
   // threshold at any backhaul switch connected to EPC serving entities.
-  uint8_t sliceTable = GetSliceTable (slice);
-  double sgwTabUse = GetFlowTableUse (rInfo->GetSgwInfraSwIdx (), sliceTable);
-  double pgwTabUse = GetFlowTableUse (rInfo->GetPgwInfraSwIdx (), sliceTable);
-  double enbTabUse = GetFlowTableUse (rInfo->GetEnbInfraSwIdx (), sliceTable);
-  if ((rInfo->HasTraffic () && sgwTabUse >= GetSwBlockThreshold ())
-      || (rInfo->HasDlTraffic () && pgwTabUse >= GetSwBlockThreshold ())
-      || (rInfo->HasUlTraffic () && enbTabUse >= GetSwBlockThreshold ()))
+  if (!rInfo->IsAggregated ())
     {
-      success = false;
-      rInfo->SetBlocked (RoutingInfo::BACKTABLE);
-      NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
-                   " because the backhaul switch table is full.");
+      uint8_t table = GetSliceTable (slice);
+      double sgwTabUse = GetFlowTableUse (rInfo->GetSgwInfraSwIdx (), table);
+      double pgwTabUse = GetFlowTableUse (rInfo->GetPgwInfraSwIdx (), table);
+      double enbTabUse = GetFlowTableUse (rInfo->GetEnbInfraSwIdx (), table);
+      if ((rInfo->HasTraffic () && sgwTabUse >= GetSwBlockThreshold ())
+          || (rInfo->HasDlTraffic () && pgwTabUse >= GetSwBlockThreshold ())
+          || (rInfo->HasUlTraffic () && enbTabUse >= GetSwBlockThreshold ()))
+        {
+          success = false;
+          rInfo->SetBlocked (RoutingInfo::BACKTABLE);
+          NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
+                       " because the backhaul switch table is full.");
+        }
     }
 
   // Second check: OpenFlow switch processing load.
