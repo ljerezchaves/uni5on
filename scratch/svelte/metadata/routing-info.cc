@@ -741,7 +741,7 @@ RoutingInfo::IsBlocked (BlockReason reason) const
 {
   NS_LOG_FUNCTION (this << reason);
 
-  return (m_blockReason & (1U << static_cast<int> (reason)));
+  return (m_blockReason & (static_cast<uint16_t> (reason)));
 }
 
 void
@@ -759,7 +759,7 @@ RoutingInfo::SetBlocked (BlockReason reason)
 
   NS_ASSERT_MSG (IsDefault () == false, "Can't block the default bearer.");
 
-  m_blockReason |= (1U << static_cast<int> (reason));
+  m_blockReason |= static_cast<uint16_t> (reason);
 }
 
 void
@@ -767,7 +767,7 @@ RoutingInfo::UnsetBlocked (BlockReason reason)
 {
   NS_LOG_FUNCTION (this << reason);
 
-  m_blockReason &= ~(1U << static_cast<int> (reason));
+  m_blockReason &= ~(static_cast<uint16_t> (reason));
 }
 
 void
