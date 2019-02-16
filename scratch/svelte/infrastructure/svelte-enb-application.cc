@@ -186,7 +186,8 @@ SvelteEnbApplication::SendToS1uSocket (Ptr<Packet> packet, uint32_t teid)
   packet->AddHeader (gtpu);
 
   // Add the EPC GTP-U packet tag to the packet.
-  EpcGtpuTag teidTag (teid, EpcGtpuTag::ENB, rInfo->GetQosType ());
+  EpcGtpuTag teidTag (
+    teid, EpcGtpuTag::ENB, rInfo->GetQosType (), rInfo->IsAggregated ());
   packet->AddPacketTag (teidTag);
   m_txS1uTrace (packet);
 

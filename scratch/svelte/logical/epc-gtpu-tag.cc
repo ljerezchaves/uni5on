@@ -31,12 +31,13 @@ EpcGtpuTag::EpcGtpuTag ()
 {
 }
 
-EpcGtpuTag::EpcGtpuTag (uint32_t teid, EpcInputNode node, QosType type)
+EpcGtpuTag::EpcGtpuTag (uint32_t teid, EpcInputNode node,
+                        QosType type, bool aggr)
   : m_meta (0),
   m_teid (teid),
   m_time (Simulator::Now ().GetTimeStep ())
 {
-  SetMetadata (node, type);
+  SetMetadata (node, type, aggr);
 }
 
 TypeId
@@ -81,9 +82,10 @@ void
 EpcGtpuTag::Print (std::ostream &os) const
 {
   os << " teid=" << m_teid
-     << " input=" << EpcInputNodeStr (GetInputNode ())
+     << " node=" << EpcInputNodeStr (GetInputNode ())
      << " type=" << QosTypeStr (GetQosType ())
-     << " timestamp=" << m_time;
+     << " aggr=" << (IsAggregated () ? "true" : "false")
+     << " time=" << m_time;
 }
 
 Direction
@@ -96,18 +98,15 @@ EpcGtpuTag::GetDirection () const
 EpcGtpuTag::EpcInputNode
 EpcGtpuTag::GetInputNode () const
 {
-  uint8_t node = m_meta;
-  node &= META_NODE;
-  return static_cast<EpcGtpuTag::EpcInputNode> (node);
+  uint8_t node = (m_meta & (1U << META_NODE));
+  return static_cast<EpcGtpuTag::EpcInputNode> (node >> META_NODE);
 }
 
 QosType
 EpcGtpuTag::GetQosType () const
 {
-  uint8_t type = m_meta;
-  type &= META_TYPE;
-  type >>= 1;
-  return static_cast<QosType> (type);
+  uint8_t type = (m_meta & (1U << META_TYPE));
+  return static_cast<QosType> (type >> META_TYPE);
 }
 
 SliceId
@@ -128,6 +127,12 @@ EpcGtpuTag::GetTimestamp () const
   return Time (m_time);
 }
 
+bool
+EpcGtpuTag::IsAggregated () const
+{
+  return (m_meta & (1U << META_AGGR));
+}
+
 std::string
 EpcGtpuTag::EpcInputNodeStr (EpcInputNode node)
 {
@@ -143,15 +148,15 @@ EpcGtpuTag::EpcInputNodeStr (EpcInputNode node)
 }
 
 void
-EpcGtpuTag::SetMetadata (EpcInputNode node, QosType type)
+EpcGtpuTag::SetMetadata (EpcInputNode node, QosType type, bool aggr)
 {
-  NS_ASSERT_MSG (node <= 0x1, "Input node cannot exceed 1 bit.");
-  NS_ASSERT_MSG (type <= 0x1, "QoS type cannot exceed 1 bit.");
+  NS_ASSERT_MSG (node <= 0x01, "Input node cannot exceed 1 bit.");
+  NS_ASSERT_MSG (type <= 0x01, "QoS type cannot exceed 1 bit.");
 
-  m_meta = 0x0;
-  m_meta |= static_cast<uint8_t> (type);
-  m_meta <<= 1;
-  m_meta |= static_cast<uint8_t> (node);
+  m_meta = 0x00;
+  m_meta |= (static_cast<uint8_t> (node) << META_NODE);
+  m_meta |= (static_cast<uint8_t> (type) << META_TYPE);
+  m_meta |= (static_cast<uint8_t> (aggr) << META_AGGR);
 }
 
 } // namespace ns3

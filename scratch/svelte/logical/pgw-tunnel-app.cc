@@ -91,7 +91,8 @@ PgwTunnelApp::AttachEpcGtpuTag (Ptr<Packet> packet, uint32_t teid)
 
   // Packet entering the EPC. Attach the tag and fire the S5 TX trace source.
   Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-  EpcGtpuTag teidTag (teid, EpcGtpuTag::PGW, rInfo->GetQosType ());
+  EpcGtpuTag teidTag (
+    teid, EpcGtpuTag::PGW, rInfo->GetQosType (), rInfo->IsAggregated ());
   packet->AddPacketTag (teidTag);
   m_txS5Trace (packet);
 }

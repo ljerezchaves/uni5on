@@ -30,8 +30,10 @@ namespace ns3 {
 
 class Tag;
 
-#define META_NODE 0x1
-#define META_TYPE 0x2
+// Metadata bitmap.
+#define META_NODE 0
+#define META_TYPE 1
+#define META_AGGR 2
 
 /**
  * Tag used for GTP packets withing LTE EPC.
@@ -51,7 +53,7 @@ public:
 
   /** Constructors */
   EpcGtpuTag ();
-  EpcGtpuTag (uint32_t teid, EpcInputNode node, QosType type);
+  EpcGtpuTag (uint32_t teid, EpcInputNode node, QosType type, bool aggr);
 
   // Inherited from Tag
   virtual void Serialize (TagBuffer i) const;
@@ -70,6 +72,7 @@ public:
   SliceId       GetSliceId    (void) const;
   uint32_t      GetTeid       (void) const;
   Time          GetTimestamp  (void) const;
+  bool          IsAggregated  (void) const;
   //\}
 
   /**
@@ -84,8 +87,9 @@ private:
    * Set internal metadata field.
    * \param node The input node.
    * \param type The QoS traffic type.
+   * \param aggr True for aggregated traffic.
    */
-  void SetMetadata (EpcInputNode node, QosType type);
+  void SetMetadata (EpcInputNode node, QosType type, bool aggr);
 
   uint8_t   m_meta;       //!< Packet metadata.
   uint32_t  m_teid;       //!< GTP teid.
