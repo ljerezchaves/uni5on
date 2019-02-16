@@ -182,7 +182,7 @@ RingController::BearerReserve (Ptr<RoutingInfo> rInfo)
   // For Non-GBR bearers (which includes the default bearer) and for bearers
   // that only transverse local switch (local routing for both S1-U and S5
   // interfaces): there's nothing to reserve.
-  if (!rInfo->IsGbr () || ringInfo->AreBothLocalPaths ())
+  if (rInfo->IsNonGbr () || ringInfo->AreBothLocalPaths ())
     {
       return true;
     }
@@ -702,7 +702,7 @@ RingController::BwBearerRequest (Ptr<RingInfo> ringInfo) const
   // For Non-GBR bearers (which includes the default bearer) and for bearers
   // that only transverse local switch (local routing for both S1-U and S5
   // interfaces): let's accept it without bandwidth guarantees.
-  if (!rInfo->IsGbr () || ringInfo->AreBothLocalPaths ())
+  if (rInfo->IsNonGbr () || ringInfo->AreBothLocalPaths ())
     {
       return true;
     }

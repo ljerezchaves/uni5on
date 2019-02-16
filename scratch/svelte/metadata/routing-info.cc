@@ -354,6 +354,14 @@ RoutingInfo::IsGbrReserved (void) const
   return m_isGbrRes;
 }
 
+bool
+RoutingInfo::IsNonGbr (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return !IsGbr ();
+}
+
 std::string
 RoutingInfo::GetMbrDelCmd (void) const
 {

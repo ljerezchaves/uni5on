@@ -136,6 +136,7 @@ public:
   bool        HasGbrUl          (void) const;
   bool        IsGbr             (void) const;
   bool        IsGbrReserved     (void) const;
+  bool        IsNonGbr          (void) const;
   //\}
 
   /**
