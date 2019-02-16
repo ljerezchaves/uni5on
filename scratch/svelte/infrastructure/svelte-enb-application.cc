@@ -21,6 +21,7 @@
 #include "svelte-enb-application.h"
 #include "../svelte-common.h"
 #include "../logical/epc-gtpu-tag.h"
+#include "../metadata/ue-info.h"
 #include "../metadata/routing-info.h"
 
 namespace ns3 {
@@ -168,14 +169,23 @@ SvelteEnbApplication::SendToS1uSocket (Ptr<Packet> packet, uint32_t teid)
 {
   NS_LOG_FUNCTION (this << packet << teid <<  packet->GetSize ());
 
+  Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
+
   // Attach the GTP-U header.
   GtpuHeader gtpu;
-  gtpu.SetTeid (teid);
+  if (rInfo->IsAggregated ())
+    {
+      // Trick for traffic aggregation: use the teid of the default bearer.
+      gtpu.SetTeid (rInfo->GetUeInfo ()->GetDefaultTeid ());
+    }
+  else
+    {
+      gtpu.SetTeid (teid);
+    }
   gtpu.SetLength (packet->GetSize () + gtpu.GetSerializedSize () - 8);
   packet->AddHeader (gtpu);
 
   // Add the EPC GTP-U packet tag to the packet.
-  Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
   EpcGtpuTag teidTag (teid, EpcGtpuTag::ENB, rInfo->GetQosType ());
   packet->AddPacketTag (teidTag);
   m_txS1uTrace (packet);
