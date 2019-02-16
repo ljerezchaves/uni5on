@@ -198,9 +198,11 @@ SliceController::DedicatedBearerRequest (
   NS_ASSERT_MSG (!rInfo->IsDefault (), "Can't request the default bearer.");
   NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should be inactive.");
 
-  // Update the P-GW TFT index (the load balancing level may have changed
-  // since the last time this bearer was active) and the blocked flag.
+  // Reseting the P-GW TFT index (the load balancing level may have changed
+  // since the last time this bearer was active), the aggregation mode and the
+  // blocked status.
   rInfo->SetPgwTftIdx (GetTftIdx (rInfo));
+  rInfo->SetAggregated (false);
   rInfo->ResetBlocked ();
 
   // Check for available resources on logical and infrastructure networks.
@@ -208,19 +210,20 @@ SliceController::DedicatedBearerRequest (
   success &= PgwBearerRequest (rInfo);
   success &= SgwBearerRequest (rInfo);
   success &= m_backhaulCtrl->BearerRequest (rInfo);
-  if (!success)
+  if (success)
+    {
+      NS_LOG_INFO ("Bearer request accepted by controller.");
+      if (!rInfo->IsAggregated ())
+        {
+          // Reserve infrastructure resources and install the bearer.
+          success &= m_backhaulCtrl->BearerReserve (rInfo);
+          success &= BearerInstall (rInfo);
+          NS_ASSERT_MSG (success, "Error when installing the bearer.");
+        }
+    }
+  else
     {
       NS_LOG_INFO ("Bearer request blocked by controller.");
-      m_bearerRequestTrace (rInfo);
-      return false;
-    }
-  NS_LOG_INFO ("Bearer request accepted by controller.");
-
-  // Reserve infrastructure resources and install the bearer.
-  if (!rInfo->IsAggregated ())
-    {
-      success &= m_backhaulCtrl->BearerReserve (rInfo);
-      success &= BearerInstall (rInfo);
     }
   m_bearerRequestTrace (rInfo);
   return success;
