@@ -30,8 +30,6 @@ default ns3::RingNetwork::NumRingSwitches "3"
 default ns3::RingNetwork::RingLinkDataRate "100Mbps"
 default ns3::RingNetwork::RingLinkDelay "200us"
 
-default ns3::PgwTunnelApp::UseTftClassifier "true"
-
 default ns3::SliceController::GbrBlockThs "0.5"
 default ns3::SliceController::PgwBlockPolicy "on"
 default ns3::SliceController::PgwBlockThs "0.9"

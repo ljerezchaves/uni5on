@@ -79,8 +79,6 @@ private:
    * the S5 interface (entering the EPC).
    */
   TracedCallback<Ptr<const Packet> > m_txS5Trace;
-
-  bool  m_useTftClassifier;   //!< Use the TFT classifier.
 };
 
 } // namespace ns3

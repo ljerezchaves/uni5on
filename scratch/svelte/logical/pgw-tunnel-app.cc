@@ -50,11 +50,6 @@ PgwTunnelApp::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::PgwTunnelApp")
     .SetParent<GtpTunnelApp> ()
-    .AddAttribute ("UseTftClassifier",
-                   "Use the UE TFT classifier when attaching the EpcGtpuTag.",
-                   BooleanValue (true),
-                   MakeBooleanAccessor (&PgwTunnelApp::m_useTftClassifier),
-                   MakeBooleanChecker ())
     .AddTraceSource ("S5Rx",
                      "Trace source for packets received from S5 interface.",
                      MakeTraceSourceAccessor (&PgwTunnelApp::m_rxS5Trace),
@@ -84,18 +79,15 @@ PgwTunnelApp::AttachEpcGtpuTag (Ptr<Packet> packet, uint32_t teid)
   // aggregating different bearers withing the same tunnel. Using this
   // independent classifier ensures that the EPC packet tags can continue to
   // differentiate the bearers withing the EPC.
-  if (m_useTftClassifier)
-    {
-      Ptr<Packet> packetCopy = packet->Copy ();
+  Ptr<Packet> packetCopy = packet->Copy ();
 
-      GtpuHeader gtpuHeader;
-      Ipv4Header ipv4Header;
-      packetCopy->RemoveHeader (gtpuHeader);
-      packetCopy->PeekHeader (ipv4Header);
+  GtpuHeader gtpuHeader;
+  Ipv4Header ipv4Header;
+  packetCopy->RemoveHeader (gtpuHeader);
+  packetCopy->PeekHeader (ipv4Header);
 
-      Ptr<UeInfo> ueInfo = UeInfo::GetPointer (ipv4Header.GetDestination ());
-      teid = ueInfo->Classify (packetCopy);
-    }
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (ipv4Header.GetDestination ());
+  teid = ueInfo->Classify (packetCopy);
 
   // Packet entering the EPC. Attach the tag and fire the S5 TX trace source.
   Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
