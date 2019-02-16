@@ -30,11 +30,6 @@ namespace ns3 {
 
 class Tag;
 
-// Metadata bitmap.
-#define META_NODE 0
-#define META_TYPE 1
-#define META_AGGR 2
-
 /**
  * Tag used for GTP packets withing LTE EPC.
  */

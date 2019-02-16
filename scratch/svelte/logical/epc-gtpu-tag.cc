@@ -20,6 +20,11 @@
 
 #include "epc-gtpu-tag.h"
 
+// Metadata bitmap.
+#define META_NODE 0
+#define META_TYPE 1
+#define META_AGGR 2
+
 namespace ns3 {
 
 NS_OBJECT_ENSURE_REGISTERED (EpcGtpuTag);
