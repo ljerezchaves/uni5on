@@ -50,13 +50,13 @@ public:
   /** The reason for any blocked request. */
   enum BlockReason
   {
-    BACKBAND  = 0,  //!< At least one backhaul link has no bandwidth.
-    BACKTABLE = 1,  //!< At least one backhaul flow table is full.
-    BACKLOAD  = 2,  //!< At least one backhaul pipeline load is full.
-    PGWTABLE  = 4,  //!< P-GW TFT flow table is full.
-    PGWLOAD   = 5,  //!< P-GW TFT pipeline load is full.
-    SGWTABLE  = 8,  //!< P-GW flow table is full.
-    SGWLOAD   = 9   //!< P-GW pipeline load is full.
+    PGWTABLE  = 0,  //!< P-GW TFT flow table is full.
+    PGWLOAD   = 1,  //!< P-GW TFT pipeline load is full.
+    SGWTABLE  = 4,  //!< P-GW flow table is full.
+    SGWLOAD   = 5,  //!< P-GW pipeline load is full.
+    BACKTABLE = 8,  //!< At least one backhaul flow table is full.
+    BACKLOAD  = 9,  //!< At least one backhaul pipeline load is full.
+    BACKBAND  = 12  //!< At least one backhaul link has no bandwidth.
   };
 
   /**
