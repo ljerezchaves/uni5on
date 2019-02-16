@@ -105,6 +105,11 @@ EpcGtpuTag::GetInputNode () const
 QosType
 EpcGtpuTag::GetQosType () const
 {
+  if (IsAggregated ())
+    {
+      return QosType::NON;
+    }
+
   uint8_t type = (m_meta & (1U << META_TYPE));
   return static_cast<QosType> (type >> META_TYPE);
 }
