@@ -83,7 +83,7 @@ SliceController::GetTypeId (void)
                    MakePointerChecker<BackhaulController> ())
     .AddAttribute ("GbrBlockThs",
                    "The backhaul GBR bandwidth block threshold.",
-                   DoubleValue (0.5),
+                   DoubleValue (0.25),
                    MakeDoubleAccessor (&SliceController::m_gbrBlockThs),
                    MakeDoubleChecker<double> (0.0, 1.0))
     .AddAttribute ("Priority",
