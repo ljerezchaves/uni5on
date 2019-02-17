@@ -226,11 +226,11 @@ double Bps2Kbps (DataRate datarate);
  * \verbatim
  * DSCP_EF   --> OpenFlow queue 0 (priority)
  * DSCP_AF41 --> OpenFlow queue 1 (WRR)
- * DSCP_AF31 --> OpenFlow queue 2 (WRR)
- * DSCP_AF32 --> OpenFlow queue 2 (WRR)
- * DSCP_AF21 --> OpenFlow queue 3 (WRR)
- * DSCP_AF11 --> OpenFlow queue 4 (WRR)
- * DSCP_BE   --> OpenFlow queue 5 (WRR)
+ * DSCP_AF31 --> OpenFlow queue 1 (WRR)
+ * DSCP_AF32 --> OpenFlow queue 1 (WRR)
+ * DSCP_AF21 --> OpenFlow queue 1 (WRR)
+ * DSCP_AF11 --> OpenFlow queue 1 (WRR)
+ * DSCP_BE   --> OpenFlow queue 2 (WRR)
  * \endverbatim
  */
 const DscpQueueMap_t& Dscp2QueueMap (void);

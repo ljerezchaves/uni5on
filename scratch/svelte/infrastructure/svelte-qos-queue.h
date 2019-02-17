@@ -28,10 +28,10 @@ namespace ns3 {
 /**
  * \ingroup svelteInfra
  * This class implements the specialized QoS queue for the SVELTE architecture.
- * It holds six drop tail queues (100 packets each). The output scheduling
- * algorithms works as follows: The fist queue (ID 0) is a priority queue,
- * always served first. The other queues (IDs 1 to 5) and served in weighted
- * rounding robin (WRR) order, with decreasing weights from 5 to 1.
+ * It holds a priority queue (ID 0) that is always served first, while other
+ * queues (IDs 1 to N-1) are served in weighted rounding robin (WRR) order.
+ * The drop tail queues are operating in packet mode with size of 100 packets.
+ * The total number of queues and the WRR weights can be customized.
  */
 class SvelteQosQueue : public OFSwitch13Queue
 {
@@ -67,8 +67,8 @@ private:
    * maximum number of packets to serve before reseting the weights. Note that
    * the first weight is zero as this is not used by the priority queue.
    */
-  const std::vector<int> m_queueWeight = {0, 1, 3, 4, 2, 2};
-  const int              m_queueNum = 6; //!< Total number of queues.
+  const std::vector<int> m_queueWeight = {0, 4, 1};
+  const int              m_queueNum = 3; //!< Total number of queues.
   std::vector<int>       m_queueTokens;  //!< Tokens for WRR scheduling.
 
   NS_LOG_TEMPLATE_DECLARE;          //!< Redefinition of the log component.
