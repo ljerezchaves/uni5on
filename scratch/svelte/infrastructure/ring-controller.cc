@@ -213,7 +213,7 @@ RingController::BearerInstall (Ptr<RoutingInfo> rInfo)
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
   // -------------------------------------------------------------------------
-  // Classification table -- [from higher to lower priority]
+  // Slice table -- [from higher to lower priority]
   //
   NS_LOG_INFO ("Installing ring rules for teid " << rInfo->GetTeidHex ());
 
