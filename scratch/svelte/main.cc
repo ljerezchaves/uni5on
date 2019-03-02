@@ -264,7 +264,7 @@ void ConfigureDefaults ()
 
   //
   // Set the LTE hexagonal grid layout topology to inter-site distance of 500m
-  // with a single site in even rows.
+  // with a two sites in even rows and three sites in odd rows.
   //
   Config::SetDefault (
     "ns3::LteHexGridEnbTopologyHelper::InterSiteDistance", DoubleValue (500));
