@@ -86,19 +86,19 @@ BackhaulNetwork::GetTypeId (void)
     .AddAttribute ("FlowTableSize",
                    "Flow table size for the backhaul switches.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   UintegerValue (4096),
+                   UintegerValue (8192),
                    MakeUintegerAccessor (&BackhaulNetwork::m_flowTableSize),
                    MakeUintegerChecker<uint16_t> (0, 65535))
     .AddAttribute ("GroupTableSize",
                    "Group table size for the backhaul switches.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   UintegerValue (2048),
+                   UintegerValue (4096),
                    MakeUintegerAccessor (&BackhaulNetwork::m_groupTableSize),
                    MakeUintegerChecker<uint16_t> (0, 65535))
     .AddAttribute ("MeterTableSize",
                    "Meter table size for the backhaul switches.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   UintegerValue (2048),
+                   UintegerValue (4096),
                    MakeUintegerAccessor (&BackhaulNetwork::m_meterTableSize),
                    MakeUintegerChecker<uint16_t> (0, 65535))
   ;
