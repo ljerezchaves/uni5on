@@ -117,6 +117,8 @@ private:
 
   Ptr<RandomVariableStream> m_interArrivalRng;  //!< Inter-arrival random time.
   bool                      m_restartApps;      //!< Restart apps after stop.
+  double                    m_startProb;        //!< Probability to start apps.
+  Ptr<RandomVariableStream> m_startProbRng;     //!< Start random probability.
   Time                      m_startTime;        //!< Time to start apps.
   Time                      m_stopTime;         //!< Time to stop apps.
   Ptr<SliceController>      m_ctrlApp;          //!< OpenFlow slice controller.

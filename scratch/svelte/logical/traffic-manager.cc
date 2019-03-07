@@ -39,6 +39,11 @@ TrafficManager::TrafficManager ()
   m_defaultTeid (0)
 {
   NS_LOG_FUNCTION (this);
+
+  // Uniform probability to start applications
+  m_startProbRng = CreateObject<UniformRandomVariable> ();
+  m_startProbRng->SetAttribute ("Min", DoubleValue (0.0));
+  m_startProbRng->SetAttribute ("Max", DoubleValue (1.0));
 }
 
 TrafficManager::~TrafficManager ()
@@ -62,6 +67,11 @@ TrafficManager::GetTypeId (void)
                    BooleanValue (true),
                    MakeBooleanAccessor (&TrafficManager::m_restartApps),
                    MakeBooleanChecker ())
+    .AddAttribute ("StartProb",
+                   "The probability to start applications.",
+                   DoubleValue (1.0),
+                   MakeDoubleAccessor (&TrafficManager::m_startProb),
+                   MakeDoubleChecker<double> (0.0, 1.0))
     .AddAttribute ("StartTime",
                    "The time to start applications.",
                    TimeValue (Seconds (1)),
@@ -146,6 +156,7 @@ TrafficManager::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
   m_interArrivalRng = 0;
+  m_startProbRng = 0;
   m_ctrlApp = 0;
   m_timeByApp.clear ();
   Object::DoDispose ();
@@ -171,6 +182,14 @@ TrafficManager::AppStartTry (Ptr<SvelteClient> app)
   // The application may be forced to stops itself to avoid overlapping
   // operations depending on the scheduled time.
   SetNextAppStartTry (app);
+
+  // Check the start probability before (re)starting the application.
+  // This allows further start attempts for this application.
+  if (m_startProbRng->GetValue () > m_startProb)
+    {
+      NS_LOG_INFO ("Application start try aborted by the start probability.");
+      return;
+    }
 
   // Request resources only for traffic over dedicated bearers.
   bool authorized = true;

@@ -80,6 +80,7 @@ default ns3::TrafficHelper::UseOnlyDefaultBearer "false"
 
 default ns3::TrafficManager::InterArrival "ns3::ExponentialRandomVariable[Mean=120.0]"
 default ns3::TrafficManager::RestartApps "true"
+default ns3::TrafficManager::StartProb "1.0"
 default ns3::TrafficManager::StartTime "1s"
 default ns3::TrafficManager::StopTime "0s"
 
