@@ -207,7 +207,7 @@ TrafficManager::AppStartTry (Ptr<SvelteClient> app)
   // Aborted events allows further start attempts for this application.
   if (!authorized)
     {
-      NS_LOG_INFO ("Application start try aborted by the authorization flag.");
+      NS_LOG_INFO ("Application start try blocked by network controller.");
       Time nextTry = GetNextAppStartTry (app) - Simulator::Now ();
       Simulator::Schedule (nextTry, &TrafficManager::AppStartTry, this, app);
       return;
