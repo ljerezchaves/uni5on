@@ -188,10 +188,10 @@ TrafficHelper::NotifyConstructionCompleted ()
 
   // Configure the traffic manager object factory.
   m_managerFac.SetTypeId (TrafficManager::GetTypeId ());
-  m_managerFac.Set ("PoissonInterArrival", PointerValue (m_poissonRng));
+  m_managerFac.Set ("InterArrival", PointerValue (m_poissonRng));
   m_managerFac.Set ("RestartApps", BooleanValue (m_restartApps));
-  m_managerFac.Set ("StartAppsAt", TimeValue (m_startAppsAt));
-  m_managerFac.Set ("StopAppsAt", TimeValue (m_stopAppsAt));
+  m_managerFac.Set ("StartTime", TimeValue (m_startAppsAt));
+  m_managerFac.Set ("StopTime", TimeValue (m_stopAppsAt));
 
   // Configure random video selections.
   m_gbrVidRng = CreateObject<UniformRandomVariable> ();

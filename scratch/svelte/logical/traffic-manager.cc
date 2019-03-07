@@ -52,26 +52,25 @@ TrafficManager::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::TrafficManager")
     .SetParent<Object> ()
     .AddConstructor<TrafficManager> ()
-    .AddAttribute ("PoissonInterArrival",
-                   "An exponential random variable used to get application "
-                   "inter-arrival start times.",
+    .AddAttribute ("InterArrival",
+                   "An random variable used to get inter-arrival start times.",
                    StringValue ("ns3::ExponentialRandomVariable[Mean=120.0]"),
-                   MakePointerAccessor (&TrafficManager::m_poissonRng),
+                   MakePointerAccessor (&TrafficManager::m_interArrivalRng),
                    MakePointerChecker <RandomVariableStream> ())
     .AddAttribute ("RestartApps",
-                   "Continuously restart applications after stop events.",
+                   "Restart applications after stop events.",
                    BooleanValue (true),
                    MakeBooleanAccessor (&TrafficManager::m_restartApps),
                    MakeBooleanChecker ())
-    .AddAttribute ("StartAppsAt",
+    .AddAttribute ("StartTime",
                    "The time to start the applications.",
                    TimeValue (Seconds (1)),
-                   MakeTimeAccessor (&TrafficManager::m_startAppsAt),
+                   MakeTimeAccessor (&TrafficManager::m_startTime),
                    MakeTimeChecker (Seconds (1)))
-    .AddAttribute ("StopAppsAt",
+    .AddAttribute ("StopTime",
                    "The time to stop the applications.",
                    TimeValue (Time (0)),
-                   MakeTimeAccessor (&TrafficManager::m_stopAppsAt),
+                   MakeTimeAccessor (&TrafficManager::m_stopTime),
                    MakeTimeChecker (Time (0)))
   ;
   return tid;
@@ -94,8 +93,8 @@ TrafficManager::AddSvelteClient (Ptr<SvelteClient> app)
     "AppError", MakeCallback (&TrafficManager::NotifyAppStop, this));
 
   // Schedule the first start attempt for this application.
-  Time firstTry = m_startAppsAt;
-  firstTry += Seconds (std::abs (m_poissonRng->GetValue ()));
+  Time firstTry = m_startTime;
+  firstTry += Seconds (std::abs (m_interArrivalRng->GetValue ()));
   Simulator::Schedule (firstTry, &TrafficManager::AppStartTry, this, app);
   NS_LOG_INFO ("First start attempt for app " << app->GetAppName () <<
                " will occur at " << firstTry.GetSeconds () << "s.");
@@ -146,25 +145,10 @@ void
 TrafficManager::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
-  m_poissonRng = 0;
+  m_interArrivalRng = 0;
   m_ctrlApp = 0;
   m_timeByApp.clear ();
   Object::DoDispose ();
-}
-
-void
-TrafficManager::NotifyConstructionCompleted ()
-{
-  NS_LOG_FUNCTION (this);
-
-  // Schedule the stop time for restarting applications.
-  if (!m_stopAppsAt.IsZero ())
-    {
-      Simulator::Schedule (m_stopAppsAt, &TrafficManager::SetAttribute, this,
-                           "RestartApps", BooleanValue (false));
-    }
-
-  Object::NotifyConstructionCompleted ();
 }
 
 void
@@ -175,8 +159,8 @@ TrafficManager::AppStartTry (Ptr<SvelteClient> app)
   NS_ASSERT_MSG (!app->IsActive (), "Can't start an active application.");
   NS_LOG_INFO ("Attempt to start app " << app->GetNameTeid ());
 
-  // Check the stop time before starting the application.
-  if (!m_stopAppsAt.IsZero () && Simulator::Now () > m_stopAppsAt)
+  // Check the stop time before (re)starting the application.
+  if (!m_stopTime.IsZero () && Simulator::Now () > m_stopTime)
     {
       NS_LOG_INFO ("Application start try aborted by the stop time.");
       return;
@@ -234,20 +218,23 @@ TrafficManager::NotifyAppStop (Ptr<SvelteClient> app)
         m_ctrlApp, app->GetEpsBearer (), m_imsi, teid);
     }
 
+  // Check the restart application flag.
+  if (!m_restartApps)
+    {
+      NS_LOG_INFO ("Application next start try aborted by the restart flag.");
+      return;
+    }
+
   // Schedule the next start attempt for this application,
   // ensuring at least 2 seconds from now.
-  if (m_restartApps)
+  Time nextTry = GetNextAppStartTry (app) - Simulator::Now ();
+  if (nextTry < Seconds (2))
     {
-      Time now = Simulator::Now ();
-      Time nextTry = GetNextAppStartTry (app) - now;
-      if (nextTry < Seconds (2))
-        {
-          nextTry = Seconds (2);
-          NS_LOG_INFO ("Next start try for app " << app->GetNameTeid () <<
-                       " delayed to +2s.");
-        }
-      Simulator::Schedule (nextTry, &TrafficManager::AppStartTry, this, app);
+      nextTry = Seconds (2);
+      NS_LOG_INFO ("Next start try for app " << app->GetNameTeid () <<
+                   " delayed to +2s.");
     }
+  Simulator::Schedule (nextTry, &TrafficManager::AppStartTry, this, app);
 }
 
 void
@@ -296,7 +283,7 @@ TrafficManager::SetNextAppStartTry (Ptr<SvelteClient> app)
   //    D-E: 1 sec
   //    E-F: at least 1 sec
   //
-  double rngValue = std::abs (m_poissonRng->GetValue ());
+  double rngValue = std::abs (m_interArrivalRng->GetValue ());
   Time nextTry = Seconds (std::max (8.0, rngValue));
 
   // Save the absolute time into application table.

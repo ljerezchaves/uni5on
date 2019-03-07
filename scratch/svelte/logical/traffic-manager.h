@@ -80,9 +80,6 @@ protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
 
-  // Inherited from ObjectBase
-  void NotifyConstructionCompleted (void);
-
 private:
   /**
    * Attempt to (re)start this application. This method will request for bearer
@@ -118,10 +115,10 @@ private:
    */
   Time GetNextAppStartTry (Ptr<SvelteClient> app) const;
 
-  Ptr<RandomVariableStream> m_poissonRng;       //!< Inter-arrival traffic.
-  bool                      m_restartApps;      //!< Continuously restart apps.
-  Time                      m_startAppsAt;      //!< Time to start apps.
-  Time                      m_stopAppsAt;       //!< Time to stop apps.
+  Ptr<RandomVariableStream> m_interArrivalRng;  //!< Inter-arrival random time.
+  bool                      m_restartApps;      //!< Restart apps after stop.
+  Time                      m_startTime;        //!< Time to start apps.
+  Time                      m_stopTime;         //!< Time to stop apps.
   Ptr<SliceController>      m_ctrlApp;          //!< OpenFlow slice controller.
   uint64_t                  m_imsi;             //!< UE IMSI identifier.
   uint32_t                  m_defaultTeid;      //!< Default UE tunnel TEID.
