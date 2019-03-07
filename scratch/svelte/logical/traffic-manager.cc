@@ -169,22 +169,21 @@ TrafficManager::AppStartTry (Ptr<SvelteClient> app)
 
   NS_ASSERT_MSG (!app->IsActive (), "Can't start an active application.");
   NS_LOG_INFO ("Attempt to start app " << app->GetNameTeid ());
+  bool authorized = true;
+
+  // Set the absolute time of the next start attempt for this application.
+  SetNextAppStartTry (app);
 
   // Check the stop time before (re)starting the application.
-  // This prevents further start attempts for this application.
+  // Aborted events prevents further start attempts for this application.
   if (!m_stopTime.IsZero () && Simulator::Now () > m_stopTime)
     {
       NS_LOG_INFO ("Application start try aborted by the stop time.");
       return;
     }
 
-  // Schedule the next start attempt for this application.
-  // The application may be forced to stops itself to avoid overlapping
-  // operations depending on the scheduled time.
-  SetNextAppStartTry (app);
-
   // Check the start probability before (re)starting the application.
-  // This allows further start attempts for this application.
+  // Aborted events allows further start attempts for this application.
   if (m_startProbRng->GetValue () > m_startProb)
     {
       NS_LOG_INFO ("Application start try aborted by the start probability.");
@@ -192,34 +191,28 @@ TrafficManager::AppStartTry (Ptr<SvelteClient> app)
     }
 
   // Request resources only for traffic over dedicated bearers.
-  bool authorized = true;
   uint32_t teid = app->GetTeid ();
   if (teid != m_defaultTeid)
     {
       authorized = m_ctrlApp->DedicatedBearerRequest (
           app->GetEpsBearer (), m_imsi, app->GetTeid ());
 
-      // Update the active flag in routing info.
-      Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-      rInfo->SetActive (authorized);
+      // Update the active flag for this bearer.
+      RoutingInfo::GetPointer (teid)->SetActive (authorized);
     }
 
   // Check the start authorization before (re)starting the application.
-  // This allows further start attempts for this application.
+  // Aborted events allows further start attempts for this application.
   if (!authorized)
     {
       NS_LOG_INFO ("Application start try aborted by the authorization flag.");
       return;
     }
 
-  // Schedule the effective application start time for +1 second.
+  // Schedule the application start for +1 second.
   Simulator::Schedule (Seconds (1), &SvelteClient::Start, app);
-  NS_LOG_INFO ("App " << app->GetNameTeid () << " will start in +1 sec.");
-  if (!app->GetMaxOnTime ().IsZero ())
-    {
-      NS_LOG_INFO ("App maximum duration set to " <<
-                   app->GetMaxOnTime ().GetSeconds () << "s.");
-    }
+  NS_LOG_INFO ("App " << app->GetNameTeid () << " will start in +1sec with " <<
+               "max duration set to " << app->GetMaxOnTime ().GetSeconds ());
 }
 
 void
@@ -227,13 +220,12 @@ TrafficManager::NotifyAppStop (Ptr<SvelteClient> app)
 {
   NS_LOG_FUNCTION (this << app);
 
-  // No resource release for traffic over default bearer.
+  // Release resources only for traffic over dedicated bearers.
   uint32_t teid = app->GetTeid ();
   if (teid != m_defaultTeid)
     {
-      // Deactivate the routing info.
-      Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-      rInfo->SetActive (false);
+      // Update the active flag for this bearer.
+      RoutingInfo::GetPointer (teid)->SetActive (false);
 
       // Schedule the resource release procedure for +1 second.
       Simulator::Schedule (
@@ -255,7 +247,7 @@ TrafficManager::NotifyAppStop (Ptr<SvelteClient> app)
     {
       nextTry = Seconds (2);
       NS_LOG_INFO ("Next start try for app " << app->GetNameTeid () <<
-                   " delayed to +2s.");
+                   " delayed to +2secs.");
     }
   Simulator::Schedule (nextTry, &TrafficManager::AppStartTry, this, app);
 }
@@ -306,8 +298,8 @@ TrafficManager::SetNextAppStartTry (Ptr<SvelteClient> app)
   //    D-E: 1 sec
   //    E-F: at least 1 sec
   //
-  double rngValue = std::abs (m_interArrivalRng->GetValue ());
-  Time nextTry = Seconds (std::max (8.0, rngValue));
+  double randValue = std::abs (m_interArrivalRng->GetValue ());
+  Time nextTry = Seconds (std::max (8.0, randValue));
 
   // Save the absolute time into application table.
   auto it = m_timeByApp.find (app);
@@ -316,7 +308,8 @@ TrafficManager::SetNextAppStartTry (Ptr<SvelteClient> app)
   NS_LOG_INFO ("Next start try for app " << app->GetNameTeid () <<
                " should occur at " << it->second.GetSeconds () << "s.");
 
-  // Set the maximum traffic duration.
+  // Set the maximum traffic duration, forcing the application to stops itself
+  // to avoid overlapping operations.
   app->SetAttribute ("MaxOnTime", TimeValue (nextTry - Seconds (5.0)));
 }
 
