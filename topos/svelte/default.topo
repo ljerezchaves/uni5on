@@ -72,6 +72,8 @@ default ns3::SliceNetwork::SgwFlowTableSize "4096"
 default ns3::SliceNetwork::SgwMeterTableSize "2048"
 default ns3::SliceNetwork::LinkMtu "1492"
 
+default ns3::TrafficHelper::FullAppsAt "0s"
+default ns3::TrafficHelper::HalfAppsAt "0s"
 default ns3::TrafficHelper::PoissonInterArrival "ns3::ExponentialRandomVariable[Mean=120.0]"
 default ns3::TrafficHelper::RestartApps "true"
 default ns3::TrafficHelper::StartAppsAt "1s"

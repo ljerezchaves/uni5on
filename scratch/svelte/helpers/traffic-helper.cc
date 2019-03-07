@@ -120,6 +120,16 @@ TrafficHelper::GetTypeId (void)
                    MakeBooleanChecker ())
 
     // Traffic manager attributes.
+    .AddAttribute ("FullAppsAt",
+                   "The time to set application start probability to 100%.",
+                   TimeValue (Time (0)),
+                   MakeTimeAccessor (&TrafficHelper::m_fullAppsAt),
+                   MakeTimeChecker (Time (0)))
+    .AddAttribute ("HalfAppsAt",
+                   "The time to set application start probability to 50%.",
+                   TimeValue (Time (0)),
+                   MakeTimeAccessor (&TrafficHelper::m_halfAppsAt),
+                   MakeTimeChecker (Time (0)))
     .AddAttribute ("PoissonInterArrival",
                    "An exponential random variable used to get "
                    "application inter-arrival start times.",
@@ -509,6 +519,18 @@ TrafficHelper::InstallApplications ()
       t_ueManager->SetController (m_controller);
       t_ueManager->SetImsi (t_ueImsi);
       t_ueNode->AggregateObject (t_ueManager);
+
+      // Schedule traffic manager start probability updates.
+      if (!m_fullAppsAt.IsZero ())
+        {
+          Simulator::Schedule (m_fullAppsAt, &TrafficManager::SetAttribute,
+                               t_ueManager, "StartProb", DoubleValue (1.0));
+        }
+      if (!m_halfAppsAt.IsZero ())
+        {
+          Simulator::Schedule (m_halfAppsAt, &TrafficManager::SetAttribute,
+                               t_ueManager, "StartProb", DoubleValue (0.5));
+        }
 
       // Connect the manager to the controller session created trace source.
       Config::ConnectWithoutContext (
