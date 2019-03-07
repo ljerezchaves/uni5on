@@ -63,12 +63,12 @@ TrafficManager::GetTypeId (void)
                    MakeBooleanAccessor (&TrafficManager::m_restartApps),
                    MakeBooleanChecker ())
     .AddAttribute ("StartTime",
-                   "The time to start the applications.",
+                   "The time to start applications.",
                    TimeValue (Seconds (1)),
                    MakeTimeAccessor (&TrafficManager::m_startTime),
                    MakeTimeChecker (Seconds (1)))
     .AddAttribute ("StopTime",
-                   "The time to stop the applications.",
+                   "The time to stop applications.",
                    TimeValue (Time (0)),
                    MakeTimeAccessor (&TrafficManager::m_stopTime),
                    MakeTimeChecker (Time (0)))
@@ -160,42 +160,46 @@ TrafficManager::AppStartTry (Ptr<SvelteClient> app)
   NS_LOG_INFO ("Attempt to start app " << app->GetNameTeid ());
 
   // Check the stop time before (re)starting the application.
+  // This prevents further start attempts for this application.
   if (!m_stopTime.IsZero () && Simulator::Now () > m_stopTime)
     {
       NS_LOG_INFO ("Application start try aborted by the stop time.");
       return;
     }
 
-  // Before requesting for resources and starting the application, let's set
-  // the next start attempt for this same application. Depending on the next
-  // start attempt time, the application will be forced to stops itself to
-  // avoid overlapping operations.
+  // Schedule the next start attempt for this application.
+  // The application may be forced to stops itself to avoid overlapping
+  // operations depending on the scheduled time.
   SetNextAppStartTry (app);
 
+  // Request resources only for traffic over dedicated bearers.
   bool authorized = true;
   uint32_t teid = app->GetTeid ();
   if (teid != m_defaultTeid)
     {
-      // No resource request for traffic over default bearer.
       authorized = m_ctrlApp->DedicatedBearerRequest (
           app->GetEpsBearer (), m_imsi, app->GetTeid ());
 
-      // Activate the dedicated routing info.
+      // Update the active flag in routing info.
       Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
       rInfo->SetActive (authorized);
     }
 
-  // No retries are performed for a non-authorized traffic.
-  if (authorized)
+  // Check the start authorization before (re)starting the application.
+  // This allows further start attempts for this application.
+  if (!authorized)
     {
-      // Schedule the application start for +1 second.
-      Simulator::Schedule (Seconds (1), &SvelteClient::Start, app);
-      NS_LOG_INFO ("App " << app->GetNameTeid () << " will start in +1 sec.");
-      if (!app->GetMaxOnTime ().IsZero ())
-        {
-          NS_LOG_INFO ("App maximum duration set to " <<
-                       app->GetMaxOnTime ().GetSeconds () << "s.");
-        }
+      NS_LOG_INFO ("Application start try aborted by the authorization flag.");
+      return;
+    }
+
+  // Schedule the effective application start time for +1 second.
+  Simulator::Schedule (Seconds (1), &SvelteClient::Start, app);
+  NS_LOG_INFO ("App " << app->GetNameTeid () << " will start in +1 sec.");
+  if (!app->GetMaxOnTime ().IsZero ())
+    {
+      NS_LOG_INFO ("App maximum duration set to " <<
+                   app->GetMaxOnTime ().GetSeconds () << "s.");
     }
 }
 
