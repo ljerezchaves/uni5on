@@ -187,6 +187,8 @@ TrafficManager::AppStartTry (Ptr<SvelteClient> app)
   if (m_startProbRng->GetValue () > m_startProb)
     {
       NS_LOG_INFO ("Application start try aborted by the start probability.");
+      Time nextTry = GetNextAppStartTry (app) - Simulator::Now ();
+      Simulator::Schedule (nextTry, &TrafficManager::AppStartTry, this, app);
       return;
     }
 
@@ -206,6 +208,8 @@ TrafficManager::AppStartTry (Ptr<SvelteClient> app)
   if (!authorized)
     {
       NS_LOG_INFO ("Application start try aborted by the authorization flag.");
+      Time nextTry = GetNextAppStartTry (app) - Simulator::Now ();
+      Simulator::Schedule (nextTry, &TrafficManager::AppStartTry, this, app);
       return;
     }
 
