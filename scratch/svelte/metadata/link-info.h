@@ -377,10 +377,10 @@ private:
     int64_t reserved;                   //!< Reserved bit rate.
 
     /** EWMA throughput for both short-term and long-term averages. */
-    int64_t ewmaThp [N_QOS_TYPES][N_EWMA_TERMS];
+    int64_t ewmaThp [N_QOS_TYPES_BOTH][N_EWMA_TERMS];
 
     /** TX byte counters for each LTE QoS type. */
-    int64_t txBytes [N_QOS_TYPES];
+    int64_t txBytes [N_QOS_TYPES_BOTH];
   };
 
   Ptr<CsmaChannel>      m_channel;              //!< The CSMA link channel.

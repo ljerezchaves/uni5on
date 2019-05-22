@@ -119,7 +119,7 @@ typedef enum
 } QosType;
 
 // Total number of valid QosType items + 1.
-#define N_QOS_TYPES (static_cast<int> (QosType::BOTH) + 1)
+#define N_QOS_TYPES_BOTH (static_cast<int> (QosType::BOTH) + 1)
 
 /**
  * \ingroup svelte

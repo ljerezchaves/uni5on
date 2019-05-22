@@ -106,7 +106,7 @@ private:
     Ptr<OutputStreamWrapper>  tffWrapper;       //!< FlwStats file wrapper.
 
     /** Flow stats calculator for each traffic direction and QoS type. */
-    Ptr<FlowStatsCalculator>  flowStats [N_DIRECTIONS][N_QOS_TYPES];
+    Ptr<FlowStatsCalculator>  flowStats [N_DIRECTIONS][N_QOS_TYPES_BOTH];
   };
 
   /** Metadata for each network slice. */
