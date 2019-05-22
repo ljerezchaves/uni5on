@@ -67,12 +67,13 @@ static ns3::GlobalValue
 int
 main (int argc, char *argv[])
 {
-  bool        verbose  = false;
-  bool        ofsLog   = false;
+  // Command line arguments.
   bool        lteRem   = false;
+  bool        ofsLog   = false;
   int         pcapCfg  = 0;
   std::string prefix   = std::string ();
   int         progress = 0;
+  bool        verbose  = false;
 
   // Configure some default attribute values. These values can be overridden by
   // users on the command line or in the configuration file.
@@ -80,12 +81,12 @@ main (int argc, char *argv[])
 
   // Parse command line arguments.
   CommandLine cmd;
-  cmd.AddValue ("Verbose",  "Enable verbose output.", verbose);
-  cmd.AddValue ("OfsLog",   "Enable ofsoftswitch13 logs.", ofsLog);
   cmd.AddValue ("LteRem",   "Print LTE radio environment map.", lteRem);
+  cmd.AddValue ("OfsLog",   "Enable ofsoftswitch13 logs.", ofsLog);
   cmd.AddValue ("PcapCfg",  "Configure pcap output.", pcapCfg);
   cmd.AddValue ("Prefix",   "Common prefix for filenames.", prefix);
   cmd.AddValue ("Progress", "Simulation progress interval (sec).", progress);
+  cmd.AddValue ("Verbose",  "Enable verbose output.", verbose);
   cmd.Parse (argc, argv);
 
   // Update input and output prefixes from command line prefix parameter.
