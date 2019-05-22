@@ -37,7 +37,7 @@ NS_LOG_COMPONENT_DEFINE ("Main");
 
 void ConfigureDefaults ();
 void ForceDefaults ();
-void EnableProgress (uint32_t);
+void EnableProgress (int);
 void EnableVerbose (bool);
 void EnableOfsLogs (bool);
 
@@ -71,21 +71,21 @@ main (int argc, char *argv[])
   bool        pcap     = false;
   bool        ofsLog   = false;
   bool        lteRem   = false;
-  uint32_t    progress = 0;
   std::string prefix   = std::string ();
+  int         progress = 0;
 
   // Configure some default attribute values. These values can be overridden by
   // users on the command line or in the configuration file.
   ConfigureDefaults ();
 
-  // Parse command line arguments
+  // Parse command line arguments.
   CommandLine cmd;
   cmd.AddValue ("Verbose",  "Enable verbose output.", verbose);
   cmd.AddValue ("Pcap",     "Enable pcap output.", pcap);
   cmd.AddValue ("OfsLog",   "Enable ofsoftswitch13 logs.", ofsLog);
   cmd.AddValue ("LteRem",   "Print LTE radio environment map.", lteRem);
-  cmd.AddValue ("Progress", "Simulation progress interval (sec).", progress);
   cmd.AddValue ("Prefix",   "Common prefix for filenames.", prefix);
+  cmd.AddValue ("Progress", "Simulation progress interval (sec).", progress);
   cmd.Parse (argc, argv);
 
   // Update input and output prefixes from command line prefix parameter.
@@ -349,7 +349,7 @@ void ForceDefaults ()
 }
 
 void
-EnableProgress (uint32_t interval)
+EnableProgress (int interval)
 {
   if (interval)
     {
