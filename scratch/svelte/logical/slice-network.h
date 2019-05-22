@@ -57,12 +57,15 @@ public:
   static TypeId GetTypeId (void);
 
   /**
-   * Enable PCAP traces on the S/P-GW OpenFlow internal switches (user and
-   * control planes), and on the SGi interface for the Internet network.
-   * \param prefix Filename prefix to use for pcap files.
-   * \param promiscuous If true, enable promisc trace.
+   * Enable PCAP traces on the logical slice network.
+   * \param prefix Filename prefix to use for PCAP files.
+   * \param promiscuous If true, enable PCAP promiscuous traces.
+   * \param ofchannel If true, enable PCAP on backhaul OpenFlow channels.
+   * \param sgiDevices If true, enable PCAP on SGi interfaces (Internet).
+   * \param pgwDevices If true, enable PCAP on P-GW switches.
    */
-  void EnablePcap (std::string prefix, bool promiscuous = false);
+  void EnablePcap (std::string prefix, bool promiscuous, bool ofchannel,
+                   bool sgiDevices, bool pgwDevices);
 
   /**
    * Get the UE nodes.

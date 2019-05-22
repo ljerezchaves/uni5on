@@ -246,17 +246,26 @@ SliceNetwork::GetTypeId (void)
 }
 
 void
-SliceNetwork::EnablePcap (std::string prefix, bool promiscuous)
+SliceNetwork::EnablePcap (std::string prefix, bool promiscuous, bool ofchannel,
+                          bool sgiDevices, bool pgwDevices)
 {
-  NS_LOG_FUNCTION (this << prefix << promiscuous);
+  NS_LOG_FUNCTION (this << prefix << promiscuous << ofchannel <<
+                   sgiDevices << pgwDevices);
 
-  // Enable pcap on OpenFlow channel.
-  m_switchHelper->EnableOpenFlowPcap (prefix + "ofchannel", promiscuous);
+  if (ofchannel)
+    {
+      m_switchHelper->EnableOpenFlowPcap (prefix + "ofchannel", promiscuous);
+    }
 
-  // Enable pcap on CSMA devices.
   CsmaHelper helper;
-  helper.EnablePcap (prefix + "pgw_user", m_pgwIntDevices, promiscuous);
-  helper.EnablePcap (prefix + "internet", m_webDevices, promiscuous);
+  if (sgiDevices)
+    {
+      helper.EnablePcap (prefix + "sgi", m_webDevices, promiscuous);
+    }
+  if (pgwDevices)
+    {
+      helper.EnablePcap (prefix + "pgw", m_pgwIntDevices, promiscuous);
+    }
 }
 
 NodeContainer

@@ -37,7 +37,8 @@ NS_LOG_COMPONENT_DEFINE ("SvelteHelper");
 NS_OBJECT_ENSURE_REGISTERED (SvelteHelper);
 
 SvelteHelper::SvelteHelper ()
-  : m_backhaul (0),
+  : m_pcapConfig (0),
+  m_backhaul (0),
   m_radio (0),
   m_mme (0),
   m_htcController (0),
@@ -118,23 +119,34 @@ SvelteHelper::GetTypeId (void)
 }
 
 void
-SvelteHelper::EnablePcap (std::string prefix, bool promiscuous)
+SvelteHelper::ConfigurePcap (std::string prefix, uint8_t config)
 {
-  NS_LOG_FUNCTION (this << prefix << promiscuous);
+  NS_LOG_FUNCTION (this << prefix);
 
-  // Enable pcap on the infrastructure and logical networks.
-  m_backhaul->EnablePcap (prefix, promiscuous);
+  m_pcapConfig = config;
+  bool promisc = HasPcapFlag (SvelteHelper::PCPROMISC);
+  bool ofpFlag = HasPcapFlag (SvelteHelper::PCSLCOFP);
+  bool sgiFlag = HasPcapFlag (SvelteHelper::PCSLCSGI);
+  bool pgwFlag = HasPcapFlag (SvelteHelper::PCSLCPGW);
+
+  // Enable PCAP on the backhaul network.
+  m_backhaul->EnablePcap (prefix, promisc,
+                          HasPcapFlag (SvelteHelper::PCBACKOFP),
+                          HasPcapFlag (SvelteHelper::PCBACKEPC),
+                          HasPcapFlag (SvelteHelper::PCBACKSWT));
+
+  // Enable PCAP on the logical network slices.
   if (m_htcNetwork)
     {
-      m_htcNetwork->EnablePcap (prefix, promiscuous);
+      m_htcNetwork->EnablePcap (prefix, promisc, ofpFlag, sgiFlag, pgwFlag);
     }
   if (m_mtcNetwork)
     {
-      m_mtcNetwork->EnablePcap (prefix, promiscuous);
+      m_mtcNetwork->EnablePcap (prefix, promisc, ofpFlag, sgiFlag, pgwFlag);
     }
   if (m_tmpNetwork)
     {
-      m_tmpNetwork->EnablePcap (prefix, promiscuous);
+      m_tmpNetwork->EnablePcap (prefix, promisc, ofpFlag, sgiFlag, pgwFlag);
     }
 }
 
@@ -518,6 +530,14 @@ SvelteHelper::NotifyConstructionCompleted (void)
   m_trafficStats    = CreateObject<TrafficStatsCalculator> ();
 
   Object::NotifyConstructionCompleted ();
+}
+
+bool
+SvelteHelper::HasPcapFlag (PcapConfig flag) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return (m_pcapConfig & (static_cast<uint8_t> (flag)));
 }
 
 bool

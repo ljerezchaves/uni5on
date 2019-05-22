@@ -68,9 +68,9 @@ int
 main (int argc, char *argv[])
 {
   bool        verbose  = false;
-  bool        pcap     = false;
   bool        ofsLog   = false;
   bool        lteRem   = false;
+  int         pcapCfg  = 0;
   std::string prefix   = std::string ();
   int         progress = 0;
 
@@ -81,9 +81,9 @@ main (int argc, char *argv[])
   // Parse command line arguments.
   CommandLine cmd;
   cmd.AddValue ("Verbose",  "Enable verbose output.", verbose);
-  cmd.AddValue ("Pcap",     "Enable pcap output.", pcap);
   cmd.AddValue ("OfsLog",   "Enable ofsoftswitch13 logs.", ofsLog);
   cmd.AddValue ("LteRem",   "Print LTE radio environment map.", lteRem);
+  cmd.AddValue ("PcapCfg",  "Configure pcap output.", pcapCfg);
   cmd.AddValue ("Prefix",   "Common prefix for filenames.", prefix);
   cmd.AddValue ("Progress", "Simulation progress interval (sec).", progress);
   cmd.Parse (argc, argv);
@@ -129,6 +129,8 @@ main (int argc, char *argv[])
 
   // Configure SVELTE helper with command line parameters.
   svelteHelper->PrintLteRem (lteRem);
+  svelteHelper->ConfigurePcap (outputPrefix.str (),
+                               static_cast<uint8_t> (pcapCfg));
 
   // Populating routing and ARP tables. The 'perfect' ARP used here comes from
   // the patch at https://www.nsnam.org/bugzilla/show_bug.cgi?id=187. This
@@ -138,12 +140,6 @@ main (int argc, char *argv[])
   // Anyway, I've decided to use this to simplify the controller logic.
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
   ArpCache::PopulateArpCaches ();
-
-  // Enable pcap output.
-  if (pcap)
-    {
-      svelteHelper->EnablePcap (outputPrefix.str (), true);
-    }
 
   // Set stop time and run the simulation.
   std::cout << "Simulating..." << std::endl;

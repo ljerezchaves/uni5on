@@ -57,12 +57,15 @@ public:
   static TypeId GetTypeId (void);
 
   /**
-   * Enable PCAP traces on the OpenFlow backhaul network (user and control
-   * planes), and on LTE EPC devices of S1, S5, and X2 interfaces.
-   * \param prefix Filename prefix to use for pcap files.
-   * \param promiscuous If true, enable promisc trace.
+   * Enable PCAP traces files on the OpenFlow backhaul network.
+   * \param prefix Filename prefix to use for PCAP files.
+   * \param promiscuous If true, enable PCAP promiscuous traces.
+   * \param ofchannel If true, enable PCAP on backhaul OpenFlow channels.
+   * \param epcDevices If true, enable PCAP on EPC S1, S5, and X2 interfaces.
+   * \param swtDevices If true, enable PCAP on backhaul switches.
    */
-  void EnablePcap (std::string prefix, bool promiscuous = false);
+  void EnablePcap (std::string prefix, bool promiscuous, bool ofchannel,
+                   bool epcDevices, bool swtDevices);
 
   /**
    * Attach the EPC node to the OpenFlow backhaul network.

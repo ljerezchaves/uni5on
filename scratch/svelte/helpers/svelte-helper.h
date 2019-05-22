@@ -49,6 +49,19 @@ class TrafficHelper;
 class SvelteHelper : public EpcHelper
 {
 public:
+  /** The reason for any blocked request. */
+  enum PcapConfig
+  {
+    PCSLCOFP  = (1U << 0),  //!< Slice OpenFlow control channels.
+    PCSLCPGW  = (1U << 1),  //!< Slice P-GW internal interfaces.
+    PCSLCSGI  = (1U << 2),  //!< Slice SGi interface (Internet).
+    PCBACKOFP = (1U << 3),  //!< Backhaul OpenFlow control channels.
+    PCBACKEPC = (1U << 4),  //!< Backhaul EPC interfaces.
+    PCBACKSWT = (1U << 5),  //!< Backhaul switches interfaces.
+    PCNOTUSED = (1U << 6),  //!< Flag not being used yet.
+    PCPROMISC = (1U << 7),  //!< Enable promiscuous mode.
+  };
+
   SvelteHelper ();          //!< Default constructor.
   virtual ~SvelteHelper (); //!< Dummy destructor, see DoDispose.
 
@@ -59,11 +72,11 @@ public:
   static TypeId GetTypeId (void);
 
   /**
-   * Enable PCAP traces on the SVELTE infrastructure.
-   * \param prefix Filename prefix to use for pcap files.
-   * \param promiscuous If true, enable promisc trace.
+   * Configure PCAP traces on the SVELTE infrastructure.
+   * \param prefix Filename prefix to use for PCAP files.
+   * \param config The PCAP configuration bitmap.
    */
-  void EnablePcap (std::string prefix, bool promiscuous = false);
+  void ConfigurePcap (std::string prefix, uint8_t config);
 
   /**
    * Print the LTE radio environment map.
@@ -92,6 +105,13 @@ protected:
   // Inherited from ObjectBase.
   virtual void NotifyConstructionCompleted (void);
 
+  /**
+   * Check the PCAP configuration bitmap for the following flag.
+   * \param flag PCAP configuration flag.
+   * \return True if the flag is set in PCAP config bitmap, false otherwise.
+   */
+  bool HasPcapFlag (PcapConfig flag) const;
+
 private:
   /**
    * Check the object factories for proper types.
@@ -109,6 +129,8 @@ private:
    * \return The backhaul switch index.
    */
   uint16_t GetEnbInfraSwIdx (uint16_t cellId);
+
+  uint8_t                   m_pcapConfig;       //!< PCAP configuration bitmap.
 
   Ptr<RingNetwork>          m_backhaul;         //!< The backhaul network.
   Ptr<RadioNetwork>         m_radio;            //!< The LTE RAN network.

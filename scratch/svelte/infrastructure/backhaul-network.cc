@@ -106,17 +106,26 @@ BackhaulNetwork::GetTypeId (void)
 }
 
 void
-BackhaulNetwork::EnablePcap (std::string prefix, bool promiscuous)
+BackhaulNetwork::EnablePcap (std::string prefix, bool promiscuous,
+                             bool ofchannel, bool epcDevices, bool swtDevices)
 {
-  NS_LOG_FUNCTION (this << prefix << promiscuous);
+  NS_LOG_FUNCTION (this << prefix << promiscuous << ofchannel <<
+                   epcDevices << swtDevices);
 
-  // Enable pcap on OpenFlow channel.
-  m_switchHelper->EnableOpenFlowPcap (prefix + "ofchannel", promiscuous);
+  if (ofchannel)
+    {
+      m_switchHelper->EnableOpenFlowPcap (prefix + "ofchannel", promiscuous);
+    }
 
-  // Enable pcap on CSMA devices.
   CsmaHelper helper;
-  helper.EnablePcap (prefix + "epc", m_epcDevices, promiscuous);
-  helper.EnablePcap (prefix + "backhaul", m_switchNodes, promiscuous);
+  if (epcDevices)
+    {
+      helper.EnablePcap (prefix + "epc", m_epcDevices, promiscuous);
+    }
+  if (swtDevices)
+    {
+      helper.EnablePcap (prefix + "swt", m_switchNodes, promiscuous);
+    }
 }
 
 std::pair<Ptr<CsmaNetDevice>, Ptr<OFSwitch13Port> >
