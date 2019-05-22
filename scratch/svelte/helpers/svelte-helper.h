@@ -67,8 +67,9 @@ public:
 
   /**
    * Print the LTE radio environment map.
+   * \param enable If true, print the LTE REM.
    */
-  void PrintLteRem (void);
+  void PrintLteRem (bool enable);
 
   // Inherited from EpcHelper.
   uint8_t ActivateEpsBearer (Ptr<NetDevice> ueLteDevice, uint64_t imsi,

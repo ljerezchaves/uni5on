@@ -127,6 +127,9 @@ main (int argc, char *argv[])
   NS_LOG_INFO ("Creating simulation scenario...");
   Ptr<SvelteHelper> svelteHelper = CreateObject<SvelteHelper> ();
 
+  // Configure SVELTE helper with command line parameters.
+  svelteHelper->PrintLteRem (lteRem);
+
   // Populating routing and ARP tables. The 'perfect' ARP used here comes from
   // the patch at https://www.nsnam.org/bugzilla/show_bug.cgi?id=187. This
   // patch uses a single ARP cache shared among all nodes. Some developers have
@@ -135,12 +138,6 @@ main (int argc, char *argv[])
   // Anyway, I've decided to use this to simplify the controller logic.
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
   ArpCache::PopulateArpCaches ();
-
-  // Print the LTE radio environment map.
-  if (lteRem)
-    {
-      svelteHelper->PrintLteRem ();
-    }
 
   // Enable pcap output.
   if (pcap)

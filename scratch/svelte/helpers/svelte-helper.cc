@@ -139,12 +139,15 @@ SvelteHelper::EnablePcap (std::string prefix, bool promiscuous)
 }
 
 void
-SvelteHelper::PrintLteRem (void)
+SvelteHelper::PrintLteRem (bool enable)
 {
   NS_LOG_FUNCTION (this);
 
   NS_ASSERT_MSG (m_radio, "No LTE radio network available.");
-  m_radio->PrintRadioEnvironmentMap ();
+  if (enable)
+    {
+      m_radio->PrintRadioEnvironmentMap ();
+    }
 }
 
 //
