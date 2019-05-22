@@ -283,34 +283,36 @@ BackhaulController::NotifyEpcAttach (
   // -------------------------------------------------------------------------
   // Input table -- [from higher to lower priority]
   //
+  // IP packets addressed to EPC elements connected to this EPC port.
+  // Write the output port into action set.
+  // Send the packet directly to the output table.
   {
-    // IP packets entering the ring network from this EPC port.
-    // Send the packet to the classification table.
-    std::ostringstream cmd;
-    cmd << "flow-mod cmd=add,prio=64"
-        << ",table="    << INPUT_TAB
-        << ",flags="    << FLAGS_REMOVED_OVERLAP_RESET
-        << " eth_type=" << IPV4_PROT_NUM
-        << ",in_port="  << portNo
-        << " goto:"     << CLASS_TAB;
-    DpctlSchedule (swDev->GetDatapathId (), cmd.str ());
-  }
-
-  // -------------------------------------------------------------------------
-  // Routing table -- [from higher to lower priority]
-  //
-  {
-    // IP packets addressed to EPC elements connected to this EPC port.
-    // Write the output port into action set.
-    // Send the packet directly to the output table.
     std::ostringstream cmd;
     cmd << "flow-mod cmd=add,prio=256"
-        << ",table="        << ROUTE_TAB
+        << ",table="        << INPUT_TAB
         << ",flags="        << FLAGS_REMOVED_OVERLAP_RESET
         << " eth_type="     << IPV4_PROT_NUM
         << ",ip_dst="       << Ipv4AddressHelper::GetAddress (epcDev)
         << " write:output=" << portNo
         << " goto:"         << OUTPT_TAB;
+    DpctlSchedule (swDev->GetDatapathId (), cmd.str ());
+  }
+  //
+  // X2-C packets entering the backhaul network from this EPC port.
+  // Set the DSCP field for Expedited Forwarding.
+  // Send the packet to the classification table.
+  {
+    std::ostringstream cmd;
+    cmd << "flow-mod cmd=add,prio=32"
+        << ",table="                    << INPUT_TAB
+        << ",flags="                    << FLAGS_REMOVED_OVERLAP_RESET
+        << " eth_type="                 << IPV4_PROT_NUM
+        << ",ip_proto="                 << UDP_PROT_NUM
+        << ",udp_src="                  << X2C_PORT
+        << ",udp_dst="                  << X2C_PORT
+        << ",in_port="                  << portNo
+        << " apply:set_field=ip_dscp:"  << Ipv4Header::DSCP_EF
+        << " goto:"                     << CLASS_TAB;
     DpctlSchedule (swDev->GetDatapathId (), cmd.str ());
   }
 }
@@ -508,35 +510,23 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // Input table -- [from higher to lower priority]
   //
   // Entries will be installed here by NotifyEpcAttach function.
+  //
+  // Table miss entry.
+  // Send the packet to the classification table.
   {
-    // IP packets entering the switch from any port, except for those coming
-    // from EPC elements connected to EPC ports (a high-priority match rule was
-    // installed by NotifyEpcAttach function for this case).
-    // Send the packet directly to the routing table.
-    std::ostringstream cmd;
-    cmd << "flow-mod cmd=add,prio=32"
-        << ",table="    << INPUT_TAB
-        << ",flags="    << FLAGS_REMOVED_OVERLAP_RESET
-        << " eth_type=" << IPV4_PROT_NUM
-        << " goto:"     << ROUTE_TAB;
-    DpctlExecute (swtch, cmd.str ());
-  }
-  {
-    // Table miss entry.
-    // Send the packet to the controller.
     std::ostringstream cmd;
     cmd << "flow-mod cmd=add,prio=0"
         << ",table=" << INPUT_TAB
         << ",flags=" << FLAGS_REMOVED_OVERLAP_RESET
-        << " apply:output=ctrl";
+        << " goto:"  << CLASS_TAB;
     DpctlExecute (swtch, cmd.str ());
   }
 
   // -------------------------------------------------------------------------
   // Classification table -- [from higher to lower priority]
   //
-  // GTP-U packets entering the backhaul network. Classify the packet on the
-  // corresponding logical slice based on the GTP-U TEID masked value.
+  // Classify GTP-U packets on the corresponding logical slice using
+  // the GTP-U TEID masked value.
   // Send the packet to the corresponding slice table.
   for (int s = 0; s < SliceId::ALL; s++)
     {
@@ -556,24 +546,8 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
           << " goto:"       << GetSliceTable (slice);
       DpctlExecute (swtch, cmd.str ());
     }
-
-  // X2-C packets entering the backhaul network (identified by the UDP port
-  // number as ns-3 currently offers no support for SCTP protocol). Set the
-  // DSCP field for Expedited Forwarding.
-  // Send the packet directly to the routing table.
-  {
-    std::ostringstream cmd;
-    cmd << "flow-mod cmd=add,prio=32"
-        << ",table="                    << CLASS_TAB
-        << ",flags="                    << FLAGS_REMOVED_OVERLAP_RESET
-        << " eth_type="                 << IPV4_PROT_NUM
-        << ",ip_proto="                 << UDP_PROT_NUM
-        << ",udp_src="                  << X2C_PORT
-        << ",udp_dst="                  << X2C_PORT
-        << " apply:set_field=ip_dscp:"  << Ipv4Header::DSCP_EF
-        << " goto:"                     << ROUTE_TAB;
-    DpctlExecute (swtch, cmd.str ());
-  }
+  //
+  // Entries will be installed here by the topology HandshakeSuccessful.
 
   // -------------------------------------------------------------------------
   // Slice tables (one for each slice) -- [from higher to lower priority]
@@ -581,29 +555,13 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // Entries will be installed here by BearerInstall function.
 
   // -------------------------------------------------------------------------
-  // Routing table -- [from higher to lower priority]
-  //
-  // Entries will be installed here by NotifyEpcAttach function.
-  // Entries will be installed here by NotifyTopologyBuilt function.
-  // Entries will be installed here by the topology HandshakeSuccessful.
-  {
-    // Table miss entry.
-    // Send the packet to the controller.
-    std::ostringstream cmd;
-    cmd << "flow-mod cmd=add,prio=0"
-        << ",table=" << ROUTE_TAB
-        << ",flags=" << FLAGS_REMOVED_OVERLAP_RESET
-        << " apply:output=ctrl";
-    DpctlExecute (swtch, cmd.str ());
-  }
-
-  // -------------------------------------------------------------------------
   // Bandwidth table -- [from higher to lower priority]
   //
   // Entries will be installed here by the topology HandshakeSuccessful.
+  //
+  // Table miss entry.
+  // Send the packet to the output table.
   {
-    // Table miss entry.
-    // Send the packet to the output table.
     std::ostringstream cmd;
     cmd << "flow-mod cmd=add,prio=0"
         << ",table="  << BANDW_TAB
@@ -615,6 +573,9 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // -------------------------------------------------------------------------
   // Output table -- [from higher to lower priority]
   //
+  // Classify IP packets on the corresponding output queue using
+  // the IP DSCP value.
+  // No goto instruction to trigger action set execution.
   if (GetQosQueuesMode () == OpMode::ON)
     {
       // QoS output queues rules.
@@ -630,8 +591,10 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
           DpctlExecute (swtch, cmd.str ());
         }
     }
+  //
+  // Table miss entry.
+  // No goto instruction to trigger action set execution.
   {
-    // Table miss entry. No instructions. This will trigger action set execute.
     std::ostringstream cmd;
     cmd << "flow-mod cmd=add,prio=0"
         << ",table=" << OUTPT_TAB

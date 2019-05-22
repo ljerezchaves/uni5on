@@ -24,9 +24,8 @@
 // Pipeline tables at OpenFlow backhaul switches.
 #define INPUT_TAB 0
 #define CLASS_TAB 1
-#define ROUTE_TAB (static_cast<int> (SliceId::ALL) + 2)
-#define BANDW_TAB (static_cast<int> (SliceId::ALL) + 3)
-#define OUTPT_TAB (static_cast<int> (SliceId::ALL) + 4)
+#define BANDW_TAB (static_cast<int> (SliceId::ALL) + 2)
+#define OUTPT_TAB (static_cast<int> (SliceId::ALL) + 3)
 
 #include <ns3/core-module.h>
 #include <ns3/internet-module.h>

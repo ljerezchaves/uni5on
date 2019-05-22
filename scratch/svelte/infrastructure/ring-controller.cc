@@ -229,6 +229,7 @@ RingController::BearerInstall (Ptr<RoutingInfo> rInfo)
       << ",prio="   << rInfo->GetPriority ()
       << ",idle="   << rInfo->GetTimeout ();
 
+  // Building the DSCP set field instruction.
   std::ostringstream dscp;
   if (rInfo->GetDscpValue ())
     {
@@ -238,60 +239,127 @@ RingController::BearerInstall (Ptr<RoutingInfo> rInfo)
   // Configuring downlink routing.
   if (rInfo->HasDlTraffic ())
     {
-      // Building the match string for both S1-U and S5 interfaces
-      // No match on source IP because we may have several P-GW TFT switches.
+      RingInfo::RingPath s5DownPath = ringInfo->GetDlPath (LteIface::S5);
+      RingInfo::RingPath s1DownPath = ringInfo->GetDlPath (LteIface::S1U);
+
+      // Building the match string for both S1-U and S5 interfaces.
+      // Using GTP TEID to identify the bearer and the IP destination address
+      // to identify the logical interface.
       std::ostringstream mS5, mS1;
-      mS5 << " eth_type="   << IPV4_PROT_NUM
-          << ",ip_proto="   << UDP_PROT_NUM
-          << ",ip_dst="     << rInfo->GetSgwS5Addr ()
-          << ",gtpu_teid="  << rInfo->GetTeidHex ();
-      mS1 << " eth_type="   << IPV4_PROT_NUM
-          << ",ip_proto="   << UDP_PROT_NUM
-          << ",ip_dst="     << rInfo->GetEnbS1uAddr ()
-          << ",gtpu_teid="  << rInfo->GetTeidHex ();
+      mS5 << " eth_type="    << IPV4_PROT_NUM
+          << ",ip_proto="    << UDP_PROT_NUM
+          << ",ip_dst="      << rInfo->GetSgwS5Addr ()
+          << ",gtpu_teid="   << rInfo->GetTeidHex ();
+      mS1 << " eth_type="    << IPV4_PROT_NUM
+          << ",ip_proto="    << UDP_PROT_NUM
+          << ",ip_dst="      << rInfo->GetEnbS1uAddr ()
+          << ",gtpu_teid="   << rInfo->GetTeidHex ();
 
-      // Build the metatada and goto instructions string.
-      std::ostringstream aS5, aS1;
-      aS5 << " meta:" << ringInfo->GetDlPath (LteIface::S5)
-          << " goto:" << ROUTE_TAB;
-      aS1 << " meta:" << ringInfo->GetDlPath (LteIface::S1U)
-          << " goto:" << ROUTE_TAB;
+      // Build the instructions string.
+      std::ostringstream iS5, iS1;
+      iS5 << " write:group=" << s5DownPath
+          << " goto:"        << BANDW_TAB;
+      iS1 << " write:group=" << s1DownPath
+          << " goto:"        << BANDW_TAB;
 
-      // Installing down rules into switches connected to the P-GW and S-GW.
-      DpctlExecute (GetDpId (rInfo->GetPgwInfraSwIdx ()),
-                    cmd.str () + mS5.str () + dscp.str () + aS5.str ());
-      DpctlExecute (GetDpId (rInfo->GetSgwInfraSwIdx ()),
-                    cmd.str () + mS1.str () + dscp.str () + aS1.str ());
+      // Installing down rules for S5 interface (from P-GW to S-GW)
+      if (!ringInfo->IsLocalPath (LteIface::S5))
+        {
+          // Rules for the switch connected to the P-GW with DSCP instruction.
+          uint16_t curr = rInfo->GetPgwInfraSwIdx ();
+          DpctlExecute (GetDpId (curr),
+                        cmd.str () + mS5.str () + dscp.str () + iS5.str ());
+
+          // Rules for other switches without DSCP instruction.
+          curr = NextSwitchIndex (curr, s5DownPath);
+          while (curr != rInfo->GetSgwInfraSwIdx ())
+            {
+              DpctlExecute (GetDpId (curr),
+                            cmd.str () + mS5.str () + iS5.str ());
+              curr = NextSwitchIndex (curr, s5DownPath);
+            }
+        }
+
+      // Installing down rules for S1-U interface (from S-GW to eNB)
+      if (!ringInfo->IsLocalPath (LteIface::S1U))
+        {
+          // Rules for the switch connected to the S-GW with DSCP instruction.
+          uint16_t curr = rInfo->GetSgwInfraSwIdx ();
+          DpctlExecute (GetDpId (curr),
+                        cmd.str () + mS1.str () + dscp.str () + iS1.str ());
+
+          // Rules for other switches without DSCP instruction.
+          curr = NextSwitchIndex (curr, s1DownPath);
+          while (curr != rInfo->GetEnbInfraSwIdx ())
+            {
+              DpctlExecute (GetDpId (curr),
+                            cmd.str () + mS1.str () + iS1.str ());
+              curr = NextSwitchIndex (curr, s1DownPath);
+            }
+        }
     }
 
   // Configuring uplink routing.
   if (rInfo->HasUlTraffic ())
     {
-      // Building the match string.
+      RingInfo::RingPath s1UpPath = ringInfo->GetUlPath (LteIface::S1U);
+      RingInfo::RingPath s5UpPath = ringInfo->GetUlPath (LteIface::S5);
+
+      // Building the match string for both S1-U and S5 interfaces.
+      // Using GTP TEID to identify the bearer and the IP destination address
+      // to identify the logical interface.
       std::ostringstream mS1, mS5;
       mS1 << " eth_type="   << IPV4_PROT_NUM
           << ",ip_proto="   << UDP_PROT_NUM
-          << ",ip_src="     << rInfo->GetEnbS1uAddr ()
           << ",ip_dst="     << rInfo->GetSgwS1uAddr ()
           << ",gtpu_teid="  << rInfo->GetTeidHex ();
       mS5 << " eth_type="   << IPV4_PROT_NUM
           << ",ip_proto="   << UDP_PROT_NUM
-          << ",ip_src="     << rInfo->GetSgwS5Addr ()
           << ",ip_dst="     << rInfo->GetPgwS5Addr ()
           << ",gtpu_teid="  << rInfo->GetTeidHex ();
 
-      // Build the metatada and goto instructions string.
-      std::ostringstream aS1, aS5;
-      aS1 << " meta:" << ringInfo->GetUlPath (LteIface::S1U)
-          << " goto:" << ROUTE_TAB;
-      aS5 << " meta:" << ringInfo->GetUlPath (LteIface::S5)
-          << " goto:" << ROUTE_TAB;
+      // Build the instructions string.
+      std::ostringstream iS1, iS5;
+      iS1 << " write:group=" << s1UpPath
+          << " goto:"        << BANDW_TAB;
+      iS5 << " write:group=" << s5UpPath
+          << " goto:"        << BANDW_TAB;
 
-      // Installing up rules into switches connected to the eNB and S-GW.
-      DpctlExecute (GetDpId (rInfo->GetEnbInfraSwIdx ()),
-                    cmd.str () + mS1.str () + dscp.str () + aS1.str ());
-      DpctlExecute (GetDpId (rInfo->GetSgwInfraSwIdx ()),
-                    cmd.str () + mS5.str () + dscp.str () + aS5.str ());
+      // Installing up rules for S1-U interface (from eNB to S-GW)
+      if (!ringInfo->IsLocalPath (LteIface::S1U))
+        {
+          // Rules for the switch connected to the eNB with DSCP instruction.
+          uint16_t curr = rInfo->GetEnbInfraSwIdx ();
+          DpctlExecute (GetDpId (curr),
+                        cmd.str () + mS1.str () + dscp.str () + iS1.str ());
+
+          // Rules for other switches without DSCP instruction.
+          curr = NextSwitchIndex (curr, s1UpPath);
+          while (curr != rInfo->GetSgwInfraSwIdx ())
+            {
+              DpctlExecute (GetDpId (curr),
+                            cmd.str () + mS1.str () + iS1.str ());
+              curr = NextSwitchIndex (curr, s1UpPath);
+            }
+        }
+
+      // Installing up rules for S5 interface (from S-GW to P-GW)
+      if (!ringInfo->IsLocalPath (LteIface::S5))
+        {
+          // Rules for the switch connected to the S-GW with DSCP instruction.
+          uint16_t curr = rInfo->GetSgwInfraSwIdx ();
+          DpctlExecute (GetDpId (curr),
+                        cmd.str () + mS5.str () + dscp.str () + iS5.str ());
+
+          // Rules for other switches without DSCP instruction.
+          curr = NextSwitchIndex (curr, s5UpPath);
+          while (curr != rInfo->GetPgwInfraSwIdx ())
+            {
+              DpctlExecute (GetDpId (curr),
+                            cmd.str () + mS5.str () + iS5.str ());
+              curr = NextSwitchIndex (curr, s5UpPath);
+            }
+        }
     }
   return true;
 }
@@ -304,6 +372,9 @@ RingController::BearerRemove (Ptr<RoutingInfo> rInfo)
   NS_ASSERT_MSG (rInfo->IsInstalled (), "Rules must be installed.");
   NS_LOG_INFO ("Removing ring rules for teid " << rInfo->GetTeidHex ());
 
+  // Getting ring routing information.
+  Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
+
   // Remove flow entries for this TEID.
   std::ostringstream cmd;
   cmd << "flow-mod cmd=del"
@@ -311,10 +382,21 @@ RingController::BearerRemove (Ptr<RoutingInfo> rInfo)
       << ",cookie="       << rInfo->GetTeidHex ()
       << ",cookie_mask="  << COOKIE_STRICT_MASK_STR;
 
-  // Removing rules from switches connected to the eNB, S-GW and P-GW.
-  DpctlExecute (GetDpId (rInfo->GetPgwInfraSwIdx ()), cmd.str ());
-  DpctlExecute (GetDpId (rInfo->GetSgwInfraSwIdx ()), cmd.str ());
-  DpctlExecute (GetDpId (rInfo->GetEnbInfraSwIdx ()), cmd.str ());
+  // Removing rules from all switches in the path from P-GW to eNB.
+  RingInfo::RingPath downPath = ringInfo->GetDlPath (LteIface::S5);
+  uint16_t curr = rInfo->GetPgwInfraSwIdx ();
+  while (curr != rInfo->GetSgwInfraSwIdx ())
+    {
+      DpctlExecute (GetDpId (curr), cmd.str ());
+      curr = NextSwitchIndex (curr, downPath);
+    }
+  downPath = ringInfo->GetDlPath (LteIface::S1U);
+  while (curr != rInfo->GetEnbInfraSwIdx ())
+    {
+      DpctlExecute (GetDpId (curr), cmd.str ());
+      curr = NextSwitchIndex (curr, downPath);
+    }
+  DpctlExecute (GetDpId (curr), cmd.str ());
 
   return true;
 }
@@ -323,6 +405,9 @@ bool
 RingController::BearerUpdate (Ptr<RoutingInfo> rInfo, Ptr<EnbInfo> dstEnbInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
+
+  // FIXME
+  NS_ABORT_MSG ("This method is not working yet.");
 
   NS_ASSERT_MSG (rInfo->IsInstalled (), "Rules must be installed.");
   NS_ASSERT_MSG (rInfo->GetEnbCellId () != dstEnbInfo->GetCellId (),
@@ -373,9 +458,9 @@ RingController::BearerUpdate (Ptr<RoutingInfo> rInfo, Ptr<EnbInfo> dstEnbInfo)
         // Build the metatada and goto instructions string.
         std::ostringstream aS5, aS1;
         aS5 << " meta:" << ringInfo->GetDlPath (LteIface::S5)
-            << " goto:" << ROUTE_TAB;
+            << " goto:" << BANDW_TAB;
         aS1 << " meta:" << ringInfo->GetDlPath (LteIface::S1U)
-            << " goto:" << ROUTE_TAB;
+            << " goto:" << BANDW_TAB;
 
         // Installing down rules into switches connected to the P-GW and S-GW.
         DpctlExecute (GetDpId (rInfo->GetPgwInfraSwIdx ()),
@@ -403,9 +488,9 @@ RingController::BearerUpdate (Ptr<RoutingInfo> rInfo, Ptr<EnbInfo> dstEnbInfo)
         // Build the metatada and goto instructions string.
         std::ostringstream aS1, aS5;
         aS1 << " meta:" << ringInfo->GetUlPath (LteIface::S1U)
-            << " goto:" << ROUTE_TAB;
+            << " goto:" << BANDW_TAB;
         aS5 << " meta:" << ringInfo->GetUlPath (LteIface::S5)
-            << " goto:" << ROUTE_TAB;
+            << " goto:" << BANDW_TAB;
 
         // Installing up rules into switches connected to the eNB and S-GW.
         DpctlExecute (GetDpId (dstEnbInfo->GetInfraSwIdx ()),  // Target eNB
@@ -509,11 +594,9 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices)
   // Create the spanning tree for this topology.
   CreateSpanningTree ();
 
+  // Iterate over links configuring the ring routing groups.
   // The following commands works as LINKS ARE CREATED IN CLOCKWISE DIRECTION.
-  // Do not merge the two following loops. Groups must be created first to
-  // avoid OpenFlow error messages with BAD_OUT_GROUP code.
-
-  // Iterate over links configuring the groups.
+  // Groups must be created first to avoid OpenFlow BAD_OUT_GROUP error code.
   for (auto const &lInfo : LinkInfo::GetList ())
     {
       // ---------------------------------------------------------------------
@@ -535,51 +618,6 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices)
         DpctlSchedule (lInfo->GetSwDpId (1), cmd.str ());
       }
     }
-
-  // Iterate over links configuring the forwarding rules.
-  for (auto const &lInfo : LinkInfo::GetList ())
-    {
-      // ---------------------------------------------------------------------
-      // Routing table -- [from higher to lower priority]
-      //
-      // IP packets being forwarded by this switch, except for those addressed
-      // to EPC elements connected to EPC ports (a high-priority match rule was
-      // installed by NotifyEpcAttach function for this case) and for those
-      // just classified by the corresponding slice table (a high-priority
-      // match rule was installed by HandshakeSuccessful function for this
-      // case). Write the output group into action set based on the input port,
-      // forwarding the packet in the same ring direction so it can reach the
-      // destination switch. Write the same group number into metadata field.
-      // Send the packet to the bandwidth table.
-      {
-        // Counterclockwise packet forwarding.
-        std::ostringstream cmd;
-        cmd << "flow-mod cmd=add,prio=64"
-            << ",table="        << ROUTE_TAB
-            << ",flags="        << FLAGS_REMOVED_OVERLAP_RESET
-            << " eth_type="     << IPV4_PROT_NUM
-            << ",meta=0x0"
-            << ",in_port="      << lInfo->GetPortNo (0)
-            << " write:group="  << RingInfo::COUNTER
-            << " meta:"         << RingInfo::COUNTER
-            << " goto:"         << BANDW_TAB;
-        DpctlSchedule (lInfo->GetSwDpId (0), cmd.str ());
-      }
-      {
-        // Clockwise packet forwarding.
-        std::ostringstream cmd;
-        cmd << "flow-mod cmd=add,prio=64"
-            << ",table="        << ROUTE_TAB
-            << ",flags="        << FLAGS_REMOVED_OVERLAP_RESET
-            << " eth_type="     << IPV4_PROT_NUM
-            << ",meta=0x0"
-            << ",in_port="      << lInfo->GetPortNo (1)
-            << " write:group="  << RingInfo::CLOCK
-            << " meta:"         << RingInfo::CLOCK
-            << " goto:"         << BANDW_TAB;
-        DpctlSchedule (lInfo->GetSwDpId (1), cmd.str ());
-      }
-    }
 }
 
 void
@@ -588,52 +626,23 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   NS_LOG_FUNCTION (this << swtch);
 
   // -------------------------------------------------------------------------
-  // Routing table -- [from higher to lower priority]
+  // Classification table -- [from higher to lower priority]
   //
-  // IP packets being forwarded by this switch, except for those addressed to
-  // EPC elements connected to EPC ports (a high-priority match rule was
-  // installed by NotifyEpcAttach function for this case). These packets were
-  // classified by the corresponding slice table and the metadata field has now
-  // the necessary information for the routing decision. Write the output group
-  // into action set based on metadata field.
-  // Send the packet to the bandwidth table.
-  {
-    std::ostringstream cmd;
-    cmd << "flow-mod cmd=add,prio=128"
-        << ",table="        << ROUTE_TAB
-        << ",flags="        << FLAGS_REMOVED_OVERLAP_RESET
-        << " eth_type="     << IPV4_PROT_NUM
-        << ",meta="         << RingInfo::CLOCK
-        << " write:group="  << RingInfo::CLOCK
-        << " goto:"         << BANDW_TAB;
-    DpctlExecute (swtch, cmd.str ());
-  }
-  {
-    std::ostringstream cmd;
-    cmd << "flow-mod cmd=add,prio=128"
-        << ",table="        << ROUTE_TAB
-        << ",flags="        << FLAGS_REMOVED_OVERLAP_RESET
-        << " eth_type="     << IPV4_PROT_NUM
-        << ",meta="         << RingInfo::COUNTER
-        << " write:group="  << RingInfo::COUNTER
-        << " goto:"         << BANDW_TAB;
-    DpctlExecute (swtch, cmd.str ());
-  }
-
-  // X2-C packets entering the backhaul network at this switch. Route the
-  // packet in the clockwise direction.
+  // Skip slice classification for X2-C packets, routing them always in the
+  // clockwise direction.
+  // Write the output group into action set.
   // Send the packet directly to the output table.
   {
     std::ostringstream cmd;
     cmd << "flow-mod cmd=add,prio=32"
-        << ",table="        << ROUTE_TAB
-        << ",flags="        << FLAGS_REMOVED_OVERLAP_RESET
-        << " eth_type="     << IPV4_PROT_NUM
-        << ",ip_proto="     << UDP_PROT_NUM
-        << ",udp_src="      << X2C_PORT
-        << ",udp_dst="      << X2C_PORT
-        << " write:group="  << RingInfo::CLOCK
-        << " goto:"         << OUTPT_TAB;
+        << ",table="                    << CLASS_TAB
+        << ",flags="                    << FLAGS_REMOVED_OVERLAP_RESET
+        << " eth_type="                 << IPV4_PROT_NUM
+        << ",ip_proto="                 << UDP_PROT_NUM
+        << ",udp_src="                  << X2C_PORT
+        << ",udp_dst="                  << X2C_PORT
+        << " write:group="              << RingInfo::CLOCK
+        << " goto:"                     << OUTPT_TAB;
     DpctlExecute (swtch, cmd.str ());
   }
 
@@ -1047,6 +1056,9 @@ RingController::SlicingMeterApply (Ptr<const RemoteSwitch> swtch,
 {
   NS_LOG_FUNCTION (this << swtch << slice);
 
+  // -------------------------------------------------------------------------
+  // Bandwidth table -- [from higher to lower priority]
+  //
   // Build the command string.
   // Using a low-priority rule for ALL slice.
   std::ostringstream cmd;
