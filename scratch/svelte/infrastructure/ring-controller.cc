@@ -625,6 +625,9 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 {
   NS_LOG_FUNCTION (this << swtch);
 
+  // Get the OpenFlow switch datapath ID.
+  uint64_t swDpId = swtch->GetDpId ();
+
   // -------------------------------------------------------------------------
   // Classification table -- [from higher to lower priority]
   //
@@ -643,7 +646,7 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
         << ",udp_dst="                  << X2C_PORT
         << " write:group="              << RingInfo::CLOCK
         << " goto:"                     << OUTPT_TAB;
-    DpctlExecute (swtch, cmd.str ());
+    DpctlExecute (swDpId, cmd.str ());
   }
 
   // -------------------------------------------------------------------------
@@ -1056,6 +1059,9 @@ RingController::SlicingMeterApply (Ptr<const RemoteSwitch> swtch,
 {
   NS_LOG_FUNCTION (this << swtch << slice);
 
+  // Get the OpenFlow switch datapath ID.
+  uint64_t swDpId = swtch->GetDpId ();
+
   // -------------------------------------------------------------------------
   // Bandwidth table -- [from higher to lower priority]
   //
@@ -1099,7 +1105,7 @@ RingController::SlicingMeterApply (Ptr<const RemoteSwitch> swtch,
           act << " meter:"      << meterId
               << " goto:"       << OUTPT_TAB;
 
-          DpctlExecute (swtch, cmd.str () + mtc.str () + act.str ());
+          DpctlExecute (swDpId, cmd.str () + mtc.str () + act.str ());
         }
     }
 }

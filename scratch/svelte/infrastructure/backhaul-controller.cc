@@ -517,6 +517,9 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 {
   NS_LOG_FUNCTION (this << swtch);
 
+  // Get the OpenFlow switch datapath ID.
+  uint64_t swDpId = swtch->GetDpId ();
+
   // For the switches on the backhaul network, install following rules:
   // -------------------------------------------------------------------------
   // Input table -- [from higher to lower priority]
@@ -531,7 +534,7 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
         << ",table=" << INPUT_TAB
         << ",flags=" << FLAGS_REMOVED_OVERLAP_RESET
         << " goto:"  << CLASS_TAB;
-    DpctlExecute (swtch, cmd.str ());
+    DpctlExecute (swDpId, cmd.str ());
   }
 
   // -------------------------------------------------------------------------
@@ -556,7 +559,7 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
           << ",gtpu_teid="  << (sliceMasked & TEID_SLICE_MASK)
           << "/"            << TEID_SLICE_MASK
           << " goto:"       << GetSliceTable (slice);
-      DpctlExecute (swtch, cmd.str ());
+      DpctlExecute (swDpId, cmd.str ());
     }
   //
   // Entries will be installed here by the topology HandshakeSuccessful.
@@ -579,7 +582,7 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
         << ",table="  << BANDW_TAB
         << ",flags="  << FLAGS_REMOVED_OVERLAP_RESET
         << " goto:"   << OUTPT_TAB;
-    DpctlExecute (swtch, cmd.str ());
+    DpctlExecute (swDpId, cmd.str ());
   }
 
   // -------------------------------------------------------------------------
@@ -600,7 +603,7 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
               << " eth_type="     << IPV4_PROT_NUM
               << ",ip_dscp="      << static_cast<uint16_t> (it.first)
               << " write:queue="  << static_cast<uint32_t> (it.second);
-          DpctlExecute (swtch, cmd.str ());
+          DpctlExecute (swDpId, cmd.str ());
         }
     }
   //
@@ -611,7 +614,7 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
     cmd << "flow-mod cmd=add,prio=0"
         << ",table=" << OUTPT_TAB
         << ",flags=" << FLAGS_REMOVED_OVERLAP_RESET;
-    DpctlExecute (swtch, cmd.str ());
+    DpctlExecute (swDpId, cmd.str ());
   }
 }
 
