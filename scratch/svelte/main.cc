@@ -64,6 +64,12 @@ static ns3::GlobalValue
              ns3::TimeValue (Seconds (0)),
              ns3::MakeTimeChecker ());
 
+// Flag for error messages at the stderr stream.
+static ns3::GlobalValue
+  g_seeLogs ("SeeCerr", "Tell user to check the stderr stream.",
+             ns3::BooleanValue (false),
+             ns3::MakeBooleanChecker ());
+
 int
 main (int argc, char *argv[])
 {
@@ -157,8 +163,16 @@ main (int argc, char *argv[])
   Simulator::Destroy ();
   svelteHelper->Dispose ();
   svelteHelper = 0;
-  std::cout << "END OK" << std::endl;
 
+  // Print the final status message.
+  BooleanValue cerrValue;
+  GlobalValue::GetValueByName ("SeeCerr", cerrValue);
+  std::cout << "END OK";
+  if (cerrValue.Get ())
+    {
+      std::cout << " - WITH ERRORS" << std::endl;
+    }
+  std::cout << std::endl;
   return 0;
 }
 

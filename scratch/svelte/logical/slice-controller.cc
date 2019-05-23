@@ -608,7 +608,14 @@ SliceController::HandleError (
   // All handlers must free the message when everything is ok.
   ofl_msg_free ((struct ofl_msg_header*)msg, 0);
 
-  NS_ABORT_MSG ("OpenFlow error message: " << msgStr);
+  // Logging this error message on the standard error stream and continue.
+  Config::SetGlobal ("SeeCerr", BooleanValue (true));
+  std::cerr << Simulator::Now ().GetSeconds ()
+            << " Slice " << SliceIdStr (GetSliceId ())
+            << " controller received message xid " << xid
+            << " from switch id " << swtch->GetDpId ()
+            << " with error message: " << msgStr
+            << std::endl;
   return 0;
 }
 
@@ -645,9 +652,8 @@ SliceController::HandleFlowRemoved (
       return 0;
     }
 
-  // 2) The application is running and the bearer is active, but the
-  // application has already been stopped since last rule installation. In this
-  // case, the bearer priority should have been increased to avoid conflicts.
+  // 2) The application is running and the bearer is active, but the bearer
+  // priority was increased and this removed flow rule is an old one.
   if (rInfo->GetPriority () > prio)
     {
       NS_LOG_INFO ("Rule removed from switch dp " << swtch->GetDpId () <<
@@ -656,9 +662,10 @@ SliceController::HandleFlowRemoved (
       return 0;
     }
 
-  // 3) The application is running and the bearer is active. This is the
-  // critical situation. For some reason, the traffic absence lead to flow
-  // expiration, and we are going to abort the program to avoid wrong results.
+  // 3) The application is running, the bearer is active, and the bearer
+  // priority is the same of the removed rule. This is a critical situation!
+  // For some reason, the flow rule was removed so we are going to abort the
+  // program to avoid wrong results.
   NS_ASSERT_MSG (rInfo->GetPriority () == prio, "Invalid flow priority.");
   NS_ABORT_MSG ("Rule removed for active bearer. " <<
                 "OpenFlow flow removed message: " << msgStr);
@@ -680,7 +687,14 @@ SliceController::HandlePacketIn (
   // All handlers must free the message when everything is ok.
   ofl_msg_free ((struct ofl_msg_header*)msg, 0);
 
-  NS_ABORT_MSG ("OpenFlow packet in message: " << msgStr);
+  // Logging this packet-in message on the standard error stream and continue.
+  Config::SetGlobal ("SeeCerr", BooleanValue (true));
+  std::cerr << Simulator::Now ().GetSeconds ()
+            << " Slice " << SliceIdStr (GetSliceId ())
+            << " controller received message xid " << xid
+            << " from switch id " << swtch->GetDpId ()
+            << " with packet-in message: " << msgStr
+            << std::endl;
   return 0;
 }
 
