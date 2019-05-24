@@ -99,8 +99,8 @@ CustomController::NotifyClient (uint32_t portNo, Ipv4Address ipAddr)
   cmd2 << "flow-mod cmd=add,prio=64,table=0"
        << " eth_type=0x800,in_port=" << portNo
        << " goto:2";
-  DpctlSchedule (m_switchDevice->GetDatapathId (), cmd1.str ());
-  DpctlSchedule (m_switchDevice->GetDatapathId (), cmd2.str ());
+  DpctlExecute (m_switchDevice->GetDatapathId (), cmd1.str ());
+  DpctlExecute (m_switchDevice->GetDatapathId (), cmd2.str ());
 }
 
 void
@@ -115,8 +115,8 @@ CustomController::NotifyServer (uint32_t portNo, Ipv4Address ipAddr)
   cmd2 << "flow-mod cmd=add,prio=64,table=0"
        << " eth_type=0x800,in_port=" << portNo
        << " goto:1";
-  DpctlSchedule (m_switchDevice->GetDatapathId (), cmd1.str ());
-  DpctlSchedule (m_switchDevice->GetDatapathId (), cmd2.str ());
+  DpctlExecute (m_switchDevice->GetDatapathId (), cmd1.str ());
+  DpctlExecute (m_switchDevice->GetDatapathId (), cmd2.str ());
 }
 
 void

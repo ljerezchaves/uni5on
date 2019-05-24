@@ -442,7 +442,7 @@ SliceController::NotifyPgwAttach (
         << ",ip_dst="   << Ipv4AddressHelper::GetAddress (webSgiDev)
         << " write:set_field=eth_dst:" << webMac
         << ",output="   << pgwInfo->GetMainSgiPortNo ();
-    DpctlSchedule (pgwInfo->GetMainDpId (), cmd.str ());
+    DpctlExecute (pgwInfo->GetMainDpId (), cmd.str ());
   }
   {
     // IP packets coming from the Internet (P-GW SGi port) and addressed to the
@@ -458,7 +458,7 @@ SliceController::NotifyPgwAttach (
         << ",ip_dst="   << m_ueAddr
         << "/"          << m_ueMask.GetPrefixLength ()
         << " goto:"     << pgwInfo->GetCurLevel () + 1;
-    DpctlSchedule (pgwInfo->GetMainDpId (), cmd.str ());
+    DpctlExecute (pgwInfo->GetMainDpId (), cmd.str ());
   }
 
   // -------------------------------------------------------------------------
@@ -480,7 +480,7 @@ SliceController::NotifyPgwAttach (
               << ",ip_dst=0.0.0." << tftIdx - 1
               << "/0.0.0."        << ipMask
               << " apply:output=" << pgwInfo->GetMainToTftPortNo (tftIdx);
-          DpctlSchedule (pgwInfo->GetMainDpId (), cmd.str ());
+          DpctlExecute (pgwInfo->GetMainDpId (), cmd.str ());
         }
     }
 
@@ -517,7 +517,7 @@ SliceController::NotifySgwAttach (Ptr<SgwInfo> sgwInfo)
         << ",ip_dst="   << m_ueAddr
         << "/"          << m_ueMask.GetPrefixLength ()
         << " goto:1";
-    DpctlSchedule (sgwInfo->GetDpId (), cmd.str ());
+    DpctlExecute (sgwInfo->GetDpId (), cmd.str ());
   }
   {
     // IP packets coming from the eNB (S-GW S1-U port) and addressed to the
@@ -532,7 +532,7 @@ SliceController::NotifySgwAttach (Ptr<SgwInfo> sgwInfo)
         << ",ip_dst="   << m_webAddr
         << "/"          << m_webMask.GetPrefixLength ()
         << " goto:2";
-    DpctlSchedule (sgwInfo->GetDpId (), cmd.str ());
+    DpctlExecute (sgwInfo->GetDpId (), cmd.str ());
   }
 
   // -------------------------------------------------------------------------
@@ -979,6 +979,7 @@ SliceController::PgwTftLoadBalancing (void)
       rand->SetAttribute ("Min", DoubleValue (0));
       rand->SetAttribute ("Max", DoubleValue (250));
 
+      // FIXME Instalar antes de remover pode causa sobrecarga temporaria?
       // Identify and move bearers to the correct P-GW TFT switches.
       uint16_t futureTfts = 1 << nextLevel;
       for (uint16_t currIdx = 1; currIdx <= m_pgwInfo->GetCurTfts (); currIdx++)

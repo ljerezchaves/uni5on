@@ -295,7 +295,7 @@ BackhaulController::NotifyEpcAttach (
         << ",ip_dst="       << Ipv4AddressHelper::GetAddress (epcDev)
         << " write:output=" << portNo
         << " goto:"         << OUTPT_TAB;
-    DpctlSchedule (swDev->GetDatapathId (), cmd.str ());
+    DpctlExecute (swDev->GetDatapathId (), cmd.str ());
   }
   //
   // X2-C packets entering the backhaul network from this EPC port.
@@ -313,7 +313,7 @@ BackhaulController::NotifyEpcAttach (
         << ",in_port="                  << portNo
         << " apply:set_field=ip_dscp:"  << Ipv4Header::DSCP_EF
         << " goto:"                     << CLASS_TAB;
-    DpctlSchedule (swDev->GetDatapathId (), cmd.str ());
+    DpctlExecute (swDev->GetDatapathId (), cmd.str ());
   }
 }
 
@@ -917,7 +917,7 @@ BackhaulController::SlicingMeterInstall (Ptr<LinkInfo> lInfo, SliceId slice)
           << ",flags="      << OFPMF_KBPS
           << ",meter="      << meterId
           << " drop:rate="  << meterKbps;
-      DpctlSchedule (lInfo->GetSwDpId (d), cmd.str ());
+      DpctlExecute (lInfo->GetSwDpId (d), cmd.str ());
     }
 }
 

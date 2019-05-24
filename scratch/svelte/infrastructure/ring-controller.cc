@@ -608,14 +608,14 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices)
         std::ostringstream cmd;
         cmd << "group-mod cmd=add,type=ind,group="    << RingInfo::CLOCK
             << " weight=0,port=any,group=any output=" << lInfo->GetPortNo (0);
-        DpctlSchedule (lInfo->GetSwDpId (0), cmd.str ());
+        DpctlExecute (lInfo->GetSwDpId (0), cmd.str ());
       }
       {
         // Routing group for counterclockwise packet forwarding.
         std::ostringstream cmd;
         cmd << "group-mod cmd=add,type=ind,group="    << RingInfo::COUNTER
             << " weight=0,port=any,group=any output=" << lInfo->GetPortNo (1);
-        DpctlSchedule (lInfo->GetSwDpId (1), cmd.str ());
+        DpctlExecute (lInfo->GetSwDpId (1), cmd.str ());
       }
     }
 }
@@ -973,7 +973,7 @@ RingController::CreateSpanningTree (void)
         << " port=" << lInfo->GetPortNo (0)
         << ",addr=" << lInfo->GetPortAddr (0)
         << ",conf=0x00000020,mask=0x00000020";
-    DpctlSchedule (lInfo->GetSwDpId (0), cmd.str ());
+    DpctlExecute (lInfo->GetSwDpId (0), cmd.str ());
   }
   {
     std::ostringstream cmd;
@@ -981,7 +981,7 @@ RingController::CreateSpanningTree (void)
         << " port=" << lInfo->GetPortNo (1)
         << ",addr=" << lInfo->GetPortAddr (1)
         << ",conf=0x00000020,mask=0x00000020";
-    DpctlSchedule (lInfo->GetSwDpId (1), cmd.str ());
+    DpctlExecute (lInfo->GetSwDpId (1), cmd.str ());
   }
 }
 
