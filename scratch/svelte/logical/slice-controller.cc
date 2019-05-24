@@ -411,12 +411,12 @@ SliceController::NotifyPgwAttach (
   switch (GetPgwTftLoadBal ())
     {
     case OpMode::ON:
-    case OpMode::AUTO:
       {
         pgwInfo->SetTftLevel (pgwInfo->GetMaxLevel ());
         break;
       }
     case OpMode::OFF:
+    case OpMode::AUTO:
       {
         pgwInfo->SetTftLevel (0);
         break;
