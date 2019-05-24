@@ -206,6 +206,14 @@ protected:
   // Inherited from ObjectBase.
   virtual void NotifyConstructionCompleted (void);
 
+  /**
+   * Schedule a dpctl command to be executed after a delay.
+   * \param delay The relative execution time for this command.
+   * \param dpId The OpenFlow datapath ID.
+   * \param textCmd The dpctl command to be executed.
+   */
+  void DpctlSchedule (Time delay, uint64_t dpId, const std::string textCmd);
+
   // Inherited from OFSwitch13Controller.
   virtual ofl_err HandleError (
     struct ofl_msg_error *msg, Ptr<const RemoteSwitch> swtch,

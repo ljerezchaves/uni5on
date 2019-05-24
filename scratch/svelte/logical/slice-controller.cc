@@ -715,6 +715,16 @@ SliceController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   DpctlExecute (swDpId, cmd.str ());
 }
 
+void
+SliceController::DpctlSchedule (Time delay, uint64_t dpId,
+                                const std::string textCmd)
+{
+  NS_LOG_FUNCTION (this << delay << dpId << textCmd);
+
+  Simulator::Schedule (delay, &SliceController::DpctlExecute,
+                       this, dpId, textCmd);
+}
+
 bool
 SliceController::BearerInstall (Ptr<RoutingInfo> rInfo)
 {

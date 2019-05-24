@@ -188,6 +188,16 @@ BackhaulController::NotifyConstructionCompleted (void)
   OFSwitch13Controller::NotifyConstructionCompleted ();
 }
 
+void
+BackhaulController::DpctlSchedule (Time delay, uint64_t dpId,
+                                   const std::string textCmd)
+{
+  NS_LOG_FUNCTION (this << delay << dpId << textCmd);
+
+  Simulator::Schedule (delay, &BackhaulController::DpctlExecute,
+                       this, dpId, textCmd);
+}
+
 double
 BackhaulController::GetFlowTableUse (uint16_t idx, uint8_t tableId) const
 {

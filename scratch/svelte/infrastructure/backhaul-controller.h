@@ -149,6 +149,14 @@ protected:
                              Ptr<EnbInfo> dstEnbInfo) = 0;
 
   /**
+   * Schedule a dpctl command to be executed after a delay.
+   * \param delay The relative execution time for this command.
+   * \param dpId The OpenFlow datapath ID.
+   * \param textCmd The dpctl command to be executed.
+   */
+  void DpctlSchedule (Time delay, uint64_t dpId, const std::string textCmd);
+
+  /**
    * Get the pipeline flow table usage for the given backhaul switch index
    * and pipeline flow table ID.
    * \param idx The switch index.
