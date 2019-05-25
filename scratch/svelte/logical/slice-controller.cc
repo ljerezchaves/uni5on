@@ -989,7 +989,6 @@ SliceController::PgwTftLoadBalancing (void)
       rand->SetAttribute ("Min", DoubleValue (0));
       rand->SetAttribute ("Max", DoubleValue (250));
 
-      // FIXME Instalar antes de remover pode causa sobrecarga temporaria?
       // Identify and move bearers to the correct P-GW TFT switches.
       uint16_t futureTfts = 1 << nextLevel;
       for (uint16_t currIdx = 1; currIdx <= m_pgwInfo->GetCurTfts (); currIdx++)
