@@ -903,22 +903,21 @@ SliceController::DoModifyBearerRequest (
       res.bearerContextsModified.push_back (bearerContext);
     }
 
-  // Iterate over routing infos and update OpenFlow rules for active bearers.
+  // Iterate over routing infos and update bearers.
   for (auto const &rit : ueInfo->GetRoutingInfoMap ())
     {
+      // Each slice has a single P-GW and S-GW, so handover only changes the
+      // eNB. Thus, we only need to modify the S-GW and backhaul S1-U rules.
+      // The update methods must check for installed rules and update them with
+      // new high-priority OpenFlow entries.
       Ptr<RoutingInfo> rInfo = rit.second;
-      if (rInfo->IsInstalled ())
-        {
-          // Increasing the priority every time we update routing rules.
-          rInfo->IncreasePriority ();
+      bool success = true;
+      success &= SgwRulesUpdate (rInfo, dstEnbInfo);
+      success &= m_backhaulCtrl->BearerUpdate (rInfo, dstEnbInfo);
+      NS_ASSERT_MSG (success, "Error when updading bearers after handover.");
 
-          // Each slice has a single P-GW and S-GW, so handover only changes
-          // the eNB. Thus, we need to modify the S-GW and backhaul S1-U rules.
-          bool success = true;
-          success &= SgwRulesUpdate (rInfo, dstEnbInfo);
-          success &= m_backhaulCtrl->BearerUpdate (rInfo, dstEnbInfo);
-          NS_ASSERT_MSG (success, "Error in OpenFlow rules after handover.");
-        }
+      // Increase the routing priority (only after updating OpenFlow rules).
+      rInfo->IncreasePriority ();
     }
 
   // Finally, update the UE's eNB info (only after updating OpenFlow rules).
@@ -1418,16 +1417,12 @@ SliceController::SgwRulesUpdate (Ptr<RoutingInfo> rInfo,
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
-  NS_ASSERT_MSG (rInfo->IsInstalled (), "Rules must be installed.");
   NS_LOG_INFO ("Updating S-GW S1-U rules for teid " << rInfo->GetTeidHex ());
 
-  // We will install new rules using the rInfo with higher priority and the
-  // dstEnbInfo, and then we will remove the old rules with lower priority.
-  //
-  // We only need to change the S1-U interface in the downlink direction.
-  if (rInfo->HasDlTraffic ())
+  // We only need to update S1-U installed rules in the downlink direction.
+  if (rInfo->IsInstalled () && rInfo->HasDlTraffic ())
     {
-      // Install new high-priority OpenFlow rules.
+      // Install new high-priority OpenFlow rules to the target eNB.
       {
         // Build the dpctl command string.
         std::ostringstream cmd, act;
@@ -1435,7 +1430,7 @@ SliceController::SgwRulesUpdate (Ptr<RoutingInfo> rInfo,
             << ",table="  << SGW_DL_TAB
             << ",flags="  << FLAGS_REMOVED_OVERLAP_RESET
             << ",cookie=" << rInfo->GetTeidHex ()
-            << ",prio="   << rInfo->GetPriority ()
+            << ",prio="   << rInfo->GetPriority () + 1 // High priority!
             << ",idle="   << rInfo->GetTimeout ();
 
         // Instruction: apply action: set tunnel ID, output port.
@@ -1488,7 +1483,6 @@ SliceController::SgwRulesUpdate (Ptr<RoutingInfo> rInfo,
       }
 
       // Remove old low-priority OpenFlow rules.
-      NS_ASSERT_MSG (rInfo->GetPriority () > 0, "Invalid zero priority.");
       {
         // Build the dpctl command string.
         std::ostringstream cmd;
@@ -1496,7 +1490,7 @@ SliceController::SgwRulesUpdate (Ptr<RoutingInfo> rInfo,
             << ",table="  << SGW_DL_TAB
             << ",flags="  << FLAGS_REMOVED_OVERLAP_RESET
             << ",cookie=" << rInfo->GetTeidHex ()
-            << ",prio="   << rInfo->GetPriority () - 1 // Old priority!
+            << ",prio="   << rInfo->GetPriority () // Low priority!
             << ",idle="   << rInfo->GetTimeout ();
 
         // Remove the downlink dedicated bearer rule for each packet filter.
@@ -1521,7 +1515,8 @@ SliceController::SgwRulesUpdate (Ptr<RoutingInfo> rInfo,
                     mat << ",ip_src="  << filter.remoteAddress
                         << ",tcp_src=" << filter.remotePortStart;
                   }
-                DpctlExecute (rInfo->GetSgwDpId (), cmd.str () + mat.str ());
+                DpctlSchedule (MilliSeconds (250), rInfo->GetSgwDpId (),
+                               cmd.str () + mat.str ());
               }
 
             // Remove rules for UDP traffic.
@@ -1536,7 +1531,8 @@ SliceController::SgwRulesUpdate (Ptr<RoutingInfo> rInfo,
                     mat << ",ip_src="  << filter.remoteAddress
                         << ",udp_src=" << filter.remotePortStart;
                   }
-                DpctlExecute (rInfo->GetSgwDpId (), cmd.str () + mat.str ());
+                DpctlSchedule (MilliSeconds (250), rInfo->GetSgwDpId (),
+                               cmd.str () + mat.str ());
               }
           }
       }
