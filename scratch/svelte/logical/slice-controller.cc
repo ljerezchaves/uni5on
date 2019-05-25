@@ -1001,7 +1001,8 @@ SliceController::PgwTftLoadBalancing (void)
               uint16_t destIdx = GetTftIdx (rInfo, futureTfts);
               if (destIdx != currIdx)
                 {
-                  NS_LOG_INFO ("Move bearer teid " << (rInfo)->GetTeidHex ());
+                  NS_LOG_INFO ("Move bearer teid " << (rInfo)->GetTeidHex () <<
+                               " from TFT " << currIdx << " to " << destIdx);
                   Simulator::Schedule (MilliSeconds (rand->GetInteger ()),
                                        &SliceController::PgwRulesInstall,
                                        this, rInfo, destIdx, true);
@@ -1023,11 +1024,7 @@ SliceController::PgwTftLoadBalancing (void)
           << ",ip_dst="   << m_ueAddr
           << "/"          << m_ueMask.GetPrefixLength ()
           << " goto:"     << nextLevel + 1;
-      Simulator::Schedule (
-        MilliSeconds (500),
-        static_cast<int (SliceController::*)(uint64_t, const std::string)> (
-          &SliceController::DpctlExecute),
-        this, m_pgwInfo->GetMainDpId (), cmd.str ());
+      DpctlSchedule (MilliSeconds (500), m_pgwInfo->GetMainDpId (), cmd.str ());
     }
 
   // Fire the load balancing trace source.
