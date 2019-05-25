@@ -708,8 +708,8 @@ RoutingInfo::SetPriority (uint16_t value)
 {
   NS_LOG_FUNCTION (this << value);
 
-  NS_ASSERT_MSG (value > 0, "Invalid zero priority.");
   m_priority = value;
+  NS_ASSERT_MSG (m_priority > 0, "Invalid zero priority.");
 }
 
 void
@@ -734,6 +734,7 @@ RoutingInfo::IncreasePriority (void)
   NS_LOG_FUNCTION (this);
 
   m_priority++;
+  NS_ASSERT_MSG (m_priority > 0, "Invalid zero priority.");
 }
 
 bool
