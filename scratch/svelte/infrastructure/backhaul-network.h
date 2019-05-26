@@ -117,10 +117,10 @@ protected:
   uint16_t                      m_linkMtu;        //!< Link MTU.
 
   // Network addresses.
-  static const Ipv4Address      m_s1uAddr;        //!< S1-U network address.
+  static const Ipv4Address      m_s1Addr;         //!< S1-U network address.
   static const Ipv4Address      m_s5Addr;         //!< S5 network address.
   static const Ipv4Address      m_x2Addr;         //!< X2 network address.
-  static const Ipv4Mask         m_s1uMask;        //!< S1-U network mask.
+  static const Ipv4Mask         m_s1Mask;         //!< S1-U network mask.
   static const Ipv4Mask         m_s5Mask;         //!< S5 network mask.
   static const Ipv4Mask         m_x2Mask;         //!< X2 network mask.
 
@@ -137,7 +137,7 @@ private:
   uint32_t                      m_meterTableSize; //!< Meter table size.
 
   // IPv4 address helpers for EPC interfaces.
-  Ipv4AddressHelper             m_s1uAddrHelper;  //!< S1-U address helper.
+  Ipv4AddressHelper             m_s1AddrHelper;   //!< S1-U address helper.
   Ipv4AddressHelper             m_s5AddrHelper;   //!< S5 address helper.
   Ipv4AddressHelper             m_x2AddrHelper;   //!< X2 address helper.
   NetDeviceContainer            m_epcDevices;     //!< EPC devices.

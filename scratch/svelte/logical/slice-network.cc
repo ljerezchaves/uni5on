@@ -589,13 +589,13 @@ SliceNetwork::CreateSgw (void)
   uint64_t sgwDpId = m_sgwDevice->GetDatapathId ();
 
   // Connect the S-GW node to the OpenFlow backhaul node.
-  Ptr<CsmaNetDevice> sgwS1uDev;
-  Ptr<OFSwitch13Port> infraSwS1uPort;
-  std::tie (sgwS1uDev, infraSwS1uPort) = m_backhaul->AttachEpcNode (
+  Ptr<CsmaNetDevice> sgwS1Dev;
+  Ptr<OFSwitch13Port> infraSwS1Port;
+  std::tie (sgwS1Dev, infraSwS1Port) = m_backhaul->AttachEpcNode (
       m_sgwNode, m_sgwInfraSwIdx, LteIface::S1);
   NS_LOG_INFO ("S-GW " << sgwId << " switch dpId " << sgwDpId <<
                " attached to the s1u interface with IP " <<
-               Ipv4AddressHelper::GetAddress (sgwS1uDev));
+               Ipv4AddressHelper::GetAddress (sgwS1Dev));
 
   Ptr<CsmaNetDevice> sgwS5Dev;
   Ptr<OFSwitch13Port> infraSwS5Port;
@@ -606,11 +606,11 @@ SliceNetwork::CreateSgw (void)
                Ipv4AddressHelper::GetAddress (sgwS5Dev));
 
   // Create the logical ports on the S-GW S1-U and S5 interfaces.
-  Ptr<VirtualNetDevice> sgwS1uPortDev = CreateObject<VirtualNetDevice> ();
-  sgwS1uPortDev->SetAddress (Mac48Address::Allocate ());
-  Ptr<OFSwitch13Port> sgwS1uPort = m_sgwDevice->AddSwitchPort (sgwS1uPortDev);
+  Ptr<VirtualNetDevice> sgwS1PortDev = CreateObject<VirtualNetDevice> ();
+  sgwS1PortDev->SetAddress (Mac48Address::Allocate ());
+  Ptr<OFSwitch13Port> sgwS1Port = m_sgwDevice->AddSwitchPort (sgwS1PortDev);
   m_sgwNode->AddApplication (
-    CreateObject<GtpTunnelApp> (sgwS1uPortDev, sgwS1uDev));
+    CreateObject<GtpTunnelApp> (sgwS1PortDev, sgwS1Dev));
 
   Ptr<VirtualNetDevice> sgwS5PortDev = CreateObject<VirtualNetDevice> ();
   sgwS5PortDev->SetAddress (Mac48Address::Allocate ());
@@ -620,9 +620,9 @@ SliceNetwork::CreateSgw (void)
 
   // Saving S-GW metadata.
   m_sgwInfo = CreateObject<SgwInfo> (
-      sgwId, m_sgwDevice, Ipv4AddressHelper::GetAddress (sgwS1uDev),
-      Ipv4AddressHelper::GetAddress (sgwS5Dev), sgwS1uPort->GetPortNo (),
-      sgwS5Port->GetPortNo (), m_sgwInfraSwIdx, infraSwS1uPort->GetPortNo (),
+      sgwId, m_sgwDevice, Ipv4AddressHelper::GetAddress (sgwS1Dev),
+      Ipv4AddressHelper::GetAddress (sgwS5Dev), sgwS1Port->GetPortNo (),
+      sgwS5Port->GetPortNo (), m_sgwInfraSwIdx, infraSwS1Port->GetPortNo (),
       infraSwS5Port->GetPortNo (), m_controllerApp);
 
   // Notify the controller of the new S-GW entity.

@@ -28,12 +28,12 @@ NS_LOG_COMPONENT_DEFINE ("BackhaulNetwork");
 NS_OBJECT_ENSURE_REGISTERED (BackhaulNetwork);
 
 // Initializing BackhaulNetwork static members.
-const Ipv4Address BackhaulNetwork::m_s1uAddr  = Ipv4Address ("10.1.0.0");
-const Ipv4Address BackhaulNetwork::m_s5Addr   = Ipv4Address ("10.2.0.0");
-const Ipv4Address BackhaulNetwork::m_x2Addr   = Ipv4Address ("10.3.0.0");
-const Ipv4Mask    BackhaulNetwork::m_s1uMask  = Ipv4Mask ("255.255.255.0");
-const Ipv4Mask    BackhaulNetwork::m_s5Mask   = Ipv4Mask ("255.255.255.0");
-const Ipv4Mask    BackhaulNetwork::m_x2Mask   = Ipv4Mask ("255.255.255.0");
+const Ipv4Address BackhaulNetwork::m_s1Addr = Ipv4Address ("10.1.0.0");
+const Ipv4Address BackhaulNetwork::m_s5Addr = Ipv4Address ("10.2.0.0");
+const Ipv4Address BackhaulNetwork::m_x2Addr = Ipv4Address ("10.3.0.0");
+const Ipv4Mask    BackhaulNetwork::m_s1Mask = Ipv4Mask ("255.255.255.0");
+const Ipv4Mask    BackhaulNetwork::m_s5Mask = Ipv4Mask ("255.255.255.0");
+const Ipv4Mask    BackhaulNetwork::m_x2Mask = Ipv4Mask ("255.255.255.0");
 
 BackhaulNetwork::BackhaulNetwork ()
   : m_controllerApp (0),
@@ -163,8 +163,8 @@ BackhaulNetwork::AttachEpcNode (Ptr<Node> epcNode, uint16_t swIdx,
   // Configure the epcDev IP address according to the LTE logical interface.
   switch (iface)
     {
-      m_s1uAddrHelper.Assign (NetDeviceContainer (epcDev));
     case LteIface::S1:
+      m_s1AddrHelper.Assign (NetDeviceContainer (epcDev));
       break;
     case LteIface::S5:
       m_s5AddrHelper.Assign (NetDeviceContainer (epcDev));
@@ -215,7 +215,7 @@ BackhaulNetwork::NotifyConstructionCompleted (void)
   NS_LOG_FUNCTION (this);
 
   // Configure IP address helpers.
-  m_s1uAddrHelper.SetBase (m_s1uAddr, m_s1uMask);
+  m_s1AddrHelper.SetBase (m_s1Addr, m_s1Mask);
   m_s5AddrHelper.SetBase (m_s5Addr, m_s5Mask);
   m_x2AddrHelper.SetBase (m_x2Addr, m_x2Mask);
 
