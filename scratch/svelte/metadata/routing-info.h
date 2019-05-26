@@ -52,8 +52,8 @@ public:
   {
     PGWTABLE  = (1U << 0),  //!< P-GW TFT flow table is full.
     PGWLOAD   = (1U << 1),  //!< P-GW TFT pipeline load is full.
-    SGWTABLE  = (1U << 4),  //!< P-GW flow table is full.
-    SGWLOAD   = (1U << 5),  //!< P-GW pipeline load is full.
+    SGWTABLE  = (1U << 4),  //!< S-GW flow table is full.
+    SGWLOAD   = (1U << 5),  //!< S-GW pipeline load is full.
     BACKTABLE = (1U << 8),  //!< At least one backhaul flow table is full.
     BACKLOAD  = (1U << 9),  //!< At least one backhaul pipeline load is full.
     BACKBAND  = (1U << 12)  //!< At least one backhaul link has no bandwidth.
