@@ -95,7 +95,8 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
   // Reset the ring routing info to the shortest path.
   Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
   NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
-  ringInfo->ResetToDefaults ();
+  ringInfo->ResetIfacePath (LteIface::S1U);
+  ringInfo->ResetIfacePath (LteIface::S5);
 
   // Check for the available resources over the shortest path.
   if (HasAvailableResources (ringInfo))
@@ -116,7 +117,8 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
           rInfo->UnsetBlocked (RoutingInfo::BACKTABLE);
           rInfo->UnsetBlocked (RoutingInfo::BACKLOAD);
           rInfo->UnsetBlocked (RoutingInfo::BACKBAND);
-          ringInfo->ResetToDefaults ();
+          ringInfo->ResetIfacePath (LteIface::S1U);
+          ringInfo->ResetIfacePath (LteIface::S5);
           ringInfo->InvertIfacePath (LteIface::S1U);
           if (HasAvailableResources (ringInfo))
             {
@@ -132,7 +134,8 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
           rInfo->UnsetBlocked (RoutingInfo::BACKTABLE);
           rInfo->UnsetBlocked (RoutingInfo::BACKLOAD);
           rInfo->UnsetBlocked (RoutingInfo::BACKBAND);
-          ringInfo->ResetToDefaults ();
+          ringInfo->ResetIfacePath (LteIface::S1U);
+          ringInfo->ResetIfacePath (LteIface::S5);
           ringInfo->InvertIfacePath (LteIface::S5);
           if (HasAvailableResources (ringInfo))
             {
@@ -149,7 +152,8 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
           rInfo->UnsetBlocked (RoutingInfo::BACKTABLE);
           rInfo->UnsetBlocked (RoutingInfo::BACKLOAD);
           rInfo->UnsetBlocked (RoutingInfo::BACKBAND);
-          ringInfo->ResetToDefaults ();
+          ringInfo->ResetIfacePath (LteIface::S1U);
+          ringInfo->ResetIfacePath (LteIface::S5);
           ringInfo->InvertIfacePath (LteIface::S1U);
           ringInfo->InvertIfacePath (LteIface::S5);
           if (HasAvailableResources (ringInfo))
@@ -570,11 +574,11 @@ RingController::NotifyBearerCreated (Ptr<RoutingInfo> rInfo)
   // Set the downlink default shortest path.
   RingInfo::RingPath s5DownPath = FindShortestPath (
       rInfo->GetPgwInfraSwIdx (), rInfo->GetSgwInfraSwIdx ());
-  ringInfo->SetDefaultPath (s5DownPath, LteIface::S5);
+  ringInfo->SetIfacePath (LteIface::S5, s5DownPath);
 
   RingInfo::RingPath s1DownPath = FindShortestPath (
       rInfo->GetSgwInfraSwIdx (), rInfo->GetEnbInfraSwIdx ());
-  ringInfo->SetDefaultPath (s1DownPath, LteIface::S1U);
+  ringInfo->SetIfacePath (LteIface::S1U, s1DownPath);
 
   NS_LOG_DEBUG ("Bearer teid " << rInfo->GetTeidHex () << " default downlink "
                 " S1-U path: " << RingInfo::RingPathStr (s1DownPath) <<
@@ -613,7 +617,7 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices)
       {
         // Routing group for counterclockwise packet forwarding.
         std::ostringstream cmd;
-        cmd << "group-mod cmd=add,type=ind,group="    << RingInfo::COUNTER
+        cmd << "group-mod cmd=add,type=ind,group="    << RingInfo::COUNT
             << " weight=0,port=any,group=any output=" << lInfo->GetPortNo (1);
         DpctlExecute (lInfo->GetSwDpId (1), cmd.str ());
       }
@@ -726,7 +730,7 @@ RingController::BwBearerRequest (Ptr<RingInfo> ringInfo) const
 
   // When checking for the available bit rate on backhaul links, the S5 and
   // S1-U routing paths may overlap if one of them is CLOCK and the other is
-  // COUNTER. We must ensure that the overlapping links have the requested
+  // COUNT. We must ensure that the overlapping links have the requested
   // bandwidth for both interfaces, otherwise the BitRateReserve () method will
   // fail. So we save the links used by S5 interface and check them when going
   // through S1-U interface.
@@ -1007,7 +1011,7 @@ RingController::FindShortestPath (uint16_t srcIdx, uint16_t dstIdx) const
     }
   return (clockwiseDistance <= maxHops) ?
          RingInfo::CLOCK :
-         RingInfo::COUNTER;
+         RingInfo::COUNT;
 }
 
 uint16_t
@@ -1028,7 +1032,7 @@ RingController::HopCounter (uint16_t srcIdx, uint16_t dstIdx,
   // Count the number of hops from src to dst switch index.
   NS_ASSERT (srcIdx != dstIdx);
   int distance = dstIdx - srcIdx;
-  if (path == RingInfo::COUNTER)
+  if (path == RingInfo::COUNT)
     {
       distance = srcIdx - dstIdx;
     }

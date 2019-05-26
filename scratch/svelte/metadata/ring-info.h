@@ -42,9 +42,9 @@ public:
   /** Routing direction in the ring. */
   enum RingPath
   {
-    LOCAL = 0,
-    CLOCK = 1,
-    COUNTER = 2
+    LOCAL = 0,    //!< Local routing.
+    CLOCK = 1,    //!< Clockwise routing.
+    COUNT = 2     //!< Counterclockwise routing.
   };
 
   /**
@@ -68,7 +68,7 @@ public:
   //\{
   RingPath      GetDlPath     (LteIface iface) const;
   RingPath      GetUlPath     (LteIface iface) const;
-  bool          IsDefaultPath (LteIface iface) const;
+  bool          IsShortPath   (LteIface iface) const;
   bool          IsLocalPath   (LteIface iface) const;
   //\}
 
@@ -77,12 +77,6 @@ public:
    * \return True for local paths, false otherwise.
    */
   bool AreLocalPaths (void) const;
-
-  /**
-   * Summarize the ring routing path into a single string.
-   * \return The ring routing path.
-   */
-  std::string GetPathStr (void) const;
 
   /**
    * Get the bearer routing information aggregated to this object.
@@ -114,13 +108,6 @@ public:
   static LinkInfo::LinkDir RingPathToLinkDir (RingPath path);
 
   /**
-   * Get the short string representing the routing path.
-   * \param path The routing path.
-   * \return The short routing path string.
-   */
-  static std::string RingPathShortStr (RingPath path);
-
-  /**
    * Get the string representing the routing path.
    * \param path The routing path.
    * \return The routing path string.
@@ -141,27 +128,28 @@ protected:
 
 private:
   /**
-   * Set the default downlink routing path for S1-U or S5 interface.
+   * Set the downlink shortest routing path for the given interface.
    * The uplink path will always be the same, but with inverted direction.
-   * \param downPath The downlink default path.
    * \param iface The LTE logical interface for this path.
+   * \param path The downlink path.
    */
-  void SetDefaultPath (RingPath downPath, LteIface iface);
+  void SetIfacePath (LteIface iface, RingPath path);
 
   /**
-   * Invert the S1-U or S5 routing path, only if different from LOCAL.
-   * \param iface The LTE logical interface for this path.
+   * Invert the interface routing path.
+   * \param iface The LTE logical interface.
    */
   void InvertIfacePath (LteIface iface);
 
   /**
-   * Reset both routing paths (S1-U and S5) to the default values.
+   * Reset the interface routing path to the shortest one.
+   * \param iface The LTE logical interface.
    */
-  void ResetToDefaults ();
+  void ResetIfacePath (LteIface iface);
 
   RingPath         m_downPath [2];       //!< Downlink routing path.
-  bool             m_isDefaultPath [2];  //!< True for default path.
-  bool             m_isLocalPath [2];    //!< True for local path.
+  bool             m_isShortPath [2];    //!< True for short down path.
+  bool             m_isLocalPath [2];    //!< True for local down path.
   Ptr<RoutingInfo> m_rInfo;              //!< Routing metadata.
 };
 
