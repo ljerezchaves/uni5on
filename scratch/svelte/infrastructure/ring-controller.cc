@@ -567,18 +567,18 @@ RingController::NotifyBearerCreated (Ptr<RoutingInfo> rInfo)
   // Let's create its ring routing metadata.
   Ptr<RingInfo> ringInfo = CreateObject<RingInfo> (rInfo);
 
-  // Set default paths to those with lower hops.
+  // Set the downlink default shortest path.
   RingInfo::RingPath s5DownPath = FindShortestPath (
       rInfo->GetPgwInfraSwIdx (), rInfo->GetSgwInfraSwIdx ());
   ringInfo->SetDefaultPath (s5DownPath, LteIface::S5);
 
-  RingInfo::RingPath s1uDownPath = FindShortestPath (
+  RingInfo::RingPath s1DownPath = FindShortestPath (
       rInfo->GetSgwInfraSwIdx (), rInfo->GetEnbInfraSwIdx ());
-  ringInfo->SetDefaultPath (s1uDownPath, LteIface::S1U);
+  ringInfo->SetDefaultPath (s1DownPath, LteIface::S1U);
 
   NS_LOG_DEBUG ("Bearer teid " << rInfo->GetTeidHex () << " default downlink "
-                "S1-U path to " << RingInfo::RingPathStr (s1uDownPath) <<
-                " and S5 path to " << RingInfo::RingPathStr (s5DownPath));
+                " S1-U path: " << RingInfo::RingPathStr (s1DownPath) <<
+                " S5 path: " << RingInfo::RingPathStr (s5DownPath));
 
   BackhaulController::NotifyBearerCreated (rInfo);
 }
