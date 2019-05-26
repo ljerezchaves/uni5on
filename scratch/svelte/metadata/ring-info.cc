@@ -35,12 +35,12 @@ RingInfo::RingInfo (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this);
 
-  NS_ASSERT_MSG ((LteIface::S1U == 0 && LteIface::S5 == 1)
-                 || (LteIface::S5 == 0 && LteIface::S1U == 1),
+  NS_ASSERT_MSG ((LteIface::S1 == 0 && LteIface::S5 == 1)
+                 || (LteIface::S5 == 0 && LteIface::S1 == 1),
                  "Incompatible LteIface enum values.");
 
   AggregateObject (rInfo);
-  SetIfacePath (LteIface::S1U, RingInfo::LOCAL);
+  SetIfacePath (LteIface::S1, RingInfo::LOCAL);
   SetIfacePath (LteIface::S5, RingInfo::LOCAL);
 }
 
@@ -63,7 +63,7 @@ RingInfo::GetDlPath (LteIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
-  NS_ASSERT_MSG (iface == LteIface::S1U || iface == LteIface::S5,
+  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
                  "Invalid LTE interface. Expected S1-U or S5 interface.");
 
   return m_downPath [iface];
@@ -74,7 +74,7 @@ RingInfo::GetUlPath (LteIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
-  NS_ASSERT_MSG (iface == LteIface::S1U || iface == LteIface::S5,
+  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
                  "Invalid LTE interface. Expected S1-U or S5 interface.");
 
   return RingInfo::InvertPath (m_downPath [iface]);
@@ -85,7 +85,7 @@ RingInfo::IsShortPath (LteIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
-  NS_ASSERT_MSG (iface == LteIface::S1U || iface == LteIface::S5,
+  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
                  "Invalid LTE interface. Expected S1-U or S5 interface.");
 
   return m_isShortPath [iface];
@@ -96,7 +96,7 @@ RingInfo::IsLocalPath (LteIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
-  NS_ASSERT_MSG (iface == LteIface::S1U || iface == LteIface::S5,
+  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
                  "Invalid LTE interface. Expected S1-U or S5 interface.");
 
   return m_isLocalPath [iface];
@@ -107,7 +107,7 @@ RingInfo::AreLocalPaths (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return (IsLocalPath (LteIface::S1U) && IsLocalPath (LteIface::S5));
+  return (IsLocalPath (LteIface::S1) && IsLocalPath (LteIface::S5));
 }
 
 Ptr<RoutingInfo>
@@ -185,7 +185,7 @@ RingInfo::SetIfacePath (LteIface iface, RingPath path)
 {
   NS_LOG_FUNCTION (this << iface << path);
 
-  NS_ASSERT_MSG (iface == LteIface::S1U || iface == LteIface::S5,
+  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
                  "Invalid LTE interface. Expected S1-U or S5 interface.");
 
   m_downPath [iface] = path;
@@ -202,7 +202,7 @@ RingInfo::InvertIfacePath (LteIface iface)
 {
   NS_LOG_FUNCTION (this << iface);
 
-  NS_ASSERT_MSG (iface == LteIface::S1U || iface == LteIface::S5,
+  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
                  "Invalid LTE interface. Expected S1-U or S5 interface.");
 
   if (m_isLocalPath [iface] == false)
@@ -217,7 +217,7 @@ RingInfo::ResetIfacePath (LteIface iface)
 {
   NS_LOG_FUNCTION (this << iface);
 
-  NS_ASSERT_MSG (iface == LteIface::S1U || iface == LteIface::S5,
+  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
                  "Invalid LTE interface. Expected S1-U or S5 interface.");
 
   if (m_isShortPath [iface] == false)
@@ -237,9 +237,9 @@ std::ostream & operator << (std::ostream &os, const RingInfo &ringInfo)
     }
   else
     {
-      RingInfo::RingPath s1Path = ringInfo.GetDlPath (LteIface::S1U);
+      RingInfo::RingPath s1Path = ringInfo.GetDlPath (LteIface::S1);
       RingInfo::RingPath s5Path = ringInfo.GetDlPath (LteIface::S5);
-      os << " " << setw (7) << ringInfo.IsShortPath (LteIface::S1U)
+      os << " " << setw (7) << ringInfo.IsShortPath (LteIface::S1)
          << " " << setw (7) << RingInfo::RingPathStr (s1Path)
          << " " << setw (7) << ringInfo.IsShortPath (LteIface::S5)
          << " " << setw (7) << RingInfo::RingPathStr (s5Path);

@@ -89,11 +89,11 @@ typedef enum
  */
 typedef enum
 {
-  // Don't change enum order. S1U and S5 are used as array indexes in RingInfo.
-  S1U  = 0,   //!< S1-U interface connecting eNB to S-GW.
-  S5   = 1,   //!< S5 interface connecting S-GW to P-GW.
-  X2   = 2,   //!< X2 interface connecting eNB to eNB.
-  SGI  = 3    //!< SGi interface connecting P-GW to Internet.
+  // Don't change the order. S1-U and S5 are used as array indexes in RingInfo.
+  S1  = 0,   //!< S1-U interface connecting eNB to S-GW.
+  S5  = 1,   //!< S5 interface connecting S-GW to P-GW.
+  X2  = 2,   //!< X2 interface connecting eNB to eNB.
+  SGI = 3    //!< SGi interface connecting P-GW to Internet.
 } LteIface;
 
 /**
@@ -125,7 +125,7 @@ typedef enum
  * \ingroup svelte
  * Enumeration of available SVELTE logical slices IDs.
  * \internal Slice IDs are restricted to the range [0, 14] by the current
- * TEID allocation strategy. The NONE value must be fixed to 0xF (15).
+ * TEID allocation strategy.
  */
 typedef enum
 {

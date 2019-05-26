@@ -95,7 +95,7 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
   // Reset the ring routing info to the shortest path.
   Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
   NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
-  ringInfo->ResetIfacePath (LteIface::S1U);
+  ringInfo->ResetIfacePath (LteIface::S1);
   ringInfo->ResetIfacePath (LteIface::S5);
 
   // Check for the available resources over the shortest path.
@@ -112,14 +112,14 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
   if (m_strategy == RingController::SPF)
     {
       // Let's try inverting only the S1-U interface.
-      if (!ringInfo->IsLocalPath (LteIface::S1U))
+      if (!ringInfo->IsLocalPath (LteIface::S1))
         {
           rInfo->UnsetBlocked (RoutingInfo::BACKTABLE);
           rInfo->UnsetBlocked (RoutingInfo::BACKLOAD);
           rInfo->UnsetBlocked (RoutingInfo::BACKBAND);
-          ringInfo->ResetIfacePath (LteIface::S1U);
+          ringInfo->ResetIfacePath (LteIface::S1);
           ringInfo->ResetIfacePath (LteIface::S5);
-          ringInfo->InvertIfacePath (LteIface::S1U);
+          ringInfo->InvertIfacePath (LteIface::S1);
           if (HasAvailableResources (ringInfo))
             {
               NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
@@ -134,7 +134,7 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
           rInfo->UnsetBlocked (RoutingInfo::BACKTABLE);
           rInfo->UnsetBlocked (RoutingInfo::BACKLOAD);
           rInfo->UnsetBlocked (RoutingInfo::BACKBAND);
-          ringInfo->ResetIfacePath (LteIface::S1U);
+          ringInfo->ResetIfacePath (LteIface::S1);
           ringInfo->ResetIfacePath (LteIface::S5);
           ringInfo->InvertIfacePath (LteIface::S5);
           if (HasAvailableResources (ringInfo))
@@ -146,15 +146,15 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
         }
 
       // Let's try inverting both the S1-U and S5 interface.
-      if (!ringInfo->IsLocalPath (LteIface::S1U)
+      if (!ringInfo->IsLocalPath (LteIface::S1)
           && !ringInfo->IsLocalPath (LteIface::S5))
         {
           rInfo->UnsetBlocked (RoutingInfo::BACKTABLE);
           rInfo->UnsetBlocked (RoutingInfo::BACKLOAD);
           rInfo->UnsetBlocked (RoutingInfo::BACKBAND);
-          ringInfo->ResetIfacePath (LteIface::S1U);
+          ringInfo->ResetIfacePath (LteIface::S1);
           ringInfo->ResetIfacePath (LteIface::S5);
-          ringInfo->InvertIfacePath (LteIface::S1U);
+          ringInfo->InvertIfacePath (LteIface::S1);
           ringInfo->InvertIfacePath (LteIface::S5);
           if (HasAvailableResources (ringInfo))
             {
@@ -244,7 +244,7 @@ RingController::BearerInstall (Ptr<RoutingInfo> rInfo)
   if (rInfo->HasDlTraffic ())
     {
       RingInfo::RingPath s5DownPath = ringInfo->GetDlPath (LteIface::S5);
-      RingInfo::RingPath s1DownPath = ringInfo->GetDlPath (LteIface::S1U);
+      RingInfo::RingPath s1DownPath = ringInfo->GetDlPath (LteIface::S1);
 
       // Building the match string for both S1-U and S5 interfaces.
       // Using GTP TEID to identify the bearer and the IP destination address
@@ -285,7 +285,7 @@ RingController::BearerInstall (Ptr<RoutingInfo> rInfo)
         }
 
       // Installing down rules for S1-U interface (from S-GW to eNB)
-      if (!ringInfo->IsLocalPath (LteIface::S1U))
+      if (!ringInfo->IsLocalPath (LteIface::S1))
         {
           // Rules for the switch connected to the S-GW with DSCP instruction.
           uint16_t curr = rInfo->GetSgwInfraSwIdx ();
@@ -306,7 +306,7 @@ RingController::BearerInstall (Ptr<RoutingInfo> rInfo)
   // Configuring uplink routing.
   if (rInfo->HasUlTraffic ())
     {
-      RingInfo::RingPath s1UpPath = ringInfo->GetUlPath (LteIface::S1U);
+      RingInfo::RingPath s1UpPath = ringInfo->GetUlPath (LteIface::S1);
       RingInfo::RingPath s5UpPath = ringInfo->GetUlPath (LteIface::S5);
 
       // Building the match string for both S1-U and S5 interfaces.
@@ -330,7 +330,7 @@ RingController::BearerInstall (Ptr<RoutingInfo> rInfo)
           << " goto:"        << BANDW_TAB;
 
       // Installing up rules for S1-U interface (from eNB to S-GW)
-      if (!ringInfo->IsLocalPath (LteIface::S1U))
+      if (!ringInfo->IsLocalPath (LteIface::S1))
         {
           // Rules for the switch connected to the eNB with DSCP instruction.
           uint16_t curr = rInfo->GetEnbInfraSwIdx ();
@@ -394,7 +394,7 @@ RingController::BearerRemove (Ptr<RoutingInfo> rInfo)
       DpctlExecute (GetDpId (curr), cmd.str ());
       curr = NextSwitchIndex (curr, downPath);
     }
-  downPath = ringInfo->GetDlPath (LteIface::S1U);
+  downPath = ringInfo->GetDlPath (LteIface::S1);
   while (curr != rInfo->GetEnbInfraSwIdx ())
     {
       DpctlExecute (GetDpId (curr), cmd.str ());
@@ -463,7 +463,7 @@ RingController::BearerUpdate (Ptr<RoutingInfo> rInfo, Ptr<EnbInfo> dstEnbInfo)
         std::ostringstream aS5, aS1;
         aS5 << " meta:" << ringInfo->GetDlPath (LteIface::S5)
             << " goto:" << BANDW_TAB;
-        aS1 << " meta:" << ringInfo->GetDlPath (LteIface::S1U)
+        aS1 << " meta:" << ringInfo->GetDlPath (LteIface::S1)
             << " goto:" << BANDW_TAB;
 
         // Installing down rules into switches connected to the P-GW and S-GW.
@@ -491,7 +491,7 @@ RingController::BearerUpdate (Ptr<RoutingInfo> rInfo, Ptr<EnbInfo> dstEnbInfo)
 
         // Build the metatada and goto instructions string.
         std::ostringstream aS1, aS5;
-        aS1 << " meta:" << ringInfo->GetUlPath (LteIface::S1U)
+        aS1 << " meta:" << ringInfo->GetUlPath (LteIface::S1)
             << " goto:" << BANDW_TAB;
         aS5 << " meta:" << ringInfo->GetUlPath (LteIface::S5)
             << " goto:" << BANDW_TAB;
@@ -578,7 +578,7 @@ RingController::NotifyBearerCreated (Ptr<RoutingInfo> rInfo)
 
   RingInfo::RingPath s1DownPath = FindShortestPath (
       rInfo->GetSgwInfraSwIdx (), rInfo->GetEnbInfraSwIdx ());
-  ringInfo->SetIfacePath (LteIface::S1U, s1DownPath);
+  ringInfo->SetIfacePath (LteIface::S1, s1DownPath);
 
   NS_LOG_DEBUG ("Bearer teid " << rInfo->GetTeidHex () << " default downlink "
                 " S1-U path: " << RingInfo::RingPathStr (s1DownPath) <<
@@ -757,7 +757,7 @@ RingController::BwBearerRequest (Ptr<RingInfo> ringInfo) const
     }
 
   // S1-U interface (from S-GW to eNB)
-  downPath = ringInfo->GetDlPath (LteIface::S1U);
+  downPath = ringInfo->GetDlPath (LteIface::S1);
   while (ok && curr != rInfo->GetEnbInfraSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, downPath);
@@ -843,7 +843,7 @@ RingController::SwBearerRequest (Ptr<RingInfo> ringInfo) const
         }
 
       // S1-U interface (from S-GW to eNB).
-      downPath = ringInfo->GetDlPath (LteIface::S1U);
+      downPath = ringInfo->GetDlPath (LteIface::S1);
       while (ok && curr != rInfo->GetEnbInfraSwIdx ())
         {
           ok &= (GetEwmaCpuUse (curr) < GetSwBlockThreshold ());
@@ -896,7 +896,7 @@ RingController::BitRateReserve (Ptr<RingInfo> ringInfo)
     }
 
   // S1-U interface (from S-GW to eNB)
-  downPath = ringInfo->GetDlPath (LteIface::S1U);
+  downPath = ringInfo->GetDlPath (LteIface::S1);
   while (success && curr != rInfo->GetEnbInfraSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, downPath);
@@ -943,7 +943,7 @@ RingController::BitRateRelease (Ptr<RingInfo> ringInfo)
     }
 
   // S1-U interface (from S-GW to eNB)
-  downPath = ringInfo->GetDlPath (LteIface::S1U);
+  downPath = ringInfo->GetDlPath (LteIface::S1);
   while (success && curr != rInfo->GetEnbInfraSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, downPath);

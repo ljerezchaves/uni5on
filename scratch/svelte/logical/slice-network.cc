@@ -592,7 +592,7 @@ SliceNetwork::CreateSgw (void)
   Ptr<CsmaNetDevice> sgwS1uDev;
   Ptr<OFSwitch13Port> infraSwS1uPort;
   std::tie (sgwS1uDev, infraSwS1uPort) = m_backhaul->AttachEpcNode (
-      m_sgwNode, m_sgwInfraSwIdx, LteIface::S1U);
+      m_sgwNode, m_sgwInfraSwIdx, LteIface::S1);
   NS_LOG_INFO ("S-GW " << sgwId << " switch dpId " << sgwDpId <<
                " attached to the s1u interface with IP " <<
                Ipv4AddressHelper::GetAddress (sgwS1uDev));

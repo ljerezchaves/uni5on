@@ -52,7 +52,7 @@ LteIfaceStr (LteIface iface)
 {
   switch (iface)
     {
-    case LteIface::S1U:
+    case LteIface::S1:
       return "s1u";
     case LteIface::S5:
       return "s5";

@@ -163,8 +163,8 @@ BackhaulNetwork::AttachEpcNode (Ptr<Node> epcNode, uint16_t swIdx,
   // Configure the epcDev IP address according to the LTE logical interface.
   switch (iface)
     {
-    case LteIface::S1U:
       m_s1uAddrHelper.Assign (NetDeviceContainer (epcDev));
+    case LteIface::S1:
       break;
     case LteIface::S5:
       m_s5AddrHelper.Assign (NetDeviceContainer (epcDev));
