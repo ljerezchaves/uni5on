@@ -583,12 +583,18 @@ RoutingInfo::BlockReasonStr (BlockReason reason)
       return "SgwTable";
     case RoutingInfo::SGWLOAD:
       return "SgwLoad";
-    case RoutingInfo::BACKTABLE:
-      return "BackTable";
-    case RoutingInfo::BACKLOAD:
-      return "BackLoad";
-    case RoutingInfo::BACKBAND:
-      return "BackBand";
+    case RoutingInfo::S5TABLE:
+      return "S5Table";
+    case RoutingInfo::S5LOAD:
+      return "S5Load";
+    case RoutingInfo::S5BAND:
+      return "S5Band";
+    case RoutingInfo::S1TABLE:
+      return "S1uTable";
+    case RoutingInfo::S1LOAD:
+      return "S1uLoad";
+    case RoutingInfo::S1BAND:
+      return "S1uBand";
     default:
       return "-";
     }

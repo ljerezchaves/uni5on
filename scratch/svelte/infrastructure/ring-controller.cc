@@ -787,7 +787,8 @@ RingController::BwBearerRequest (Ptr<RingInfo> ringInfo) const
 
   if (!ok)
     {
-      rInfo->SetBlocked (RoutingInfo::BACKBAND);
+      rInfo->SetBlocked (RoutingInfo::S5BAND);
+      rInfo->SetBlocked (RoutingInfo::S1BAND);
       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
                    " because at least one backhaul link is overloaded.");
       return false;
@@ -819,7 +820,8 @@ RingController::SwBearerRequest (Ptr<RingInfo> ringInfo) const
           || (rInfo->HasUlTraffic () && enbTabUse >= GetSwBlockThreshold ()))
         {
           success = false;
-          rInfo->SetBlocked (RoutingInfo::BACKTABLE);
+          rInfo->SetBlocked (RoutingInfo::S5TABLE);
+          rInfo->SetBlocked (RoutingInfo::S1TABLE);
           NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
                        " because the backhaul switch table is full.");
         }
@@ -864,7 +866,8 @@ RingController::SwBearerRequest (Ptr<RingInfo> ringInfo) const
       if (!ok)
         {
           success = false;
-          rInfo->SetBlocked (RoutingInfo::BACKLOAD);
+          rInfo->SetBlocked (RoutingInfo::S5LOAD);
+          rInfo->SetBlocked (RoutingInfo::S1LOAD);
           NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
                        " because the backhaul switch is overloaded.");
         }
