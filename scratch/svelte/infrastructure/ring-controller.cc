@@ -571,7 +571,7 @@ RingController::NotifyBearerCreated (Ptr<RoutingInfo> rInfo)
   // Let's create its ring routing metadata.
   Ptr<RingInfo> ringInfo = CreateObject<RingInfo> (rInfo);
 
-  // Set the downlink default shortest path.
+  // Set the downlink shortest path for both S1-U and S5 interfaces.
   RingInfo::RingPath s5DownPath = FindShortestPath (
       rInfo->GetPgwInfraSwIdx (), rInfo->GetSgwInfraSwIdx ());
   ringInfo->SetIfacePath (LteIface::S5, s5DownPath);

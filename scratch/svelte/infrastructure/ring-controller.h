@@ -84,7 +84,7 @@ protected:
 
 private:
   /**
-   * Check for the available resources on the backhaul insfrastructure. When
+   * Check for the available resources on the backhaul infrastructure. When
    * any of the requested resources is not available, this method must set
    * the routing information with the block reason.
    * \param ringInfo The ring routing information.
