@@ -713,8 +713,8 @@ RingController::BwBearerRequest (Ptr<RingInfo> ringInfo) const
 
   Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
 
-  // Single check: available bandwidth over backhaul links (only GBR
-  // non-agregated bearers transversing at least one backhaul link).
+  // Single check: available bandwidth over backhaul links.
+  // Only GBR non-agregated bearers transversing at least one backhaul link.
   if (rInfo->IsNonGbr () || rInfo->IsAggregated ()
       || ringInfo->AreLocalPaths ())
     {
@@ -723,9 +723,10 @@ RingController::BwBearerRequest (Ptr<RingInfo> ringInfo) const
 
   SliceId slice = rInfo->GetSliceId ();
   LinkInfo::LinkDir dlDir, ulDir;
-  RingInfo::RingPath downPath;
+  RingInfo::RingPath path;
   Ptr<LinkInfo> lInfo;
   uint16_t curr = 0;
+  uint16_t last = 0;
   bool ok = true;
 
   // When checking for the available bit rate on backhaul links, the S5 and
@@ -742,10 +743,11 @@ RingController::BwBearerRequest (Ptr<RingInfo> ringInfo) const
 
   // S5 interface (from P-GW to S-GW)
   curr = rInfo->GetPgwInfraSwIdx ();
-  downPath = ringInfo->GetDlPath (LteIface::S5);
-  while (ok && curr != rInfo->GetSgwInfraSwIdx ())
+  last = rInfo->GetSgwInfraSwIdx ();
+  path = ringInfo->GetDlPath (LteIface::S5);
+  while (ok && curr != last)
     {
-      uint16_t next = NextSwitchIndex (curr, downPath);
+      uint16_t next = NextSwitchIndex (curr, path);
       std::tie (lInfo, dlDir, ulDir) = GetLinkInfo (curr, next);
       ok &= HasGbrBitRate (lInfo, dlDir, slice, dlRate, blockThs);
       ok &= HasGbrBitRate (lInfo, ulDir, slice, ulRate, blockThs);
@@ -757,10 +759,12 @@ RingController::BwBearerRequest (Ptr<RingInfo> ringInfo) const
     }
 
   // S1-U interface (from S-GW to eNB)
-  downPath = ringInfo->GetDlPath (LteIface::S1);
-  while (ok && curr != rInfo->GetEnbInfraSwIdx ())
+  curr = rInfo->GetSgwInfraSwIdx ();
+  last = rInfo->GetEnbInfraSwIdx ();
+  path = ringInfo->GetDlPath (LteIface::S1);
+  while (ok && curr != last)
     {
-      uint16_t next = NextSwitchIndex (curr, downPath);
+      uint16_t next = NextSwitchIndex (curr, path);
       std::tie (lInfo, dlDir, ulDir) = GetLinkInfo (curr, next);
 
       // Check if this link was used by S5 interface.
@@ -829,25 +833,29 @@ RingController::SwBearerRequest (Ptr<RingInfo> ringInfo) const
   // - If ON  : block the request.
   if (GetSwBlockPolicy () == OpMode::ON)
     {
-      RingInfo::RingPath downPath;
+      RingInfo::RingPath path;
       uint16_t curr = 0;
+      uint16_t last = 0;
       bool ok = true;
 
       // S5 interface (from P-GW to S-GW).
       curr = rInfo->GetPgwInfraSwIdx ();
-      downPath = ringInfo->GetDlPath (LteIface::S5);
-      while (ok && curr != rInfo->GetSgwInfraSwIdx ())
+      last = rInfo->GetSgwInfraSwIdx ();
+      path = ringInfo->GetDlPath (LteIface::S5);
+      while (ok && curr != last)
         {
           ok &= (GetEwmaCpuUse (curr) < GetSwBlockThreshold ());
-          curr = NextSwitchIndex (curr, downPath);
+          curr = NextSwitchIndex (curr, path);
         }
 
       // S1-U interface (from S-GW to eNB).
-      downPath = ringInfo->GetDlPath (LteIface::S1);
-      while (ok && curr != rInfo->GetEnbInfraSwIdx ())
+      curr = rInfo->GetSgwInfraSwIdx ();
+      last = rInfo->GetEnbInfraSwIdx ();
+      path = ringInfo->GetDlPath (LteIface::S1);
+      while (ok && curr != last)
         {
           ok &= (GetEwmaCpuUse (curr) < GetSwBlockThreshold ());
-          curr = NextSwitchIndex (curr, downPath);
+          curr = NextSwitchIndex (curr, path);
         }
 
       // The last switch (eNB).
@@ -876,40 +884,45 @@ RingController::BitRateReserve (Ptr<RingInfo> ringInfo)
   SliceId slice = rInfo->GetSliceId ();
   int64_t dlRate = rInfo->GetGbrDlBitRate ();
   int64_t ulRate = rInfo->GetGbrUlBitRate ();
-  RingInfo::RingPath downPath;
-  bool success = true;
+  RingInfo::RingPath path;
+  uint16_t curr = 0;
+  uint16_t last = 0;
+  bool ok = true;
 
   Ptr<LinkInfo> lInfo;
   LinkInfo::LinkDir dlDir, ulDir;
 
   // S5 interface (from P-GW to S-GW)
-  uint16_t curr = rInfo->GetPgwInfraSwIdx ();
-  downPath = ringInfo->GetDlPath (LteIface::S5);
-  while (success && curr != rInfo->GetSgwInfraSwIdx ())
+  curr = rInfo->GetPgwInfraSwIdx ();
+  last = rInfo->GetSgwInfraSwIdx ();
+  path = ringInfo->GetDlPath (LteIface::S5);
+  while (ok && curr != last)
     {
-      uint16_t next = NextSwitchIndex (curr, downPath);
+      uint16_t next = NextSwitchIndex (curr, path);
       std::tie (lInfo, dlDir, ulDir) = GetLinkInfo (curr, next);
-      success &= lInfo->UpdateResBitRate (dlDir, slice, dlRate);
-      success &= lInfo->UpdateResBitRate (ulDir, slice, ulRate);
+      ok &= lInfo->UpdateResBitRate (dlDir, slice, dlRate);
+      ok &= lInfo->UpdateResBitRate (ulDir, slice, ulRate);
       SlicingMeterAdjust (lInfo, slice);
       curr = next;
     }
 
   // S1-U interface (from S-GW to eNB)
-  downPath = ringInfo->GetDlPath (LteIface::S1);
-  while (success && curr != rInfo->GetEnbInfraSwIdx ())
+  curr = rInfo->GetSgwInfraSwIdx ();
+  last = rInfo->GetEnbInfraSwIdx ();
+  path = ringInfo->GetDlPath (LteIface::S1);
+  while (ok && curr != last)
     {
-      uint16_t next = NextSwitchIndex (curr, downPath);
+      uint16_t next = NextSwitchIndex (curr, path);
       std::tie (lInfo, dlDir, ulDir) = GetLinkInfo (curr, next);
-      success &= lInfo->UpdateResBitRate (dlDir, slice, dlRate);
-      success &= lInfo->UpdateResBitRate (ulDir, slice, ulRate);
+      ok &= lInfo->UpdateResBitRate (dlDir, slice, dlRate);
+      ok &= lInfo->UpdateResBitRate (ulDir, slice, ulRate);
       SlicingMeterAdjust (lInfo, slice);
       curr = next;
     }
 
-  NS_ASSERT_MSG (success, "Error when reserving resources.");
-  rInfo->SetGbrReserved (success);
-  return success;
+  NS_ASSERT_MSG (ok, "Error when reserving resources.");
+  rInfo->SetGbrReserved (ok);
+  return ok;
 }
 
 bool
@@ -923,40 +936,45 @@ RingController::BitRateRelease (Ptr<RingInfo> ringInfo)
   SliceId slice = rInfo->GetSliceId ();
   int64_t dlRate = rInfo->GetGbrDlBitRate ();
   int64_t ulRate = rInfo->GetGbrUlBitRate ();
-  RingInfo::RingPath downPath;
-  bool success = true;
+  RingInfo::RingPath path;
+  uint16_t curr = 0;
+  uint16_t last = 0;
+  bool ok = true;
 
   Ptr<LinkInfo> lInfo;
   LinkInfo::LinkDir dlDir, ulDir;
 
   // S5 interface (from P-GW to S-GW)
-  uint16_t curr = rInfo->GetPgwInfraSwIdx ();
-  downPath = ringInfo->GetDlPath (LteIface::S5);
-  while (success && curr != rInfo->GetSgwInfraSwIdx ())
+  curr = rInfo->GetPgwInfraSwIdx ();
+  last = rInfo->GetSgwInfraSwIdx ();
+  path = ringInfo->GetDlPath (LteIface::S5);
+  while (ok && curr != last)
     {
-      uint16_t next = NextSwitchIndex (curr, downPath);
+      uint16_t next = NextSwitchIndex (curr, path);
       std::tie (lInfo, dlDir, ulDir) = GetLinkInfo (curr, next);
-      success &= lInfo->UpdateResBitRate (dlDir, slice, -dlRate);
-      success &= lInfo->UpdateResBitRate (ulDir, slice, -ulRate);
+      ok &= lInfo->UpdateResBitRate (dlDir, slice, -dlRate);
+      ok &= lInfo->UpdateResBitRate (ulDir, slice, -ulRate);
       SlicingMeterAdjust (lInfo, slice);
       curr = next;
     }
 
   // S1-U interface (from S-GW to eNB)
-  downPath = ringInfo->GetDlPath (LteIface::S1);
-  while (success && curr != rInfo->GetEnbInfraSwIdx ())
+  curr = rInfo->GetSgwInfraSwIdx ();
+  last = rInfo->GetEnbInfraSwIdx ();
+  path = ringInfo->GetDlPath (LteIface::S1);
+  while (ok && curr != last)
     {
-      uint16_t next = NextSwitchIndex (curr, downPath);
+      uint16_t next = NextSwitchIndex (curr, path);
       std::tie (lInfo, dlDir, ulDir) = GetLinkInfo (curr, next);
-      success &= lInfo->UpdateResBitRate (dlDir, slice, -dlRate);
-      success &= lInfo->UpdateResBitRate (ulDir, slice, -ulRate);
+      ok &= lInfo->UpdateResBitRate (dlDir, slice, -dlRate);
+      ok &= lInfo->UpdateResBitRate (ulDir, slice, -ulRate);
       SlicingMeterAdjust (lInfo, slice);
       curr = next;
     }
 
-  NS_ASSERT_MSG (success, "Error when releasing resources.");
-  rInfo->SetGbrReserved (!success);
-  return success;
+  NS_ASSERT_MSG (ok, "Error when releasing resources.");
+  rInfo->SetGbrReserved (!ok);
+  return ok;
 }
 
 void
