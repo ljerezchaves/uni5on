@@ -126,24 +126,6 @@ protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
 
-  /**
-   * Check if the given link is saved in the auxiliary set of S5 links.
-   * \param lInfo The link to find.
-   * \return True if the link was found, false otherwise.
-   */
-  bool HasS5Link (Ptr<LinkInfo> lInfo) const;
-
-  /**
-   * Clear the auxiliary set of S5 links.
-   */
-  void ResetS5Links (void);
-
-  /**
-   * Save the given link in the auxiliary set of S5 links.
-   * \param lInfo The link to save.
-   */
-  void SaveS5Link (Ptr<LinkInfo> lInfo);
-
 private:
   /**
    * Set the downlink shortest routing path for the given interface.
@@ -165,11 +147,10 @@ private:
    */
   void ResetIfacePath (LteIface iface);
 
-  RingPath                  m_downPath [2];     //!< Downlink routing path.
-  bool                      m_isShortPath [2];  //!< True for short down path.
-  bool                      m_isLocalPath [2];  //!< True for local down path.
-  Ptr<RoutingInfo>          m_rInfo;            //!< Routing metadata.
-  std::set<Ptr<LinkInfo> >  m_s5Links;          //!< Auxiliary set of S5 links.
+  RingPath         m_downPath [2];       //!< Downlink routing path.
+  bool             m_isShortPath [2];    //!< True for short down path.
+  bool             m_isLocalPath [2];    //!< True for local down path.
+  Ptr<RoutingInfo> m_rInfo;              //!< Routing metadata.
 };
 
 /**
