@@ -180,6 +180,32 @@ RingInfo::DoDispose ()
   Object::DoDispose ();
 }
 
+bool
+RingInfo::HasS5Link (Ptr<LinkInfo> lInfo) const
+{
+  NS_LOG_FUNCTION (this << lInfo);
+
+  auto it = m_s5Links.find (lInfo);
+  return (it != m_s5Links.end ());
+}
+
+void
+RingInfo::ResetS5Links (void)
+{
+  NS_LOG_FUNCTION (this);
+
+  m_s5Links.clear ();
+}
+
+void
+RingInfo::SaveS5Link (Ptr<LinkInfo> lInfo)
+{
+  NS_LOG_FUNCTION (this << lInfo);
+
+  auto ret = m_s5Links.insert (lInfo);
+  NS_ABORT_MSG_IF (ret.second == false, "Error saving link info.");
+}
+
 void
 RingInfo::SetIfacePath (LteIface iface, RingPath path)
 {
