@@ -749,8 +749,8 @@ RingController::BwBearerRequest (Ptr<RingInfo> ringInfo) const
     {
       uint16_t next = NextSwitchIndex (curr, path);
       std::tie (lInfo, dlDir, ulDir) = GetLinkInfo (curr, next);
-      ok &= HasGbrBitRate (lInfo, dlDir, slice, dlRate, blockThs);
-      ok &= HasGbrBitRate (lInfo, ulDir, slice, ulRate, blockThs);
+      ok &= lInfo->HasBitRate (dlDir, slice, dlRate, blockThs);
+      ok &= lInfo->HasBitRate (ulDir, slice, ulRate, blockThs);
       curr = next;
 
       // Save this link as used by S5 interface.
@@ -774,13 +774,13 @@ RingController::BwBearerRequest (Ptr<RingInfo> ringInfo) const
           // When checking for downlink resources for S1-U interface we also
           // must ensure that the link has uplink resources for S5 interface,
           // and vice-versa.
-          ok &= HasGbrBitRate (lInfo, dlDir, slice, dlRate + ulRate, blockThs);
-          ok &= HasGbrBitRate (lInfo, ulDir, slice, ulRate + dlRate, blockThs);
+          ok &= lInfo->HasBitRate (dlDir, slice, dlRate + ulRate, blockThs);
+          ok &= lInfo->HasBitRate (ulDir, slice, ulRate + dlRate, blockThs);
         }
       else
         {
-          ok &= HasGbrBitRate (lInfo, dlDir, slice, dlRate, blockThs);
-          ok &= HasGbrBitRate (lInfo, ulDir, slice, ulRate, blockThs);
+          ok &= lInfo->HasBitRate (dlDir, slice, dlRate, blockThs);
+          ok &= lInfo->HasBitRate (ulDir, slice, ulRate, blockThs);
         }
       curr = next;
     }

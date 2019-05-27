@@ -274,6 +274,21 @@ LinkInfo::GetMetBitRate (LinkDir dir, SliceId slice) const
   return m_slices [dir][slice].meter;
 }
 
+bool
+LinkInfo::HasBitRate (LinkDir dir, SliceId slice, int64_t bitRate,
+                      double blockThs) const
+{
+  NS_LOG_FUNCTION (this << dir << slice << bitRate << blockThs);
+
+  // Can't reserve more bit rate than the minimum between the slice
+  // quota bit rate and the slice maximum bit rate * block threshold.
+  NS_ASSERT_MSG (slice < SliceId::ALL, "Invalid slice for this operation.");
+  int64_t blkBitRate = GetMaxBitRate (dir, slice) * blockThs;
+  int64_t quoBitRate = GetQuoBitRate (dir, slice);
+  int64_t resBitRate = GetResBitRate (dir, slice);
+  return (resBitRate + bitRate <= std::min (blkBitRate, quoBitRate));
+}
+
 std::ostream &
 LinkInfo::PrintValues (std::ostream &os, LinkDir dir, SliceId slice) const
 {

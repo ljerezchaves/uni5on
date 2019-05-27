@@ -259,6 +259,18 @@ public:
     LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**
+   * Check for free (not reserved) bit rate that can be reserved for GBR
+   * bearers, considering the GBR block threshold.
+   * \param dir The link direction.
+   * \param slice The network slice.
+   * \param bitRate The bit rate to check.
+   * \param blockThs The block threshold.
+   * \return True if there is available bit rate, false otherwise.
+   */
+  bool HasBitRate (LinkDir dir, SliceId slice, int64_t bitRate,
+                   double blockThs) const;
+
+  /**
    * Print the link metadata for a specific link direction and network slice.
    * \param os The output stream.
    * \param dir The link direction.
@@ -266,7 +278,8 @@ public:
    * \return The output stream.
    * \internal Keep this method consistent with the PrintHeader () method.
    */
-  std::ostream & PrintValues (std::ostream &os, LinkDir dir, SliceId slice) const;
+  std::ostream & PrintValues (std::ostream &os, LinkDir dir,
+                              SliceId slice) const;
 
   /**
    * Get the string representing the given direction.
