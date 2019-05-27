@@ -243,6 +243,18 @@ protected:
   virtual void DoDispose ();
 
   /**
+   * \name Private member accessors for infrastructure switch information.
+   * \param iface The LTE interface.
+   * \return The requested information.
+   */
+  //\{
+  uint16_t GetFirstDlInfraSwIdx (LteIface iface) const;
+  uint16_t GetFirstUlInfraSwIdx (LteIface iface) const;
+  uint16_t GetLastDlInfraSwIdx  (LteIface iface) const;
+  uint16_t GetLastUlInfraSwIdx  (LteIface iface) const;
+  //\}
+
+  /**
    * \name Private member accessors for updating internal metadata.
    * \param value The value to set.
    */

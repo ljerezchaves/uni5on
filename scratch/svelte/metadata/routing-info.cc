@@ -660,6 +660,46 @@ RoutingInfo::DoDispose ()
   Object::DoDispose ();
 }
 
+uint16_t
+RoutingInfo::GetFirstDlInfraSwIdx (LteIface iface) const
+{
+  NS_LOG_FUNCTION (this << iface);
+
+  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
+                 "Invalid LTE interface. Expected S1-U or S5 interface.");
+  return (iface == LteIface::S5) ? GetPgwInfraSwIdx () : GetSgwInfraSwIdx ();
+}
+
+uint16_t
+RoutingInfo::GetFirstUlInfraSwIdx (LteIface iface) const
+{
+  NS_LOG_FUNCTION (this << iface);
+
+  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
+                 "Invalid LTE interface. Expected S1-U or S5 interface.");
+  return (iface == LteIface::S1) ? GetEnbInfraSwIdx () : GetSgwInfraSwIdx ();
+}
+
+uint16_t
+RoutingInfo::GetLastDlInfraSwIdx  (LteIface iface) const
+{
+  NS_LOG_FUNCTION (this << iface);
+
+  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
+                 "Invalid LTE interface. Expected S1-U or S5 interface.");
+  return (iface == LteIface::S5) ? GetSgwInfraSwIdx () : GetEnbInfraSwIdx ();
+}
+
+uint16_t
+RoutingInfo::GetLastUlInfraSwIdx  (LteIface iface) const
+{
+  NS_LOG_FUNCTION (this << iface);
+
+  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
+                 "Invalid LTE interface. Expected S1-U or S5 interface.");
+  return (iface == LteIface::S1) ? GetSgwInfraSwIdx () : GetPgwInfraSwIdx ();
+}
+
 void
 RoutingInfo::SetActive (bool value)
 {
