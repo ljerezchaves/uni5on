@@ -42,9 +42,10 @@ public:
   /** Routing direction in the ring. */
   enum RingPath
   {
-    LOCAL = 0,    //!< Local routing.
+    UNDEF = 0,    //!< Undefined routing.
     CLOCK = 1,    //!< Clockwise routing.
-    COUNT = 2     //!< Counterclockwise routing.
+    COUNT = 2,    //!< Counterclockwise routing.
+    LOCAL = 3,    //!< Local routing.
   };
 
   /**
@@ -68,8 +69,9 @@ public:
   //\{
   RingPath      GetDlPath     (LteIface iface) const;
   RingPath      GetUlPath     (LteIface iface) const;
-  bool          IsShortPath   (LteIface iface) const;
   bool          IsLocalPath   (LteIface iface) const;
+  bool          IsShortPath   (LteIface iface) const;
+  bool          IsUndefPath   (LteIface iface) const;
   //\}
 
   /**
@@ -100,14 +102,6 @@ public:
   static RingPath LinkDirToRingPath (LinkInfo::LinkDir dir);
 
   /**
-   * Map the ring routing path to the corresponding link direction.
-   * \param path The ring routing path.
-   * \return The link direction.
-   * \attention This works only for links created in clockwise direction.
-   */
-  static LinkInfo::LinkDir RingPathToLinkDir (RingPath path);
-
-  /**
    * Get the string representing the routing path.
    * \param path The routing path.
    * \return The routing path string.
@@ -133,24 +127,23 @@ private:
    * \param iface The LTE logical interface for this path.
    * \param path The downlink path.
    */
-  void SetIfacePath (LteIface iface, RingPath path);
+  void SetShortDlPath (LteIface iface, RingPath path);
 
   /**
    * Invert the interface routing path.
    * \param iface The LTE logical interface.
    */
-  void InvertIfacePath (LteIface iface);
+  void InvertPath (LteIface iface);
 
   /**
    * Reset the interface routing path to the shortest one.
    * \param iface The LTE logical interface.
    */
-  void ResetIfacePath (LteIface iface);
+  void ResetPath (LteIface iface);
 
-  RingPath         m_downPath [2];       //!< Downlink routing path.
-  bool             m_isShortPath [2];    //!< True for short down path.
-  bool             m_isLocalPath [2];    //!< True for local down path.
-  Ptr<RoutingInfo> m_rInfo;              //!< Routing metadata.
+  RingPath         m_downPath [2];  //!< Downlink routing path.
+  bool             m_shortPath [2]; //!< True for short downlink routing path.
+  Ptr<RoutingInfo> m_rInfo;         //!< Routing metadata.
 };
 
 /**
