@@ -574,11 +574,11 @@ RingController::NotifyBearerCreated (Ptr<RoutingInfo> rInfo)
   // Set the downlink shortest path for both S1-U and S5 interfaces.
   RingInfo::RingPath s5DownPath = FindShortestPath (
       rInfo->GetPgwInfraSwIdx (), rInfo->GetSgwInfraSwIdx ());
-  ringInfo->SetIfacePath (LteIface::S5, s5DownPath);
+  ringInfo->SetShortDlPath (LteIface::S5, s5DownPath);
 
   RingInfo::RingPath s1DownPath = FindShortestPath (
       rInfo->GetSgwInfraSwIdx (), rInfo->GetEnbInfraSwIdx ());
-  ringInfo->SetIfacePath (LteIface::S1, s1DownPath);
+  ringInfo->SetShortDlPath (LteIface::S1, s1DownPath);
 
   NS_LOG_DEBUG ("Bearer teid " << rInfo->GetTeidHex () << " default downlink "
                 " S1-U path: " << RingInfo::RingPathStr (s1DownPath) <<
@@ -1041,6 +1041,7 @@ RingController::HopCounter (uint16_t srcIdx, uint16_t dstIdx,
 {
   NS_LOG_FUNCTION (this << srcIdx << dstIdx);
 
+  NS_ASSERT_MSG (path != RingInfo::UNDEF, "Invalid ring routing path.");
   NS_ASSERT (std::max (srcIdx, dstIdx) < GetNSwitches ());
 
   // Check for local routing.
@@ -1070,8 +1071,8 @@ RingController::NextSwitchIndex (uint16_t idx, RingInfo::RingPath path) const
   NS_LOG_FUNCTION (this << idx << path);
 
   NS_ASSERT_MSG (GetNSwitches () > 0, "Invalid number of switches.");
-  NS_ASSERT_MSG (path != RingInfo::LOCAL,
-                 "Not supposed to get here for local routing.");
+  NS_ASSERT_MSG (path != RingInfo::UNDEF, "Invalid ring routing path.");
+  NS_ASSERT_MSG (path != RingInfo::LOCAL, "Invalid ring routing path.");
 
   return path == RingInfo::CLOCK ?
          (idx + 1) % GetNSwitches () :
