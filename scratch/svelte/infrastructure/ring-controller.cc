@@ -688,19 +688,19 @@ RingController::HasAvailableResources (
     {
       rInfo->SetBlocked (RoutingInfo::BACKBAND);
       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
-                   " because tat least one backhaul link is overloaded.");
+                   " because at least one backhaul link is overloaded.");
     }
   if (!cpuOk)
     {
       rInfo->SetBlocked (RoutingInfo::BACKLOAD);
       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
-                   " because tat least one backhaul switch is overloaded.");
+                   " because at least one backhaul switch is overloaded.");
     }
   if (!tabOk)
     {
       rInfo->SetBlocked (RoutingInfo::BACKTABLE);
       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
-                   " because tat least one backhaul switch table is full.");
+                   " because at least one backhaul switch table is full.");
     }
 
   return (bwdOk && cpuOk && tabOk);
