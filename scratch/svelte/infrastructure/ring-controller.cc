@@ -150,7 +150,11 @@ RingController::BearerReserve (Ptr<RoutingInfo> rInfo)
     {
       return true;
     }
-  return BitRateReserve (ringInfo);
+
+  bool success = true;
+  success &= BitRateReserve (ringInfo, LteIface::S5);
+  success &= BitRateReserve (ringInfo, LteIface::S1);
+  return success;
 }
 
 bool
@@ -168,7 +172,11 @@ RingController::BearerRelease (Ptr<RoutingInfo> rInfo)
 
   Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
   NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
-  return BitRateRelease (ringInfo);
+
+  bool success = true;
+  success &= BitRateRelease (ringInfo, LteIface::S5);
+  success &= BitRateRelease (ringInfo, LteIface::S1);
+  return success;
 }
 
 bool
@@ -651,28 +659,37 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 }
 
 bool
-RingController::BitRateReserve (Ptr<RingInfo> ringInfo)
+RingController::BitRateReserve (Ptr<RingInfo> ringInfo, LteIface iface)
 {
-  NS_LOG_FUNCTION (this << ringInfo);
+  NS_LOG_FUNCTION (this << ringInfo << iface);
 
   Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
-  NS_LOG_INFO ("Reserving resources for teid " << rInfo->GetTeidHex ());
+  NS_ASSERT_MSG (!rInfo->IsBlocked (), "Bearer should not be blocked.");
+  NS_ASSERT_MSG (!rInfo->IsAggregated (), "Bearer should not be aggregated.");
+  NS_ASSERT_MSG (!rInfo->IsGbrReserved (iface), "Bit rate already reserved.");
+
+  NS_LOG_INFO ("Reserving resources for teid " << rInfo->GetTeidHex () <<
+               " on interface " << LteIfaceStr (iface));
+
+  // Nothing to reserve for Non-GBR bearers and local-routing bearers. FIXME
+  if (!(rInfo->GetGbrDlBitRate () && rInfo->GetGbrUlBitRate ())
+      || ringInfo->IsLocalPath (iface))
+    {
+      return true;
+    }
 
   SliceId slice = rInfo->GetSliceId ();
   int64_t dlRate = rInfo->GetGbrDlBitRate ();
   int64_t ulRate = rInfo->GetGbrUlBitRate ();
-  RingInfo::RingPath path;
-  uint16_t curr = 0;
-  uint16_t last = 0;
-  bool ok = true;
+  uint16_t curr = rInfo->GetFirstDlInfraSwIdx (iface);
+  uint16_t last = rInfo->GetLastDlInfraSwIdx (iface);
+  RingInfo::RingPath path = ringInfo->GetDlPath (iface);
 
-  Ptr<LinkInfo> lInfo;
+  // Walk through the backhaul links in the downlink routing path,
+  // reserving the requested bit rate.
   LinkInfo::LinkDir dlDir, ulDir;
-
-  // S5 interface (from P-GW to S-GW)
-  curr = rInfo->GetPgwInfraSwIdx ();
-  last = rInfo->GetSgwInfraSwIdx ();
-  path = ringInfo->GetDlPath (LteIface::S5);
+  Ptr<LinkInfo> lInfo;
+  bool ok = true;
   while (ok && curr != last)
     {
       uint16_t next = NextSwitchIndex (curr, path);
@@ -683,48 +700,38 @@ RingController::BitRateReserve (Ptr<RingInfo> ringInfo)
       curr = next;
     }
 
-  // S1-U interface (from S-GW to eNB)
-  curr = rInfo->GetSgwInfraSwIdx ();
-  last = rInfo->GetEnbInfraSwIdx ();
-  path = ringInfo->GetDlPath (LteIface::S1);
-  while (ok && curr != last)
-    {
-      uint16_t next = NextSwitchIndex (curr, path);
-      std::tie (lInfo, dlDir, ulDir) = GetLinkInfo (curr, next);
-      ok &= lInfo->UpdateResBitRate (dlDir, slice, dlRate);
-      ok &= lInfo->UpdateResBitRate (ulDir, slice, ulRate);
-      SlicingMeterAdjust (lInfo, slice);
-      curr = next;
-    }
-
-  NS_ASSERT_MSG (ok, "Error when reserving resources.");
-  rInfo->SetGbrReserved (ok);
+  NS_ASSERT_MSG (ok, "Error when reserving bit rate.");
+  rInfo->SetGbrReserved (iface, ok);
   return ok;
 }
 
 bool
-RingController::BitRateRelease (Ptr<RingInfo> ringInfo)
+RingController::BitRateRelease (Ptr<RingInfo> ringInfo, LteIface iface)
 {
-  NS_LOG_FUNCTION (this << ringInfo);
+  NS_LOG_FUNCTION (this << ringInfo << iface);
 
   Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
-  NS_LOG_INFO ("Releasing resources for teid " << rInfo->GetTeidHex ());
+  NS_LOG_INFO ("Reserving resources for teid " << rInfo->GetTeidHex () <<
+               " on interface " << LteIfaceStr (iface));
+
+  // Nothing to release when no guaranteed bit rate was reserved. // FIXME
+  if (!rInfo->IsGbrReserved (iface))
+    {
+      return true;
+    }
 
   SliceId slice = rInfo->GetSliceId ();
   int64_t dlRate = rInfo->GetGbrDlBitRate ();
   int64_t ulRate = rInfo->GetGbrUlBitRate ();
-  RingInfo::RingPath path;
-  uint16_t curr = 0;
-  uint16_t last = 0;
-  bool ok = true;
+  uint16_t curr = rInfo->GetFirstDlInfraSwIdx (iface);
+  uint16_t last = rInfo->GetLastDlInfraSwIdx (iface);
+  RingInfo::RingPath path = ringInfo->GetDlPath (iface);
 
-  Ptr<LinkInfo> lInfo;
+  // Walk through the backhaul links in the downlink routing path,
+  // releasing the reserved bit rate.
   LinkInfo::LinkDir dlDir, ulDir;
-
-  // S5 interface (from P-GW to S-GW)
-  curr = rInfo->GetPgwInfraSwIdx ();
-  last = rInfo->GetSgwInfraSwIdx ();
-  path = ringInfo->GetDlPath (LteIface::S5);
+  Ptr<LinkInfo> lInfo;
+  bool ok = true;
   while (ok && curr != last)
     {
       uint16_t next = NextSwitchIndex (curr, path);
@@ -735,22 +742,8 @@ RingController::BitRateRelease (Ptr<RingInfo> ringInfo)
       curr = next;
     }
 
-  // S1-U interface (from S-GW to eNB)
-  curr = rInfo->GetSgwInfraSwIdx ();
-  last = rInfo->GetEnbInfraSwIdx ();
-  path = ringInfo->GetDlPath (LteIface::S1);
-  while (ok && curr != last)
-    {
-      uint16_t next = NextSwitchIndex (curr, path);
-      std::tie (lInfo, dlDir, ulDir) = GetLinkInfo (curr, next);
-      ok &= lInfo->UpdateResBitRate (dlDir, slice, -dlRate);
-      ok &= lInfo->UpdateResBitRate (ulDir, slice, -ulRate);
-      SlicingMeterAdjust (lInfo, slice);
-      curr = next;
-    }
-
-  NS_ASSERT_MSG (ok, "Error when releasing resources.");
-  rInfo->SetGbrReserved (!ok);
+  NS_ASSERT_MSG (ok, "Error when releasing bit rate.");
+  rInfo->SetGbrReserved (iface, !ok);
   return ok;
 }
 

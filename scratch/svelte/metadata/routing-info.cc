@@ -44,7 +44,6 @@ RoutingInfo::RoutingInfo (uint32_t teid, BearerCreated_t bearer,
   m_isActive (false),
   m_isAggregated (false),
   m_isDefault (isDefault),
-  m_isGbrRes (false),
   m_isMbrDlInst (false),
   m_isMbrUlInst (false),
   m_isInstalled (false),
@@ -58,6 +57,9 @@ RoutingInfo::RoutingInfo (uint32_t teid, BearerCreated_t bearer,
   NS_LOG_FUNCTION (this);
 
   NS_ASSERT_MSG (m_ueInfo, "Invalid UeInfo pointer.");
+
+  m_isGbrRes [LteIface::S1] = false;
+  m_isGbrRes [LteIface::S5] = false;
 
   // Validate the default bearer.
   if (IsDefault ())
@@ -347,11 +349,14 @@ RoutingInfo::IsGbr (void) const
 }
 
 bool
-RoutingInfo::IsGbrReserved (void) const
+RoutingInfo::IsGbrReserved (LteIface iface) const
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION (this << iface);
 
-  return m_isGbrRes;
+  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
+                 "Invalid LTE interface. Expected S1-U or S5 interface.");
+
+  return m_isGbrRes [iface];
 }
 
 bool
@@ -636,7 +641,8 @@ RoutingInfo::PrintHeader (std::ostream &os)
      << " " << setw (6)  << "Ulink"
      << " " << setw (11) << "UlGbrKbps"
      << " " << setw (11) << "UlMbrKbps"
-     << " " << setw (6)  << "GbrRes"
+     << " " << setw (8)  << "GbrS1Res"
+     << " " << setw (8)  << "GbrS5Res"
      << " " << setw (6)  << "DMbIns"
      << " " << setw (6)  << "UMbIns"
      << " " << setw (6)  << "TtfIdx"
@@ -675,7 +681,7 @@ RoutingInfo::GetFirstUlInfraSwIdx (LteIface iface) const
 }
 
 uint16_t
-RoutingInfo::GetLastDlInfraSwIdx  (LteIface iface) const
+RoutingInfo::GetLastDlInfraSwIdx (LteIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
@@ -685,7 +691,7 @@ RoutingInfo::GetLastDlInfraSwIdx  (LteIface iface) const
 }
 
 uint16_t
-RoutingInfo::GetLastUlInfraSwIdx  (LteIface iface) const
+RoutingInfo::GetLastUlInfraSwIdx (LteIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
@@ -711,11 +717,14 @@ RoutingInfo::SetAggregated (bool value)
 }
 
 void
-RoutingInfo::SetGbrReserved (bool value)
+RoutingInfo::SetGbrReserved (LteIface iface, bool value)
 {
-  NS_LOG_FUNCTION (this << value);
+  NS_LOG_FUNCTION (this << iface << value);
 
-  m_isGbrRes = value;
+  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
+                 "Invalid LTE interface. Expected S1-U or S5 interface.");
+
+  m_isGbrRes [iface] = value;
 }
 
 void
@@ -871,7 +880,8 @@ std::ostream & operator << (std::ostream &os, const RoutingInfo &rInfo)
      << " " << setw (6)  << rInfo.HasUlTraffic ()
      << " " << setw (11) << Bps2Kbps (rInfo.GetGbrUlBitRate ())
      << " " << setw (11) << Bps2Kbps (rInfo.GetMbrUlBitRate ())
-     << " " << setw (6)  << rInfo.IsGbrReserved ()
+     << " " << setw (8)  << rInfo.IsGbrReserved (LteIface::S1)
+     << " " << setw (8)  << rInfo.IsGbrReserved (LteIface::S5)
      << " " << setw (6)  << rInfo.IsMbrDlInstalled ()
      << " " << setw (6)  << rInfo.IsMbrUlInstalled ()
      << " " << setw (6)  << rInfo.GetPgwTftIdx ()

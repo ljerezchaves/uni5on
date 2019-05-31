@@ -127,6 +127,7 @@ public:
   /**
    * \name Private member accessors for bearer guaranteed bit rate information.
    *       These methods are used for reserving resources at backhaul network.
+   * \param iface The LTE logical interface.
    * \return The requested information.
    */
   //\{
@@ -135,8 +136,8 @@ public:
   bool        HasGbrDl          (void) const;
   bool        HasGbrUl          (void) const;
   bool        IsGbr             (void) const;
-  bool        IsGbrReserved     (void) const;
   bool        IsNonGbr          (void) const;
+  bool        IsGbrReserved     (LteIface iface) const;
   //\}
 
   /**
@@ -253,12 +254,13 @@ protected:
 
   /**
    * \name Private member accessors for updating internal metadata.
+   * \param iface The LTE logical interface.
    * \param value The value to set.
    */
   //\{
   void SetActive          (bool value);
   void SetAggregated      (bool value);
-  void SetGbrReserved     (bool value);
+  void SetGbrReserved     (LteIface iface, bool value);
   void SetMbrDlInstalled  (bool value);
   void SetMbrUlInstalled  (bool value);
   void SetPgwTftIdx       (uint16_t value);
@@ -319,8 +321,8 @@ private:
   bool                 m_isActive;     //!< True for active bearer.
   bool                 m_isAggregated; //!< True for aggregated bearer.
   bool                 m_isDefault;    //!< True for default bearer.
-  bool                 m_isGbrRes;     //!< True for GBR resources reserved.
-  bool                 m_isMbrDlInst;  //!< True fir downlink meter installed.
+  bool                 m_isGbrRes [2]; //!< True for GBR resources reserved.
+  bool                 m_isMbrDlInst;  //!< True for downlink meter installed.
   bool                 m_isMbrUlInst;  //!< True for uplink meter installed.
   bool                 m_isInstalled;  //!< True for OpenFlow rules installed.
   uint16_t             m_pgwTftIdx;    //!< P-GW TFT switch index.

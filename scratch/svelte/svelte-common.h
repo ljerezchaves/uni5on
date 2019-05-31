@@ -89,7 +89,8 @@ typedef enum
  */
 typedef enum
 {
-  // Don't change the order. S1-U and S5 are used as array indexes in RingInfo.
+  // Don't change the order. S1-U and S5 are used as array indexes in RingInfo
+  // and RoutingInfo and must be 0 and 1, respectivelly.
   S1  = 0,   //!< S1-U interface connecting eNB to S-GW.
   S5  = 1,   //!< S5 interface connecting S-GW to P-GW.
   X2  = 2,   //!< X2 interface connecting eNB to eNB.

@@ -92,16 +92,18 @@ private:
   /**
    * Reserve the bit rate for this bearer.
    * \param ringInfo The ring routing information.
+   * \param iface The LTE logical interface.
    * \return True if succeeded, false otherwise.
    */
-  bool BitRateReserve (Ptr<RingInfo> ringInfo);
+  bool BitRateReserve (Ptr<RingInfo> ringInfo, LteIface iface);
 
   /**
    * Release the bit rate for this bearer.
    * \param ringInfo The ring routing information.
+   * \param iface The LTE logical interface.
    * \return True if succeeded, false otherwise.
    */
-  bool BitRateRelease (Ptr<RingInfo> ringInfo);
+  bool BitRateRelease (Ptr<RingInfo> ringInfo, LteIface iface);
 
   /**
    * To avoid flooding problems when broadcasting packets (like in ARP
