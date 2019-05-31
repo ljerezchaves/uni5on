@@ -90,18 +90,6 @@ protected:
 
 private:
   /**
-   * Check for the available resources on the backhaul infrastructure for the
-   * given LTE interface. When any of the requested resources is not available,
-   * this method must set the routing information with the block reason.
-   * \param ringInfo The ring routing information.
-   * \param iface The LTE logical interface.
-   * \param overlap The optional overlapping links.
-   * \return True if succeeded, false otherwise.
-   */
-  bool HasAvailableResources (Ptr<RingInfo> ringInfo, LteIface iface,
-                              LinkInfoSet_t *overlap = 0) const;
-
-  /**
    * Reserve the bit rate for this bearer.
    * \param ringInfo The ring routing information.
    * \return True if succeeded, false otherwise.
@@ -141,6 +129,18 @@ private:
    */
   void GetLinks (Ptr<RingInfo> ringInfo, LteIface iface,
                  LinkInfoSet_t *links) const;
+
+  /**
+   * Check for the available resources on the backhaul infrastructure for the
+   * given LTE interface. When any of the requested resources is not available,
+   * this method must set the routing information with the block reason.
+   * \param ringInfo The ring routing information.
+   * \param iface The LTE logical interface.
+   * \param overlap The optional overlapping links.
+   * \return True if succeeded, false otherwise.
+   */
+  bool HasAvailableResources (Ptr<RingInfo> ringInfo, LteIface iface,
+                              LinkInfoSet_t *overlap = 0) const;
 
   /**
    * Check for the available bit rate on backhaul links for the given LTE

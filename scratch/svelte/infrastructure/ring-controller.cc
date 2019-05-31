@@ -650,52 +650,6 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 }
 
 bool
-RingController::HasAvailableResources (
-  Ptr<RingInfo> ringInfo, LteIface iface, LinkInfoSet_t *overlap) const
-{
-  NS_LOG_FUNCTION (this << ringInfo << iface);
-
-  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
-
-  // Check for the available resources on the default path.
-  bool bwdOk = HasLinkBitRate (ringInfo, iface, overlap);
-  bool cpuOk = HasSwitchCpu (ringInfo, iface);
-  bool tabOk = HasSwitchTable (ringInfo, iface);
-  if ((bwdOk == false || cpuOk == false || tabOk == false)
-      && GetRoutingStrategy () == RingController::SPF)
-    {
-      // We don't have the resources in the default path.
-      // Let's invert the routing path and check again.
-      ringInfo->InvertPath (iface);
-      bwdOk = HasLinkBitRate (ringInfo, iface, overlap);
-      cpuOk = HasSwitchCpu (ringInfo, iface);
-      tabOk = HasSwitchTable (ringInfo, iface);
-    }
-
-  // Set the blocked flagged when necessary.
-  if (!bwdOk)
-    {
-      rInfo->SetBlocked (RoutingInfo::BACKBAND);
-      NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
-                   " because at least one backhaul link is overloaded.");
-    }
-  if (!cpuOk)
-    {
-      rInfo->SetBlocked (RoutingInfo::BACKLOAD);
-      NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
-                   " because at least one backhaul switch is overloaded.");
-    }
-  if (!tabOk)
-    {
-      rInfo->SetBlocked (RoutingInfo::BACKTABLE);
-      NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
-                   " because at least one backhaul switch table is full.");
-    }
-
-  return (bwdOk && cpuOk && tabOk);
-}
-
-bool
 RingController::BitRateReserve (Ptr<RingInfo> ringInfo)
 {
   NS_LOG_FUNCTION (this << ringInfo);
@@ -878,6 +832,52 @@ RingController::GetLinks (
       NS_ABORT_MSG_IF (ret.second == false, "Error saving link info.");
       curr = next;
     }
+}
+
+bool
+RingController::HasAvailableResources (
+  Ptr<RingInfo> ringInfo, LteIface iface, LinkInfoSet_t *overlap) const
+{
+  NS_LOG_FUNCTION (this << ringInfo << iface);
+
+  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
+
+  // Check for the available resources on the default path.
+  bool bwdOk = HasLinkBitRate (ringInfo, iface, overlap);
+  bool cpuOk = HasSwitchCpu (ringInfo, iface);
+  bool tabOk = HasSwitchTable (ringInfo, iface);
+  if ((bwdOk == false || cpuOk == false || tabOk == false)
+      && GetRoutingStrategy () == RingController::SPF)
+    {
+      // We don't have the resources in the default path.
+      // Let's invert the routing path and check again.
+      ringInfo->InvertPath (iface);
+      bwdOk = HasLinkBitRate (ringInfo, iface, overlap);
+      cpuOk = HasSwitchCpu (ringInfo, iface);
+      tabOk = HasSwitchTable (ringInfo, iface);
+    }
+
+  // Set the blocked flagged when necessary.
+  if (!bwdOk)
+    {
+      rInfo->SetBlocked (RoutingInfo::BACKBAND);
+      NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
+                   " because at least one backhaul link is overloaded.");
+    }
+  if (!cpuOk)
+    {
+      rInfo->SetBlocked (RoutingInfo::BACKLOAD);
+      NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
+                   " because at least one backhaul switch is overloaded.");
+    }
+  if (!tabOk)
+    {
+      rInfo->SetBlocked (RoutingInfo::BACKTABLE);
+      NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
+                   " because at least one backhaul switch table is full.");
+    }
+
+  return (bwdOk && cpuOk && tabOk);
 }
 
 bool
