@@ -194,8 +194,9 @@ private:
   /**
    * Set the default ring routing paths to the shortest ones.
    * \param ringInfo The ring routing information.
+   * \param iface The LTE logical interface.
    */
-  void SetShortestPath (Ptr<RingInfo> ringInfo) const;
+  void SetShortestPath (Ptr<RingInfo> ringInfo, LteIface iface) const;
 
   /**
    * Apply the infrastructure inter-slicing OpenFlow meters.

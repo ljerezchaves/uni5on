@@ -103,9 +103,9 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
   Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
   NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
 
-  // Reset the shortest path for both S1-U and S5 interfaces.
-  // Routing paths may change after handover procedures.
-  SetShortestPath (ringInfo);
+  // Reset the shortest path for S1-U interfaces (the handover procedure may
+  // have changed the eNB switch index.)
+  SetShortestPath (ringInfo, LteIface::S1);
 
   // Part 1: Check for the available resources on the S5 interface.
   bool s5Ok = HasAvailableResources (ringInfo, LteIface::S5);
@@ -536,7 +536,8 @@ RingController::NotifyBearerCreated (Ptr<RoutingInfo> rInfo)
   Ptr<RingInfo> ringInfo = CreateObject<RingInfo> (rInfo);
 
   // Set the downlink shortest path for both S1-U and S5 interfaces.
-  SetShortestPath (ringInfo);
+  SetShortestPath (ringInfo, LteIface::S5);
+  SetShortestPath (ringInfo, LteIface::S1);
 
   BackhaulController::NotifyBearerCreated (rInfo);
 }
@@ -1033,25 +1034,20 @@ RingController::NextSwitchIndex (uint16_t idx, RingInfo::RingPath path) const
 }
 
 void
-RingController::SetShortestPath (Ptr<RingInfo> ringInfo) const
+RingController::SetShortestPath (Ptr<RingInfo> ringInfo, LteIface iface) const
 {
   NS_LOG_FUNCTION (this << ringInfo);
 
   Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
 
-  RingInfo::RingPath s5DownPath = FindShortestPath (
-      rInfo->GetFirstDlInfraSwIdx (LteIface::S5),
-      rInfo->GetLastDlInfraSwIdx (LteIface::S5));
-  ringInfo->SetShortDlPath (LteIface::S5, s5DownPath);
-
-  RingInfo::RingPath s1DownPath = FindShortestPath (
-      rInfo->GetFirstDlInfraSwIdx (LteIface::S1),
-      rInfo->GetLastDlInfraSwIdx (LteIface::S1));
-  ringInfo->SetShortDlPath (LteIface::S1, s1DownPath);
+  RingInfo::RingPath dlPath = FindShortestPath (
+      rInfo->GetFirstDlInfraSwIdx (iface),
+      rInfo->GetLastDlInfraSwIdx (iface));
+  ringInfo->SetShortDlPath (iface, dlPath);
 
   NS_LOG_DEBUG ("Bearer teid " << rInfo->GetTeidHex () <<
-                " S1-U path: " << RingInfo::RingPathStr (s1DownPath) <<
-                " S5 path: "   << RingInfo::RingPathStr (s5DownPath));
+                " interface "  << LteIfaceStr (iface) <<
+                " short path " << RingInfo::RingPathStr (dlPath));
 }
 
 void
