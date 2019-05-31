@@ -142,15 +142,6 @@ RingController::BearerReserve (Ptr<RoutingInfo> rInfo)
   Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
   NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
 
-  // The only resource that is reserved is the GBR bit rate over links.
-  // For Non-GBR bearers (which includes the default bearer) and for bearers
-  // that only transverse the local switch (local routing for both S1-U and S5
-  // interfaces): there's no GBR bit rate to reserve.
-  if (rInfo->IsNonGbr () || ringInfo->AreLocalPaths ()) // FIXME Verificar se e local na funcao
-    {
-      return true;
-    }
-
   bool success = true;
   success &= BitRateReserve (ringInfo, LteIface::S5);
   success &= BitRateReserve (ringInfo, LteIface::S1);
@@ -163,12 +154,6 @@ RingController::BearerRelease (Ptr<RoutingInfo> rInfo)
   NS_LOG_FUNCTION (this << rInfo);
 
   NS_ASSERT_MSG (!rInfo->IsAggregated (), "Bearer should not be aggregated.");
-
-  // For bearers without reserved resources: nothing to release. // FIXME
-  // if (!rInfo->IsGbrReserved ())
-  //   {
-  //     return true;
-  //   }
 
   Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
   NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
@@ -676,6 +661,7 @@ RingController::BitRateReserve (Ptr<RingInfo> ringInfo, LteIface iface)
     {
       return true;
     }
+  NS_ASSERT_MSG (rInfo->IsGbr (), "Non-GBR bearers should not get here.");
 
   SliceId slice = rInfo->GetSliceId ();
   int64_t dlRate = rInfo->GetGbrDlBitRate ();
@@ -710,7 +696,7 @@ RingController::BitRateRelease (Ptr<RingInfo> ringInfo, LteIface iface)
   NS_LOG_FUNCTION (this << ringInfo << iface);
 
   Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
-  NS_LOG_INFO ("Reserving resources for teid " << rInfo->GetTeidHex () <<
+  NS_LOG_INFO ("Releasing resources for teid " << rInfo->GetTeidHex () <<
                " on interface " << LteIfaceStr (iface));
 
   // Nothing to release when no guaranteed bit rate was reserved.
