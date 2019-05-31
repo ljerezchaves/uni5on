@@ -208,6 +208,12 @@ private:
   uint16_t NextSwitchIndex (uint16_t idx, RingInfo::RingPath path) const;
 
   /**
+   * Set the default ring routing paths to the shortest ones.
+   * \param ringInfo The ring routing information.
+   */
+  void SetShortestPath (Ptr<RingInfo> ringInfo) const;
+
+  /**
    * Apply the infrastructure inter-slicing OpenFlow meters.
    * \param swtch The switch information.
    * \param slice The network slice.

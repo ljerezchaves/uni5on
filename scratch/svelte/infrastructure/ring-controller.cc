@@ -572,17 +572,9 @@ RingController::NotifyBearerCreated (Ptr<RoutingInfo> rInfo)
   Ptr<RingInfo> ringInfo = CreateObject<RingInfo> (rInfo);
 
   // Set the downlink shortest path for both S1-U and S5 interfaces.
-  RingInfo::RingPath s5DownPath = FindShortestPath (
-      rInfo->GetPgwInfraSwIdx (), rInfo->GetSgwInfraSwIdx ());
-  ringInfo->SetShortDlPath (LteIface::S5, s5DownPath);
+  SetShortestPath (ringInfo);
 
-  RingInfo::RingPath s1DownPath = FindShortestPath (
-      rInfo->GetSgwInfraSwIdx (), rInfo->GetEnbInfraSwIdx ());
-  ringInfo->SetShortDlPath (LteIface::S1, s1DownPath);
 
-  NS_LOG_DEBUG ("Bearer teid " << rInfo->GetTeidHex () << " default downlink "
-                " S1-U path: " << RingInfo::RingPathStr (s1DownPath) <<
-                " S5 path: " << RingInfo::RingPathStr (s5DownPath));
 
   BackhaulController::NotifyBearerCreated (rInfo);
 }
@@ -1231,6 +1223,28 @@ RingController::NextSwitchIndex (uint16_t idx, RingInfo::RingPath path) const
   return path == RingInfo::CLOCK ?
          (idx + 1) % GetNSwitches () :
          (idx == 0 ? GetNSwitches () - 1 : (idx - 1));
+}
+
+void
+RingController::SetShortestPath (Ptr<RingInfo> ringInfo) const
+{
+  NS_LOG_FUNCTION (this << ringInfo);
+
+  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
+
+  RingInfo::RingPath s5DownPath = FindShortestPath (
+      rInfo->GetFirstDlInfraSwIdx (LteIface::S5),
+      rInfo->GetLastDlInfraSwIdx (LteIface::S5));
+  ringInfo->SetShortDlPath (LteIface::S5, s5DownPath);
+
+  RingInfo::RingPath s1DownPath = FindShortestPath (
+      rInfo->GetFirstDlInfraSwIdx (LteIface::S1),
+      rInfo->GetLastDlInfraSwIdx (LteIface::S1));
+  ringInfo->SetShortDlPath (LteIface::S1, s1DownPath);
+
+  NS_LOG_DEBUG ("Bearer teid " << rInfo->GetTeidHex () <<
+                " S1-U path: " << RingInfo::RingPathStr (s1DownPath) <<
+                " S5 path: "   << RingInfo::RingPathStr (s5DownPath));
 }
 
 void
