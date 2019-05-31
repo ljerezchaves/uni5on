@@ -173,15 +173,14 @@ SvelteEnbApplication::SendToS1uSocket (Ptr<Packet> packet, uint32_t teid)
 
   // Attach the GTP-U header.
   GtpuHeader gtpu;
+  gtpu.SetTeid (teid);
+
+  // Trick for traffic aggregation: use the teid of the default bearer.
   if (rInfo->IsAggregated ())
     {
-      // Trick for traffic aggregation: use the teid of the default bearer.
       gtpu.SetTeid (rInfo->GetUeInfo ()->GetDefaultTeid ());
     }
-  else
-    {
-      gtpu.SetTeid (teid);
-    }
+
   gtpu.SetLength (packet->GetSize () + gtpu.GetSerializedSize () - 8);
   packet->AddHeader (gtpu);
 

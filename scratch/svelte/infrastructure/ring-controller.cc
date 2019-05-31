@@ -103,7 +103,7 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
   Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
   NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
 
-  // Reset the shortest path for S1-U interfaces (the handover procedure may
+  // Reset the shortest path for the S1-U interface (the handover procedure may
   // have changed the eNB switch index.)
   SetShortestPath (ringInfo, LteIface::S1);
 
