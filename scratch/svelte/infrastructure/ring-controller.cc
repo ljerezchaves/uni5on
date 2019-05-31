@@ -1036,9 +1036,9 @@ RingController::FindShortestPath (uint16_t srcIdx, uint16_t dstIdx) const
 }
 
 void
-RingController::GetLinks (Ptr<RingInfo> ringInfo, LteIface iface,
-                          LinkInfoSet_t *links,
-                          RingInfo::RingPath dlPath) const
+RingController::GetLinks (
+  Ptr<RingInfo> ringInfo, LteIface iface, LinkInfoSet_t *links,
+  RingInfo::RingPath dlPath) const
 {
   NS_LOG_FUNCTION (this << ringInfo << iface);
 
@@ -1068,9 +1068,9 @@ RingController::GetLinks (Ptr<RingInfo> ringInfo, LteIface iface,
 }
 
 bool
-RingController::HasLinkBitRate (Ptr<RingInfo> ringInfo, LteIface iface,
-                                LinkInfoSet_t *overlap,
-                                RingInfo::RingPath dlPath) const
+RingController::HasLinkBitRate (
+  Ptr<RingInfo> ringInfo, LteIface iface, LinkInfoSet_t *overlap,
+  RingInfo::RingPath dlPath) const
 {
   NS_LOG_FUNCTION (this << ringInfo << iface << dlPath << overlap);
 
@@ -1123,8 +1123,8 @@ RingController::HasLinkBitRate (Ptr<RingInfo> ringInfo, LteIface iface,
 }
 
 bool
-RingController::HasSwitchCpu (Ptr<RingInfo> ringInfo, LteIface iface,
-                              RingInfo::RingPath dlPath) const
+RingController::HasSwitchCpu (
+  Ptr<RingInfo> ringInfo, LteIface iface, RingInfo::RingPath dlPath) const
 {
   NS_LOG_FUNCTION (this << ringInfo << iface << dlPath);
 
@@ -1157,8 +1157,8 @@ RingController::HasSwitchCpu (Ptr<RingInfo> ringInfo, LteIface iface,
 }
 
 bool
-RingController::HasSwitchTable (Ptr<RingInfo> ringInfo, LteIface iface,
-                                RingInfo::RingPath dlPath) const
+RingController::HasSwitchTable (
+  Ptr<RingInfo> ringInfo, LteIface iface, RingInfo::RingPath dlPath) const
 {
   NS_LOG_FUNCTION (this << ringInfo << iface << dlPath);
 
@@ -1193,8 +1193,8 @@ RingController::HasSwitchTable (Ptr<RingInfo> ringInfo, LteIface iface,
 }
 
 uint16_t
-RingController::HopCounter (uint16_t srcIdx, uint16_t dstIdx,
-                            RingInfo::RingPath path) const
+RingController::HopCounter (
+  uint16_t srcIdx, uint16_t dstIdx, RingInfo::RingPath path) const
 {
   NS_LOG_FUNCTION (this << srcIdx << dstIdx);
 
@@ -1237,8 +1237,8 @@ RingController::NextSwitchIndex (uint16_t idx, RingInfo::RingPath path) const
 }
 
 void
-RingController::SlicingMeterApply (Ptr<const RemoteSwitch> swtch,
-                                   SliceId slice)
+RingController::SlicingMeterApply (
+  Ptr<const RemoteSwitch> swtch, SliceId slice)
 {
   NS_LOG_FUNCTION (this << swtch << slice);
 
