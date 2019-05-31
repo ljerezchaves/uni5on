@@ -582,8 +582,6 @@ RingController::NotifyBearerCreated (Ptr<RoutingInfo> rInfo)
   // Set the downlink shortest path for both S1-U and S5 interfaces.
   SetShortestPath (ringInfo);
 
-
-
   BackhaulController::NotifyBearerCreated (rInfo);
 }
 
@@ -1111,11 +1109,11 @@ RingController::HasLinkBitRate (
   NS_LOG_FUNCTION (this << ringInfo << iface << overlap);
 
   Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
-  RingInfo::RingPath path = ringInfo->GetDlPath (iface);
 
   // Ignoring this check for Non-GBR bearers, aggregated bearers,
   // and local-routing bearers.
-  if (rInfo->IsNonGbr () || rInfo->IsAggregated () || path == RingInfo::LOCAL)
+  if (rInfo->IsNonGbr () || rInfo->IsAggregated ()
+      || ringInfo->IsLocalPath (iface))
     {
       return true;
     }
@@ -1125,6 +1123,7 @@ RingController::HasLinkBitRate (
   int64_t ulRate = rInfo->GetGbrUlBitRate ();
   uint16_t curr = rInfo->GetFirstDlInfraSwIdx (iface);
   uint16_t last = rInfo->GetLastDlInfraSwIdx (iface);
+  RingInfo::RingPath path = ringInfo->GetDlPath (iface);
   double blockThs = GetSliceController (slice)->GetGbrBlockThs ();
 
   // Walk through the backhaul links in the downlink routing path,
@@ -1136,7 +1135,7 @@ RingController::HasLinkBitRate (
     {
       uint16_t next = NextSwitchIndex (curr, path);
       std::tie (lInfo, dlDir, ulDir) = GetLinkInfo (curr, next);
-      if (overlap != 0 && (overlap->find (lInfo) != overlap->end ()))
+      if (overlap && overlap->find (lInfo) != overlap->end ())
         {
           // Ensure that overlapping links have the requested bandwidth for
           // both interfaces, otherwise the BitRateReserve () method will fail.
