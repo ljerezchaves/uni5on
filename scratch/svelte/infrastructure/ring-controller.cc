@@ -100,83 +100,35 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
-  // Reset the ring routing info to the shortest path.
   Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
   NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
-  ringInfo->ResetPath (LteIface::S1);
-  ringInfo->ResetPath (LteIface::S5);
 
-  // Check for the available resources over the shortest path.
-  if (HasAvailableResources (ringInfo))
+  // Reset the shortest path for both S1-U and S5 interfaces.
+  // Routing paths may change after handover procedures.
+  SetShortestPath (ringInfo);
+
+  // Part 1: Check for the available resources on the S5 interface.
+  bool s5Ok = HasAvailableResources (ringInfo, LteIface::S5);
+  if (!s5Ok)
     {
-      NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
-                   " over the shortest path");
-      return true;
+      NS_ASSERT_MSG (rInfo->IsBlocked (), "This bearer should be blocked.");
+      NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
+                   " because there are no resources for the S5 interface.");
     }
 
-  // The requested resources are not available over the shortest path. When
-  // using the SPF routing strategy, invert the path for S1/S5 interfaces and
-  // check for available resources again.
-  if (m_strategy == RingController::SPF)
+  // Part 2: Check for the available resources on the S1-U interface.
+  // To avoid errors when reserving bit rates, check for overlapping links.
+  LinkInfoSet_t s5Links;
+  GetLinks (ringInfo, LteIface::S5, &s5Links);
+  bool s1Ok = HasAvailableResources (ringInfo, LteIface::S1, &s5Links);
+  if (!s1Ok)
     {
-      // Let's try inverting only the S1-U interface.
-      if (!ringInfo->IsLocalPath (LteIface::S1))
-        {
-          rInfo->UnsetBlocked (RoutingInfo::BACKTABLE);
-          rInfo->UnsetBlocked (RoutingInfo::BACKLOAD);
-          rInfo->UnsetBlocked (RoutingInfo::BACKBAND);
-          ringInfo->ResetPath (LteIface::S1);
-          ringInfo->ResetPath (LteIface::S5);
-          ringInfo->InvertPath (LteIface::S1);
-          if (HasAvailableResources (ringInfo))
-            {
-              NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
-                           " over the inverted S1-U path");
-              return true;
-            }
-        }
-
-      // Let's try inverting only the S5 interface.
-      if (!ringInfo->IsLocalPath (LteIface::S5))
-        {
-          rInfo->UnsetBlocked (RoutingInfo::BACKTABLE);
-          rInfo->UnsetBlocked (RoutingInfo::BACKLOAD);
-          rInfo->UnsetBlocked (RoutingInfo::BACKBAND);
-          ringInfo->ResetPath (LteIface::S1);
-          ringInfo->ResetPath (LteIface::S5);
-          ringInfo->InvertPath (LteIface::S5);
-          if (HasAvailableResources (ringInfo))
-            {
-              NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
-                           " over the inverted S5 path");
-              return true;
-            }
-        }
-
-      // Let's try inverting both the S1-U and S5 interface.
-      if (!ringInfo->IsLocalPath (LteIface::S1)
-          && !ringInfo->IsLocalPath (LteIface::S5))
-        {
-          rInfo->UnsetBlocked (RoutingInfo::BACKTABLE);
-          rInfo->UnsetBlocked (RoutingInfo::BACKLOAD);
-          rInfo->UnsetBlocked (RoutingInfo::BACKBAND);
-          ringInfo->ResetPath (LteIface::S1);
-          ringInfo->ResetPath (LteIface::S5);
-          ringInfo->InvertPath (LteIface::S1);
-          ringInfo->InvertPath (LteIface::S5);
-          if (HasAvailableResources (ringInfo))
-            {
-              NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
-                           " over the inverted S1-U and S5 paths");
-              return true;
-            }
-        }
+      NS_ASSERT_MSG (rInfo->IsBlocked (), "This bearer should be blocked.");
+      NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
+                   " because there are no resources for the S1-U interface.");
     }
 
-  // If we get here it's because one of the resources is not available.
-  // It is expected that the HasAvailableResources method set the block reason.
-  NS_ASSERT_MSG (rInfo->IsBlocked (), "This bearer should be blocked.");
-  return false;
+  return (s5Ok && s1Ok);
 }
 
 bool
