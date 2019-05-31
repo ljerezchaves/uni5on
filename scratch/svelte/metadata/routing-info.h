@@ -133,7 +133,9 @@ public:
   //\{
   int64_t     GetGbrDlBitRate   (void) const;
   int64_t     GetGbrUlBitRate   (void) const;
-  bool        HasGbrDl          (void) const;
+  bool        HasGbrBitRate     (void) const;
+  bool        HasGbrUlBitRate   (void) const;
+  bool        HasGbrDlBitRate   (void) const;
   bool        HasGbrUl          (void) const;
   bool        IsGbr             (void) const;
   bool        IsNonGbr          (void) const;

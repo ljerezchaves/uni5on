@@ -325,19 +325,27 @@ RoutingInfo::GetGbrUlBitRate (void) const
 }
 
 bool
-RoutingInfo::HasGbrDl (void) const
+RoutingInfo::HasGbrBitRate (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return GetGbrDlBitRate () != 0;
+  return (HasGbrDlBitRate () || HasGbrUlBitRate ());
 }
 
 bool
-RoutingInfo::HasGbrUl (void) const
+RoutingInfo::HasGbrDlBitRate (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return GetGbrUlBitRate () != 0;
+  return (GetGbrDlBitRate () != 0);
+}
+
+bool
+RoutingInfo::HasGbrUlBitRate (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return (GetGbrUlBitRate () != 0);
 }
 
 bool

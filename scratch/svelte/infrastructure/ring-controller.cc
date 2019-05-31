@@ -164,11 +164,11 @@ RingController::BearerRelease (Ptr<RoutingInfo> rInfo)
 
   NS_ASSERT_MSG (!rInfo->IsAggregated (), "Bearer should not be aggregated.");
 
-  // For bearers without reserved resources: nothing to release.
-  if (!rInfo->IsGbrReserved ())
-    {
-      return true;
-    }
+  // For bearers without reserved resources: nothing to release. // FIXME
+  // if (!rInfo->IsGbrReserved ())
+  //   {
+  //     return true;
+  //   }
 
   Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
   NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
@@ -671,9 +671,8 @@ RingController::BitRateReserve (Ptr<RingInfo> ringInfo, LteIface iface)
   NS_LOG_INFO ("Reserving resources for teid " << rInfo->GetTeidHex () <<
                " on interface " << LteIfaceStr (iface));
 
-  // Nothing to reserve for Non-GBR bearers and local-routing bearers. FIXME
-  if (!(rInfo->GetGbrDlBitRate () && rInfo->GetGbrUlBitRate ())
-      || ringInfo->IsLocalPath (iface))
+  // Ignoring bearers without guaranteed bit rate or local-routing bearers.
+  if (!rInfo->HasGbrBitRate () || ringInfo->IsLocalPath (iface))
     {
       return true;
     }
@@ -714,7 +713,7 @@ RingController::BitRateRelease (Ptr<RingInfo> ringInfo, LteIface iface)
   NS_LOG_INFO ("Reserving resources for teid " << rInfo->GetTeidHex () <<
                " on interface " << LteIfaceStr (iface));
 
-  // Nothing to release when no guaranteed bit rate was reserved. // FIXME
+  // Nothing to release when no guaranteed bit rate was reserved.
   if (!rInfo->IsGbrReserved (iface))
     {
       return true;
