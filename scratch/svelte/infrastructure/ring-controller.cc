@@ -1026,29 +1026,23 @@ RingController::FindShortestPath (uint16_t srcIdx, uint16_t dstIdx) const
 
 void
 RingController::GetLinks (
-  Ptr<RingInfo> ringInfo, LteIface iface, LinkInfoSet_t *links,
-  RingInfo::RingPath dlPath) const
+  Ptr<RingInfo> ringInfo, LteIface iface, LinkInfoSet_t *links) const
 {
   NS_LOG_FUNCTION (this << ringInfo << iface);
 
   NS_ASSERT_MSG (links && links->empty (), "Set of links should be empty.");
 
-  // When the routing path parameter is undefined, get the one from RingInfo.
-  if (dlPath == RingInfo::UNDEF)
-    {
-      dlPath = ringInfo->GetDlPath (iface);
-    }
-
   Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
   uint16_t curr = rInfo->GetFirstDlInfraSwIdx (iface);
   uint16_t last = rInfo->GetLastDlInfraSwIdx (iface);
+  RingInfo::RingPath path = ringInfo->GetDlPath (iface);
 
   // Walk through the downlink path.
   LinkInfo::LinkDir dlDir, ulDir;
   Ptr<LinkInfo> lInfo;
   while (curr != last)
     {
-      uint16_t next = NextSwitchIndex (curr, dlPath);
+      uint16_t next = NextSwitchIndex (curr, path);
       std::tie (lInfo, dlDir, ulDir) = GetLinkInfo (curr, next);
       auto ret = links->insert (lInfo);
       NS_ABORT_MSG_IF (ret.second == false, "Error saving link info.");
@@ -1058,22 +1052,16 @@ RingController::GetLinks (
 
 bool
 RingController::HasLinkBitRate (
-  Ptr<RingInfo> ringInfo, LteIface iface, LinkInfoSet_t *overlap,
-  RingInfo::RingPath dlPath) const
+  Ptr<RingInfo> ringInfo, LteIface iface, LinkInfoSet_t *overlap) const
 {
-  NS_LOG_FUNCTION (this << ringInfo << iface << dlPath << overlap);
+  NS_LOG_FUNCTION (this << ringInfo << iface << overlap);
 
-  // When the routing path parameter is undefined, get the one from RingInfo.
-  if (dlPath == RingInfo::UNDEF)
-    {
-      dlPath = ringInfo->GetDlPath (iface);
-    }
+  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
+  RingInfo::RingPath path = ringInfo->GetDlPath (iface);
 
   // Ignoring this check for Non-GBR bearers, aggregated bearers,
   // and local-routing bearers.
-  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
-  if (rInfo->IsNonGbr () || rInfo->IsAggregated ()
-      || dlPath == RingInfo::LOCAL)
+  if (rInfo->IsNonGbr () || rInfo->IsAggregated () || path == RingInfo::LOCAL)
     {
       return true;
     }
@@ -1092,7 +1080,7 @@ RingController::HasLinkBitRate (
   bool ok = true;
   while (ok && curr != last)
     {
-      uint16_t next = NextSwitchIndex (curr, dlPath);
+      uint16_t next = NextSwitchIndex (curr, path);
       std::tie (lInfo, dlDir, ulDir) = GetLinkInfo (curr, next);
       if (overlap != 0 && (overlap->find (lInfo) != overlap->end ()))
         {
@@ -1112,16 +1100,9 @@ RingController::HasLinkBitRate (
 }
 
 bool
-RingController::HasSwitchCpu (
-  Ptr<RingInfo> ringInfo, LteIface iface, RingInfo::RingPath dlPath) const
+RingController::HasSwitchCpu (Ptr<RingInfo> ringInfo, LteIface iface) const
 {
-  NS_LOG_FUNCTION (this << ringInfo << iface << dlPath);
-
-  // When the routing path parameter is undefined, get the one from RingInfo.
-  if (dlPath == RingInfo::UNDEF)
-    {
-      dlPath = ringInfo->GetDlPath (iface);
-    }
+  NS_LOG_FUNCTION (this << ringInfo << iface);
 
   // Ignoring this check when the BlockPolicy mode is OFF.
   if (GetSwBlockPolicy () == OpMode::OFF)
@@ -1132,6 +1113,7 @@ RingController::HasSwitchCpu (
   Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
   uint16_t curr = rInfo->GetFirstDlInfraSwIdx (iface);
   uint16_t last = rInfo->GetLastDlInfraSwIdx (iface);
+  RingInfo::RingPath path = ringInfo->GetDlPath (iface);
 
   // Walk through the OpenFlow switches in the downlink routing path,
   // checking for the CPU usage.
@@ -1139,23 +1121,16 @@ RingController::HasSwitchCpu (
   while (ok && curr != last)
     {
       ok &= (GetEwmaCpuUse (curr) < GetSwBlockThreshold ());
-      curr = NextSwitchIndex (curr, dlPath);
+      curr = NextSwitchIndex (curr, path);
     }
   ok &= (GetEwmaCpuUse (curr) < GetSwBlockThreshold ());
   return ok;
 }
 
 bool
-RingController::HasSwitchTable (
-  Ptr<RingInfo> ringInfo, LteIface iface, RingInfo::RingPath dlPath) const
+RingController::HasSwitchTable (Ptr<RingInfo> ringInfo, LteIface iface) const
 {
-  NS_LOG_FUNCTION (this << ringInfo << iface << dlPath);
-
-  // When the routing path parameter is undefined, get the one from RingInfo.
-  if (dlPath == RingInfo::UNDEF)
-    {
-      dlPath = ringInfo->GetDlPath (iface);
-    }
+  NS_LOG_FUNCTION (this << ringInfo << iface);
 
   // Ignoring this check for aggregated bearers.
   Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
@@ -1168,6 +1143,7 @@ RingController::HasSwitchTable (
   uint8_t table = GetSliceTable (slice);
   uint16_t curr = rInfo->GetFirstDlInfraSwIdx (iface);
   uint16_t last = rInfo->GetLastDlInfraSwIdx (iface);
+  RingInfo::RingPath path = ringInfo->GetDlPath (iface);
 
   // Walk through the OpenFlow switches in the downlink routing path,
   // checking for the slice table usage.
@@ -1175,7 +1151,7 @@ RingController::HasSwitchTable (
   while (ok && curr != last)
     {
       ok &= (GetFlowTableUse (curr, table) < GetSwBlockThreshold ());
-      curr = NextSwitchIndex (curr, dlPath);
+      curr = NextSwitchIndex (curr, path);
     }
   ok &= (GetFlowTableUse (curr, table) < GetSwBlockThreshold ());
   return ok;

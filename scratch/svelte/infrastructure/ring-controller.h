@@ -147,10 +147,9 @@ private:
    * \param ringInfo The ring routing information.
    * \param iface The LTE logical interface.
    * \param links The set of links to populate.
-   * \param dlPath The optional routing path.
    */
-  void GetLinks (Ptr<RingInfo> ringInfo, LteIface iface, LinkInfoSet_t *links,
-                 RingInfo::RingPath dlPath = RingInfo::UNDEF) const;
+  void GetLinks (Ptr<RingInfo> ringInfo, LteIface iface,
+                 LinkInfoSet_t *links) const;
 
   /**
    * Check for the available bit rate on backhaul links for the given LTE
@@ -159,34 +158,28 @@ private:
    * \param ringInfo The ring routing information.
    * \param iface The LTE logical interface.
    * \param overlap The optional overlapping links.
-   * \param dlPath The optional routing path.
    * \return True if succeeded, false otherwise.
    */
   bool HasLinkBitRate (Ptr<RingInfo> ringInfo, LteIface iface,
-                       LinkInfoSet_t *overlap = 0,
-                       RingInfo::RingPath dlPath = RingInfo::UNDEF) const;
+                       LinkInfoSet_t *overlap = 0) const;
 
   /**
    * Check for the CPU usage on switches for the given LTE interface,
    * optionally following the given routing path.
    * \param ringInfo The ring routing information.
    * \param iface The LTE logical interface.
-   * \param dlPath The optional routing path.
    * \return True if succeeded, false otherwise.
    */
-  bool HasSwitchCpu (Ptr<RingInfo> ringInfo, LteIface iface,
-                     RingInfo::RingPath dlPath = RingInfo::UNDEF) const;
+  bool HasSwitchCpu (Ptr<RingInfo> ringInfo, LteIface iface) const;
 
   /**
    * Check for the flow table usage on switches for the given LTE interface,
    * optionally following the given routing path.
    * \param ringInfo The ring routing information.
    * \param iface The LTE logical interface.
-   * \param dlPath The optional routing path.
    * \return True if succeeded, false otherwise.
    */
-  bool HasSwitchTable (Ptr<RingInfo> ringInfo, LteIface iface,
-                       RingInfo::RingPath dlPath = RingInfo::UNDEF) const;
+  bool HasSwitchTable (Ptr<RingInfo> ringInfo, LteIface iface) const;
 
   /**
    * Count the number of hops between source and destination switch indexes
