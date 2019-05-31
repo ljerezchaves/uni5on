@@ -57,6 +57,14 @@ RingController::GetTypeId (void)
   return tid;
 }
 
+RingController::RoutingStrategy
+RingController::GetRoutingStrategy (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_strategy;
+}
+
 std::string
 RingController::RoutingStrategyStr (RoutingStrategy strategy)
 {

@@ -55,6 +55,12 @@ public:
   static TypeId GetTypeId (void);
 
   /**
+   * Get the routing strategy attribute.
+   * \return The routing strategy.
+   */
+  RoutingStrategy GetRoutingStrategy (void) const;
+
+  /**
    * Get the string representing the given routing strategy.
    * \param strategy The routing strategy.
    * \return The routing strategy string.
