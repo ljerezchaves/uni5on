@@ -90,15 +90,6 @@ protected:
 
 private:
   /**
-   * Check for the available resources on the backhaul infrastructure. When
-   * any of the requested resources is not available, this method must set
-   * the routing information with the block reason.
-   * \param ringInfo The ring routing information.
-   * \return True if succeeded, false otherwise.
-   */
-  bool HasAvailableResources (Ptr<RingInfo> ringInfo) const;
-
-  /**
    * Check for the available resources on the backhaul infrastructure for the
    * given LTE interface. When any of the requested resources is not available,
    * this method must set the routing information with the block reason.
@@ -109,25 +100,6 @@ private:
    */
   bool HasAvailableResources (Ptr<RingInfo> ringInfo, LteIface iface,
                               LinkInfoSet_t *overlap = 0) const;
-
-  /**
-   * Check for available resources on backhaul switches for this bearer request
-   * on both S1-U and S5 LTE interfaces. When any of the requested resources is
-   * not available, this method must set the routing information with the block
-   * reason.
-   * \param ringInfo The ring routing information.
-   * \return True if succeeded, false otherwise.
-   */
-  bool SwBearerRequest (Ptr<RingInfo> ringInfo) const;
-
-  /**
-   * Check for available resources on backhaul links for this bearer request.
-   * When any of the requested resources is not available, this method must set
-   * the routing information with the block reason.
-   * \param ringInfo The ring routing information.
-   * \return True if succeeded, false otherwise.
-   */
-  bool BwBearerRequest (Ptr<RingInfo> ringInfo) const;
 
   /**
    * Reserve the bit rate for this bearer.
