@@ -194,7 +194,7 @@ RingController::BearerReserve (Ptr<RoutingInfo> rInfo)
   // For Non-GBR bearers (which includes the default bearer) and for bearers
   // that only transverse the local switch (local routing for both S1-U and S5
   // interfaces): there's no GBR bit rate to reserve.
-  if (rInfo->IsNonGbr () || ringInfo->AreLocalPaths ())
+  if (rInfo->IsNonGbr () || ringInfo->AreLocalPaths ()) // FIXME Verificar se e local na funcao
     {
       return true;
     }
@@ -420,6 +420,10 @@ RingController::BearerUpdate (Ptr<RoutingInfo> rInfo, Ptr<EnbInfo> dstEnbInfo)
 
   // FIXME
   NS_ABORT_MSG ("This method is not working yet.");
+
+  // FIXME Ao checkar recursos no S1,
+  // nao esquecer de ringInfo->ResetS5Links (); antes
+  // O melhor é dar um jeito de fazer isso mesmo se nao tiver recursos.
 
   NS_ASSERT_MSG (rInfo->IsInstalled (), "Rules must be installed.");
   NS_ASSERT_MSG (rInfo->GetEnbCellId () != dstEnbInfo->GetCellId (),
@@ -854,6 +858,7 @@ RingController::SwBearerRequest (Ptr<RingInfo> ringInfo) const
   // threshold at any backhaul switch connected to EPC serving entities.
   if (!rInfo->IsAggregated ())
     {
+      // FIXME. Com a mudança das tabelas do backhaul tem que percorrer todo o caminho.
       uint8_t table = GetSliceTable (slice);
       double sgwTabUse = GetFlowTableUse (rInfo->GetSgwInfraSwIdx (), table);
       double pgwTabUse = GetFlowTableUse (rInfo->GetPgwInfraSwIdx (), table);
