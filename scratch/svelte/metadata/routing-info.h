@@ -54,12 +54,9 @@ public:
     PGWLOAD   = (1U << 1),  //!< P-GW TFT pipeline load is full.
     SGWTABLE  = (1U << 4),  //!< S-GW flow table is full.
     SGWLOAD   = (1U << 5),  //!< S-GW pipeline load is full.
-    S5TABLE   = (1U << 8),  //!< Backhaul S5 switch flow table is full.
-    S5LOAD    = (1U << 9),  //!< Backhaul S5 switch pipeline load is full.
-    S5BAND    = (1U << 10), //!< Backhaul S5 link has no bandwidth.
-    S1TABLE   = (1U << 12), //!< Backhaul S1-U switch flow table is full.
-    S1LOAD    = (1U << 13), //!< Backhaul S1-U switch pipeline load is full.
-    S1BAND    = (1U << 14)  //!< Backhaul S1-U link has no bandwidth.
+    BACKTABLE = (1U << 8),  //!< At least one backhaul flow table is full.
+    BACKLOAD  = (1U << 9),  //!< At least one backhaul pipeline load is full.
+    BACKBAND  = (1U << 12)  //!< At least one backhaul link has no bandwidth.
   };
 
   /**
