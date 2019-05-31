@@ -765,6 +765,29 @@ SliceController::BearerRemove (Ptr<RoutingInfo> rInfo)
   return success;
 }
 
+bool
+SliceController::BearerUpdate (Ptr<RoutingInfo> rInfo, Ptr<EnbInfo> dstEnbInfo)
+{
+  NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
+
+  // Each slice has a single P-GW and S-GW, so handover only changes the
+  // eNB. Thus, we only need to modify the S-GW and backhaul rules.
+
+  // The update methods must check for installed rules and update them with
+  // new high-priority OpenFlow entries.
+  // FIXME Atualização deveria ser condicionada aos bearers ativos? instalados?
+  // Agregadis ficam condificonados? Talvez o melhor seria filtrar esse casos
+  // antes de chamar aqui!
+  bool success = true;
+  success &= SgwRulesUpdate (rInfo, dstEnbInfo);
+  success &= m_backhaulCtrl->BearerUpdate (rInfo, dstEnbInfo);
+
+  // Increase the routing priority (only after updating OpenFlow rules).
+  rInfo->IncreasePriority ();
+
+  return success;
+}
+
 void
 SliceController::DoCreateSessionRequest (
   EpcS11SapSgw::CreateSessionRequestMessage msg)
@@ -906,18 +929,9 @@ SliceController::DoModifyBearerRequest (
   // Iterate over routing infos and update bearers.
   for (auto const &rit : ueInfo->GetRoutingInfoMap ())
     {
-      // Each slice has a single P-GW and S-GW, so handover only changes the
-      // eNB. Thus, we only need to modify the S-GW and backhaul S1-U rules.
-      // The update methods must check for installed rules and update them with
-      // new high-priority OpenFlow entries.
-      Ptr<RoutingInfo> rInfo = rit.second;
-      bool success = true;
-      success &= SgwRulesUpdate (rInfo, dstEnbInfo);
-      success &= m_backhaulCtrl->BearerUpdate (rInfo, dstEnbInfo);
+      // Update this bearer.
+      bool success = BearerUpdate (rit.second, dstEnbInfo);
       NS_ASSERT_MSG (success, "Error when updading bearers after handover.");
-
-      // Increase the routing priority (only after updating OpenFlow rules).
-      rInfo->IncreasePriority ();
     }
 
   // Finally, update the UE's eNB info (only after updating OpenFlow rules).

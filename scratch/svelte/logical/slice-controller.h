@@ -243,6 +243,17 @@ private:
   bool BearerRemove (Ptr<RoutingInfo> rInfo);
 
   /**
+   * Update OpenFlow match rules for this bearer.
+   * \attention Don't update the ueInfo with the destination eNB metadata
+   *            before invoking this method.
+   * \internal This method must increase the rInfo priority.
+   * \param rInfo The routing information to process.
+   * \param dstEnbInfo The destination eNB after the handover procedure.
+   * \return True if succeeded, false otherwise.
+   */
+  bool BearerUpdate (Ptr<RoutingInfo> rInfo, Ptr<EnbInfo> dstEnbInfo);
+
+  /**
    * \name Methods for the S11 SAP S-GW control plane.
    * \param msg The message sent here by the MME entity.
    * \internal Note the trick to avoid the need for allocating TEID on the S11
