@@ -95,8 +95,8 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
   // Reset the ring routing info to the shortest path.
   Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
   NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
-  ringInfo->ResetIfacePath (LteIface::S1);
-  ringInfo->ResetIfacePath (LteIface::S5);
+  ringInfo->ResetPath (LteIface::S1);
+  ringInfo->ResetPath (LteIface::S5);
 
   // Check for the available resources over the shortest path.
   if (HasAvailableResources (ringInfo))
@@ -117,9 +117,9 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
           rInfo->UnsetBlocked (RoutingInfo::BACKTABLE);
           rInfo->UnsetBlocked (RoutingInfo::BACKLOAD);
           rInfo->UnsetBlocked (RoutingInfo::BACKBAND);
-          ringInfo->ResetIfacePath (LteIface::S1);
-          ringInfo->ResetIfacePath (LteIface::S5);
-          ringInfo->InvertIfacePath (LteIface::S1);
+          ringInfo->ResetPath (LteIface::S1);
+          ringInfo->ResetPath (LteIface::S5);
+          ringInfo->InvertPath (LteIface::S1);
           if (HasAvailableResources (ringInfo))
             {
               NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
@@ -134,9 +134,9 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
           rInfo->UnsetBlocked (RoutingInfo::BACKTABLE);
           rInfo->UnsetBlocked (RoutingInfo::BACKLOAD);
           rInfo->UnsetBlocked (RoutingInfo::BACKBAND);
-          ringInfo->ResetIfacePath (LteIface::S1);
-          ringInfo->ResetIfacePath (LteIface::S5);
-          ringInfo->InvertIfacePath (LteIface::S5);
+          ringInfo->ResetPath (LteIface::S1);
+          ringInfo->ResetPath (LteIface::S5);
+          ringInfo->InvertPath (LteIface::S5);
           if (HasAvailableResources (ringInfo))
             {
               NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
@@ -152,10 +152,10 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
           rInfo->UnsetBlocked (RoutingInfo::BACKTABLE);
           rInfo->UnsetBlocked (RoutingInfo::BACKLOAD);
           rInfo->UnsetBlocked (RoutingInfo::BACKBAND);
-          ringInfo->ResetIfacePath (LteIface::S1);
-          ringInfo->ResetIfacePath (LteIface::S5);
-          ringInfo->InvertIfacePath (LteIface::S1);
-          ringInfo->InvertIfacePath (LteIface::S5);
+          ringInfo->ResetPath (LteIface::S1);
+          ringInfo->ResetPath (LteIface::S5);
+          ringInfo->InvertPath (LteIface::S1);
+          ringInfo->InvertPath (LteIface::S5);
           if (HasAvailableResources (ringInfo))
             {
               NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
