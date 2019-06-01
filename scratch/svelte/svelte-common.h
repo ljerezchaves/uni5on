@@ -309,35 +309,34 @@ std::string DscpTypeStr (Ipv4Header::DscpType dscp);
  *                            |-|-|-----|-|
  *                             A B C     D
  *
- *  4 (A) bits are reserved for slicing meters.
- *        - For TEID these bits are fixed to 0x0.
+ *  4 (A) bits are reserved for TEID, here fixed at 0x0.
  *  4 (B) bits are used to identify the logical slice (slice ID).
  * 20 (C) bits are used to identify the UE (IMSI).
- *  4 (D) bits are used to identify the bearer withing the UE (BID).
+ *  4 (D) bits are used to identify the bearer withing the UE (bearer ID).
  * \endverbatim
  */
-uint32_t GetSvelteTeid (SliceId sliceId, uint32_t ueImsi, uint32_t bearerId);
+uint32_t TeidCreate (SliceId sliceId, uint32_t ueImsi, uint32_t bearerId);
 
 /**
  * Decompose the TEID to get the UE bearer ID.
  * \param teid The GTP tunnel ID.
  * \return The UE bearer ID for this tunnel.
  */
-uint8_t ExtractBearerId (uint32_t teid);
+uint8_t TeidGetBearerId (uint32_t teid);
 
 /**
  * Decompose the TEID to get the slice ID.
  * \param teid The GTP tunnel ID.
  * \return The slice ID for this tunnel.
  */
-SliceId ExtractSliceId (uint32_t teid);
+SliceId TeidGetSliceId (uint32_t teid);
 
 /**
  * Decompose the TEID to get the UE IMSI.
  * \param teid The GTP tunnel ID.
  * \return The UE IMSI for this tunnel.
  */
-uint64_t ExtractUeImsi (uint32_t teid);
+uint64_t TeidGetUeImsi (uint32_t teid);
 
 /**
  * \ingroup svelte
@@ -351,19 +350,18 @@ uint64_t ExtractUeImsi (uint32_t teid);
  * \internal
  * When the network slicing operation mode is active, the traffic of each
  * slice will be independently monitored by slicing meters using the
- * following meter ID allocation strategy.
+ * following meter ID allocation strategy:
  * \verbatim
- * Meter ID has 32 bits length: 0x 0 0 000000
+ * Meter ID has 32 bits length: 0x 1 0 000000
  *                                |-|-|------|
  *                                 A B C
  *
- *  4 (A) bits are used to identify the meter type.
- *        - For infrastructure slicing meters these bits are fixed to 0x1.
+ *  4 (A) bits are reserved for meter ID, here fixed at 0x1.
  *  4 (B) bits are used to identify the logical slice (slice ID).
- * 24 (C) bits are used to identify the meter considering the network topology.
+ * 24 (C) bits are used to identify the meter withing topology (meter ID).
  * \endverbatim
  */
-uint32_t GetSvelteMeterId (SliceId sliceId, uint32_t meterId);
+uint32_t MeterIdCreate (SliceId sliceId, uint32_t meterId);
 
 /**
  * \ingroup svelte

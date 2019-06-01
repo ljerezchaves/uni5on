@@ -815,7 +815,7 @@ SliceController::DoCreateSessionRequest (
   for (auto const &bit : msg.bearerContextsToBeCreated)
     {
       // Allocate an unique (system-wide) TEID for this EPS bearer.
-      uint32_t teid = GetSvelteTeid (m_sliceId, imsi, bit.epsBearerId);
+      uint32_t teid = TeidCreate (m_sliceId, imsi, bit.epsBearerId);
 
       EpcS11SapMme::BearerContextCreated bearerContext;
       bearerContext.sgwFteid.address = ueInfo->GetSgwInfo ()->GetS1uAddr ();

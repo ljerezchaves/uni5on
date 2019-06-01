@@ -295,7 +295,7 @@ DscpTypeStr (Ipv4Header::DscpType dscp)
 }
 
 uint32_t
-GetSvelteTeid (SliceId sliceId, uint32_t ueImsi, uint32_t bearerId)
+TeidCreate (SliceId sliceId, uint32_t ueImsi, uint32_t bearerId)
 {
   NS_ASSERT_MSG (sliceId <= 0xF, "Slice ID cannot exceed 4 bits.");
   NS_ASSERT_MSG (ueImsi <= 0xFFFFF, "UE IMSI cannot exceed 20 bits.");
@@ -312,33 +312,30 @@ GetSvelteTeid (SliceId sliceId, uint32_t ueImsi, uint32_t bearerId)
 }
 
 uint8_t
-ExtractBearerId (uint32_t teid)
+TeidGetBearerId (uint32_t teid)
 {
-  uint32_t bearerId = teid;
-  bearerId &= TEID_BID_MASK;
-  return static_cast<uint8_t> (bearerId);
+  teid &= TEID_BID_MASK;
+  return static_cast<uint8_t> (teid);
 }
 
 SliceId
-ExtractSliceId (uint32_t teid)
+TeidGetSliceId (uint32_t teid)
 {
-  uint32_t sliceId = teid;
-  sliceId &= TEID_SLICE_MASK;
-  sliceId >>= 24;
-  return static_cast<SliceId> (sliceId);
+  teid &= TEID_SLICE_MASK;
+  teid >>= 24;
+  return static_cast<SliceId> (teid);
 }
 
 uint64_t
-ExtractUeImsi (uint32_t teid)
+TeidGetUeImsi (uint32_t teid)
 {
-  uint32_t ueImsi = teid;
-  ueImsi &= TEID_IMSI_MASK;
-  ueImsi >>= 4;
-  return static_cast<uint64_t> (ueImsi);
+  teid &= TEID_IMSI_MASK;
+  teid >>= 4;
+  return static_cast<uint64_t> (teid);
 }
 
 uint32_t
-GetSvelteMeterId (SliceId sliceId, uint32_t meterId)
+MeterIdCreate (SliceId sliceId, uint32_t meterId)
 {
   NS_ASSERT_MSG (sliceId <= 0xF, "Slice ID cannot exceed 4 bits.");
   NS_ASSERT_MSG (meterId <= 0xFFFFFF, "Topo meter ID cannot exceed 24 bits.");

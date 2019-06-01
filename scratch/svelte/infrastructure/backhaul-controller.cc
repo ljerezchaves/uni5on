@@ -539,7 +539,7 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   for (int s = 0; s < SliceId::ALL; s++)
     {
       SliceId slice = static_cast<SliceId> (s);
-      uint32_t sliceMasked = GetSvelteTeid (slice, 0, 0);
+      uint32_t sliceTeid = TeidCreate (slice, 0, 0);
 
       std::ostringstream cmd;
       cmd << "flow-mod cmd=add,prio=64"
@@ -549,7 +549,7 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
           << ",ip_proto="   << UDP_PROT_NUM
           << ",udp_src="    << GTPU_PORT
           << ",udp_dst="    << GTPU_PORT
-          << ",gtpu_teid="  << (sliceMasked & TEID_SLICE_MASK)
+          << ",gtpu_teid="  << (sliceTeid & TEID_SLICE_MASK)
           << "/"            << TEID_SLICE_MASK
           << " goto:"       << GetSliceTable (slice);
       DpctlExecute (swDpId, cmd.str ());
@@ -837,7 +837,7 @@ BackhaulController::SlicingMeterAdjust (
 
       if (diffBitRate >= m_meterStep.GetBitRate ())
         {
-          uint32_t meterId = GetSvelteMeterId (slice, d);
+          uint32_t meterId = MeterIdCreate (slice, d);
           int64_t meterKbps = Bps2Kbps (freeBitRate);
           bool success = lInfo->SetMetBitRate (dir, slice, meterKbps * 1000);
           NS_ASSERT_MSG (success, "Error when setting meter bit rate.");
@@ -895,7 +895,7 @@ BackhaulController::SlicingMeterInstall (Ptr<LinkInfo> lInfo, SliceId slice)
           quotaBitRate = lInfo->GetQuoBitRate (dir, slice);
         }
 
-      uint32_t meterId = GetSvelteMeterId (slice, d);
+      uint32_t meterId = MeterIdCreate (slice, d);
       int64_t meterKbps = Bps2Kbps (quotaBitRate);
       bool success = lInfo->SetMetBitRate (dir, slice, meterKbps * 1000);
       NS_ASSERT_MSG (success, "Error when setting meter bit rate.");
