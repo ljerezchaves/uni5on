@@ -434,7 +434,7 @@ BackhaulController::HandleFlowRemoved (
 {
   NS_LOG_FUNCTION (this << swtch << xid << msg->stats->cookie);
 
-  uint32_t teid = msg->stats->cookie;
+  uint32_t teid = CookieGetTeid (msg->stats->cookie);
   uint16_t prio = msg->stats->priority;
 
   // Print the message.
