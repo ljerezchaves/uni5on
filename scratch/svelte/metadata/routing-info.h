@@ -204,6 +204,22 @@ public:
   //\}
 
   /**
+   * \name Private member accessors for infrastructure routing.
+   * \param iface The LTE interface.
+   * \return The requested information.
+   */
+  //\{
+  uint16_t    GetDstDlInfraSwIdx  (LteIface iface) const;
+  Ipv4Address GetDstDlAddr        (LteIface iface) const;
+  uint16_t    GetDstUlInfraSwIdx  (LteIface iface) const;
+  Ipv4Address GetDstUlAddr        (LteIface iface) const;
+  uint16_t    GetSrcDlInfraSwIdx  (LteIface iface) const;
+  Ipv4Address GetSrcDlAddr        (LteIface iface) const;
+  uint16_t    GetSrcUlInfraSwIdx  (LteIface iface) const;
+  Ipv4Address GetSrcUlAddr        (LteIface iface) const;
+  //\}
+
+  /**
    * Get the string representing the block reason.
    * \param reason The block reason.
    * \return The block reason string.
@@ -241,18 +257,6 @@ public:
 protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
-
-  /**
-   * \name Private member accessors for infrastructure switch information.
-   * \param iface The LTE interface.
-   * \return The requested information.
-   */
-  //\{
-  uint16_t GetFirstDlInfraSwIdx (LteIface iface) const;
-  uint16_t GetFirstUlInfraSwIdx (LteIface iface) const;
-  uint16_t GetLastDlInfraSwIdx  (LteIface iface) const;
-  uint16_t GetLastUlInfraSwIdx  (LteIface iface) const;
-  //\}
 
   /**
    * \name Private member accessors for updating internal metadata.

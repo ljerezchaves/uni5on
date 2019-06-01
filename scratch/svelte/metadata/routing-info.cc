@@ -583,6 +583,86 @@ RoutingInfo::GetSgwS5PortNo (void) const
   return m_ueInfo->GetSgwInfo ()->GetS5PortNo ();
 }
 
+uint16_t
+RoutingInfo::GetDstDlInfraSwIdx (LteIface iface) const
+{
+  NS_LOG_FUNCTION (this << iface);
+
+  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
+                 "Invalid LTE interface. Expected S1-U or S5 interface.");
+  return (iface == LteIface::S5) ? GetSgwInfraSwIdx () : GetEnbInfraSwIdx ();
+}
+
+Ipv4Address
+RoutingInfo::GetDstDlAddr (LteIface iface) const
+{
+  NS_LOG_FUNCTION (this << iface);
+
+  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
+                 "Invalid LTE interface. Expected S1-U or S5 interface.");
+  return (iface == LteIface::S5) ? GetSgwS5Addr () : GetEnbS1uAddr ();
+}
+
+uint16_t
+RoutingInfo::GetDstUlInfraSwIdx (LteIface iface) const
+{
+  NS_LOG_FUNCTION (this << iface);
+
+  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
+                 "Invalid LTE interface. Expected S1-U or S5 interface.");
+  return (iface == LteIface::S1) ? GetSgwInfraSwIdx () : GetPgwInfraSwIdx ();
+}
+
+Ipv4Address
+RoutingInfo::GetDstUlAddr (LteIface iface) const
+{
+  NS_LOG_FUNCTION (this << iface);
+
+  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
+                 "Invalid LTE interface. Expected S1-U or S5 interface.");
+  return (iface == LteIface::S1) ? GetSgwS1uAddr () : GetPgwS5Addr ();
+}
+
+uint16_t
+RoutingInfo::GetSrcDlInfraSwIdx (LteIface iface) const
+{
+  NS_LOG_FUNCTION (this << iface);
+
+  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
+                 "Invalid LTE interface. Expected S1-U or S5 interface.");
+  return (iface == LteIface::S5) ? GetPgwInfraSwIdx () : GetSgwInfraSwIdx ();
+}
+
+Ipv4Address
+RoutingInfo::GetSrcDlAddr (LteIface iface) const
+{
+  NS_LOG_FUNCTION (this << iface);
+
+  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
+                 "Invalid LTE interface. Expected S1-U or S5 interface.");
+  return (iface == LteIface::S5) ? GetPgwS5Addr () : GetSgwS1uAddr ();
+}
+
+uint16_t
+RoutingInfo::GetSrcUlInfraSwIdx (LteIface iface) const
+{
+  NS_LOG_FUNCTION (this << iface);
+
+  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
+                 "Invalid LTE interface. Expected S1-U or S5 interface.");
+  return (iface == LteIface::S1) ? GetEnbInfraSwIdx () : GetSgwInfraSwIdx ();
+}
+
+Ipv4Address
+RoutingInfo::GetSrcUlAddr (LteIface iface) const
+{
+  NS_LOG_FUNCTION (this << iface);
+
+  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
+                 "Invalid LTE interface. Expected S1-U or S5 interface.");
+  return (iface == LteIface::S1) ? GetEnbS1uAddr () : GetSgwS5Addr ();
+}
+
 std::string
 RoutingInfo::BlockReasonStr (BlockReason reason)
 {
@@ -666,46 +746,6 @@ RoutingInfo::DoDispose ()
 
   m_ueInfo = 0;
   Object::DoDispose ();
-}
-
-uint16_t
-RoutingInfo::GetFirstDlInfraSwIdx (LteIface iface) const
-{
-  NS_LOG_FUNCTION (this << iface);
-
-  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
-                 "Invalid LTE interface. Expected S1-U or S5 interface.");
-  return (iface == LteIface::S5) ? GetPgwInfraSwIdx () : GetSgwInfraSwIdx ();
-}
-
-uint16_t
-RoutingInfo::GetFirstUlInfraSwIdx (LteIface iface) const
-{
-  NS_LOG_FUNCTION (this << iface);
-
-  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
-                 "Invalid LTE interface. Expected S1-U or S5 interface.");
-  return (iface == LteIface::S1) ? GetEnbInfraSwIdx () : GetSgwInfraSwIdx ();
-}
-
-uint16_t
-RoutingInfo::GetLastDlInfraSwIdx (LteIface iface) const
-{
-  NS_LOG_FUNCTION (this << iface);
-
-  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
-                 "Invalid LTE interface. Expected S1-U or S5 interface.");
-  return (iface == LteIface::S5) ? GetSgwInfraSwIdx () : GetEnbInfraSwIdx ();
-}
-
-uint16_t
-RoutingInfo::GetLastUlInfraSwIdx (LteIface iface) const
-{
-  NS_LOG_FUNCTION (this << iface);
-
-  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
-                 "Invalid LTE interface. Expected S1-U or S5 interface.");
-  return (iface == LteIface::S1) ? GetSgwInfraSwIdx () : GetPgwInfraSwIdx ();
 }
 
 void

@@ -666,8 +666,8 @@ RingController::BitRateReserve (Ptr<RingInfo> ringInfo, LteIface iface)
   SliceId slice = rInfo->GetSliceId ();
   int64_t dlRate = rInfo->GetGbrDlBitRate ();
   int64_t ulRate = rInfo->GetGbrUlBitRate ();
-  uint16_t curr = rInfo->GetFirstDlInfraSwIdx (iface);
-  uint16_t last = rInfo->GetLastDlInfraSwIdx (iface);
+  uint16_t curr = rInfo->GetSrcDlInfraSwIdx (iface);
+  uint16_t last = rInfo->GetDstDlInfraSwIdx (iface);
   RingInfo::RingPath path = ringInfo->GetDlPath (iface);
 
   // Walk through the backhaul links in the downlink routing path,
@@ -708,8 +708,8 @@ RingController::BitRateRelease (Ptr<RingInfo> ringInfo, LteIface iface)
   SliceId slice = rInfo->GetSliceId ();
   int64_t dlRate = rInfo->GetGbrDlBitRate ();
   int64_t ulRate = rInfo->GetGbrUlBitRate ();
-  uint16_t curr = rInfo->GetFirstDlInfraSwIdx (iface);
-  uint16_t last = rInfo->GetLastDlInfraSwIdx (iface);
+  uint16_t curr = rInfo->GetSrcDlInfraSwIdx (iface);
+  uint16_t last = rInfo->GetDstDlInfraSwIdx (iface);
   RingInfo::RingPath path = ringInfo->GetDlPath (iface);
 
   // Walk through the backhaul links in the downlink routing path,
@@ -796,8 +796,8 @@ RingController::GetLinks (
   NS_ASSERT_MSG (links && links->empty (), "Set of links should be empty.");
 
   Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
-  uint16_t curr = rInfo->GetFirstDlInfraSwIdx (iface);
-  uint16_t last = rInfo->GetLastDlInfraSwIdx (iface);
+  uint16_t curr = rInfo->GetSrcDlInfraSwIdx (iface);
+  uint16_t last = rInfo->GetDstDlInfraSwIdx (iface);
   RingInfo::RingPath path = ringInfo->GetDlPath (iface);
 
   // Walk through the downlink path.
@@ -878,8 +878,8 @@ RingController::HasLinkBitRate (
   SliceId slice = rInfo->GetSliceId ();
   int64_t dlRate = rInfo->GetGbrDlBitRate ();
   int64_t ulRate = rInfo->GetGbrUlBitRate ();
-  uint16_t curr = rInfo->GetFirstDlInfraSwIdx (iface);
-  uint16_t last = rInfo->GetLastDlInfraSwIdx (iface);
+  uint16_t curr = rInfo->GetSrcDlInfraSwIdx (iface);
+  uint16_t last = rInfo->GetDstDlInfraSwIdx (iface);
   RingInfo::RingPath path = ringInfo->GetDlPath (iface);
   double blockThs = GetSliceController (slice)->GetGbrBlockThs ();
 
@@ -921,8 +921,8 @@ RingController::HasSwitchCpu (Ptr<RingInfo> ringInfo, LteIface iface) const
     }
 
   Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
-  uint16_t curr = rInfo->GetFirstDlInfraSwIdx (iface);
-  uint16_t last = rInfo->GetLastDlInfraSwIdx (iface);
+  uint16_t curr = rInfo->GetSrcDlInfraSwIdx (iface);
+  uint16_t last = rInfo->GetDstDlInfraSwIdx (iface);
   RingInfo::RingPath path = ringInfo->GetDlPath (iface);
 
   // Walk through the OpenFlow switches in the downlink routing path,
@@ -951,8 +951,8 @@ RingController::HasSwitchTable (Ptr<RingInfo> ringInfo, LteIface iface) const
 
   SliceId slice = rInfo->GetSliceId ();
   uint8_t table = GetSliceTable (slice);
-  uint16_t curr = rInfo->GetFirstDlInfraSwIdx (iface);
-  uint16_t last = rInfo->GetLastDlInfraSwIdx (iface);
+  uint16_t curr = rInfo->GetSrcDlInfraSwIdx (iface);
+  uint16_t last = rInfo->GetDstDlInfraSwIdx (iface);
   RingInfo::RingPath path = ringInfo->GetDlPath (iface);
 
   // Walk through the OpenFlow switches in the downlink routing path,
@@ -1019,8 +1019,8 @@ RingController::SetShortestPath (Ptr<RingInfo> ringInfo, LteIface iface) const
   Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
 
   RingInfo::RingPath dlPath = FindShortestPath (
-      rInfo->GetFirstDlInfraSwIdx (iface),
-      rInfo->GetLastDlInfraSwIdx (iface));
+      rInfo->GetSrcDlInfraSwIdx (iface),
+      rInfo->GetDstDlInfraSwIdx (iface));
   ringInfo->SetShortDlPath (iface, dlPath);
 
   NS_LOG_DEBUG ("Bearer teid " << rInfo->GetTeidHex () <<
