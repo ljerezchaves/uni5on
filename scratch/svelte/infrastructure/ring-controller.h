@@ -194,6 +194,14 @@ private:
   uint16_t NextSwitchIndex (uint16_t idx, RingInfo::RingPath path) const;
 
   /**
+   * Install forwarding rules on switches for the given LTE interface.
+   * \param ringInfo The ring routing information.
+   * \param iface The LTE logical interface.
+   * \return True if succeeded, false otherwise.
+   */
+  bool RulesInstall (Ptr<RingInfo> ringInfo, LteIface iface);
+
+  /**
    * Set the default ring routing paths to the shortest ones.
    * \param ringInfo The ring routing information.
    * \param iface The LTE logical interface.

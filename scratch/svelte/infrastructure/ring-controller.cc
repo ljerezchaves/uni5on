@@ -1011,6 +1011,110 @@ RingController::NextSwitchIndex (uint16_t idx, RingInfo::RingPath path) const
          (idx == 0 ? GetNSwitches () - 1 : (idx - 1));
 }
 
+bool
+RingController::RulesInstall (Ptr<RingInfo> ringInfo, LteIface iface)
+{
+  NS_LOG_FUNCTION (this << ringInfo << iface);
+
+  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
+
+  // -------------------------------------------------------------------------
+  // Slice table -- [from higher to lower priority]
+  //
+  // Building the dpctl command.
+  std::ostringstream cmd;
+  cmd << "flow-mod cmd=add"
+      << ",table="  << GetSliceTable (rInfo->GetSliceId ())
+      << ",flags="  << FLAGS_REMOVED_OVERLAP_RESET
+      << ",cookie=" << rInfo->GetTeidHex ()
+      << ",prio="   << rInfo->GetPriority ()
+      << ",idle="   << rInfo->GetTimeout ();
+  std::string cmdStr = cmd.str ();
+
+  // Building the DSCP set field instruction.
+  std::ostringstream dscp;
+  if (rInfo->GetDscpValue ())
+    {
+      dscp << " apply:set_field=ip_dscp:" << rInfo->GetDscpValue ();
+    }
+  std::string dscpStr = dscp.str ();
+
+  // Configuring downlink routing.
+  if (rInfo->HasDlTraffic ())
+    {
+      RingInfo::RingPath dlPath = ringInfo->GetDlPath (iface);
+
+      // Building the match string. Using GTP TEID to identify the bearer and
+      // the IP destination address to identify the logical interface.
+      std::ostringstream mat;
+      mat << " eth_type="    << IPV4_PROT_NUM
+          << ",ip_proto="    << UDP_PROT_NUM
+          << ",ip_dst="      << rInfo->GetDstDlAddr (iface)
+          << ",gtpu_teid="   << rInfo->GetTeidHex ();
+      std::string matStr = mat.str ();
+
+      // Build the instructions string.
+      std::ostringstream ins;
+      ins << " write:group=" << dlPath
+          << " goto:"        << BANDW_TAB;
+      std::string insStr = ins.str ();
+
+      // Installing OpenFlow rules
+      if (!ringInfo->IsLocalPath (iface))
+        {
+          uint16_t curr = rInfo->GetSrcDlInfraSwIdx (iface);
+          uint16_t last = rInfo->GetDstDlInfraSwIdx (iface);
+
+          // DSCP rules just in the first switch.
+          DpctlExecute (GetDpId (curr), cmdStr + matStr + dscpStr + insStr);
+          curr = NextSwitchIndex (curr, dlPath);
+          while (curr != last)
+            {
+              DpctlExecute (GetDpId (curr), cmdStr + matStr + insStr);
+              curr = NextSwitchIndex (curr, dlPath);
+            }
+        }
+    }
+
+  // Configuring uplink routing.
+  if (rInfo->HasUlTraffic ())
+    {
+      RingInfo::RingPath ulPath = ringInfo->GetUlPath (iface);
+
+      // Building the match string. Using GTP TEID to identify the bearer and
+      // the IP destination address to identify the logical interface.
+      std::ostringstream mat;
+      mat << " eth_type="    << IPV4_PROT_NUM
+          << ",ip_proto="    << UDP_PROT_NUM
+          << ",ip_dst="      << rInfo->GetDstUlAddr (iface)
+          << ",gtpu_teid="   << rInfo->GetTeidHex ();
+      std::string matStr = mat.str ();
+
+      // Build the instructions string.
+      std::ostringstream ins;
+      ins << " write:group=" << ulPath
+          << " goto:"        << BANDW_TAB;
+      std::string insStr = ins.str ();
+
+      // Installing OpenFlow rules
+      if (!ringInfo->IsLocalPath (iface))
+        {
+          uint16_t curr = rInfo->GetSrcUlInfraSwIdx (iface);
+          uint16_t last = rInfo->GetDstUlInfraSwIdx (iface);
+
+          // DSCP rules just in the first switch.
+          DpctlExecute (GetDpId (curr), cmdStr + matStr + dscpStr + insStr);
+          curr = NextSwitchIndex (curr, ulPath);
+          while (curr != last)
+            {
+              DpctlExecute (GetDpId (curr), cmdStr + matStr + insStr);
+              curr = NextSwitchIndex (curr, ulPath);
+            }
+        }
+    }
+  return true;
+}
+
 void
 RingController::SetShortestPath (Ptr<RingInfo> ringInfo, LteIface iface) const
 {
