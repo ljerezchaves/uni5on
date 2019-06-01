@@ -193,8 +193,6 @@ SliceController::DedicatedBearerRequest (
   NS_LOG_FUNCTION (this << imsi << teid);
 
   Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-
-  // This bearer must be inactive as we are going to reuse its metadata.
   NS_ASSERT_MSG (!rInfo->IsDefault (), "Can't request the default bearer.");
   NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should be inactive.");
 
@@ -267,11 +265,8 @@ SliceController::DedicatedBearerRelease (
   NS_LOG_FUNCTION (this << imsi << teid);
 
   Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-
-  // This bearer must be active.
   NS_ASSERT_MSG (!rInfo->IsDefault (), "Can't release the default bearer.");
-  NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should not be active.");
-  NS_LOG_INFO ("Bearer released by controller.");
+  NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should be inactive.");
 
   // Release infrastructure resources and remove the bearer.
   bool success = true;
@@ -280,6 +275,8 @@ SliceController::DedicatedBearerRelease (
       success &= m_backhaulCtrl->BearerRelease (rInfo);
       success &= BearerRemove (rInfo);
     }
+
+  NS_LOG_INFO ("Bearer released by controller.");
   m_bearerReleaseTrace (rInfo);
   return success;
 }
@@ -1063,7 +1060,7 @@ SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo) const
   if (!rInfo->IsAggregated ())
     {
       double tabUse = m_pgwInfo->GetFlowTableUse (rInfo->GetPgwTftIdx (), 0);
-      if (tabUse >= m_pgwBlockThs)
+      if (tabUse >= GetPgwBlockThs ())
         {
           success = false;
           rInfo->SetBlocked (RoutingInfo::PGWTABLE);
@@ -1072,15 +1069,13 @@ SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo) const
         }
     }
 
-  // Second check: OpenFlow switch CPU load.
+  // Second check: OpenFlow switch CPU load (only when block policy is ON).
   // Block the bearer if the P-GW TFT switch CPU load is exceeding
-  // the block threshold, respecting the PgwBlockPolicy attribute:
-  // - If OFF : don't block the request.
-  // - If ON  : block the request.
-  if (m_pgwBlockPolicy == OpMode::ON)
+  // the block threshold.
+  if (GetPgwBlockPolicy () == OpMode::ON)
     {
       double cpuUse = m_pgwInfo->GetEwmaCpuUse (rInfo->GetPgwTftIdx ());
-      if (cpuUse >= m_pgwBlockThs)
+      if (cpuUse >= GetPgwBlockThs ())
         {
           success = false;
           rInfo->SetBlocked (RoutingInfo::PGWLOAD);
@@ -1218,17 +1213,17 @@ SliceController::SgwBearerRequest (Ptr<RoutingInfo> rInfo) const
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
+  Ptr<SgwInfo> sgwInfo = rInfo->GetUeInfo ()->GetSgwInfo ();
   bool success = true;
 
   // First check: OpenFlow switch table usage (only non-aggregated bearers).
-  // Block the bearer if the S-GW switch dl/ul tables (#1 and #2) usage is
+  // Block the bearer if any of the S-GW switch tables (#1 or #2) usage is
   // exceeding the block threshold.
-  Ptr<SgwInfo> sgwInfo = rInfo->GetUeInfo ()->GetSgwInfo ();
   if (!rInfo->IsAggregated ())
     {
       double dlTabUse = sgwInfo->GetFlowTableUse (1);
       double ulTabUse = sgwInfo->GetFlowTableUse (2);
-      if (dlTabUse >= m_sgwBlockThs || ulTabUse >= m_sgwBlockThs)
+      if (dlTabUse >= GetSgwBlockThs () || ulTabUse >= GetSgwBlockThs ())
         {
           success = false;
           rInfo->SetBlocked (RoutingInfo::SGWTABLE);
@@ -1237,15 +1232,13 @@ SliceController::SgwBearerRequest (Ptr<RoutingInfo> rInfo) const
         }
     }
 
-  // Second check: OpenFlow switch CPU load.
+  // Second check: OpenFlow switch CPU load (only when block policy is ON).
   // Block the bearer if the S-GW switch CPU load is exceeding
-  // the block threshold, respecting the SgwBlockPolicy attribute:
-  // - If OFF : don't block the request.
-  // - If ON  : block the request.
-  if (m_sgwBlockPolicy == OpMode::ON)
+  // the block threshold.
+  if (GetSgwBlockPolicy () == OpMode::ON)
     {
       double cpuUse = sgwInfo->GetEwmaCpuUse ();
-      if (cpuUse >= m_sgwBlockThs)
+      if (cpuUse >= GetSgwBlockThs ())
         {
           success = false;
           rInfo->SetBlocked (RoutingInfo::SGWLOAD);
