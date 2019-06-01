@@ -982,6 +982,7 @@ RingController::RulesRemove (Ptr<RingInfo> ringInfo, LteIface iface)
       DpctlExecute (GetDpId (curr), cmdStr);
       curr = NextSwitchIndex (curr, dlPath);
     }
+  DpctlExecute (GetDpId (curr), cmdStr);
   return true;
 }
 
