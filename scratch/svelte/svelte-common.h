@@ -84,7 +84,7 @@ typedef enum
   ULINK = 1   //!< Uplink traffic.
 } Direction;
 
-// Total number of valid Direction items + 1.
+// Total number of valid Direction items.
 #define N_DIRECTIONS (static_cast<int> (Direction::ULINK) + 1)
 
 /**
@@ -101,6 +101,10 @@ typedef enum
   SGI = 3    //!< SGi interface connecting P-GW to Internet.
 } LteIface;
 
+// Total number of valid LteIface items.
+#define N_IFACES (static_cast<int> (LteIface::SGI) + 1)
+#define N_IFACES_EPC (static_cast<int> (LteIface::S5) + 1)
+
 /**
  * \ingroup svelte
  * Enumeration of available operation modes.
@@ -111,6 +115,9 @@ typedef enum
   ON   = 1,   //!< Always on.
   AUTO = 2    //!< Automatic.
 } OpMode;
+
+// Total number of valid OpMode items.
+#define N_OP_MODES (static_cast<int> (OpMode::AUTO) + 1)
 
 /**
  * \ingroup svelte
@@ -123,7 +130,7 @@ typedef enum
   BOTH = 2   //!< Both GBR and Non-GBR traffic.
 } QosType;
 
-// Total number of valid QosType items + 1.
+// Total number of valid QosType items.
 #define N_QOS_TYPES_BOTH (static_cast<int> (QosType::BOTH) + 1)
 
 /**
@@ -141,7 +148,7 @@ typedef enum
   UNKN = 4   //!< Unknown slice.
 } SliceId;
 
-// Total number of valid SliceId items + 1.
+// Total number of valid SliceId items.
 #define N_SLICE_IDS (static_cast<int> (SliceId::ALL) + 1)
 #define N_SLICE_IDS_UNKN (static_cast<int> (SliceId::UNKN) + 1)
 
@@ -156,6 +163,9 @@ typedef enum
   STAT = 2,   //!< Full static inter-slicing.
   DYNA = 3    //!< Full dinaymic inter-slicing.
 } SliceMode;
+
+// Total number of valid SliceMode items.
+#define N_SLICE_MODES (static_cast<int> (SliceMode::DYNA) + 1)
 
 /**
  * \ingroup svelte
