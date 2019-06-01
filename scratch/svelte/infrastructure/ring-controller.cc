@@ -169,6 +169,7 @@ RingController::BearerInstall (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
+  NS_ASSERT_MSG (!rInfo->IsInstalled (), "Rules must not be installed.");
   NS_LOG_INFO ("Installing ring rules for teid " << rInfo->GetTeidHex ());
 
   Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
@@ -877,19 +878,17 @@ RingController::RulesInstall (Ptr<RingInfo> ringInfo, LteIface iface)
 
   Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
 
-  // Create the cookie string.
-  std::string cookieStr = GetUint64Hex (
-      CookieCreate (iface, rInfo->GetPriority (), rInfo->GetTeid ()));
-
   // -------------------------------------------------------------------------
   // Slice table -- [from higher to lower priority]
   //
   // Building the dpctl command.
+  uint64_t cookie = CookieCreate (
+      iface, rInfo->GetPriority (), rInfo->GetTeid ());
   std::ostringstream cmd;
   cmd << "flow-mod cmd=add"
       << ",table="  << GetSliceTable (rInfo->GetSliceId ())
       << ",flags="  << FLAGS_REMOVED_OVERLAP_RESET
-      << ",cookie=" << cookieStr
+      << ",cookie=" << GetUint64Hex (cookie)
       << ",prio="   << rInfo->GetPriority ()
       << ",idle="   << rInfo->GetTimeout ();
   std::string cmdStr = cmd.str ();
