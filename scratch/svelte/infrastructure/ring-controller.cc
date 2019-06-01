@@ -171,8 +171,8 @@ RingController::BearerInstall (Ptr<RoutingInfo> rInfo)
 
   NS_LOG_INFO ("Installing ring rules for teid " << rInfo->GetTeidHex ());
 
-  // Getting ring routing information.
   Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
+  NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
 
   bool success = true;
   success &= RulesInstall (ringInfo, LteIface::S5);
