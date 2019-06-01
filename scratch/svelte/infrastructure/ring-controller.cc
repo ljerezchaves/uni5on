@@ -195,7 +195,7 @@ RingController::BearerRemove (Ptr<RoutingInfo> rInfo)
   std::ostringstream cmd;
   cmd << "flow-mod cmd=del"
       << ",table="        << GetSliceTable (rInfo->GetSliceId ())
-      << ",cookie="       << rInfo->GetTeidHex ()
+      << ",cookie="       << rInfo->GetTeidHex () // FIXME
       << ",cookie_mask="  << GetUint64Hex (COOKIE_STRICT_MASK);
 
   // Removing rules from all switches in the path from P-GW to eNB.
@@ -250,7 +250,7 @@ RingController::BearerUpdate (Ptr<RoutingInfo> rInfo, Ptr<EnbInfo> dstEnbInfo)
     cmd << "flow-mod cmd=add"
         << ",table="  << GetSliceTable (rInfo->GetSliceId ())
         << ",flags="  << FLAGS_REMOVED_OVERLAP_RESET
-        << ",cookie=" << rInfo->GetTeidHex ()
+        << ",cookie=" << rInfo->GetTeidHex () // FIXME
         << ",prio="   << rInfo->GetPriority ()
         << ",idle="   << rInfo->GetTimeout ();
 
@@ -327,7 +327,7 @@ RingController::BearerUpdate (Ptr<RoutingInfo> rInfo, Ptr<EnbInfo> dstEnbInfo)
     cmd << "flow-mod cmd=dels"
         << ",table="  << GetSliceTable (rInfo->GetSliceId ())
         << ",flags="  << FLAGS_REMOVED_OVERLAP_RESET
-        << ",cookie=" << rInfo->GetTeidHex ()
+        << ",cookie=" << rInfo->GetTeidHex () // FIXME
         << ",prio="   << rInfo->GetPriority () - 1 // Old priority!
         << ",idle="   << rInfo->GetTimeout ();
 
@@ -877,6 +877,10 @@ RingController::RulesInstall (Ptr<RingInfo> ringInfo, LteIface iface)
 
   Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
 
+  // Create the cookie string.
+  std::string cookieStr = GetUint64Hex (
+      CookieCreate (iface, rInfo->GetPriority (), rInfo->GetTeid ()));
+
   // -------------------------------------------------------------------------
   // Slice table -- [from higher to lower priority]
   //
@@ -885,7 +889,7 @@ RingController::RulesInstall (Ptr<RingInfo> ringInfo, LteIface iface)
   cmd << "flow-mod cmd=add"
       << ",table="  << GetSliceTable (rInfo->GetSliceId ())
       << ",flags="  << FLAGS_REMOVED_OVERLAP_RESET
-      << ",cookie=" << rInfo->GetTeidHex ()
+      << ",cookie=" << cookieStr
       << ",prio="   << rInfo->GetPriority ()
       << ",idle="   << rInfo->GetTimeout ();
   std::string cmdStr = cmd.str ();

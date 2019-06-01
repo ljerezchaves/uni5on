@@ -1112,7 +1112,7 @@ SliceController::PgwRulesInstall (
   cmd << "flow-mod cmd=add"
       << ",table="  << PGW_TFT_TAB
       << ",flags="  << FLAGS_OVERLAP_RESET
-      << ",cookie=" << rInfo->GetTeidHex ()
+      << ",cookie=" << rInfo->GetTeidHex () // FIXME
       << ",prio="   << rInfo->GetPriority ()
       << ",idle="   << rInfo->GetTimeout ();
 
@@ -1197,7 +1197,7 @@ SliceController::PgwRulesRemove (
   std::ostringstream cmd;
   cmd << "flow-mod cmd=del"
       << ",table="        << PGW_TFT_TAB
-      << ",cookie="       << rInfo->GetTeidHex ()
+      << ",cookie="       << rInfo->GetTeidHex () // FIXME
       << ",cookie_mask="  << GetUint64Hex (COOKIE_STRICT_MASK);;
   DpctlExecute (pgwTftDpId, cmd.str ());
 
@@ -1272,7 +1272,7 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
       cmd << "flow-mod cmd=add"
           << ",table="  << SGW_DL_TAB
           << ",flags="  << FLAGS_REMOVED_OVERLAP_RESET
-          << ",cookie=" << rInfo->GetTeidHex ()
+          << ",cookie=" << rInfo->GetTeidHex () // FIXME
           << ",prio="   << rInfo->GetPriority ()
           << ",idle="   << rInfo->GetTimeout ();
 
@@ -1333,7 +1333,7 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
       cmd << "flow-mod cmd=add"
           << ",table="  << SGW_UL_TAB
           << ",flags="  << FLAGS_REMOVED_OVERLAP_RESET
-          << ",cookie=" << rInfo->GetTeidHex ()
+          << ",cookie=" << rInfo->GetTeidHex () // FIXME
           << ",prio="   << rInfo->GetPriority ()
           << ",idle="   << rInfo->GetTimeout ();
 
@@ -1412,7 +1412,7 @@ SliceController::SgwRulesRemove (Ptr<RoutingInfo> rInfo)
   // Remove flow entries for this TEID.
   std::ostringstream cmd;
   cmd << "flow-mod cmd=del"
-      << ",cookie="       << rInfo->GetTeidHex ()
+      << ",cookie="       << rInfo->GetTeidHex () // FIXME
       << ",cookie_mask="  << GetUint64Hex (COOKIE_STRICT_MASK);;
   DpctlExecute (rInfo->GetSgwDpId (), cmd.str ());
 
@@ -1443,7 +1443,7 @@ SliceController::SgwRulesUpdate (Ptr<RoutingInfo> rInfo,
         cmd << "flow-mod cmd=add"
             << ",table="  << SGW_DL_TAB
             << ",flags="  << FLAGS_REMOVED_OVERLAP_RESET
-            << ",cookie=" << rInfo->GetTeidHex ()
+            << ",cookie=" << rInfo->GetTeidHex () // FIXME
             << ",prio="   << rInfo->GetPriority () + 1 // High priority!
             << ",idle="   << rInfo->GetTimeout ();
 
@@ -1503,7 +1503,7 @@ SliceController::SgwRulesUpdate (Ptr<RoutingInfo> rInfo,
         cmd << "flow-mod cmd=dels"
             << ",table="  << SGW_DL_TAB
             << ",flags="  << FLAGS_REMOVED_OVERLAP_RESET
-            << ",cookie=" << rInfo->GetTeidHex ()
+            << ",cookie=" << rInfo->GetTeidHex () // FIXME
             << ",prio="   << rInfo->GetPriority () // Low priority!
             << ",idle="   << rInfo->GetTimeout ();
 
