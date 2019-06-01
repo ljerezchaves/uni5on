@@ -41,6 +41,11 @@ namespace ns3 {
 #define COOKIE_PRIO_MASK    0x0000FFFF00000000
 #define COOKIE_IFACE_MASK   0x000F000000000000
 
+#define COOKIE_TEID_IFACE_MASK \
+  ((COOKIE_TEID_MASK | COOKIE_IFACE_MASK))
+#define COOKIE_TEID_PRIO_IFACE_MASK \
+  ((COOKIE_TEID_MASK | COOKIE_PRIO_MASK | COOKIE_IFACE_MASK))
+
 // UDP port numbers.
 #define GTPU_PORT         2152
 #define X2C_PORT          4444
@@ -50,7 +55,7 @@ namespace ns3 {
 #define UDP_PROT_NUM      (static_cast<uint16_t> (UdpL4Protocol::PROT_NUMBER))
 #define TCP_PROT_NUM      (static_cast<uint16_t> (TcpL4Protocol::PROT_NUMBER))
 
-// Flow-mod flags.
+// OpenFlow flow-mod flags.
 #define FLAGS_REMOVED_OVERLAP_RESET \
   ((OFPFF_SEND_FLOW_REM | OFPFF_CHECK_OVERLAP | OFPFF_RESET_COUNTS))
 #define FLAGS_OVERLAP_RESET \
@@ -80,6 +85,7 @@ typedef std::map<Ipv4Header::DscpType, uint32_t> DscpQueueMap_t;
  */
 typedef enum
 {
+  // Don't change the order. Enum values are used as array indexes.
   DLINK = 0,  //!< Downlink traffic.
   ULINK = 1   //!< Uplink traffic.
 } Direction;
@@ -93,8 +99,7 @@ typedef enum
  */
 typedef enum
 {
-  // Don't change the order. S1-U and S5 are used as array indexes in RingInfo
-  // and RoutingInfo and must be 0 and 1, respectivelly.
+  // Don't change the order. Enum values are used as array indexes.
   S1  = 0,   //!< S1-U interface connecting eNB to S-GW.
   S5  = 1,   //!< S5 interface connecting S-GW to P-GW.
   X2  = 2,   //!< X2 interface connecting eNB to eNB.
@@ -125,6 +130,7 @@ typedef enum
  */
 typedef enum
 {
+  // Don't change the order. Enum values are used as array indexes.
   NON  = 0,  //!< Non-GBR traffic.
   GBR  = 1,  //!< GBR traffic.
   BOTH = 2   //!< Both GBR and Non-GBR traffic.
@@ -141,6 +147,7 @@ typedef enum
  */
 typedef enum
 {
+  // Don't change the order. Enum values are used as array indexes.
   HTC  = 0,  //!< Slice for HTC UEs.
   MTC  = 1,  //!< Slice for MTC UEs.
   TMP  = 2,  //!< Slice for TMP UEs.

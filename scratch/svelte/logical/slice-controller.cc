@@ -1198,7 +1198,7 @@ SliceController::PgwRulesRemove (
   cmd << "flow-mod cmd=del"
       << ",table="        << PGW_TFT_TAB
       << ",cookie="       << rInfo->GetTeidHex () // FIXME
-      << ",cookie_mask="  << GetUint64Hex (COOKIE_STRICT_MASK);;
+      << ",cookie_mask="  << GetUint64Hex (COOKIE_STRICT_MASK);
   DpctlExecute (pgwTftDpId, cmd.str ());
 
   // Remove meter entry for this TEID.
@@ -1413,7 +1413,7 @@ SliceController::SgwRulesRemove (Ptr<RoutingInfo> rInfo)
   std::ostringstream cmd;
   cmd << "flow-mod cmd=del"
       << ",cookie="       << rInfo->GetTeidHex () // FIXME
-      << ",cookie_mask="  << GetUint64Hex (COOKIE_STRICT_MASK);;
+      << ",cookie_mask="  << GetUint64Hex (COOKIE_STRICT_MASK);
   DpctlExecute (rInfo->GetSgwDpId (), cmd.str ());
 
   // Remove meter entry for this TEID.
