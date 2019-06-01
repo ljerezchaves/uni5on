@@ -196,7 +196,7 @@ RingController::BearerRemove (Ptr<RoutingInfo> rInfo)
   cmd << "flow-mod cmd=del"
       << ",table="        << GetSliceTable (rInfo->GetSliceId ())
       << ",cookie="       << rInfo->GetTeidHex ()
-      << ",cookie_mask="  << COOKIE_STRICT_MASK_STR;
+      << ",cookie_mask="  << GetUint64Hex (COOKIE_STRICT_MASK);
 
   // Removing rules from all switches in the path from P-GW to eNB.
   RingInfo::RingPath downPath = ringInfo->GetDlPath (LteIface::S5);

@@ -294,6 +294,46 @@ DscpTypeStr (Ipv4Header::DscpType dscp)
     }
 }
 
+uint64_t
+CookieCreate (LteIface iface, uint16_t prio, uint32_t teid)
+{
+  NS_ASSERT_MSG (iface <= 0xF, "LTE interface cannot exceed 4 bits.");
+  NS_ASSERT_MSG (prio <= 0xFFFF, "Rule priority cannot exceed 16 bits.");
+  NS_ASSERT_MSG (teid <= 0xFFFFFFFF, "TEID cannot exceed 32 bits.");
+
+  uint64_t cookie = 0x0;
+  cookie <<= 4;
+  cookie |= static_cast<uint32_t> (iface);
+  cookie <<= 16;
+  cookie |= prio;
+  cookie <<= 32;
+  cookie |= teid;
+  return cookie;
+}
+
+uint32_t
+CookieGetTeid (uint64_t cookie)
+{
+  cookie &= COOKIE_TEID_MASK;
+  return static_cast<uint32_t> (cookie);
+}
+
+uint16_t
+CookieGetPriority (uint64_t cookie)
+{
+  cookie &= COOKIE_PRIO_MASK;
+  cookie >>= 32;
+  return static_cast<uint16_t> (cookie);
+}
+
+LteIface
+CookieGetIface (uint64_t cookie)
+{
+  cookie &= COOKIE_IFACE_MASK;
+  cookie >>= 48;
+  return static_cast<LteIface> (cookie);
+}
+
 uint32_t
 TeidCreate (SliceId sliceId, uint32_t ueImsi, uint32_t bearerId)
 {

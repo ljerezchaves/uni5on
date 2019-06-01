@@ -30,9 +30,16 @@
 namespace ns3 {
 
 // SVELTE TEID masks for OpenFlow matching.
-#define TEID_SLICE_MASK   0x0F000000
-#define TEID_IMSI_MASK    0x00FFFFF0
-#define TEID_BID_MASK     0x0000000F
+#define TEID_STRICT_MASK    0xFFFFFFFF
+#define TEID_SLICE_MASK     0x0F000000
+#define TEID_IMSI_MASK      0x00FFFFF0
+#define TEID_BID_MASK       0x0000000F
+
+// SVELTE cookie masks for OpenFlow matching.
+#define COOKIE_STRICT_MASK  0xFFFFFFFFFFFFFFFF
+#define COOKIE_TEID_MASK    0x00000000FFFFFFFF
+#define COOKIE_PRIO_MASK    0x0000FFFF00000000
+#define COOKIE_IFACE_MASK   0x000F000000000000
 
 // UDP port numbers.
 #define GTPU_PORT         2152
@@ -42,9 +49,6 @@ namespace ns3 {
 #define IPV4_PROT_NUM     (static_cast<uint16_t> (Ipv4L3Protocol::PROT_NUMBER))
 #define UDP_PROT_NUM      (static_cast<uint16_t> (UdpL4Protocol::PROT_NUMBER))
 #define TCP_PROT_NUM      (static_cast<uint16_t> (TcpL4Protocol::PROT_NUMBER))
-
-// OpenFlow cookie strick mask.
-#define COOKIE_STRICT_MASK_STR  "0xFFFFFFFFFFFFFFFF"
 
 // Flow-mod flags.
 #define FLAGS_REMOVED_OVERLAP_RESET \
@@ -295,6 +299,52 @@ std::string DscpTypeStr (Ipv4Header::DscpType dscp);
 
 /**
  * \ingroup svelte
+ * Compute the cookie value globally used in the SVELTE architecture for
+ * OpenFlow rules considering the bearer TEID, the rule priority, and the LTE
+ * logical interface.
+ * \param teid The TEID value.
+ * \param prio The OpenFlow rule priority.
+ * \param iface The LTE logical interface.
+ * \return The cookie value.
+ *
+ * \internal
+ * We are using the following cookie allocation strategy:
+ * \verbatim
+ * Cookie has 64 bits length: 0x 000 0 0000 00000000
+ *                              |---|-|----|--------|
+ *                               A   B C    D
+ *
+ * 12 (A) bits are currently unused, here fixed at 0x000.
+ *  4 (B) bits are used to identify the LTE logical interface.
+ * 16 (C) bits are used to identify the rule priority.
+ * 32 (D) bits are used to identify the bearer TEID.
+ * \endverbatim
+ */
+uint64_t CookieCreate (LteIface iface, uint16_t prio, uint32_t teid);
+
+/**
+ * Decompose the cookie to get the bearer TEID.
+ * \param cookie The OpenFlow cookie.
+ * \return The bearer TEID.
+ */
+uint32_t CookieGetTeid (uint64_t cookie);
+
+/**
+ * Decompose the cookie to get the rule priority.
+ * \param cookie The OpenFlow cookie.
+ * \return The OpenFlow rule priority.
+ */
+uint16_t CookieGetPriority (uint64_t cookie);
+
+/**
+ * Decompose the cookie to get the LTE logical interface.
+ * \param cookie The OpenFlow cookie.
+ * \return The LTE logical interface.
+ */
+LteIface CookieGetIface (uint64_t cookie);
+
+/**
+ * \ingroup svelte
  * Compute the TEID value globally used in the SVELTE architecture for a EPS
  * bearer considering the slice ID, the UE ISMI and bearer ID.
  * \param sliceId The SVELTE logical slice ID.
@@ -309,7 +359,7 @@ std::string DscpTypeStr (Ipv4Header::DscpType dscp);
  *                            |-|-|-----|-|
  *                             A B C     D
  *
- *  4 (A) bits are reserved for TEID, here fixed at 0x0.
+ *  4 (A) bits are used to identify a valid TEID, here fixed at 0x0.
  *  4 (B) bits are used to identify the logical slice (slice ID).
  * 20 (C) bits are used to identify the UE (IMSI).
  *  4 (D) bits are used to identify the bearer withing the UE (bearer ID).
@@ -356,7 +406,7 @@ uint64_t TeidGetUeImsi (uint32_t teid);
  *                                |-|-|------|
  *                                 A B C
  *
- *  4 (A) bits are reserved for meter ID, here fixed at 0x1.
+ *  4 (A) bits are used to idenfity a valid meter ID, here fixed at 0x1.
  *  4 (B) bits are used to identify the logical slice (slice ID).
  * 24 (C) bits are used to identify the meter withing topology (meter ID).
  * \endverbatim
