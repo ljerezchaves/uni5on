@@ -1102,16 +1102,19 @@ SliceController::PgwRulesInstall (
   NS_LOG_INFO ("Installing P-GW rules for teid " << rInfo->GetTeidHex () <<
                " into P-GW TFT switch index " << pgwTftIdx);
 
-  // Build the dpctl command string
+  // Building the dpctl command.
+  uint64_t cookie = CookieCreate (
+      LteIface::S5, rInfo->GetPriority (), rInfo->GetTeid ());
   std::ostringstream cmd, act;
   cmd << "flow-mod cmd=add"
       << ",table="  << PGW_TFT_TAB
       << ",flags="  << FLAGS_OVERLAP_RESET
-      << ",cookie=" << rInfo->GetTeidHex () // FIXME
+      << ",cookie=" << GetUint64Hex (cookie)
       << ",prio="   << rInfo->GetPriority ()
       << ",idle="   << rInfo->GetTimeout ();
+  std::string cmdStr = cmd.str ();
 
-  // Check for meter entry.
+  // Checking for meter entry.
   if (rInfo->HasMbrDl ())
     {
       if (moveFlag || !rInfo->IsMbrDlInstalled ())
@@ -1129,6 +1132,7 @@ SliceController::PgwRulesInstall (
   act << " apply:set_field=tunn_id:"
       << GetTunnelIdStr (rInfo->GetTeid (), rInfo->GetSgwS5Addr ())
       << ",output=" << m_pgwInfo->GetTftS5PortNo (pgwTftIdx);
+  std::string actStr = act.str ();
 
   // Install one downlink dedicated bearer rule for each packet filter.
   Ptr<EpcTft> tft = rInfo->GetTft ();
@@ -1140,7 +1144,7 @@ SliceController::PgwRulesInstall (
           continue;
         }
 
-      // Install rules for TCP traffic.
+      // Installing rules for TCP traffic.
       if (filter.protocol == TcpL4Protocol::PROT_NUMBER)
         {
           std::ostringstream mat;
@@ -1152,10 +1156,10 @@ SliceController::PgwRulesInstall (
               mat << ",ip_src="  << filter.remoteAddress
                   << ",tcp_src=" << filter.remotePortStart;
             }
-          DpctlExecute (pgwTftDpId, cmd.str () + mat.str () + act.str ());
+          DpctlExecute (pgwTftDpId, cmdStr + mat.str () + actStr);
         }
 
-      // Install rules for UDP traffic.
+      // Installing rules for UDP traffic.
       else if (filter.protocol == UdpL4Protocol::PROT_NUMBER)
         {
           std::ostringstream mat;
@@ -1167,7 +1171,7 @@ SliceController::PgwRulesInstall (
               mat << ",ip_src="  << filter.remoteAddress
                   << ",udp_src=" << filter.remotePortStart;
             }
-          DpctlExecute (pgwTftDpId, cmd.str () + mat.str () + act.str ());
+          DpctlExecute (pgwTftDpId, cmdStr + mat.str () + actStr);
         }
     }
   return true;
@@ -1188,12 +1192,12 @@ SliceController::PgwRulesRemove (
   NS_LOG_INFO ("Removing P-GW rules for teid " << rInfo->GetTeidHex () <<
                " from P-GW TFT switch index " << pgwTftIdx);
 
-  // Remove P-GW TFT flow entries for this TEID.
+  // Building the dpctl command. Matching cookie just for TEID.
   std::ostringstream cmd;
   cmd << "flow-mod cmd=del"
       << ",table="        << PGW_TFT_TAB
-      << ",cookie="       << rInfo->GetTeidHex () // FIXME
-      << ",cookie_mask="  << GetUint64Hex (COOKIE_STRICT_MASK);
+      << ",cookie="       << GetUint64Hex (rInfo->GetTeid ())
+      << ",cookie_mask="  << GetUint64Hex (COOKIE_TEID_MASK);
   DpctlExecute (pgwTftDpId, cmd.str ());
 
   // Remove meter entry for this TEID.
@@ -1255,24 +1259,29 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
+  uint64_t sgwDpId = rInfo->GetSgwDpId ();
   NS_LOG_INFO ("Installing S-GW rules for teid " << rInfo->GetTeidHex ());
 
   // Configure downlink.
   if (rInfo->HasDlTraffic ())
     {
-      // Build the dpctl command string.
+      // Building the dpctl command.
+      uint64_t cookie = CookieCreate (
+          LteIface::S1, rInfo->GetPriority (), rInfo->GetTeid ());
       std::ostringstream cmd, act;
       cmd << "flow-mod cmd=add"
           << ",table="  << SGW_DL_TAB
           << ",flags="  << FLAGS_REMOVED_OVERLAP_RESET
-          << ",cookie=" << rInfo->GetTeidHex () // FIXME
+          << ",cookie=" << GetUint64Hex (cookie)
           << ",prio="   << rInfo->GetPriority ()
           << ",idle="   << rInfo->GetTimeout ();
+      std::string cmdStr = cmd.str ();
 
       // Instruction: apply action: set tunnel ID, output port.
       act << " apply:set_field=tunn_id:"
           << GetTunnelIdStr (rInfo->GetTeid (), rInfo->GetEnbS1uAddr ())
           << ",output=" << rInfo->GetSgwS1uPortNo ();
+      std::string actStr = act.str ();
 
       // Install one downlink dedicated bearer rule for each packet filter.
       Ptr<EpcTft> tft = rInfo->GetTft ();
@@ -1296,8 +1305,7 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
                   mat << ",ip_src="  << filter.remoteAddress
                       << ",tcp_src=" << filter.remotePortStart;
                 }
-              DpctlExecute (rInfo->GetSgwDpId (),
-                            cmd.str () + mat.str () + act.str ());
+              DpctlExecute (sgwDpId, cmdStr + mat.str () + actStr);
             }
 
           // Install rules for UDP traffic.
@@ -1312,8 +1320,7 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
                   mat << ",ip_src="  << filter.remoteAddress
                       << ",udp_src=" << filter.remotePortStart;
                 }
-              DpctlExecute (rInfo->GetSgwDpId (),
-                            cmd.str () + mat.str () + act.str ());
+              DpctlExecute (sgwDpId, cmdStr + mat.str () + actStr);
             }
         }
     }
@@ -1321,14 +1328,17 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
   // Configure uplink.
   if (rInfo->HasUlTraffic ())
     {
-      // Build the dpctl command string.
+      // Building the dpctl command.
+      uint64_t cookie = CookieCreate (
+          LteIface::S5, rInfo->GetPriority (), rInfo->GetTeid ());
       std::ostringstream cmd, act;
       cmd << "flow-mod cmd=add"
           << ",table="  << SGW_UL_TAB
           << ",flags="  << FLAGS_REMOVED_OVERLAP_RESET
-          << ",cookie=" << rInfo->GetTeidHex () // FIXME
+          << ",cookie=" << GetUint64Hex (cookie)
           << ",prio="   << rInfo->GetPriority ()
           << ",idle="   << rInfo->GetTimeout ();
+      std::string cmdStr = cmd.str ();
 
       // Check for meter entry.
       if (rInfo->HasMbrUl ())
@@ -1336,7 +1346,7 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
           if (!rInfo->IsMbrUlInstalled ())
             {
               // Install the per-flow meter entry.
-              DpctlExecute (rInfo->GetSgwDpId (), rInfo->GetMbrUlAddCmd ());
+              DpctlExecute (sgwDpId, rInfo->GetMbrUlAddCmd ());
               rInfo->SetMbrUlInstalled (true);
             }
 
@@ -1348,6 +1358,7 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
       act << " apply:set_field=tunn_id:"
           << GetTunnelIdStr (rInfo->GetTeid (), rInfo->GetPgwS5Addr ())
           << ",output=" << rInfo->GetSgwS5PortNo ();
+      std::string actStr = act.str ();
 
       // Install one uplink dedicated bearer rule for each packet filter.
       Ptr<EpcTft> tft = rInfo->GetTft ();
@@ -1371,8 +1382,7 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
                   mat << ",ip_dst="  << filter.remoteAddress
                       << ",tcp_dst=" << filter.remotePortStart;
                 }
-              DpctlExecute (rInfo->GetSgwDpId (),
-                            cmd.str () + mat.str () + act.str ());
+              DpctlExecute (sgwDpId, cmdStr + mat.str () + actStr);
             }
 
           // Install rules for UDP traffic.
@@ -1387,8 +1397,7 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
                   mat << ",ip_dst="  << filter.remoteAddress
                       << ",udp_dst=" << filter.remotePortStart;
                 }
-              DpctlExecute (rInfo->GetSgwDpId (),
-                            cmd.str () + mat.str () + act.str ());
+              DpctlExecute (sgwDpId, cmdStr + mat.str () + actStr);
             }
         }
     }
@@ -1402,11 +1411,11 @@ SliceController::SgwRulesRemove (Ptr<RoutingInfo> rInfo)
 
   NS_LOG_INFO ("Removing S-GW rules for bearer teid " << rInfo->GetTeidHex ());
 
-  // Remove flow entries for this TEID.
+  // Building the dpctl command. Matching cookie just for TEID.
   std::ostringstream cmd;
   cmd << "flow-mod cmd=del"
-      << ",cookie="       << rInfo->GetTeidHex () // FIXME
-      << ",cookie_mask="  << GetUint64Hex (COOKIE_STRICT_MASK);
+      << ",cookie="       << GetUint64Hex (rInfo->GetTeid ())
+      << ",cookie_mask="  << GetUint64Hex (COOKIE_TEID_MASK);
   DpctlExecute (rInfo->GetSgwDpId (), cmd.str ());
 
   // Remove meter entry for this TEID.

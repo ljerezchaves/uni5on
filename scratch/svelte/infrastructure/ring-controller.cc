@@ -895,7 +895,7 @@ RingController::RulesInstall (Ptr<RingInfo> ringInfo, LteIface iface)
           << ",gtpu_teid="   << rInfo->GetTeidHex ();
       std::string matStr = mat.str ();
 
-      // Build the instructions string.
+      // Building the instructions string.
       std::ostringstream ins;
       ins << " write:group=" << dlPath
           << " goto:"        << BANDW_TAB;
@@ -932,7 +932,7 @@ RingController::RulesInstall (Ptr<RingInfo> ringInfo, LteIface iface)
           << ",gtpu_teid="   << rInfo->GetTeidHex ();
       std::string matStr = mat.str ();
 
-      // Build the instructions string.
+      // Building the instructions string.
       std::ostringstream ins;
       ins << " write:group=" << ulPath
           << " goto:"        << BANDW_TAB;
@@ -964,14 +964,13 @@ RingController::RulesRemove (Ptr<RingInfo> ringInfo, LteIface iface)
 
   Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
 
-  // Building the dpctl command.
-  uint64_t cookie = CookieCreate (
-      iface, rInfo->GetPriority (), rInfo->GetTeid ());
+  // Building the dpctl command. Matching cookie for interface and TEID.
+  uint64_t cookie = CookieCreate (iface, 0, rInfo->GetTeid ());
   std::ostringstream cmd;
   cmd << "flow-mod cmd=del"
       << ",table="        << GetSliceTable (rInfo->GetSliceId ())
       << ",cookie="       << GetUint64Hex (cookie)
-      << ",cookie_mask="  << GetUint64Hex (COOKIE_IFACE_PRIO_TEID_MASK);
+      << ",cookie_mask="  << GetUint64Hex (COOKIE_IFACE_TEID_MASK);
   std::string cmdStr = cmd.str ();
 
   RingInfo::RingPath dlPath = ringInfo->GetDlPath (iface);
