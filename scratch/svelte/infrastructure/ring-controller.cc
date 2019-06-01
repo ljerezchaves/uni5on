@@ -189,33 +189,13 @@ RingController::BearerRemove (Ptr<RoutingInfo> rInfo)
   NS_ASSERT_MSG (rInfo->IsInstalled (), "Rules must be installed.");
   NS_LOG_INFO ("Removing ring rules for teid " << rInfo->GetTeidHex ());
 
-  // Getting ring routing information.
   Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
+  NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
 
-  // Remove flow entries for this TEID.
-  std::ostringstream cmd;
-  cmd << "flow-mod cmd=del"
-      << ",table="        << GetSliceTable (rInfo->GetSliceId ())
-      << ",cookie="       << rInfo->GetTeidHex () // FIXME
-      << ",cookie_mask="  << GetUint64Hex (COOKIE_STRICT_MASK);
-
-  // Removing rules from all switches in the path from P-GW to eNB.
-  RingInfo::RingPath downPath = ringInfo->GetDlPath (LteIface::S5);
-  uint16_t curr = rInfo->GetPgwInfraSwIdx ();
-  while (curr != rInfo->GetSgwInfraSwIdx ())
-    {
-      DpctlExecute (GetDpId (curr), cmd.str ());
-      curr = NextSwitchIndex (curr, downPath);
-    }
-  downPath = ringInfo->GetDlPath (LteIface::S1);
-  while (curr != rInfo->GetEnbInfraSwIdx ())
-    {
-      DpctlExecute (GetDpId (curr), cmd.str ());
-      curr = NextSwitchIndex (curr, downPath);
-    }
-  DpctlExecute (GetDpId (curr), cmd.str ());
-
-  return true;
+  bool success = true;
+  success &= RulesRemove (ringInfo, LteIface::S5);
+  success &= RulesRemove (ringInfo, LteIface::S1);
+  return success;
 }
 
 bool
@@ -973,6 +953,34 @@ RingController::RulesInstall (Ptr<RingInfo> ringInfo, LteIface iface)
               curr = NextSwitchIndex (curr, ulPath);
             }
         }
+    }
+  return true;
+}
+
+bool
+RingController::RulesRemove (Ptr<RingInfo> ringInfo, LteIface iface)
+{
+  NS_LOG_FUNCTION (this << ringInfo << iface);
+
+  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
+
+  // Building the dpctl command.
+  uint64_t cookie = CookieCreate (
+      iface, rInfo->GetPriority (), rInfo->GetTeid ());
+  std::ostringstream cmd;
+  cmd << "flow-mod cmd=del"
+      << ",table="        << GetSliceTable (rInfo->GetSliceId ())
+      << ",cookie="       << GetUint64Hex (cookie)
+      << ",cookie_mask="  << GetUint64Hex (COOKIE_IFACE_PRIO_TEID_MASK);
+  std::string cmdStr = cmd.str ();
+
+  RingInfo::RingPath dlPath = ringInfo->GetDlPath (iface);
+  uint16_t curr = rInfo->GetSrcDlInfraSwIdx (iface);
+  uint16_t last = rInfo->GetDstDlInfraSwIdx (iface);
+  while (curr != last)
+    {
+      DpctlExecute (GetDpId (curr), cmdStr);
+      curr = NextSwitchIndex (curr, dlPath);
     }
   return true;
 }

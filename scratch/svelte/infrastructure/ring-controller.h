@@ -202,6 +202,14 @@ private:
   bool RulesInstall (Ptr<RingInfo> ringInfo, LteIface iface);
 
   /**
+   * Remove forwarding rules from switches for the given LTE interface.
+   * \param ringInfo The ring routing information.
+   * \param iface The LTE logical interface.
+   * \return True if succeeded, false otherwise.
+   */
+  bool RulesRemove (Ptr<RingInfo> ringInfo, LteIface iface);
+
+  /**
    * Set the default ring routing paths to the shortest ones.
    * \param ringInfo The ring routing information.
    * \param iface The LTE logical interface.
