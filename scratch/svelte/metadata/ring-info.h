@@ -75,12 +75,6 @@ public:
   //\}
 
   /**
-   * Check whether both LTE S1-U and S5 interfaces are routed over local paths.
-   * \return True for local paths, false otherwise.
-   */
-  bool AreLocalPaths (void) const;
-
-  /**
    * Get the bearer routing information aggregated to this object.
    * \return The routing information.
    */

@@ -106,14 +106,6 @@ RingInfo::IsUndefPath (LteIface iface) const
   return (GetDlPath (iface) == RingInfo::UNDEF);
 }
 
-bool
-RingInfo::AreLocalPaths (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return (IsLocalPath (LteIface::S1) && IsLocalPath (LteIface::S5));
-}
-
 Ptr<RoutingInfo>
 RingInfo::GetRoutingInfo (void) const
 {
