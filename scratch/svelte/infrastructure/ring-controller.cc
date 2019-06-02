@@ -806,6 +806,12 @@ RingController::RulesRemove (
 {
   NS_LOG_FUNCTION (this << ringInfo << iface);
 
+  // No rules installed for this interface.
+  if (!ringInfo->IsInstalled (iface))
+    {
+      return true;
+    }
+
   Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
 
   // Building the dpctl command. Matching cookie for interface and TEID.
