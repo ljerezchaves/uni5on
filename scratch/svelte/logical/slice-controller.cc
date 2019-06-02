@@ -1013,11 +1013,8 @@ SliceController::PgwTftLoadBalancing (void)
                   NS_LOG_INFO ("Move bearer teid " << (rInfo)->GetTeidHex () <<
                                " from TFT " << currIdx << " to " << destIdx);
                   Simulator::Schedule (MilliSeconds (rand->GetInteger ()),
-                                       &SliceController::PgwRulesInstall,
-                                       this, rInfo, destIdx, true);
-                  Simulator::Schedule (MilliSeconds (750 + rand->GetInteger ()),
-                                       &SliceController::PgwRulesRemove,
-                                       this, rInfo, currIdx, true);
+                                       &SliceController::PgwRulesMove,
+                                       this, rInfo, currIdx, destIdx);
                   rInfo->SetPgwTftIdx (destIdx);
                   moved++;
                 }
@@ -1088,21 +1085,17 @@ SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo) const
 }
 
 bool
-SliceController::PgwRulesInstall (
-  Ptr<RoutingInfo> rInfo, uint16_t pgwTftIdx, bool moveFlag)
+SliceController::PgwRulesInstall (Ptr<RoutingInfo> rInfo)
 {
-  NS_LOG_FUNCTION (this << rInfo->GetTeidHex () << pgwTftIdx << moveFlag);
+  NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
-  // Use the rInfo P-GW TFT index when the parameter is not set.
-  if (pgwTftIdx == 0)
-    {
-      pgwTftIdx = rInfo->GetPgwTftIdx ();
-    }
-  uint64_t pgwTftDpId = m_pgwInfo->GetTftDpId (pgwTftIdx);
-
-  NS_LOG_INFO ("Installing P-GW rules for teid " << rInfo->GetTeidHex () <<
-               " into P-GW TFT switch index " << pgwTftIdx);
+  NS_ASSERT_MSG (!rInfo->IsInstalled (), "Rules should not be installed.");
+  NS_LOG_INFO ("Installing P-GW rules for teid " << rInfo->GetTeidHex ());
   bool success = true;
+
+  uint16_t pgwTftIdx = rInfo->GetPgwTftIdx ();
+  uint64_t pgwTftDpId = m_pgwInfo->GetTftDpId (pgwTftIdx);
+  NS_LOG_DEBUG ("Installing into P-GW TFT switch index " << pgwTftIdx);
 
   // Configure downlink.
   if (rInfo->HasDlTraffic ())
@@ -1123,7 +1116,7 @@ SliceController::PgwRulesInstall (
       // Check for meter entry.
       if (rInfo->HasMbrDl ())
         {
-          if (moveFlag || !rInfo->IsMbrDlInstalled ())
+          if (!rInfo->IsMbrDlInstalled ())
             {
               // Install the per-flow meter entry.
               DpctlExecute (pgwTftDpId, rInfo->GetMbrDlAddCmd ());
@@ -1148,20 +1141,84 @@ SliceController::PgwRulesInstall (
 }
 
 bool
-SliceController::PgwRulesRemove (
-  Ptr<RoutingInfo> rInfo, uint16_t pgwTftIdx, bool moveFlag)
+SliceController::PgwRulesMove (
+  Ptr<RoutingInfo> rInfo, uint16_t srcTftIdx, uint16_t dstTftIdx)
 {
-  NS_LOG_FUNCTION (this << rInfo->GetTeidHex () << pgwTftIdx << moveFlag);
+  NS_LOG_FUNCTION (this << rInfo->GetTeidHex () << srcTftIdx << dstTftIdx);
 
-  // Use the rInfo P-GW TFT index when the parameter is not set.
-  if (pgwTftIdx == 0)
+  NS_ASSERT_MSG (rInfo->IsInstalled (), "Rules should be installed.");
+  NS_LOG_INFO ("Moving P-GW rules for teid " << rInfo->GetTeidHex ())
+  bool success = true;
+
+  uint64_t srcTftDpId = m_pgwInfo->GetTftDpId (srcTftIdx);
+  uint64_t dstTftDpId = m_pgwInfo->GetTftDpId (dstTftIdx);
+  NS_LOG_DEBUG ("Moving from P-GW TFT switch index " <<
+                srcTftIdx << " to " << dstTftIdx);
+
+  // Schedule the removal of rules from source switch.
+  std::ostringstream del;
+  del << "flow-mod cmd=del"
+      << ",table="        << PGW_TFT_TAB
+      << ",cookie="       << GetUint64Hex (rInfo->GetTeid ())
+      << ",cookie_mask="  << GetUint64Hex (COOKIE_TEID_MASK);
+  DpctlSchedule (MilliSeconds (750), srcTftDpId, del.str ());
+
+  // Remove the per-flow meter entry. Don't change the flag to false.
+  if (rInfo->IsMbrDlInstalled ())
     {
-      pgwTftIdx = rInfo->GetPgwTftIdx ();
+      DpctlSchedule (MilliSeconds (751), srcTftDpId, rInfo->GetMbrDelCmd ());
     }
-  uint64_t pgwTftDpId = m_pgwInfo->GetTftDpId (pgwTftIdx);
 
-  NS_LOG_INFO ("Removing P-GW rules for teid " << rInfo->GetTeidHex () <<
-               " from P-GW TFT switch index " << pgwTftIdx);
+  // Install rules into target switch now.
+  if (rInfo->HasDlTraffic ())
+    {
+      // Cookie for new downlink rules.
+      uint64_t cookie = CookieCreate (
+          LteIface::S5, rInfo->GetPriority (), rInfo->GetTeid ());
+
+      // Building the dpctl command.
+      std::ostringstream cmd, act;
+      cmd << "flow-mod cmd=add"
+          << ",table="  << PGW_TFT_TAB
+          << ",flags="  << FLAGS_OVERLAP_RESET
+          << ",cookie=" << GetUint64Hex (cookie)
+          << ",prio="   << rInfo->GetPriority ()
+          << ",idle="   << rInfo->GetTimeout ();
+
+      // Check for meter entry. The flag must be true.
+      if (rInfo->IsMbrDlInstalled ())
+        {
+          // Install the per-flow meter entry.
+          DpctlExecute (dstTftDpId, rInfo->GetMbrDlAddCmd ());
+
+          // Instruction: meter.
+          act << " meter:" << rInfo->GetTeid ();
+        }
+
+      // Instruction: apply action: set tunnel ID, output port.
+      act << " apply:set_field=tunn_id:"
+          << GetTunnelIdStr (rInfo->GetTeid (), rInfo->GetSgwS5Addr ())
+          << ",output=" << m_pgwInfo->GetTftS5PortNo (dstTftIdx);
+
+      // Install downlink OpenFlow TFT rules.
+      success &= TftRulesInstall (rInfo->GetTft (), Direction::DLINK,
+                                  dstTftDpId, cmd.str (), act.str ());
+    }
+
+  return success;
+}
+
+bool
+SliceController::PgwRulesRemove (Ptr<RoutingInfo> rInfo)
+{
+  NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
+
+  NS_ASSERT_MSG (rInfo->IsInstalled (), "Rules should be installed.");
+  NS_LOG_INFO ("Removing P-GW rules for teid " << rInfo->GetTeidHex ());
+
+  uint16_t pgwTftIdx = rInfo->GetPgwTftIdx ();
+  uint64_t pgwTftDpId = m_pgwInfo->GetTftDpId (pgwTftIdx);
+  NS_LOG_DEBUG ("Removing from P-GW TFT switch index " << pgwTftIdx);
 
   // Building the dpctl command. Matching cookie just for TEID.
   std::ostringstream cmd;
@@ -1171,14 +1228,11 @@ SliceController::PgwRulesRemove (
       << ",cookie_mask="  << GetUint64Hex (COOKIE_TEID_MASK);
   DpctlExecute (pgwTftDpId, cmd.str ());
 
-  // Remove meter entry for this TEID.
+  // Remove the per-flow meter entry.
   if (rInfo->IsMbrDlInstalled ())
     {
       DpctlExecute (pgwTftDpId, rInfo->GetMbrDelCmd ());
-      if (!moveFlag)
-        {
-          rInfo->SetMbrDlInstalled (false);
-        }
+      rInfo->SetMbrDlInstalled (false);
     }
 
   return true;
@@ -1189,8 +1243,8 @@ SliceController::SgwBearerRequest (Ptr<RoutingInfo> rInfo) const
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
-  bool success = true;
   Ptr<SgwInfo> sgwInfo = rInfo->GetUeInfo ()->GetSgwInfo ();
+  bool success = true;
 
   // First check: OpenFlow switch table usage (only non-aggregated bearers).
   // Block the bearer if any of the S-GW switch tables (#1 or #2) usage is

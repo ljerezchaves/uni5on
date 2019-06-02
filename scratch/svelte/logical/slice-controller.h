@@ -297,28 +297,27 @@ private:
    * \attention To avoid conflicts with old entries, increase the routing
    *            priority before installing OpenFlow rules.
    * \param rInfo The routing information to process.
-   * \param pgwTftIdx The P-GW TFT switch index. When set to 0, the index will
-   *        be get from rInfo->GetPgwTftIdx ().
-   * \param moveFlag When true, forces the meter entry install even when
-   *        rInfo->IsMbrDlInstalled () is true (useful when moving rules
-   *        among TFT switches).
    * \return True if succeeded, false otherwise.
    */
-  bool PgwRulesInstall (Ptr<RoutingInfo> rInfo, uint16_t pgwTftIdx = 0,
-                        bool moveFlag = false);
+  bool PgwRulesInstall (Ptr<RoutingInfo> rInfo);
+
+  /**
+   * Move downlink packet filtering rules from the source P-GW TFT OpenFlow
+   * switch to the target one.
+   * \param rInfo The routing information to process.
+   * \param srcTftIdx The source P-GW TFT switch index.
+   * \param dstTftIdx The target P-GW TFT switch index.
+   * \return True if succeeded, false otherwise.
+   */
+  bool PgwRulesMove (Ptr<RoutingInfo> rInfo, uint16_t srcTftIdx,
+                     uint16_t dstTftIdx);
 
   /**
    * Remove downlink packet filtering rules from the P-GW TFT OpenFlow switch.
    * \param rInfo The routing information to process.
-   * \param pgwTftIdx The P-GW TFT switch index. When set to 0, the index will
-   *        be get from rInfo->GetPgwTftIdx ().
-   * \param moveFlag When true, don't set the rInfo->IsMbrDlInstalled ()
-   *        flag to false when removing the meter entry (useful when moving
-   *        rules among TFT switches).
    * \return True if succeeded, false otherwise.
    */
-  bool PgwRulesRemove (Ptr<RoutingInfo> rInfo, uint16_t pgwTftIdx = 0,
-                       bool moveFlag = false);
+  bool PgwRulesRemove (Ptr<RoutingInfo> rInfo);
 
   /**
    * Check for available resources on S-GW switch for this bearer request. When
