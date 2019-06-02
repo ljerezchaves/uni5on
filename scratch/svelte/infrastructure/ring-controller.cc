@@ -342,6 +342,69 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 }
 
 bool
+RingController::BitRateRequest (
+  Ptr<RingInfo> ringInfo, LteIface iface, LinkInfoSet_t *overlap) const
+{
+  NS_LOG_FUNCTION (this << ringInfo << iface << overlap);
+
+  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
+
+  // Ignoring this check for Non-GBR bearers, aggregated bearers,
+  // and local-routing bearers.
+  if (rInfo->IsNonGbr () || rInfo->IsAggregated ()
+      || ringInfo->IsLocalPath (iface))
+    {
+      return true;
+    }
+
+  return BitRateRequest (
+    rInfo->GetSrcDlInfraSwIdx (iface),
+    rInfo->GetDstDlInfraSwIdx (iface),
+    rInfo->GetGbrDlBitRate (),
+    rInfo->GetGbrUlBitRate (),
+    ringInfo->GetDlPath (iface),
+    rInfo->GetSliceId (),
+    GetSliceController (rInfo->GetSliceId ())->GetGbrBlockThs (),
+    overlap);
+}
+
+bool
+RingController::BitRateRequest (
+  uint16_t srcIdx, uint16_t dstIdx, int64_t fwdBitRate, int64_t bwdBitRate,
+  RingInfo::RingPath path, SliceId slice, double blockThs,
+  LinkInfoSet_t *overlap) const
+{
+  NS_LOG_FUNCTION (this << srcIdx << dstIdx << fwdBitRate <<
+                   bwdBitRate << path << slice << blockThs << overlap);
+
+  // Walk through links in the given routing path, requesting for the bit rate.
+  LinkInfo::LinkDir fwdDir, bwdDir;
+  Ptr<LinkInfo> lInfo;
+  bool ok = true;
+  while (ok && srcIdx != dstIdx)
+    {
+      uint16_t next = NextSwitchIndex (srcIdx, path);
+      std::tie (lInfo, fwdDir, bwdDir) = GetLinkInfo (srcIdx, next);
+      if (overlap && overlap->find (lInfo) != overlap->end ())
+        {
+          // Ensure that overlapping links have the requested bandwidth for
+          // both directions, otherwise the BitRateReserve method will fail.
+          int64_t sumBitRate = fwdBitRate + bwdBitRate;
+          ok &= lInfo->HasBitRate (fwdDir, slice, sumBitRate, blockThs);
+          ok &= lInfo->HasBitRate (bwdDir, slice, sumBitRate, blockThs);
+        }
+      else
+        {
+          ok &= lInfo->HasBitRate (fwdDir, slice, fwdBitRate, blockThs);
+          ok &= lInfo->HasBitRate (bwdDir, slice, bwdBitRate, blockThs);
+        }
+      srcIdx = next;
+    }
+
+  return ok;
+}
+
+bool
 RingController::BitRateReserve (Ptr<RingInfo> ringInfo, LteIface iface)
 {
   NS_LOG_FUNCTION (this << ringInfo << iface);
@@ -540,7 +603,7 @@ RingController::HasAvailableResources (
   Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
 
   // Check for the available resources on the default path.
-  bool bwdOk = HasLinkBitRate (ringInfo, iface, overlap);
+  bool bwdOk = BitRateRequest (ringInfo, iface, overlap);
   bool cpuOk = HasSwitchCpu (ringInfo, iface);
   bool tabOk = HasSwitchTable (ringInfo, iface);
   if ((bwdOk == false || cpuOk == false || tabOk == false)
@@ -549,7 +612,7 @@ RingController::HasAvailableResources (
       // We don't have the resources in the default path.
       // Let's invert the routing path and check again.
       ringInfo->InvertPath (iface);
-      bwdOk = HasLinkBitRate (ringInfo, iface, overlap);
+      bwdOk = BitRateRequest (ringInfo, iface, overlap);
       cpuOk = HasSwitchCpu (ringInfo, iface);
       tabOk = HasSwitchTable (ringInfo, iface);
     }
@@ -575,56 +638,6 @@ RingController::HasAvailableResources (
     }
 
   return (bwdOk && cpuOk && tabOk);
-}
-
-bool
-RingController::HasLinkBitRate (
-  Ptr<RingInfo> ringInfo, LteIface iface, LinkInfoSet_t *overlap) const
-{
-  NS_LOG_FUNCTION (this << ringInfo << iface << overlap);
-
-  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
-
-  // Ignoring this check for Non-GBR bearers, aggregated bearers,
-  // and local-routing bearers.
-  if (rInfo->IsNonGbr () || rInfo->IsAggregated ()
-      || ringInfo->IsLocalPath (iface))
-    {
-      return true;
-    }
-
-  SliceId slice = rInfo->GetSliceId ();
-  int64_t dlRate = rInfo->GetGbrDlBitRate ();
-  int64_t ulRate = rInfo->GetGbrUlBitRate ();
-  uint16_t curr = rInfo->GetSrcDlInfraSwIdx (iface);
-  uint16_t last = rInfo->GetDstDlInfraSwIdx (iface);
-  RingInfo::RingPath path = ringInfo->GetDlPath (iface);
-  double blockThs = GetSliceController (slice)->GetGbrBlockThs ();
-
-  // Walk through the backhaul links in the downlink routing path,
-  // checking for the available bandwidth.
-  LinkInfo::LinkDir dlDir, ulDir;
-  Ptr<LinkInfo> lInfo;
-  bool ok = true;
-  while (ok && curr != last)
-    {
-      uint16_t next = NextSwitchIndex (curr, path);
-      std::tie (lInfo, dlDir, ulDir) = GetLinkInfo (curr, next);
-      if (overlap && overlap->find (lInfo) != overlap->end ())
-        {
-          // Ensure that overlapping links have the requested bandwidth for
-          // both interfaces, otherwise the BitRateReserve () method will fail.
-          ok &= lInfo->HasBitRate (dlDir, slice, dlRate + ulRate, blockThs);
-          ok &= lInfo->HasBitRate (ulDir, slice, ulRate + dlRate, blockThs);
-        }
-      else
-        {
-          ok &= lInfo->HasBitRate (dlDir, slice, dlRate, blockThs);
-          ok &= lInfo->HasBitRate (ulDir, slice, ulRate, blockThs);
-        }
-      curr = next;
-    }
-  return ok;
 }
 
 bool

@@ -90,6 +90,37 @@ protected:
 
 private:
   /**
+   * Check the available bit rate for this bearer for given LTE interface. This
+   * method checks for "doubled" resources on overlapping links.
+   * \param ringInfo The ring routing information.
+   * \param iface The LTE logical interface.
+   * \param overlap The optional overlapping links.
+   * \return True if succeeded, false otherwise.
+   */
+  bool BitRateRequest (Ptr<RingInfo> ringInfo, LteIface iface,
+                       LinkInfoSet_t *overlap = 0) const;
+
+  /**
+   * Check the forward and backward available bit rate on links from the source
+   * to the destination switch following the given routing path. This method
+   * checks for "doubled" resources on overlapping links, respecting the block
+   * threshold.
+   * \param srcIdx Source switch index.
+   * \param dstIdx Destination switch index.
+   * \param fwdBitRate The forwarding bit rate.
+   * \param bwdBitRate The backward bit rate.
+   * \param path The routing path.
+   * \param slice The network slice.
+   * \param blockThs The reserved block threshold.
+   * \param overlap The optional overlapping links.
+   * \return True if succeeded, false otherwise.
+   */
+  bool BitRateRequest (uint16_t srcIdx, uint16_t dstIdx,
+                       int64_t fwdBitRate, int64_t bwdBitRate,
+                       RingInfo::RingPath path, SliceId slice,
+                       double blockThs, LinkInfoSet_t *overlap = 0) const;
+
+  /**
    * Reserve the bit rate for this bearer for the given LTE logical interface.
    * \param ringInfo The ring routing information.
    * \param iface The LTE logical interface.
@@ -173,18 +204,6 @@ private:
    */
   bool HasAvailableResources (Ptr<RingInfo> ringInfo, LteIface iface,
                               LinkInfoSet_t *overlap = 0) const;
-
-  /**
-   * Check for the available bit rate on backhaul links for the given LTE
-   * interface, optionally following the given routing path. This method checks
-   * for "doubled" resources on overlapping links.
-   * \param ringInfo The ring routing information.
-   * \param iface The LTE logical interface.
-   * \param overlap The optional overlapping links.
-   * \return True if succeeded, false otherwise.
-   */
-  bool HasLinkBitRate (Ptr<RingInfo> ringInfo, LteIface iface,
-                       LinkInfoSet_t *overlap = 0) const;
 
   /**
    * Check for the CPU usage on switches for the given LTE interface,
