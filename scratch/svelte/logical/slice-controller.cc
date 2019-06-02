@@ -1155,23 +1155,25 @@ SliceController::PgwRulesMove (
   NS_LOG_DEBUG ("Moving from P-GW TFT switch index " <<
                 srcTftIdx << " to " << dstTftIdx);
 
-  // Schedule the removal of rules from source switch.
-  std::ostringstream del;
-  del << "flow-mod cmd=del"
-      << ",table="        << PGW_TFT_TAB
-      << ",cookie="       << GetUint64Hex (rInfo->GetTeid ())
-      << ",cookie_mask="  << GetUint64Hex (COOKIE_TEID_MASK);
-  DpctlSchedule (MilliSeconds (750), srcTftDpId, del.str ());
-
-  // Remove the per-flow meter entry. Don't change the flag to false.
-  if (rInfo->IsMbrDlInstalled ())
-    {
-      DpctlSchedule (MilliSeconds (751), srcTftDpId, rInfo->GetMbrDelCmd ());
-    }
-
-  // Install rules into target switch now.
   if (rInfo->HasDlTraffic ())
     {
+      // Schedule the removal of rules from source switch.
+      // Building the dpctl command. Matching cookie just for TEID.
+      std::ostringstream del;
+      del << "flow-mod cmd=del"
+          << ",table="        << PGW_TFT_TAB
+          << ",cookie="       << GetUint64Hex (rInfo->GetTeid ())
+          << ",cookie_mask="  << GetUint64Hex (COOKIE_TEID_MASK);
+      DpctlSchedule (MilliSeconds (750), srcTftDpId, del.str ());
+
+      // Remove the per-flow meter entry. Don't change the flag to false.
+      if (rInfo->IsMbrDlInstalled ())
+        {
+          DpctlSchedule (MilliSeconds (751), srcTftDpId,
+                         rInfo->GetMbrDelCmd ());
+        }
+
+      // Install rules into target switch now.
       // Cookie for new downlink rules.
       uint64_t cookie = CookieCreate (
           LteIface::S5, rInfo->GetPriority (), rInfo->GetTeid ());
@@ -1395,6 +1397,20 @@ SliceController::SgwRulesUpdate (Ptr<RoutingInfo> rInfo,
 
   if (rInfo->HasDlTraffic ())
     {
+      // Schedule the removal of old low-priority OpenFlow rules.
+      // Cookie for old rules.
+      uint64_t oldCookie = CookieCreate (
+          LteIface::S1, rInfo->GetPriority (), rInfo->GetTeid ());
+
+      // Building the dpctl command. Strict matching cookie.
+      std::ostringstream del;
+      del << "flow-mod cmd=del"
+          << ",table="        << SGW_DL_TAB
+          << ",cookie="       << GetUint64Hex (oldCookie)
+          << ",cookie_mask="  << GetUint64Hex (COOKIE_STRICT_MASK);
+      DpctlSchedule (MilliSeconds (250), rInfo->GetSgwDpId (), del.str ());
+
+      // Install updated rules now.
       // Cookie for new downlink rules.
       uint16_t newPriority = rInfo->GetPriority () + 1;
       uint64_t newCookie = CookieCreate (
@@ -1417,18 +1433,6 @@ SliceController::SgwRulesUpdate (Ptr<RoutingInfo> rInfo,
       // Install new high-priority downlink OpenFlow TFT rules.
       success &= TftRulesInstall (rInfo->GetTft (), Direction::DLINK,
                                   rInfo->GetSgwDpId (), cmd.str (), act.str ());
-
-      // Cookie for old rules.
-      uint64_t oldCookie = CookieCreate (
-          LteIface::S1, rInfo->GetPriority (), rInfo->GetTeid ());
-
-      // Schedule the removal of old low-priority OpenFlow rules.
-      std::ostringstream del;
-      del << "flow-mod cmd=del"
-          << ",table="        << SGW_DL_TAB
-          << ",cookie="       << GetUint64Hex (oldCookie)
-          << ",cookie_mask="  << GetUint64Hex (COOKIE_IFACE_PRIO_TEID_MASK);
-      DpctlSchedule (MilliSeconds (250), rInfo->GetSgwDpId (), del.str ());
     }
 
   return success;
