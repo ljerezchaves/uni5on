@@ -1147,7 +1147,7 @@ SliceController::PgwRulesMove (
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex () << srcTftIdx << dstTftIdx);
 
   NS_ASSERT_MSG (rInfo->IsInstalled (), "Rules should be installed.");
-  NS_LOG_INFO ("Moving P-GW rules for teid " << rInfo->GetTeidHex ())
+  NS_LOG_INFO ("Moving P-GW rules for teid " << rInfo->GetTeidHex ());
   bool success = true;
 
   uint64_t srcTftDpId = m_pgwInfo->GetTftDpId (srcTftIdx);
