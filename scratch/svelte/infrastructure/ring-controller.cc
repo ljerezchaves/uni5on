@@ -366,25 +366,36 @@ RingController::BitRateReserve (Ptr<RingInfo> ringInfo, LteIface iface)
   int64_t ulRate = rInfo->GetGbrUlBitRate ();
   uint16_t curr = rInfo->GetSrcDlInfraSwIdx (iface);
   uint16_t last = rInfo->GetDstDlInfraSwIdx (iface);
-  RingInfo::RingPath path = ringInfo->GetDlPath (iface);
+  RingInfo::RingPath dlPath = ringInfo->GetDlPath (iface);
 
-  // Walk through the backhaul links in the downlink routing path,
-  // reserving the requested bit rate.
-  LinkInfo::LinkDir dlDir, ulDir;
+  bool success = BitRateReserve (curr, last, dlRate, ulRate, dlPath, slice);
+  rInfo->SetGbrReserved (iface, success);
+  return success;
+}
+
+bool
+RingController::BitRateReserve (uint16_t srcIdx, uint16_t dstIdx,
+                                uint64_t fwdBitRate, uint64_t bwdBitRate,
+                                RingInfo::RingPath path, SliceId slice)
+{
+  NS_LOG_FUNCTION (this << srcIdx << dstIdx << fwdBitRate <<
+                   bwdBitRate << path << slice);
+
+  // Walk through links in the given routing path, reserving the bit rate.
+  LinkInfo::LinkDir fwdDir, bwdDir;
   Ptr<LinkInfo> lInfo;
   bool ok = true;
-  while (ok && curr != last)
+  while (ok && srcIdx != dstIdx)
     {
-      uint16_t next = NextSwitchIndex (curr, path);
-      std::tie (lInfo, dlDir, ulDir) = GetLinkInfo (curr, next);
-      ok &= lInfo->UpdateResBitRate (dlDir, slice, dlRate);
-      ok &= lInfo->UpdateResBitRate (ulDir, slice, ulRate);
+      uint16_t next = NextSwitchIndex (srcIdx, path);
+      std::tie (lInfo, fwdDir, bwdDir) = GetLinkInfo (srcIdx, next);
+      ok &= lInfo->UpdateResBitRate (fwdDir, slice, fwdBitRate);
+      ok &= lInfo->UpdateResBitRate (bwdDir, slice, bwdBitRate);
       SlicingMeterAdjust (lInfo, slice);
-      curr = next;
+      srcIdx = next;
     }
 
   NS_ASSERT_MSG (ok, "Error when reserving bit rate.");
-  rInfo->SetGbrReserved (iface, ok);
   return ok;
 }
 
@@ -408,25 +419,36 @@ RingController::BitRateRelease (Ptr<RingInfo> ringInfo, LteIface iface)
   int64_t ulRate = rInfo->GetGbrUlBitRate ();
   uint16_t curr = rInfo->GetSrcDlInfraSwIdx (iface);
   uint16_t last = rInfo->GetDstDlInfraSwIdx (iface);
-  RingInfo::RingPath path = ringInfo->GetDlPath (iface);
+  RingInfo::RingPath dlPath = ringInfo->GetDlPath (iface);
 
-  // Walk through the backhaul links in the downlink routing path,
-  // releasing the reserved bit rate.
-  LinkInfo::LinkDir dlDir, ulDir;
+  bool success = BitRateRelease (curr, last, dlRate, ulRate, dlPath, slice);
+  rInfo->SetGbrReserved (iface, !success);
+  return success;
+}
+
+bool
+RingController::BitRateRelease (uint16_t srcIdx, uint16_t dstIdx,
+                                uint64_t fwdBitRate, uint64_t bwdBitRate,
+                                RingInfo::RingPath path, SliceId slice)
+{
+  NS_LOG_FUNCTION (this << srcIdx << dstIdx << fwdBitRate <<
+                   bwdBitRate << path << slice);
+
+  // Walk through links in the given routing path, releasing the bit rate.
+  LinkInfo::LinkDir fwdDir, bwdDir;
   Ptr<LinkInfo> lInfo;
   bool ok = true;
-  while (ok && curr != last)
+  while (ok && srcIdx != dstIdx)
     {
-      uint16_t next = NextSwitchIndex (curr, path);
-      std::tie (lInfo, dlDir, ulDir) = GetLinkInfo (curr, next);
-      ok &= lInfo->UpdateResBitRate (dlDir, slice, -dlRate);
-      ok &= lInfo->UpdateResBitRate (ulDir, slice, -ulRate);
+      uint16_t next = NextSwitchIndex (srcIdx, path);
+      std::tie (lInfo, fwdDir, bwdDir) = GetLinkInfo (srcIdx, next);
+      ok &= lInfo->UpdateResBitRate (fwdDir, slice, -fwdBitRate);
+      ok &= lInfo->UpdateResBitRate (bwdDir, slice, -bwdBitRate);
       SlicingMeterAdjust (lInfo, slice);
-      curr = next;
+      srcIdx = next;
     }
 
   NS_ASSERT_MSG (ok, "Error when releasing bit rate.");
-  rInfo->SetGbrReserved (iface, !ok);
   return ok;
 }
 

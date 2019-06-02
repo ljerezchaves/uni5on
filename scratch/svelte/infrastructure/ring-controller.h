@@ -90,7 +90,7 @@ protected:
 
 private:
   /**
-   * Reserve the bit rate for this bearer.
+   * Reserve the bit rate for this bearer for the given LTE logical interface.
    * \param ringInfo The ring routing information.
    * \param iface The LTE logical interface.
    * \return True if succeeded, false otherwise.
@@ -98,12 +98,42 @@ private:
   bool BitRateReserve (Ptr<RingInfo> ringInfo, LteIface iface);
 
   /**
-   * Release the bit rate for this bearer.
+   * Reserve the forward and backward bit rate on links from the source to the
+   * destination switch following the given routing path.
+   * \param srcIdx Source switch index.
+   * \param dstIdx Destination switch index.
+   * \param fwdBitRate The forwarding bit rate.
+   * \param bwdBitRate The backward bit rate.
+   * \param path The routing path.
+   * \param slice The network slice.
+   * \return True if succeeded, false otherwise.
+   */
+  bool BitRateReserve (uint16_t srcIdx, uint16_t dstIdx,
+                       uint64_t fwdBitRate, uint64_t bwdBitRate,
+                       RingInfo::RingPath path, SliceId slice);
+
+  /**
+   * Release the bit rate for this bearer for the given LTE logical interface.
    * \param ringInfo The ring routing information.
    * \param iface The LTE logical interface.
    * \return True if succeeded, false otherwise.
    */
   bool BitRateRelease (Ptr<RingInfo> ringInfo, LteIface iface);
+
+  /**
+   * Release the forward and backward bit rate on links from the source to the
+   * destination switch following the given routing path.
+   * \param srcIdx Source switch index.
+   * \param dstIdx Destination switch index.
+   * \param fwdBitRate The forwarding bit rate.
+   * \param bwdBitRate The backward bit rate.
+   * \param path The routing path.
+   * \param slice The network slice.
+   * \return True if succeeded, false otherwise.
+   */
+  bool BitRateRelease (uint16_t srcIdx, uint16_t dstIdx,
+                       uint64_t fwdBitRate, uint64_t bwdBitRate,
+                       RingInfo::RingPath path, SliceId slice);
 
   /**
    * To avoid flooding problems when broadcasting packets (like in ARP
