@@ -792,6 +792,9 @@ RingController::RulesInstall (
             }
         }
     }
+
+  // Update the installed flag for this interface.
+  ringInfo->SetInstalled (iface, true);
   return true;
 }
 
@@ -821,6 +824,9 @@ RingController::RulesRemove (
       curr = GetNextSwIdx (curr, dlPath);
     }
   DpctlExecute (GetDpId (curr), cmdStr);
+
+  // Update the installed flag for this interface.
+  ringInfo->SetInstalled (iface, false);
   return true;
 }
 
