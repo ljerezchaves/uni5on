@@ -361,14 +361,13 @@ RingController::BitRateReserve (Ptr<RingInfo> ringInfo, LteIface iface)
     }
   NS_ASSERT_MSG (rInfo->IsGbr (), "Non-GBR bearers should not get here.");
 
-  SliceId slice = rInfo->GetSliceId ();
-  int64_t dlRate = rInfo->GetGbrDlBitRate ();
-  int64_t ulRate = rInfo->GetGbrUlBitRate ();
-  uint16_t curr = rInfo->GetSrcDlInfraSwIdx (iface);
-  uint16_t last = rInfo->GetDstDlInfraSwIdx (iface);
-  RingInfo::RingPath dlPath = ringInfo->GetDlPath (iface);
-
-  bool success = BitRateReserve (curr, last, dlRate, ulRate, dlPath, slice);
+  bool success = BitRateReserve (
+      rInfo->GetSrcDlInfraSwIdx (iface),
+      rInfo->GetDstDlInfraSwIdx (iface),
+      rInfo->GetGbrDlBitRate (),
+      rInfo->GetGbrUlBitRate (),
+      ringInfo->GetDlPath (iface),
+      rInfo->GetSliceId ());
   rInfo->SetGbrReserved (iface, success);
   return success;
 }
@@ -414,14 +413,13 @@ RingController::BitRateRelease (Ptr<RingInfo> ringInfo, LteIface iface)
       return true;
     }
 
-  SliceId slice = rInfo->GetSliceId ();
-  int64_t dlRate = rInfo->GetGbrDlBitRate ();
-  int64_t ulRate = rInfo->GetGbrUlBitRate ();
-  uint16_t curr = rInfo->GetSrcDlInfraSwIdx (iface);
-  uint16_t last = rInfo->GetDstDlInfraSwIdx (iface);
-  RingInfo::RingPath dlPath = ringInfo->GetDlPath (iface);
-
-  bool success = BitRateRelease (curr, last, dlRate, ulRate, dlPath, slice);
+  bool success = BitRateRelease (
+      rInfo->GetSrcDlInfraSwIdx (iface),
+      rInfo->GetDstDlInfraSwIdx (iface),
+      rInfo->GetGbrDlBitRate (),
+      rInfo->GetGbrUlBitRate (),
+      ringInfo->GetDlPath (iface),
+      rInfo->GetSliceId ());
   rInfo->SetGbrReserved (iface, !success);
   return success;
 }
