@@ -356,6 +356,18 @@ private:
    */
   bool SgwRulesUpdate (Ptr<RoutingInfo> rInfo, Ptr<EnbInfo> dstEnbInfo);
 
+  /**
+   * Install individual TFT forwarding rules.
+   * \param tft The Traffic Flow Template.
+   * \param dir The traffic direction.
+   * \param dpId The target switch datapath ID.
+   * \param cmdStr The OpenFlow dpctl flow mod command.
+   * \param actStr The OpenFlow dpctl action command
+   * \return True if succeeded, false otherwise.
+   */
+  bool TftRulesInstall (Ptr<EpcTft> tft, Direction dir, uint64_t dpId,
+                        std::string cmdStr, std::string actStr);
+
   /** The bearer request trace source, fired at RequestDedicatedBearer. */
   TracedCallback<Ptr<const RoutingInfo> > m_bearerRequestTrace;
 
