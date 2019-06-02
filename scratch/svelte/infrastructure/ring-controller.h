@@ -109,7 +109,7 @@ private:
    * \return True if succeeded, false otherwise.
    */
   bool BitRateReserve (uint16_t srcIdx, uint16_t dstIdx,
-                       uint64_t fwdBitRate, uint64_t bwdBitRate,
+                       int64_t fwdBitRate, int64_t bwdBitRate,
                        RingInfo::RingPath path, SliceId slice);
 
   /**
@@ -132,7 +132,7 @@ private:
    * \return True if succeeded, false otherwise.
    */
   bool BitRateRelease (uint16_t srcIdx, uint16_t dstIdx,
-                       uint64_t fwdBitRate, uint64_t bwdBitRate,
+                       int64_t fwdBitRate, int64_t bwdBitRate,
                        RingInfo::RingPath path, SliceId slice);
 
   /**

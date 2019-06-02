@@ -374,9 +374,9 @@ RingController::BitRateReserve (Ptr<RingInfo> ringInfo, LteIface iface)
 }
 
 bool
-RingController::BitRateReserve (uint16_t srcIdx, uint16_t dstIdx,
-                                uint64_t fwdBitRate, uint64_t bwdBitRate,
-                                RingInfo::RingPath path, SliceId slice)
+RingController::BitRateReserve (
+  uint16_t srcIdx, uint16_t dstIdx, int64_t fwdBitRate, int64_t bwdBitRate,
+  RingInfo::RingPath path, SliceId slice)
 {
   NS_LOG_FUNCTION (this << srcIdx << dstIdx << fwdBitRate <<
                    bwdBitRate << path << slice);
@@ -427,9 +427,9 @@ RingController::BitRateRelease (Ptr<RingInfo> ringInfo, LteIface iface)
 }
 
 bool
-RingController::BitRateRelease (uint16_t srcIdx, uint16_t dstIdx,
-                                uint64_t fwdBitRate, uint64_t bwdBitRate,
-                                RingInfo::RingPath path, SliceId slice)
+RingController::BitRateRelease (
+  uint16_t srcIdx, uint16_t dstIdx, int64_t fwdBitRate, int64_t bwdBitRate,
+  RingInfo::RingPath path, SliceId slice)
 {
   NS_LOG_FUNCTION (this << srcIdx << dstIdx << fwdBitRate <<
                    bwdBitRate << path << slice);
