@@ -203,161 +203,19 @@ RingController::BearerUpdate (Ptr<RoutingInfo> rInfo, Ptr<EnbInfo> dstEnbInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
-  // FIXME
-  NS_ABORT_MSG ("This method is not working yet.");
-
-  // FIXME Ao checkar recursos no S1,
-  // nao esquecer de ringInfo->ResetS5Links (); antes
-  // O melhor é dar um jeito de fazer isso mesmo se nao tiver recursos.
-
   NS_ASSERT_MSG (rInfo->IsInstalled (), "Rules must be installed.");
   NS_ASSERT_MSG (rInfo->GetEnbCellId () != dstEnbInfo->GetCellId (),
                  "Don't update UE's eNB info before BearerUpdate.");
-
   NS_LOG_INFO ("Updating ring rules for teid " << rInfo->GetTeidHex ());
 
-  // Getting ring routing information.
   Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
+  NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
 
-  // We can't just modify the OpenFlow rules in the backhaul switches because
-  // we need to change the match fields. So, we will install new rules using
-  // the rInfo with higher priority and the dstEnbInfo, and then we will remove
-  // the old rules with lower priority.
-  //
-  // Install new high-priority OpenFlow rules.
-  {
-    // Building the dpctl command.
-    std::ostringstream cmd;
-    cmd << "flow-mod cmd=add"
-        << ",table="  << GetSliceTable (rInfo->GetSliceId ())
-        << ",flags="  << FLAGS_REMOVED_OVERLAP_RESET
-        << ",cookie=" << rInfo->GetTeidHex () // FIXME
-        << ",prio="   << rInfo->GetPriority ()
-        << ",idle="   << rInfo->GetTimeout ();
-
-    std::ostringstream dscp;
-    if (rInfo->GetDscpValue ())
-      {
-        dscp << " apply:set_field=ip_dscp:" << rInfo->GetDscpValue ();
-      }
-
-    // Configuring downlink routing.
-    if (rInfo->HasDlTraffic ())
-      {
-        // Building the match string for both S1-U and S5 interfaces
-        // No match on source IP because we may have several P-GW TFT switches.
-        std::ostringstream mS5, mS1;
-        mS5 << " eth_type="   << IPV4_PROT_NUM
-            << ",ip_proto="   << UDP_PROT_NUM
-            << ",ip_dst="     << rInfo->GetSgwS5Addr ()
-            << ",gtpu_teid="  << rInfo->GetTeidHex ();
-        mS1 << " eth_type="   << IPV4_PROT_NUM
-            << ",ip_proto="   << UDP_PROT_NUM
-            << ",ip_dst="     << dstEnbInfo->GetS1uAddr ()  // Target eNB
-            << ",gtpu_teid="  << rInfo->GetTeidHex ();
-
-        // Build the metatada and goto instructions string.
-        std::ostringstream aS5, aS1;
-        aS5 << " meta:" << ringInfo->GetDlPath (LteIface::S5)
-            << " goto:" << BANDW_TAB;
-        aS1 << " meta:" << ringInfo->GetDlPath (LteIface::S1)
-            << " goto:" << BANDW_TAB;
-
-        // Installing down rules into switches connected to the P-GW and S-GW.
-        DpctlExecute (GetDpId (rInfo->GetPgwInfraSwIdx ()),
-                      cmd.str () + mS5.str () + dscp.str () + aS5.str ());
-        DpctlExecute (GetDpId (rInfo->GetSgwInfraSwIdx ()),
-                      cmd.str () + mS1.str () + dscp.str () + aS1.str ());
-      }
-
-    // Configuring uplink routing.
-    if (rInfo->HasUlTraffic ())
-      {
-        // Building the match string.
-        std::ostringstream mS1, mS5;
-        mS1 << " eth_type="   << IPV4_PROT_NUM
-            << ",ip_proto="   << UDP_PROT_NUM
-            << ",ip_src="     << dstEnbInfo->GetS1uAddr ()  // Target eNB
-            << ",ip_dst="     << rInfo->GetSgwS1uAddr ()
-            << ",gtpu_teid="  << rInfo->GetTeidHex ();
-        mS5 << " eth_type="   << IPV4_PROT_NUM
-            << ",ip_proto="   << UDP_PROT_NUM
-            << ",ip_src="     << rInfo->GetSgwS5Addr ()
-            << ",ip_dst="     << rInfo->GetPgwS5Addr ()
-            << ",gtpu_teid="  << rInfo->GetTeidHex ();
-
-        // Build the metatada and goto instructions string.
-        std::ostringstream aS1, aS5;
-        aS1 << " meta:" << ringInfo->GetUlPath (LteIface::S1)
-            << " goto:" << BANDW_TAB;
-        aS5 << " meta:" << ringInfo->GetUlPath (LteIface::S5)
-            << " goto:" << BANDW_TAB;
-
-        // Installing up rules into switches connected to the eNB and S-GW.
-        DpctlExecute (GetDpId (dstEnbInfo->GetInfraSwIdx ()),  // Target eNB
-                      cmd.str () + mS1.str () + dscp.str () + aS1.str ());
-        DpctlExecute (GetDpId (rInfo->GetSgwInfraSwIdx ()),
-                      cmd.str () + mS5.str () + dscp.str () + aS5.str ());
-      }
-  }
-
-  // Remove old low-priority OpenFlow rules.
-  {
-    // Building the dpctl command.
-    std::ostringstream cmd;
-    cmd << "flow-mod cmd=dels"
-        << ",table="  << GetSliceTable (rInfo->GetSliceId ())
-        << ",flags="  << FLAGS_REMOVED_OVERLAP_RESET
-        << ",cookie=" << rInfo->GetTeidHex () // FIXME
-        << ",prio="   << rInfo->GetPriority () - 1 // Old priority!
-        << ",idle="   << rInfo->GetTimeout ();
-
-    // Configuring downlink routing.
-    if (rInfo->HasDlTraffic ())
-      {
-        // Building the match string for both S1-U and S5 interfaces
-        // No match on source IP because we may have several P-GW TFT switches.
-        std::ostringstream mS5, mS1;
-        mS5 << " eth_type="   << IPV4_PROT_NUM
-            << ",ip_proto="   << UDP_PROT_NUM
-            << ",ip_dst="     << rInfo->GetSgwS5Addr ()
-            << ",gtpu_teid="  << rInfo->GetTeidHex ();
-        mS1 << " eth_type="   << IPV4_PROT_NUM
-            << ",ip_proto="   << UDP_PROT_NUM
-            << ",ip_dst="     << rInfo->GetEnbS1uAddr ()
-            << ",gtpu_teid="  << rInfo->GetTeidHex ();
-
-        // Removing down rules from switches connected to the P-GW and S-GW.
-        DpctlExecute (GetDpId (rInfo->GetPgwInfraSwIdx ()),
-                      cmd.str () + mS5.str ());
-        DpctlExecute (GetDpId (rInfo->GetSgwInfraSwIdx ()),
-                      cmd.str () + mS1.str ());
-      }
-
-    // Configuring uplink routing.
-    if (rInfo->HasUlTraffic ())
-      {
-        // Building the match string.
-        std::ostringstream mS1, mS5;
-        mS1 << " eth_type="   << IPV4_PROT_NUM
-            << ",ip_proto="   << UDP_PROT_NUM
-            << ",ip_src="     << rInfo->GetEnbS1uAddr ()
-            << ",ip_dst="     << rInfo->GetSgwS1uAddr ()
-            << ",gtpu_teid="  << rInfo->GetTeidHex ();
-        mS5 << " eth_type="   << IPV4_PROT_NUM
-            << ",ip_proto="   << UDP_PROT_NUM
-            << ",ip_src="     << rInfo->GetSgwS5Addr ()
-            << ",ip_dst="     << rInfo->GetPgwS5Addr ()
-            << ",gtpu_teid="  << rInfo->GetTeidHex ();
-
-        // Removing up rules from switches connected to the eNB and S-GW.
-        DpctlExecute (GetDpId (rInfo->GetEnbInfraSwIdx ()),
-                      cmd.str () + mS1.str ());
-        DpctlExecute (GetDpId (rInfo->GetSgwInfraSwIdx ()),
-                      cmd.str () + mS5.str ());
-      }
-  }
-  return true;
+  // Each slice has a single P-GW and S-GW, so handover only changes the eNB.
+  // Thus, we only need to modify the S1-U backhaul rules.
+  bool success = true;
+  success &= RulesUpdate (ringInfo, LteIface::S1, dstEnbInfo);
+  return success;
 }
 
 void
@@ -982,6 +840,16 @@ RingController::RulesRemove (Ptr<RingInfo> ringInfo, LteIface iface)
       curr = NextSwitchIndex (curr, dlPath);
     }
   DpctlExecute (GetDpId (curr), cmdStr);
+  return true;
+}
+
+bool
+RingController::RulesUpdate (Ptr<RingInfo> ringInfo, LteIface iface,
+                             Ptr<EnbInfo> dstEnbInfo)
+{
+  NS_LOG_FUNCTION (this << ringInfo << iface << dstEnbInfo);
+
+  NS_ASSERT_MSG (iface == LteIface::S1, "Only S1-U interface supported.");
   return true;
 }
 

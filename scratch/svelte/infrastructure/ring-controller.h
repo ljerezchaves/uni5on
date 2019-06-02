@@ -210,6 +210,17 @@ private:
   bool RulesRemove (Ptr<RingInfo> ringInfo, LteIface iface);
 
   /**
+   * Update forwarding rules on switches for the given LTE interface after a
+   * successful handover procedure.
+   * \param ringInfo The ring routing information.
+   * \param iface The LTE logical interface.
+   * \param dstEnbInfo The destination eNB after the handover procedure.
+   * \return True if succeeded, false otherwise.
+   */
+  bool RulesUpdate (Ptr<RingInfo> ringInfo, LteIface iface,
+                    Ptr<EnbInfo> dstEnbInfo);
+
+  /**
    * Set the default ring routing paths to the shortest ones.
    * \param ringInfo The ring routing information.
    * \param iface The LTE logical interface.
