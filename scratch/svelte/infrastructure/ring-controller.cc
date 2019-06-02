@@ -694,6 +694,14 @@ RingController::RulesInstall (
 {
   NS_LOG_FUNCTION (this << ringInfo << iface);
 
+  NS_ASSERT_MSG (!ringInfo->IsInstalled (iface), "OpenFlow rules installed.");
+
+  // No rules to install for local-routing bearers.
+  if (ringInfo->IsLocalPath (iface))
+    {
+      return true;
+    }
+
   Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
 
   // -------------------------------------------------------------------------
@@ -740,19 +748,16 @@ RingController::RulesInstall (
       std::string insStr = ins.str ();
 
       // Installing OpenFlow rules
-      if (!ringInfo->IsLocalPath (iface))
-        {
-          uint16_t curr = rInfo->GetSrcDlInfraSwIdx (iface);
-          uint16_t last = rInfo->GetDstDlInfraSwIdx (iface);
+      uint16_t curr = rInfo->GetSrcDlInfraSwIdx (iface);
+      uint16_t last = rInfo->GetDstDlInfraSwIdx (iface);
 
-          // DSCP rules just in the first switch.
-          DpctlExecute (GetDpId (curr), cmdStr + matStr + dscpStr + insStr);
+      // DSCP rules just in the first switch.
+      DpctlExecute (GetDpId (curr), cmdStr + matStr + dscpStr + insStr);
+      curr = GetNextSwIdx (curr, dlPath);
+      while (curr != last)
+        {
+          DpctlExecute (GetDpId (curr), cmdStr + matStr + insStr);
           curr = GetNextSwIdx (curr, dlPath);
-          while (curr != last)
-            {
-              DpctlExecute (GetDpId (curr), cmdStr + matStr + insStr);
-              curr = GetNextSwIdx (curr, dlPath);
-            }
         }
     }
 
@@ -777,19 +782,16 @@ RingController::RulesInstall (
       std::string insStr = ins.str ();
 
       // Installing OpenFlow rules
-      if (!ringInfo->IsLocalPath (iface))
-        {
-          uint16_t curr = rInfo->GetSrcUlInfraSwIdx (iface);
-          uint16_t last = rInfo->GetDstUlInfraSwIdx (iface);
+      uint16_t curr = rInfo->GetSrcUlInfraSwIdx (iface);
+      uint16_t last = rInfo->GetDstUlInfraSwIdx (iface);
 
-          // DSCP rules just in the first switch.
-          DpctlExecute (GetDpId (curr), cmdStr + matStr + dscpStr + insStr);
+      // DSCP rules just in the first switch.
+      DpctlExecute (GetDpId (curr), cmdStr + matStr + dscpStr + insStr);
+      curr = GetNextSwIdx (curr, ulPath);
+      while (curr != last)
+        {
+          DpctlExecute (GetDpId (curr), cmdStr + matStr + insStr);
           curr = GetNextSwIdx (curr, ulPath);
-          while (curr != last)
-            {
-              DpctlExecute (GetDpId (curr), cmdStr + matStr + insStr);
-              curr = GetNextSwIdx (curr, ulPath);
-            }
         }
     }
 
