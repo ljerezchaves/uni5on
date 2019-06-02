@@ -69,6 +69,7 @@ public:
   //\{
   RingPath      GetDlPath     (LteIface iface) const;
   RingPath      GetUlPath     (LteIface iface) const;
+  bool          IsInstalled   (LteIface iface) const;
   bool          IsLocalPath   (LteIface iface) const;
   bool          IsShortPath   (LteIface iface) const;
   bool          IsUndefPath   (LteIface iface) const;
@@ -116,6 +117,13 @@ protected:
 
 private:
   /**
+   * Set internal flag for OpenFlow installed rules.
+   * \param iface The LTE logical interface.
+   * \param value The value to set.
+   */
+  void SetInstalled (LteIface iface, bool value);
+
+  /**
    * Set the downlink shortest routing path for the given interface.
    * The uplink path will always be the same, but with inverted direction.
    * \param iface The LTE logical interface for this path.
@@ -137,6 +145,7 @@ private:
 
   RingPath         m_downPath [2];  //!< Downlink routing path.
   bool             m_shortPath [2]; //!< True for short downlink routing path.
+  bool             m_instRules [2]; //!< True for OpenFlow rules installed.
   Ptr<RoutingInfo> m_rInfo;         //!< Routing metadata.
 };
 
