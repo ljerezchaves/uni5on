@@ -767,14 +767,11 @@ SliceController::BearerUpdate (Ptr<RoutingInfo> rInfo, Ptr<EnbInfo> dstEnbInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
-  // Each slice has a single P-GW and S-GW, so handover only changes the
-  // eNB. Thus, we only need to modify the S-GW and backhaul rules.
+  NS_ASSERT_MSG (rInfo->IsInstalled (), "Rules should be installed.");
+  NS_ASSERT_MSG (!rInfo->IsAggregated (), "Bearer should not be aggregated.");
 
-  // The update methods must check for installed rules and update them with
-  // new high-priority OpenFlow entries.
-  // FIXME Atualização deveria ser condicionada aos bearers ativos? instalados?
-  // Agregadis ficam condificonados? Talvez o melhor seria filtrar esse casos
-  // antes de chamar aqui!
+  // Each slice has a single P-GW and S-GW, so handover only changes the eNB.
+  // Thus, we only need to modify the S-GW downlink rules and backhaul rules.
   bool success = true;
   success &= SgwRulesUpdate (rInfo, dstEnbInfo);
   success &= m_backhaulCtrl->BearerUpdate (rInfo, dstEnbInfo);
@@ -923,12 +920,15 @@ SliceController::DoModifyBearerRequest (
       res.bearerContextsModified.push_back (bearerContext);
     }
 
-  // Iterate over routing infos and update bearers.
+  // Iterate over routing infos and update bearers with installed rules.
   for (auto const &rit : ueInfo->GetRoutingInfoMap ())
     {
-      // Update this bearer.
-      bool success = BearerUpdate (rit.second, dstEnbInfo);
-      NS_ASSERT_MSG (success, "Error when updading bearers after handover.");
+      Ptr<RoutingInfo> rInfo = rit.second;
+      if (rInfo->IsInstalled ())
+        {
+          bool success = BearerUpdate (rInfo, dstEnbInfo);
+          NS_ASSERT_MSG (success, "Error updating bearer after handover.");
+        }
     }
 
   // Finally, update the UE's eNB info (only after updating OpenFlow rules).
