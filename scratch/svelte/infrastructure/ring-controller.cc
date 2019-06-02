@@ -119,7 +119,7 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
   // Part 2: Check for the available resources on the S1-U interface.
   // To avoid errors when reserving bit rates, check for overlapping links.
   LinkInfoSet_t s5Links;
-  GetLinks (ringInfo, LteIface::S5, &s5Links);
+  GetLinkSet (ringInfo, LteIface::S5, &s5Links);
   bool s1Ok = HasAvailableResources (ringInfo, LteIface::S1, &s5Links);
   if (!s1Ok)
     {
@@ -383,7 +383,7 @@ RingController::BitRateRequest (
   bool ok = true;
   while (ok && srcIdx != dstIdx)
     {
-      uint16_t next = NextSwitchIndex (srcIdx, path);
+      uint16_t next = GetNextSwIdx (srcIdx, path);
       std::tie (lInfo, fwdDir, bwdDir) = GetLinkInfo (srcIdx, next);
       if (overlap && overlap->find (lInfo) != overlap->end ())
         {
@@ -450,7 +450,7 @@ RingController::BitRateReserve (
   bool ok = true;
   while (ok && srcIdx != dstIdx)
     {
-      uint16_t next = NextSwitchIndex (srcIdx, path);
+      uint16_t next = GetNextSwIdx (srcIdx, path);
       std::tie (lInfo, fwdDir, bwdDir) = GetLinkInfo (srcIdx, next);
       ok &= lInfo->UpdateResBitRate (fwdDir, slice, fwdBitRate);
       ok &= lInfo->UpdateResBitRate (bwdDir, slice, bwdBitRate);
@@ -503,7 +503,7 @@ RingController::BitRateRelease (
   bool ok = true;
   while (ok && srcIdx != dstIdx)
     {
-      uint16_t next = NextSwitchIndex (srcIdx, path);
+      uint16_t next = GetNextSwIdx (srcIdx, path);
       std::tie (lInfo, fwdDir, bwdDir) = GetLinkInfo (srcIdx, next);
       ok &= lInfo->UpdateResBitRate (fwdDir, slice, -fwdBitRate);
       ok &= lInfo->UpdateResBitRate (bwdDir, slice, -bwdBitRate);
@@ -545,8 +545,80 @@ RingController::CreateSpanningTree (void)
   }
 }
 
+void
+RingController::GetLinkSet (
+  Ptr<RingInfo> ringInfo, LteIface iface, LinkInfoSet_t *links) const
+{
+  NS_LOG_FUNCTION (this << ringInfo << iface);
+
+  NS_ASSERT_MSG (links && links->empty (), "Set of links should be empty.");
+
+  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
+  uint16_t curr = rInfo->GetSrcDlInfraSwIdx (iface);
+  uint16_t last = rInfo->GetDstDlInfraSwIdx (iface);
+  RingInfo::RingPath path = ringInfo->GetDlPath (iface);
+
+  // Walk through the downlink path.
+  LinkInfo::LinkDir dlDir, ulDir;
+  Ptr<LinkInfo> lInfo;
+  while (curr != last)
+    {
+      uint16_t next = GetNextSwIdx (curr, path);
+      std::tie (lInfo, dlDir, ulDir) = GetLinkInfo (curr, next);
+      auto ret = links->insert (lInfo);
+      NS_ABORT_MSG_IF (ret.second == false, "Error saving link info.");
+      curr = next;
+    }
+}
+
+uint16_t
+RingController::GetNextSwIdx (
+  uint16_t srcIdx, RingInfo::RingPath path) const
+{
+  NS_LOG_FUNCTION (this << srcIdx << path);
+
+  NS_ASSERT_MSG (GetNSwitches () > 0, "Invalid number of switches.");
+  NS_ASSERT_MSG (path != RingInfo::UNDEF, "Invalid ring routing path.");
+  NS_ASSERT_MSG (path != RingInfo::LOCAL, "Invalid ring routing path.");
+
+  return path == RingInfo::CLOCK ?
+         (srcIdx + 1) % GetNSwitches () :
+         (srcIdx == 0 ? GetNSwitches () - 1 : (srcIdx - 1));
+}
+
+uint16_t
+RingController::GetNumHops (
+  uint16_t srcIdx, uint16_t dstIdx, RingInfo::RingPath path) const
+{
+  NS_LOG_FUNCTION (this << srcIdx << dstIdx);
+
+  NS_ASSERT_MSG (path != RingInfo::UNDEF, "Invalid ring routing path.");
+  NS_ASSERT (std::max (srcIdx, dstIdx) < GetNSwitches ());
+
+  // Check for local routing.
+  if (path == RingInfo::LOCAL)
+    {
+      NS_ASSERT (srcIdx == dstIdx);
+      return 0;
+    }
+
+  // Count the number of hops from src to dst switch index.
+  NS_ASSERT (srcIdx != dstIdx);
+  int distance = dstIdx - srcIdx;
+  if (path == RingInfo::COUNT)
+    {
+      distance = srcIdx - dstIdx;
+    }
+  if (distance < 0)
+    {
+      distance += GetNSwitches ();
+    }
+  return distance;
+}
+
 RingInfo::RingPath
-RingController::FindShortestPath (uint16_t srcIdx, uint16_t dstIdx) const
+RingController::GetShortPath (
+  uint16_t srcIdx, uint16_t dstIdx) const
 {
   NS_LOG_FUNCTION (this << srcIdx << dstIdx);
 
@@ -568,32 +640,6 @@ RingController::FindShortestPath (uint16_t srcIdx, uint16_t dstIdx) const
   return (clockwiseDistance <= maxHops) ?
          RingInfo::CLOCK :
          RingInfo::COUNT;
-}
-
-void
-RingController::GetLinks (
-  Ptr<RingInfo> ringInfo, LteIface iface, LinkInfoSet_t *links) const
-{
-  NS_LOG_FUNCTION (this << ringInfo << iface);
-
-  NS_ASSERT_MSG (links && links->empty (), "Set of links should be empty.");
-
-  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
-  uint16_t curr = rInfo->GetSrcDlInfraSwIdx (iface);
-  uint16_t last = rInfo->GetDstDlInfraSwIdx (iface);
-  RingInfo::RingPath path = ringInfo->GetDlPath (iface);
-
-  // Walk through the downlink path.
-  LinkInfo::LinkDir dlDir, ulDir;
-  Ptr<LinkInfo> lInfo;
-  while (curr != last)
-    {
-      uint16_t next = NextSwitchIndex (curr, path);
-      std::tie (lInfo, dlDir, ulDir) = GetLinkInfo (curr, next);
-      auto ret = links->insert (lInfo);
-      NS_ABORT_MSG_IF (ret.second == false, "Error saving link info.");
-      curr = next;
-    }
 }
 
 bool
@@ -642,52 +688,9 @@ RingController::HasAvailableResources (
   return (bwdOk && cpuOk && tabOk);
 }
 
-uint16_t
-RingController::HopCounter (
-  uint16_t srcIdx, uint16_t dstIdx, RingInfo::RingPath path) const
-{
-  NS_LOG_FUNCTION (this << srcIdx << dstIdx);
-
-  NS_ASSERT_MSG (path != RingInfo::UNDEF, "Invalid ring routing path.");
-  NS_ASSERT (std::max (srcIdx, dstIdx) < GetNSwitches ());
-
-  // Check for local routing.
-  if (path == RingInfo::LOCAL)
-    {
-      NS_ASSERT (srcIdx == dstIdx);
-      return 0;
-    }
-
-  // Count the number of hops from src to dst switch index.
-  NS_ASSERT (srcIdx != dstIdx);
-  int distance = dstIdx - srcIdx;
-  if (path == RingInfo::COUNT)
-    {
-      distance = srcIdx - dstIdx;
-    }
-  if (distance < 0)
-    {
-      distance += GetNSwitches ();
-    }
-  return distance;
-}
-
-uint16_t
-RingController::NextSwitchIndex (uint16_t idx, RingInfo::RingPath path) const
-{
-  NS_LOG_FUNCTION (this << idx << path);
-
-  NS_ASSERT_MSG (GetNSwitches () > 0, "Invalid number of switches.");
-  NS_ASSERT_MSG (path != RingInfo::UNDEF, "Invalid ring routing path.");
-  NS_ASSERT_MSG (path != RingInfo::LOCAL, "Invalid ring routing path.");
-
-  return path == RingInfo::CLOCK ?
-         (idx + 1) % GetNSwitches () :
-         (idx == 0 ? GetNSwitches () - 1 : (idx - 1));
-}
-
 bool
-RingController::RulesInstall (Ptr<RingInfo> ringInfo, LteIface iface)
+RingController::RulesInstall (
+  Ptr<RingInfo> ringInfo, LteIface iface)
 {
   NS_LOG_FUNCTION (this << ringInfo << iface);
 
@@ -744,11 +747,11 @@ RingController::RulesInstall (Ptr<RingInfo> ringInfo, LteIface iface)
 
           // DSCP rules just in the first switch.
           DpctlExecute (GetDpId (curr), cmdStr + matStr + dscpStr + insStr);
-          curr = NextSwitchIndex (curr, dlPath);
+          curr = GetNextSwIdx (curr, dlPath);
           while (curr != last)
             {
               DpctlExecute (GetDpId (curr), cmdStr + matStr + insStr);
-              curr = NextSwitchIndex (curr, dlPath);
+              curr = GetNextSwIdx (curr, dlPath);
             }
         }
     }
@@ -781,11 +784,11 @@ RingController::RulesInstall (Ptr<RingInfo> ringInfo, LteIface iface)
 
           // DSCP rules just in the first switch.
           DpctlExecute (GetDpId (curr), cmdStr + matStr + dscpStr + insStr);
-          curr = NextSwitchIndex (curr, ulPath);
+          curr = GetNextSwIdx (curr, ulPath);
           while (curr != last)
             {
               DpctlExecute (GetDpId (curr), cmdStr + matStr + insStr);
-              curr = NextSwitchIndex (curr, ulPath);
+              curr = GetNextSwIdx (curr, ulPath);
             }
         }
     }
@@ -793,7 +796,8 @@ RingController::RulesInstall (Ptr<RingInfo> ringInfo, LteIface iface)
 }
 
 bool
-RingController::RulesRemove (Ptr<RingInfo> ringInfo, LteIface iface)
+RingController::RulesRemove (
+  Ptr<RingInfo> ringInfo, LteIface iface)
 {
   NS_LOG_FUNCTION (this << ringInfo << iface);
 
@@ -814,15 +818,15 @@ RingController::RulesRemove (Ptr<RingInfo> ringInfo, LteIface iface)
   while (curr != last)
     {
       DpctlExecute (GetDpId (curr), cmdStr);
-      curr = NextSwitchIndex (curr, dlPath);
+      curr = GetNextSwIdx (curr, dlPath);
     }
   DpctlExecute (GetDpId (curr), cmdStr);
   return true;
 }
 
 bool
-RingController::RulesUpdate (Ptr<RingInfo> ringInfo, LteIface iface,
-                             Ptr<EnbInfo> dstEnbInfo)
+RingController::RulesUpdate (
+  Ptr<RingInfo> ringInfo, LteIface iface, Ptr<EnbInfo> dstEnbInfo)
 {
   NS_LOG_FUNCTION (this << ringInfo << iface << dstEnbInfo);
 
@@ -831,13 +835,14 @@ RingController::RulesUpdate (Ptr<RingInfo> ringInfo, LteIface iface,
 }
 
 void
-RingController::SetShortestPath (Ptr<RingInfo> ringInfo, LteIface iface) const
+RingController::SetShortestPath (
+  Ptr<RingInfo> ringInfo, LteIface iface) const
 {
   NS_LOG_FUNCTION (this << ringInfo);
 
   Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
 
-  RingInfo::RingPath dlPath = FindShortestPath (
+  RingInfo::RingPath dlPath = GetShortPath (
       rInfo->GetSrcDlInfraSwIdx (iface),
       rInfo->GetDstDlInfraSwIdx (iface));
   ringInfo->SetShortDlPath (iface, dlPath);
@@ -936,7 +941,7 @@ RingController::SwitchCpuRequest (
   while (ok && srcIdx != dstIdx)
     {
       ok &= (GetEwmaCpuUse (srcIdx) < blockThs);
-      srcIdx = NextSwitchIndex (srcIdx, path);
+      srcIdx = GetNextSwIdx (srcIdx, path);
     }
   ok &= (GetEwmaCpuUse (srcIdx) < blockThs);
 
@@ -976,7 +981,7 @@ RingController::SwitchTableRequest (
   while (ok && srcIdx != dstIdx)
     {
       ok &= (GetFlowTableUse (srcIdx, table) < blockThs);
-      srcIdx = NextSwitchIndex (srcIdx, path);
+      srcIdx = GetNextSwIdx (srcIdx, path);
     }
   ok &= (GetFlowTableUse (srcIdx, table) < blockThs);
 

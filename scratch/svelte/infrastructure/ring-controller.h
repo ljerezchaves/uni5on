@@ -175,23 +175,41 @@ private:
   void CreateSpanningTree (void);
 
   /**
-   * Look for the routing path from source to destination switch index with
+   * Get the backhaul lInfo pointers for the given LTE interface.
+   * \param ringInfo The ring routing information.
+   * \param iface The LTE logical interface.
+   * \param links The set of links to populate.
+   */
+  void GetLinkSet (Ptr<RingInfo> ringInfo, LteIface iface,
+                   LinkInfoSet_t *links) const;
+
+  /**
+   * Get the next switch index following the given routing path.
+   * \param srcIdx The source switch index.
+   * \param path The routing path direction.
+   * \return The next switch index.
+   */
+  uint16_t GetNextSwIdx (uint16_t srcIdx, RingInfo::RingPath path) const;
+
+  /**
+   * Get the number of hops between source and destination switch indexes
+   * following the given routing path.
+   * \param srcIdx Source switch index.
+   * \param dstIdx Destination switch index.
+   * \param path The routing path.
+   * \return The number of hops in routing path.
+   */
+  uint16_t GetNumHops (uint16_t srcIdx, uint16_t dstIdx,
+                       RingInfo::RingPath path) const;
+
+  /**
+   * Get the routing path from source to destination switch index with the
    * lowest number of hops.
    * \param srcIdx Source switch index.
    * \param dstIdx Destination switch index.
    * \return The routing path.
    */
-  RingInfo::RingPath FindShortestPath (uint16_t srcIdx, uint16_t dstIdx) const;
-
-  /**
-   * Save the backhaul lInfo pointer for the given LTE interface, optionally
-   * following the given routing path.
-   * \param ringInfo The ring routing information.
-   * \param iface The LTE logical interface.
-   * \param links The set of links to populate.
-   */
-  void GetLinks (Ptr<RingInfo> ringInfo, LteIface iface,
-                 LinkInfoSet_t *links) const;
+  RingInfo::RingPath GetShortPath (uint16_t srcIdx, uint16_t dstIdx) const;
 
   /**
    * Check for the available resources on the backhaul infrastructure for the
@@ -204,25 +222,6 @@ private:
    */
   bool HasAvailableResources (Ptr<RingInfo> ringInfo, LteIface iface,
                               LinkInfoSet_t *overlap = 0) const;
-
-  /**
-   * Count the number of hops between source and destination switch indexes
-   * following the given routing path.
-   * \param srcIdx Source switch index.
-   * \param dstIdx Destination switch index.
-   * \param path The routing path.
-   * \return The number of hops in routing path.
-   */
-  uint16_t HopCounter (uint16_t srcIdx, uint16_t dstIdx,
-                       RingInfo::RingPath path) const;
-
-  /**
-   * Get the next switch index following the given routing path.
-   * \param idx Current switch index.
-   * \param path The routing path direction.
-   * \return The next switch index.
-   */
-  uint16_t NextSwitchIndex (uint16_t idx, RingInfo::RingPath path) const;
 
   /**
    * Install forwarding rules on switches for the given LTE interface.
