@@ -111,7 +111,7 @@ private:
    * \param bwdBitRate The backward bit rate.
    * \param path The routing path.
    * \param slice The network slice.
-   * \param blockThs The reserved block threshold.
+   * \param blockThs The block threshold.
    * \param overlap The optional overlapping links.
    * \return True if succeeded, false otherwise.
    */
@@ -206,24 +206,6 @@ private:
                               LinkInfoSet_t *overlap = 0) const;
 
   /**
-   * Check for the CPU usage on switches for the given LTE interface,
-   * optionally following the given routing path.
-   * \param ringInfo The ring routing information.
-   * \param iface The LTE logical interface.
-   * \return True if succeeded, false otherwise.
-   */
-  bool HasSwitchCpu (Ptr<RingInfo> ringInfo, LteIface iface) const;
-
-  /**
-   * Check for the flow table usage on switches for the given LTE interface,
-   * optionally following the given routing path.
-   * \param ringInfo The ring routing information.
-   * \param iface The LTE logical interface.
-   * \return True if succeeded, false otherwise.
-   */
-  bool HasSwitchTable (Ptr<RingInfo> ringInfo, LteIface iface) const;
-
-  /**
    * Count the number of hops between source and destination switch indexes
    * following the given routing path.
    * \param srcIdx Source switch index.
@@ -282,6 +264,50 @@ private:
    * \param slice The network slice.
    */
   void SlicingMeterApply (Ptr<const RemoteSwitch> swtch, SliceId slice);
+
+  /**
+   * Check for the CPU usage on switches for the given LTE interface.
+   * \param ringInfo The ring routing information.
+   * \param iface The LTE logical interface.
+   * \return True if succeeded, false otherwise.
+   */
+  bool SwitchCpuRequest (Ptr<RingInfo> ringInfo, LteIface iface) const;
+
+  /**
+   * Check for the CPU usage on switches from the source to the destination
+   * following the given routing path.
+   * \param srcIdx Source switch index.
+   * \param dstIdx Destination switch index.
+   * \param path The routing path.
+   * \param slice The network slice.
+   * \param blockThs The block threshold.
+   * \return True if succeeded, false otherwise.
+   */
+  bool SwitchCpuRequest (uint16_t srcIdx, uint16_t dstIdx,
+                         RingInfo::RingPath path, double blockThs) const;
+
+  /**
+   * Check for the flow table usage on switches for the given LTE interface.
+   * \param ringInfo The ring routing information.
+   * \param iface The LTE logical interface.
+   * \return True if succeeded, false otherwise.
+   */
+  bool SwitchTableRequest (Ptr<RingInfo> ringInfo, LteIface iface) const;
+
+  /**
+   * Check for the flow table usage on switches from the source to the
+   * destination following the given routing path.
+   * \param srcIdx Source switch index.
+   * \param dstIdx Destination switch index.
+   * \param path The routing path.
+   * \param slice The network slice.
+   * \param blockThs The block threshold.
+   * \param table The slice table.
+   * \return True if succeeded, false otherwise.
+   */
+  bool SwitchTableRequest (uint16_t srcIdx, uint16_t dstIdx,
+                           RingInfo::RingPath path, double blockThs,
+                           uint16_t table) const;
 
   RoutingStrategy           m_strategy;       //!< Routing strategy in use.
 };

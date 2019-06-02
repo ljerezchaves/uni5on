@@ -405,7 +405,8 @@ RingController::BitRateRequest (
 }
 
 bool
-RingController::BitRateReserve (Ptr<RingInfo> ringInfo, LteIface iface)
+RingController::BitRateReserve (
+  Ptr<RingInfo> ringInfo, LteIface iface)
 {
   NS_LOG_FUNCTION (this << ringInfo << iface);
 
@@ -462,7 +463,8 @@ RingController::BitRateReserve (
 }
 
 bool
-RingController::BitRateRelease (Ptr<RingInfo> ringInfo, LteIface iface)
+RingController::BitRateRelease (
+  Ptr<RingInfo> ringInfo, LteIface iface)
 {
   NS_LOG_FUNCTION (this << ringInfo << iface);
 
@@ -604,8 +606,8 @@ RingController::HasAvailableResources (
 
   // Check for the available resources on the default path.
   bool bwdOk = BitRateRequest (ringInfo, iface, overlap);
-  bool cpuOk = HasSwitchCpu (ringInfo, iface);
-  bool tabOk = HasSwitchTable (ringInfo, iface);
+  bool cpuOk = SwitchCpuRequest (ringInfo, iface);
+  bool tabOk = SwitchTableRequest (ringInfo, iface);
   if ((bwdOk == false || cpuOk == false || tabOk == false)
       && GetRoutingStrategy () == RingController::SPF)
     {
@@ -613,8 +615,8 @@ RingController::HasAvailableResources (
       // Let's invert the routing path and check again.
       ringInfo->InvertPath (iface);
       bwdOk = BitRateRequest (ringInfo, iface, overlap);
-      cpuOk = HasSwitchCpu (ringInfo, iface);
-      tabOk = HasSwitchTable (ringInfo, iface);
+      cpuOk = SwitchCpuRequest (ringInfo, iface);
+      tabOk = SwitchTableRequest (ringInfo, iface);
     }
 
   // Set the blocked flagged when necessary.
@@ -638,64 +640,6 @@ RingController::HasAvailableResources (
     }
 
   return (bwdOk && cpuOk && tabOk);
-}
-
-bool
-RingController::HasSwitchCpu (Ptr<RingInfo> ringInfo, LteIface iface) const
-{
-  NS_LOG_FUNCTION (this << ringInfo << iface);
-
-  // Ignoring this check when the BlockPolicy mode is OFF.
-  if (GetSwBlockPolicy () == OpMode::OFF)
-    {
-      return true;
-    }
-
-  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
-  uint16_t curr = rInfo->GetSrcDlInfraSwIdx (iface);
-  uint16_t last = rInfo->GetDstDlInfraSwIdx (iface);
-  RingInfo::RingPath path = ringInfo->GetDlPath (iface);
-
-  // Walk through the OpenFlow switches in the downlink routing path,
-  // checking for the CPU usage.
-  bool ok = true;
-  while (ok && curr != last)
-    {
-      ok &= (GetEwmaCpuUse (curr) < GetSwBlockThreshold ());
-      curr = NextSwitchIndex (curr, path);
-    }
-  ok &= (GetEwmaCpuUse (curr) < GetSwBlockThreshold ());
-  return ok;
-}
-
-bool
-RingController::HasSwitchTable (Ptr<RingInfo> ringInfo, LteIface iface) const
-{
-  NS_LOG_FUNCTION (this << ringInfo << iface);
-
-  // Ignoring this check for aggregated bearers.
-  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
-  if (rInfo->IsAggregated ())
-    {
-      return true;
-    }
-
-  SliceId slice = rInfo->GetSliceId ();
-  uint8_t table = GetSliceTable (slice);
-  uint16_t curr = rInfo->GetSrcDlInfraSwIdx (iface);
-  uint16_t last = rInfo->GetDstDlInfraSwIdx (iface);
-  RingInfo::RingPath path = ringInfo->GetDlPath (iface);
-
-  // Walk through the OpenFlow switches in the downlink routing path,
-  // checking for the slice table usage.
-  bool ok = true;
-  while (ok && curr != last)
-    {
-      ok &= (GetFlowTableUse (curr, table) < GetSwBlockThreshold ());
-      curr = NextSwitchIndex (curr, path);
-    }
-  ok &= (GetFlowTableUse (curr, table) < GetSwBlockThreshold ());
-  return ok;
 }
 
 uint16_t
@@ -958,6 +902,85 @@ RingController::SlicingMeterApply (
           DpctlExecute (swDpId, cmd.str () + mtc.str () + act.str ());
         }
     }
+}
+
+bool
+RingController::SwitchCpuRequest (
+  Ptr<RingInfo> ringInfo, LteIface iface) const
+{
+  NS_LOG_FUNCTION (this << ringInfo << iface);
+
+  // Ignoring this check when the BlockPolicy mode is OFF.
+  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
+  if (GetSwBlockPolicy () == OpMode::OFF)
+    {
+      return true;
+    }
+
+  return SwitchCpuRequest (
+    rInfo->GetSrcDlInfraSwIdx (iface),
+    rInfo->GetDstDlInfraSwIdx (iface),
+    ringInfo->GetDlPath (iface),
+    GetSwBlockThreshold ());
+}
+
+bool
+RingController::SwitchCpuRequest (
+  uint16_t srcIdx, uint16_t dstIdx, RingInfo::RingPath path,
+  double blockThs) const
+{
+  NS_LOG_FUNCTION (this << srcIdx << dstIdx << path << blockThs);
+
+  // Walk through switches in the given routing path, requesting for CPU.
+  bool ok = true;
+  while (ok && srcIdx != dstIdx)
+    {
+      ok &= (GetEwmaCpuUse (srcIdx) < blockThs);
+      srcIdx = NextSwitchIndex (srcIdx, path);
+    }
+  ok &= (GetEwmaCpuUse (srcIdx) < blockThs);
+
+  return ok;
+}
+
+bool
+RingController::SwitchTableRequest (
+  Ptr<RingInfo> ringInfo, LteIface iface) const
+{
+  NS_LOG_FUNCTION (this << ringInfo << iface);
+
+  // Ignoring this check for aggregated bearers.
+  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
+  if (rInfo->IsAggregated ())
+    {
+      return true;
+    }
+
+  return SwitchTableRequest (
+    rInfo->GetSrcDlInfraSwIdx (iface),
+    rInfo->GetDstDlInfraSwIdx (iface),
+    ringInfo->GetDlPath (iface),
+    GetSwBlockThreshold (),
+    GetSliceTable (rInfo->GetSliceId ()));
+}
+
+bool
+RingController::SwitchTableRequest (
+  uint16_t srcIdx, uint16_t dstIdx, RingInfo::RingPath path,
+  double blockThs, uint16_t table) const
+{
+  NS_LOG_FUNCTION (this << srcIdx << dstIdx << path << blockThs << table);
+
+  // Walk through switches in the given routing path, requesting for table.
+  bool ok = true;
+  while (ok && srcIdx != dstIdx)
+    {
+      ok &= (GetFlowTableUse (srcIdx, table) < blockThs);
+      srcIdx = NextSwitchIndex (srcIdx, path);
+    }
+  ok &= (GetFlowTableUse (srcIdx, table) < blockThs);
+
+  return ok;
 }
 
 } // namespace ns3
