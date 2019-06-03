@@ -139,6 +139,7 @@ typedef enum
 } QosType;
 
 // Total number of valid QosType items.
+#define N_QOS_TYPES (static_cast<int> (QosType::BOTH))
 #define N_QOS_TYPES_BOTH (static_cast<int> (QosType::BOTH) + 1)
 
 /**
@@ -158,7 +159,8 @@ typedef enum
 } SliceId;
 
 // Total number of valid SliceId items.
-#define N_SLICE_IDS (static_cast<int> (SliceId::ALL) + 1)
+#define N_SLICE_IDS (static_cast<int> (SliceId::ALL))
+#define N_SLICE_IDS_ALL (static_cast<int> (SliceId::ALL) + 1)
 #define N_SLICE_IDS_UNKN (static_cast<int> (SliceId::UNKN) + 1)
 
 /**

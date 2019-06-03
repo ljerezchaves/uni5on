@@ -36,7 +36,7 @@ BackhaulStatsCalculator::BackhaulStatsCalculator ()
   NS_LOG_FUNCTION (this);
 
   // Clear slice metadata.
-  memset (m_slices, 0, sizeof (SliceMetadata) * N_SLICE_IDS);
+  memset (m_slices, 0, sizeof (SliceMetadata) * N_SLICE_IDS_ALL);
 
   // Connect this stats calculator to required trace sources.
   Config::Connect (

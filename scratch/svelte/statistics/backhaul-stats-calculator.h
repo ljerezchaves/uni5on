@@ -110,7 +110,7 @@ private:
   };
 
   /** Metadata for each network slice. */
-  SliceMetadata             m_slices [N_SLICE_IDS];
+  SliceMetadata             m_slices [N_SLICE_IDS_ALL];
   std::string               m_bwdFilename;  //!< BwdStats filename.
   std::string               m_tffFilename;  //!< TffStats filename.
 };
