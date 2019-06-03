@@ -751,9 +751,9 @@ RoutingInfo::PrintHeader (std::ostream &os)
      << " " << setw (6)  << "S1Ins"
      << " " << setw (6)  << "S5Ins"
      << " " << setw (6)  << "GwIns"
-     << " " << setw (6)  << "TtfIdx"
+     << " " << setw (3)  << "Ttf"
      << " " << setw (7)  << "Prio"
-     << " " << setw (6)  << "TmoSec";
+     << " " << setw (3)  << "Tmo";
   return os;
 }
 
@@ -963,9 +963,9 @@ std::ostream & operator << (std::ostream &os, const RoutingInfo &rInfo)
      << " " << setw (6)  << rInfo.IsIfInstalled (LteIface::S1)
      << " " << setw (6)  << rInfo.IsIfInstalled (LteIface::S5)
      << " " << setw (6)  << rInfo.IsGwInstalled ()
-     << " " << setw (6)  << rInfo.GetPgwTftIdx ()
+     << " " << setw (3)  << rInfo.GetPgwTftIdx ()
      << " " << setw (7)  << prioStr
-     << " " << setw (6)  << rInfo.GetTimeout ();
+     << " " << setw (3)  << rInfo.GetTimeout ();
   return os;
 }
 
