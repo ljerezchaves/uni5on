@@ -470,7 +470,7 @@ RingController::BitRateRelease (
   NS_LOG_INFO ("Releasing resources for teid " << rInfo->GetTeidHex () <<
                " on interface " << LteIfaceStr (iface));
 
-  // Nothing to release when no guaranteed bit rate was reserved.
+  // Ignoring when there is no bit rate to release.
   if (!rInfo->IsGbrReserved (iface))
     {
       return true;
@@ -693,6 +693,7 @@ RingController::RulesInstall (
 
   Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
   NS_ASSERT_MSG (!rInfo->IsIfInstalled (iface), "Ring rules installed.");
+  bool success = true;
 
   // No rules to install for local-routing bearers.
   if (ringInfo->IsLocalPath (iface))
@@ -700,13 +701,14 @@ RingController::RulesInstall (
       return true;
     }
 
-  bool success = true;
   // -------------------------------------------------------------------------
   // Slice table -- [from higher to lower priority]
   //
-  // Building the dpctl command.
+  // Cookie for new rules.
   uint64_t cookie = CookieCreate (
       iface, rInfo->GetPriority (), rInfo->GetTeid ());
+
+  // Building the dpctl command.
   std::ostringstream cmd;
   cmd << "flow-mod cmd=add"
       << ",table="  << GetSliceTable (rInfo->GetSliceId ())
