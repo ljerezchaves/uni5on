@@ -76,6 +76,7 @@ public:
   /** Link direction. */
   enum LinkDir
   {
+    // Don't change the order. Enum values are used as array indexes.
     FWD = 0,  //!< Forward direction (from first to second switch).
     BWD = 1   //!< Backward direction (from second to first switch).
   };
@@ -86,8 +87,9 @@ public:
   /** EWMA period of evaluation. */
   enum EwmaTerm
   {
+    // Don't change the order. Enum values are used as array indexes.
     STERM = 0,  //!< Short-term EWMA evaluation.
-    LTERM = 1  //!< Long-term EWMA evaluation.
+    LTERM = 1   //!< Long-term EWMA evaluation.
   };
 
   // Total number of valid EwmaTerm items + 1.
