@@ -999,7 +999,7 @@ SliceController::PgwTftLoadBalancing (void)
       for (uint16_t currIdx = 1; currIdx <= m_pgwInfo->GetCurTfts (); currIdx++)
         {
           RoutingInfoList_t bearerList;
-          RoutingInfo::GetInstalledList (bearerList, m_sliceId, currIdx);
+          RoutingInfo::GetGwInstalledList (bearerList, m_sliceId, currIdx);
           for (auto const &rInfo : bearerList)
             {
               uint16_t destIdx = GetTftIdx (rInfo, futureTfts);

@@ -869,8 +869,8 @@ RoutingInfo::UnsetBlocked (BlockReason reason)
 }
 
 void
-RoutingInfo::GetInstalledList (RoutingInfoList_t &returnList, SliceId slice,
-                               uint16_t pgwTftIdx)
+RoutingInfo::GetGwInstalledList (RoutingInfoList_t &returnList, SliceId slice,
+                                 uint16_t pgwTftIdx)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
