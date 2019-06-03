@@ -400,7 +400,6 @@ RingController::BitRateRequest (
         }
       srcIdx = next;
     }
-
   return ok;
 }
 
@@ -958,7 +957,6 @@ RingController::SwitchCpuRequest (
       srcIdx = GetNextSwIdx (srcIdx, path);
     }
   ok &= (GetEwmaCpuUse (srcIdx) < blockThs);
-
   return ok;
 }
 
@@ -998,7 +996,6 @@ RingController::SwitchTableRequest (
       srcIdx = GetNextSwIdx (srcIdx, path);
     }
   ok &= (GetFlowTableUse (srcIdx, table) < blockThs);
-
   return ok;
 }
 
