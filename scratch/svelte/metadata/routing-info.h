@@ -94,7 +94,8 @@ public:
   bool        IsAggregated      (void) const;
   bool        IsBlocked         (void) const;
   bool        IsDefault         (void) const;
-  bool        IsInstalled       (void) const;
+  bool        IsGwInstalled     (void) const;
+  bool        IsIfInstalled     (LteIface iface) const;
   //\}
 
   /**
@@ -272,7 +273,8 @@ protected:
   void SetPgwTftIdx       (uint16_t value);
   void SetPriority        (uint16_t value);
   void SetTimeout         (uint16_t value);
-  void SetInstalled       (bool value);
+  void SetGwInstalled     (bool value);
+  void SetIfInstalled     (LteIface iface, bool value);
   //\}
 
   /**
@@ -328,9 +330,10 @@ private:
   bool                 m_isAggregated; //!< True for aggregated bearer.
   bool                 m_isDefault;    //!< True for default bearer.
   bool                 m_isGbrRes [2]; //!< True for GBR resources reserved.
+  bool                 m_isInstGw;     //!< True for installed gateway rules.
+  bool                 m_isInstIf [2]; //!< True for installed interface rules.
   bool                 m_isMbrDlInst;  //!< True for downlink meter installed.
   bool                 m_isMbrUlInst;  //!< True for uplink meter installed.
-  bool                 m_isInstalled;  //!< True for OpenFlow rules installed.
   uint16_t             m_pgwTftIdx;    //!< P-GW TFT switch index.
   uint16_t             m_priority;     //!< Flow table rule priority.
   SliceId              m_sliceId;      //!< Slice ID for this bearer.

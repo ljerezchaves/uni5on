@@ -44,9 +44,9 @@ RoutingInfo::RoutingInfo (uint32_t teid, BearerCreated_t bearer,
   m_isActive (false),
   m_isAggregated (false),
   m_isDefault (isDefault),
+  m_isInstGw (false),
   m_isMbrDlInst (false),
   m_isMbrUlInst (false),
-  m_isInstalled (false),
   m_pgwTftIdx (0),
   m_priority (1),
   m_sliceId (ueInfo->GetSliceId ()),
@@ -57,9 +57,14 @@ RoutingInfo::RoutingInfo (uint32_t teid, BearerCreated_t bearer,
   NS_LOG_FUNCTION (this);
 
   NS_ASSERT_MSG (m_ueInfo, "Invalid UeInfo pointer.");
+  NS_ASSERT_MSG ((LteIface::S1 == 0 && LteIface::S5 == 1)
+                 || (LteIface::S5 == 0 && LteIface::S1 == 1),
+                 "Incompatible LteIface enum values.");
 
   m_isGbrRes [LteIface::S1] = false;
   m_isGbrRes [LteIface::S5] = false;
+  m_isInstIf [LteIface::S1] = false;
+  m_isInstIf [LteIface::S5] = false;
 
   // Validate the default bearer.
   if (IsDefault ())
@@ -197,11 +202,22 @@ RoutingInfo::IsDefault (void) const
 }
 
 bool
-RoutingInfo::IsInstalled (void) const
+RoutingInfo::IsGwInstalled (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_isInstalled;
+  return m_isInstGw;
+}
+
+bool
+RoutingInfo::IsIfInstalled (LteIface iface) const
+{
+  NS_LOG_FUNCTION (this << iface);
+
+  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
+                 "Invalid LTE interface. Expected S1-U or S5 interface.");
+
+  return m_isInstIf [iface];
 }
 
 Ipv4Header::DscpType
@@ -716,23 +732,25 @@ RoutingInfo::PrintHeader (std::ostream &os)
      << " " << setw (6)  << "Slice"
      << " " << setw (6)  << "IsDft"
      << " " << setw (6)  << "IsAct"
-     << " " << setw (6)  << "IsIns"
      << " " << setw (6)  << "IsAgg"
      << " " << setw (6)  << "IsBlk"
-     << " " << setw (9)  << "BlkReas"
+     << " " << setw (8)  << "BlkReas"
      << " " << setw (4)  << "Qci"
      << " " << setw (8)  << "QosType"
      << " " << setw (5)  << "Dscp"
      << " " << setw (6)  << "Dlink"
-     << " " << setw (11) << "DlGbrKbps"
-     << " " << setw (11) << "DlMbrKbps"
-     << " " << setw (6)  << "Ulink"
-     << " " << setw (11) << "UlGbrKbps"
-     << " " << setw (11) << "UlMbrKbps"
-     << " " << setw (8)  << "GbrS1Res"
-     << " " << setw (8)  << "GbrS5Res"
+     << " " << setw (10) << "DlGbrKbps"
+     << " " << setw (10) << "DlMbrKbps"
      << " " << setw (6)  << "DMbIns"
+     << " " << setw (6)  << "Ulink"
+     << " " << setw (10) << "UlGbrKbps"
+     << " " << setw (10) << "UlMbrKbps"
      << " " << setw (6)  << "UMbIns"
+     << " " << setw (6)  << "S1Res"
+     << " " << setw (6)  << "S5Res"
+     << " " << setw (6)  << "S1Ins"
+     << " " << setw (6)  << "S5Ins"
+     << " " << setw (6)  << "GwIns"
      << " " << setw (6)  << "TtfIdx"
      << " " << setw (7)  << "Prio"
      << " " << setw (6)  << "TmoSec";
@@ -818,11 +836,22 @@ RoutingInfo::SetTimeout (uint16_t value)
 }
 
 void
-RoutingInfo::SetInstalled (bool value)
+RoutingInfo::SetGwInstalled (bool value)
 {
   NS_LOG_FUNCTION (this << value);
 
-  m_isInstalled = value;
+  m_isInstGw = value;
+}
+
+void
+RoutingInfo::SetIfInstalled (LteIface iface, bool value)
+{
+  NS_LOG_FUNCTION (this << iface << value);
+
+  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
+                 "Invalid LTE interface. Expected S1-U or S5 interface.");
+
+  m_isInstIf [iface] = value;
 }
 
 void
@@ -879,7 +908,7 @@ RoutingInfo::GetGwInstalledList (RoutingInfoList_t &returnList, SliceId slice,
     {
       Ptr<RoutingInfo> rInfo = it.second;
 
-      if (!rInfo->IsInstalled ())
+      if (!rInfo->IsGwInstalled ())
         {
           continue;
         }
@@ -915,23 +944,25 @@ std::ostream & operator << (std::ostream &os, const RoutingInfo &rInfo)
      << " " << setw (6)  << rInfo.GetSliceIdStr ()
      << " " << setw (6)  << rInfo.IsDefault ()
      << " " << setw (6)  << rInfo.IsActive ()
-     << " " << setw (6)  << rInfo.IsInstalled ()
      << " " << setw (6)  << rInfo.IsAggregated ()
      << " " << setw (6)  << rInfo.IsBlocked ()
-     << " " << setw (9)  << rInfo.GetBlockReasonHex ()
+     << " " << setw (8)  << rInfo.GetBlockReasonHex ()
      << " " << setw (4)  << rInfo.GetQciInfo ()
      << " " << setw (8)  << rInfo.GetQosTypeStr ()
      << " " << setw (5)  << rInfo.GetDscpStr ()
      << " " << setw (6)  << rInfo.HasDlTraffic ()
-     << " " << setw (11) << Bps2Kbps (rInfo.GetGbrDlBitRate ())
-     << " " << setw (11) << Bps2Kbps (rInfo.GetMbrDlBitRate ())
-     << " " << setw (6)  << rInfo.HasUlTraffic ()
-     << " " << setw (11) << Bps2Kbps (rInfo.GetGbrUlBitRate ())
-     << " " << setw (11) << Bps2Kbps (rInfo.GetMbrUlBitRate ())
-     << " " << setw (8)  << rInfo.IsGbrReserved (LteIface::S1)
-     << " " << setw (8)  << rInfo.IsGbrReserved (LteIface::S5)
+     << " " << setw (10) << Bps2Kbps (rInfo.GetGbrDlBitRate ())
+     << " " << setw (10) << Bps2Kbps (rInfo.GetMbrDlBitRate ())
      << " " << setw (6)  << rInfo.IsMbrDlInstalled ()
+     << " " << setw (6)  << rInfo.HasUlTraffic ()
+     << " " << setw (10) << Bps2Kbps (rInfo.GetGbrUlBitRate ())
+     << " " << setw (10) << Bps2Kbps (rInfo.GetMbrUlBitRate ())
      << " " << setw (6)  << rInfo.IsMbrUlInstalled ()
+     << " " << setw (6)  << rInfo.IsGbrReserved (LteIface::S1)
+     << " " << setw (6)  << rInfo.IsGbrReserved (LteIface::S5)
+     << " " << setw (6)  << rInfo.IsIfInstalled (LteIface::S1)
+     << " " << setw (6)  << rInfo.IsIfInstalled (LteIface::S5)
+     << " " << setw (6)  << rInfo.IsGwInstalled ()
      << " " << setw (6)  << rInfo.GetPgwTftIdx ()
      << " " << setw (7)  << prioStr
      << " " << setw (6)  << rInfo.GetTimeout ();

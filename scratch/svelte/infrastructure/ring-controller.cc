@@ -169,7 +169,7 @@ RingController::BearerInstall (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
-  NS_ASSERT_MSG (!rInfo->IsInstalled (), "Rules must not be installed.");
+  NS_ASSERT_MSG (rInfo->IsGwInstalled (), "Gateway rules not installed.");
   NS_LOG_INFO ("Installing ring rules for teid " << rInfo->GetTeidHex ());
 
   Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
@@ -186,7 +186,7 @@ RingController::BearerRemove (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
-  NS_ASSERT_MSG (rInfo->IsInstalled (), "Rules must be installed.");
+  NS_ASSERT_MSG (!rInfo->IsGwInstalled (), "Gateway rules installed.");
   NS_LOG_INFO ("Removing ring rules for teid " << rInfo->GetTeidHex ());
 
   Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
@@ -203,7 +203,7 @@ RingController::BearerUpdate (Ptr<RoutingInfo> rInfo, Ptr<EnbInfo> dstEnbInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
-  NS_ASSERT_MSG (rInfo->IsInstalled (), "Rules must be installed.");
+  NS_ASSERT_MSG (rInfo->IsGwInstalled (), "Gateway rules not installed.");
   NS_ASSERT_MSG (rInfo->GetEnbCellId () != dstEnbInfo->GetCellId (),
                  "Don't update UE's eNB info before BearerUpdate.");
   NS_LOG_INFO ("Updating ring rules for teid " << rInfo->GetTeidHex ());
@@ -347,10 +347,9 @@ RingController::BitRateRequest (
 {
   NS_LOG_FUNCTION (this << ringInfo << iface << overlap);
 
-  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
-
   // Ignoring this check for Non-GBR bearers, aggregated bearers,
   // and local-routing bearers.
+  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
   if (rInfo->IsNonGbr () || rInfo->IsAggregated ()
       || ringInfo->IsLocalPath (iface))
     {
@@ -647,9 +646,8 @@ RingController::HasAvailableResources (
 {
   NS_LOG_FUNCTION (this << ringInfo << iface);
 
-  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
-
   // Check for the available resources on the default path.
+  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
   bool bwdOk = BitRateRequest (ringInfo, iface, overlap);
   bool cpuOk = SwitchCpuRequest (ringInfo, iface);
   bool tabOk = SwitchTableRequest (ringInfo, iface);
@@ -693,7 +691,8 @@ RingController::RulesInstall (
 {
   NS_LOG_FUNCTION (this << ringInfo << iface);
 
-  NS_ASSERT_MSG (!ringInfo->IsInstalled (iface), "OpenFlow rules installed.");
+  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
+  NS_ASSERT_MSG (!rInfo->IsIfInstalled (iface), "Ring rules installed.");
 
   // No rules to install for local-routing bearers.
   if (ringInfo->IsLocalPath (iface))
@@ -701,9 +700,7 @@ RingController::RulesInstall (
       return true;
     }
 
-  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
   bool success = true;
-
   // -------------------------------------------------------------------------
   // Slice table -- [from higher to lower priority]
   //
@@ -745,7 +742,7 @@ RingController::RulesInstall (
     }
 
   // Update the installed flag for this interface.
-  ringInfo->SetInstalled (iface, success);
+  rInfo->SetIfInstalled (iface, success);
   return success;
 }
 
@@ -800,12 +797,11 @@ RingController::RulesRemove (
   NS_LOG_FUNCTION (this << ringInfo << iface);
 
   // No rules installed for this interface.
-  if (!ringInfo->IsInstalled (iface))
+  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
+  if (!rInfo->IsIfInstalled (iface))
     {
       return true;
     }
-
-  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
 
   // Building the dpctl command. Matching cookie for interface and TEID.
   uint64_t cookie = CookieCreate (iface, 0, rInfo->GetTeid ());
@@ -827,7 +823,7 @@ RingController::RulesRemove (
   DpctlExecute (GetDpId (curr), cmdStr);
 
   // Update the installed flag for this interface.
-  ringInfo->SetInstalled (iface, false);
+  rInfo->SetIfInstalled (iface, false);
   return true;
 }
 
@@ -848,7 +844,6 @@ RingController::SetShortestPath (
   NS_LOG_FUNCTION (this << ringInfo);
 
   Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
-
   RingInfo::RingPath dlPath = GetShortPath (
       rInfo->GetSrcDlInfraSwIdx (iface),
       rInfo->GetDstDlInfraSwIdx (iface));

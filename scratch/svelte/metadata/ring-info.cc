@@ -44,8 +44,6 @@ RingInfo::RingInfo (Ptr<RoutingInfo> rInfo)
   m_downPath [LteIface::S5] = RingInfo::UNDEF;
   m_shortPath [LteIface::S1] = true;
   m_shortPath [LteIface::S5] = true;
-  m_instRules [LteIface::S1] = false;
-  m_instRules [LteIface::S5] = false;
 }
 
 RingInfo::~RingInfo ()
@@ -79,17 +77,6 @@ RingInfo::GetUlPath (LteIface iface) const
   NS_LOG_FUNCTION (this << iface);
 
   return RingInfo::InvertPath (GetDlPath (iface));
-}
-
-bool
-RingInfo::IsInstalled (LteIface iface) const
-{
-  NS_LOG_FUNCTION (this << iface);
-
-  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
-                 "Invalid LTE interface. Expected S1-U or S5 interface.");
-
-  return m_instRules [iface];
 }
 
 bool
@@ -192,17 +179,6 @@ RingInfo::DoDispose ()
 
   m_rInfo = 0;
   Object::DoDispose ();
-}
-
-void
-RingInfo::SetInstalled (LteIface iface, bool value)
-{
-  NS_LOG_FUNCTION (this << iface << value);
-
-  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
-                 "Invalid LTE interface. Expected S1-U or S5 interface.");
-
-  m_instRules [iface] = value;
 }
 
 void

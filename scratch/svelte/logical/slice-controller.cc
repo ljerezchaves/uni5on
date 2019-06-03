@@ -722,7 +722,6 @@ SliceController::BearerInstall (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
-  NS_ASSERT_MSG (!rInfo->IsInstalled (), "Rules should not be installed.");
   NS_ASSERT_MSG (!rInfo->IsAggregated (), "Bearer should not be aggregated.");
 
   // Increasing the priority every time we (re)install routing rules. Doing
@@ -734,8 +733,8 @@ SliceController::BearerInstall (Ptr<RoutingInfo> rInfo)
   bool success = true;
   success &= PgwRulesInstall (rInfo);
   success &= SgwRulesInstall (rInfo);
+  rInfo->SetGwInstalled (success);
   success &= m_backhaulCtrl->BearerInstall (rInfo);
-  rInfo->SetInstalled (success);
   return success;
 }
 
@@ -744,7 +743,6 @@ SliceController::BearerRemove (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
-  NS_ASSERT_MSG (rInfo->IsInstalled (), "Rules should be installed.");
   NS_ASSERT_MSG (!rInfo->IsAggregated (), "Bearer should not be aggregated.");
   NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should not be active.");
 
@@ -752,8 +750,8 @@ SliceController::BearerRemove (Ptr<RoutingInfo> rInfo)
   bool success = true;
   success &= PgwRulesRemove (rInfo);
   success &= SgwRulesRemove (rInfo);
+  rInfo->SetGwInstalled (!success);
   success &= m_backhaulCtrl->BearerRemove (rInfo);
-  rInfo->SetInstalled (!success);
   return success;
 }
 
@@ -762,7 +760,6 @@ SliceController::BearerUpdate (Ptr<RoutingInfo> rInfo, Ptr<EnbInfo> dstEnbInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
-  NS_ASSERT_MSG (rInfo->IsInstalled (), "Rules should be installed.");
   NS_ASSERT_MSG (!rInfo->IsAggregated (), "Bearer should not be aggregated.");
 
   // Each slice has a single P-GW and S-GW, so handover only changes the eNB.
@@ -919,7 +916,7 @@ SliceController::DoModifyBearerRequest (
   for (auto const &rit : ueInfo->GetRoutingInfoMap ())
     {
       Ptr<RoutingInfo> rInfo = rit.second;
-      if (rInfo->IsInstalled ())
+      if (rInfo->IsGwInstalled ())
         {
           bool success = BearerUpdate (rInfo, dstEnbInfo);
           NS_ASSERT_MSG (success, "Error updating bearer after handover.");
@@ -1084,7 +1081,7 @@ SliceController::PgwRulesInstall (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
-  NS_ASSERT_MSG (!rInfo->IsInstalled (), "Rules should not be installed.");
+  NS_ASSERT_MSG (!rInfo->IsGwInstalled (), "Gateway rules installed.");
   NS_LOG_INFO ("Installing P-GW rules for teid " << rInfo->GetTeidHex ());
   bool success = true;
 
@@ -1141,7 +1138,7 @@ SliceController::PgwRulesMove (
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex () << srcTftIdx << dstTftIdx);
 
-  NS_ASSERT_MSG (rInfo->IsInstalled (), "Rules should be installed.");
+  NS_ASSERT_MSG (rInfo->IsGwInstalled (), "Gateway rules not installed.");
   NS_LOG_INFO ("Moving P-GW rules for teid " << rInfo->GetTeidHex ());
   bool success = true;
 
@@ -1210,7 +1207,7 @@ SliceController::PgwRulesRemove (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
-  NS_ASSERT_MSG (rInfo->IsInstalled (), "Rules should be installed.");
+  NS_ASSERT_MSG (rInfo->IsGwInstalled (), "Gateway rules not installed.");
   NS_LOG_INFO ("Removing P-GW rules for teid " << rInfo->GetTeidHex ());
 
   uint16_t pgwTftIdx = rInfo->GetPgwTftIdx ();
@@ -1282,7 +1279,7 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
-  NS_ASSERT_MSG (!rInfo->IsInstalled (), "Rules should not be installed.");
+  NS_ASSERT_MSG (!rInfo->IsGwInstalled (), "Gateway rules installed.");
   NS_LOG_INFO ("Installing S-GW rules for teid " << rInfo->GetTeidHex ());
   bool success = true;
 
@@ -1360,7 +1357,7 @@ SliceController::SgwRulesRemove (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
-  NS_ASSERT_MSG (rInfo->IsInstalled (), "Rules should be installed.");
+  NS_ASSERT_MSG (rInfo->IsGwInstalled (), "Gateway rules not installed.");
   NS_LOG_INFO ("Removing S-GW rules for bearer teid " << rInfo->GetTeidHex ());
 
   // Building the dpctl command. Matching cookie just for TEID.
@@ -1386,7 +1383,7 @@ SliceController::SgwRulesUpdate (Ptr<RoutingInfo> rInfo,
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
-  NS_ASSERT_MSG (rInfo->IsInstalled (), "Rules should be installed.");
+  NS_ASSERT_MSG (rInfo->IsGwInstalled (), "Gateway rules not installed.");
   NS_LOG_INFO ("Updating S-GW S1-U rules for teid " << rInfo->GetTeidHex ());
   bool success = true;
 
