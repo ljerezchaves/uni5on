@@ -202,7 +202,7 @@ RingInfo::SetInstalled (LteIface iface, bool value)
   NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
                  "Invalid LTE interface. Expected S1-U or S5 interface.");
 
-  m_instRules [iface] = true;
+  m_instRules [iface] = value;
 }
 
 void
