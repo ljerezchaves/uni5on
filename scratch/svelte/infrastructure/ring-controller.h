@@ -232,6 +232,22 @@ private:
   bool RulesInstall (Ptr<RingInfo> ringInfo, LteIface iface);
 
   /**
+   * Install forwarding rules on switches from the source to the destination
+   * following the given routing path.
+   * \param srcIdx Source switch index.
+   * \param dstIdx Destination switch index.
+   * \param path The routing path.
+   * \param teid The TEID value.
+   * \param dstAddr The IP destination address.
+   * \param dscp The DSCP value for this bearer.
+   * \param cmdStr The OpenFlow dpctl flow mod command.
+   * \return True if succeeded, false otherwise.
+   */
+  bool RulesInstall (uint16_t srcIdx, uint16_t dstIdx, RingInfo::RingPath path,
+                     uint32_t teid, Ipv4Address dstAddr, uint16_t dscp,
+                     std::string cmdStr);
+
+  /**
    * Remove forwarding rules from switches for the given LTE interface.
    * \param ringInfo The ring routing information.
    * \param iface The LTE logical interface.
