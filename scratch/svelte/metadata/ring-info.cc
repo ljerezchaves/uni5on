@@ -44,8 +44,8 @@ RingInfo::RingInfo (Ptr<RoutingInfo> rInfo)
   m_downPath [LteIface::S5] = RingInfo::UNDEF;
   m_shortPath [LteIface::S1] = true;
   m_shortPath [LteIface::S5] = true;
-  m_instRules [LteIface::S1] = true;
-  m_instRules [LteIface::S5] = true;
+  m_instRules [LteIface::S1] = false;
+  m_instRules [LteIface::S5] = false;
 }
 
 RingInfo::~RingInfo ()
