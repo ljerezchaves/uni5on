@@ -836,6 +836,155 @@ RingController::RulesUpdate (
   NS_LOG_FUNCTION (this << ringInfo << iface << dstEnbInfo);
 
   NS_ASSERT_MSG (iface == LteIface::S1, "Only S1-U interface supported.");
+
+  // During this procedure, the eNB was not updated in the rInfo yet.
+  // So, the following methods will return information for the old eNB.
+  // rInfo->GetEnbCellId ()                   // eNB cell ID
+  // rInfo->GetEnbInfraSwIdx ()               // eNB switch index
+  // rInfo->GetDstDlInfraSwIdx (LteIface::S1) // eNB switch index
+  // rInfo->GetSrcUlInfraSwIdx (LteIface::S1) // eNB switch index
+  // rInfo->GetEnbS1uAddr ()                  // eNB S1-U address
+  // rInfo->GetDstDlAddr (LteIface::S1)       // eNB S1-U address
+  // rInfo->GetSrcUlAddr (LteIface::S1)       // eNB S1-U address
+  //
+  // We can't just modify the OpenFlow rules in the backhaul switches because
+  // we need to change the match fields. So, we will schedule the removal of
+  // old low-priority rules from the old routing path and install new rules in
+  // the new routing path (may be the same), using a higher priority and the
+  // dstEnbInfo metadata.
+
+  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
+
+  // Schedule the removal of old low-priority OpenFlow rules.
+  if (rInfo->IsIfInstalled (iface))
+    {
+      // Cookie for old rules. Using old low-priority.
+      uint64_t oldCookie = CookieCreate (
+          iface, rInfo->GetPriority (), rInfo->GetTeid ());
+
+      // Building the dpctl command. Strict matching cookie.
+      std::ostringstream del;
+      del << "flow-mod cmd=del"
+          << ",table="        << GetSliceTable (rInfo->GetSliceId ())
+          << ",cookie="       << GetUint64Hex (oldCookie)
+          << ",cookie_mask="  << GetUint64Hex (COOKIE_STRICT_MASK);
+      std::string delStr = del.str ();
+
+      // Walking through the old S1-U downlink path.
+      RingInfo::RingPath dlPath = ringInfo->GetDlPath (iface);
+      uint16_t curr = rInfo->GetSgwInfraSwIdx ();
+      uint16_t last = rInfo->GetEnbInfraSwIdx ();
+      while (curr != last)
+        {
+          DpctlSchedule (MilliSeconds (250), GetDpId (curr), delStr);
+          curr = GetNextSwIdx (curr, dlPath);
+        }
+      DpctlSchedule (MilliSeconds (250), GetDpId (curr), delStr);
+
+      // Update the installation flag.
+      rInfo->SetIfInstalled (iface, false);
+    }
+
+  // When changing the switch index, we must release any possible reserved bit
+  // rate from the old path, update the ring routing path to the new (shortest)
+  // one, and reserve the bit rate on the new path.
+  if (rInfo->GetEnbInfraSwIdx () != dstEnbInfo->GetInfraSwIdx ())
+    {
+      // Release the bit rate from the old path.
+      if (rInfo->IsGbrReserved (iface))
+        {
+          bool success = BitRateRelease (
+              rInfo->GetSgwInfraSwIdx (),
+              rInfo->GetEnbInfraSwIdx (),
+              rInfo->GetGbrDlBitRate (),
+              rInfo->GetGbrUlBitRate (),
+              ringInfo->GetDlPath (iface),
+              rInfo->GetSliceId ());
+          rInfo->SetGbrReserved (iface, !success);
+        }
+
+      // Update the new shortest path from the S-GW to the target eNB.
+      RingInfo::RingPath newDlPath = GetShortPath (
+          rInfo->GetSgwInfraSwIdx (),
+          dstEnbInfo->GetInfraSwIdx ());
+      ringInfo->SetShortDlPath (iface, newDlPath);
+
+      // Try to reserve the bit rate on the new path.
+      if (rInfo->HasGbrBitRate ())
+        {
+          // Check for the available bit rate in the new path and reserve it.
+          // There's no need to check for overlapping paths as the bit rate for
+          // the S5 interface is already reserved.
+          bool hasBitRate = BitRateRequest (
+              rInfo->GetSgwInfraSwIdx (),
+              dstEnbInfo->GetInfraSwIdx (),         // Target eNB switch idx.
+              rInfo->GetGbrDlBitRate (),
+              rInfo->GetGbrUlBitRate (),
+              ringInfo->GetDlPath (iface),          // New downlink path.
+              rInfo->GetSliceId (),
+              GetSliceController (rInfo->GetSliceId ())->GetGbrBlockThs ());
+          if (hasBitRate)
+            {
+              bool success = BitRateReserve (
+                  rInfo->GetSgwInfraSwIdx (),
+                  dstEnbInfo->GetInfraSwIdx (),     // Target eNB switch idx.
+                  rInfo->GetGbrDlBitRate (),
+                  rInfo->GetGbrUlBitRate (),
+                  ringInfo->GetDlPath (iface),      // New downlink path.
+                  rInfo->GetSliceId ());
+              rInfo->SetGbrReserved (iface, success);
+            }
+        }
+    }
+
+  // Install new high-priority OpenFlow rules for non-local routing paths.
+  if (!ringInfo->IsLocalPath (iface))
+    {
+      // Cookie for new rules. Using new high-priority.
+      uint64_t newCookie = CookieCreate (
+          iface, rInfo->GetPriority () + 1, rInfo->GetTeid ());
+
+      // Building the dpctl command.
+      std::ostringstream cmd;
+      cmd << "flow-mod cmd=add"
+          << ",table="  << GetSliceTable (rInfo->GetSliceId ())
+          << ",flags="  << FLAGS_REMOVED_OVERLAP_RESET
+          << ",cookie=" << GetUint64Hex (newCookie)
+          << ",prio="   << rInfo->GetPriority () + 1
+          << ",idle="   << rInfo->GetTimeout ();
+
+      bool success = true;
+
+      // Configuring downlink routing.
+      if (rInfo->HasDlTraffic ())
+        {
+          success &= RulesInstall (
+              rInfo->GetSgwInfraSwIdx (),
+              dstEnbInfo->GetInfraSwIdx (),         // Target eNB switch idx.
+              ringInfo->GetDlPath (iface),          // New downlink path.
+              rInfo->GetTeid (),
+              dstEnbInfo->GetS1uAddr (),            // Target eNB address.
+              rInfo->GetDscpValue (),
+              cmd.str ());
+        }
+
+      // Configuring uplink routing.
+      if (rInfo->HasUlTraffic ())
+        {
+          success &= RulesInstall (
+              dstEnbInfo->GetInfraSwIdx (),         // Target eNB switch idx.
+              rInfo->GetSgwInfraSwIdx (),
+              ringInfo->GetUlPath (iface),          // New uplink path.
+              rInfo->GetTeid (),
+              rInfo->GetSgwS1uAddr (),
+              rInfo->GetDscpValue (),
+              cmd.str ());
+        }
+
+      // Update the installed flag for this interface.
+      rInfo->SetIfInstalled (iface, success);
+    }
+
   return true;
 }
 
