@@ -39,11 +39,12 @@ public:
   /** Reason for packet drops at OpenFlow backhaul network. */
   enum DropReason
   {
-    PLOAD = 0,    //!< Switch pipeline capacity overloaded.
-    METER = 1,    //!< EPC bearer MBR meter.
-    SLICE = 2,    //!< OpenFlow EPC infrastructure slicing.
-    QUEUE = 3,    //!< Network device queues.
-    ALL   = 4     //!< ALL previous reasons.
+    TABLE = 0,    //!< Unmatched packets at flow tables.
+    PLOAD = 1,    //!< Switch pipeline capacity overloaded.
+    METER = 2,    //!< EPC bearer MBR meter.
+    SLICE = 3,    //!< OpenFlow EPC infrastructure slicing.
+    QUEUE = 4,    //!< Network device queues.
+    ALL   = 5     //!< ALL previous reasons.
   };
 
   // Total number of DropReason items + 1.

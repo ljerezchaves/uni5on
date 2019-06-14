@@ -304,7 +304,8 @@ FlowStatsCalculator::PrintHeader (std::ostream &os)
      << " " << setw (6)  << "DpQue"
      << " " << setw (6)  << "DpSli"
      << " " << setw (6)  << "DpMbr"
-     << " " << setw (6)  << "DpLoa";
+     << " " << setw (6)  << "DpLoa"
+     << " " << setw (6)  << "DpTab";
   return os;
 }
 
