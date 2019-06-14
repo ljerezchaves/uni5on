@@ -276,7 +276,7 @@ TrafficStatsCalculator::MeterDropPacket (
       // It must be a packed dropped by a traffic meter because we only have
       // slicing meters on ring switches, not on the P-GW.
       //
-      stats = GetFlowStats (gtpuTag.GetTeid (), Direction::DLINK);
+      stats = GetFlowStats (meterId, Direction::DLINK);
       stats->NotifyTx (packet->GetSize ());
       stats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::METER);
     }
