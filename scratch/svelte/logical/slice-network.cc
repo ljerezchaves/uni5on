@@ -168,13 +168,13 @@ SliceNetwork::GetTypeId (void)
     .AddAttribute ("PgwMainCpuCapacity",
                    "CPU capacity for the P-GW main switch.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   DataRateValue (DataRate ("4Gbps")),
+                   DataRateValue (DataRate ("2Gbps")),
                    MakeDataRateAccessor (&SliceNetwork::m_mainCpuCapacity),
                    MakeDataRateChecker ())
     .AddAttribute ("PgwMainFlowTableSize",
                    "Flow table size for the P-GW main switch.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   UintegerValue (1024),
+                   UintegerValue (8192),
                    MakeUintegerAccessor (&SliceNetwork::m_mainFlowSize),
                    MakeUintegerChecker<uint16_t> (0, 65535))
     .AddAttribute ("PgwTftCpuCapacity",
@@ -186,13 +186,13 @@ SliceNetwork::GetTypeId (void)
     .AddAttribute ("PgwTftFlowTableSize",
                    "Flow table size for the P-GW TFT switches.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   UintegerValue (4096),
+                   UintegerValue (8192),
                    MakeUintegerAccessor (&SliceNetwork::m_tftFlowSize),
                    MakeUintegerChecker<uint16_t> (0, 65535))
     .AddAttribute ("PgwTftMeterTableSize",
                    "Meter table size for the P-GW TFT switches.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   UintegerValue (2048),
+                   UintegerValue (4096),
                    MakeUintegerAccessor (&SliceNetwork::m_tftMeterSize),
                    MakeUintegerChecker<uint16_t> (0, 65535))
     .AddAttribute ("PgwLinkDataRate",
@@ -224,13 +224,13 @@ SliceNetwork::GetTypeId (void)
     .AddAttribute ("SgwFlowTableSize",
                    "Flow table size for the S-GW switches.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   UintegerValue (4098),
+                   UintegerValue (8192),
                    MakeUintegerAccessor (&SliceNetwork::m_sgwFlowSize),
                    MakeUintegerChecker<uint16_t> (0, 65535))
     .AddAttribute ("SgwMeterTableSize",
                    "Meter table size for the S-GW switches.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   UintegerValue (2048),
+                   UintegerValue (4096),
                    MakeUintegerAccessor (&SliceNetwork::m_sgwMeterSize),
                    MakeUintegerChecker<uint16_t> (0, 65535))
 
