@@ -145,9 +145,9 @@ TrafficHelper::GetTypeId (void)
                    MakeBooleanChecker ())
     .AddAttribute ("StartAppsAt",
                    "The time to start the applications.",
-                   TimeValue (Seconds (1)),
+                   TimeValue (Time (0)),
                    MakeTimeAccessor (&TrafficHelper::m_startAppsAt),
-                   MakeTimeChecker (Seconds (1)))
+                   MakeTimeChecker (Time (0)))
     .AddAttribute ("StopAppsAt",
                    "The time to stop the applications.",
                    TimeValue (Time (0)),

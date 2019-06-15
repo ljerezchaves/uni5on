@@ -74,9 +74,9 @@ TrafficManager::GetTypeId (void)
                    MakeDoubleChecker<double> (0.0, 1.0))
     .AddAttribute ("StartTime",
                    "The time to start applications.",
-                   TimeValue (Seconds (1)),
+                   TimeValue (Time (0)),
                    MakeTimeAccessor (&TrafficManager::m_startTime),
-                   MakeTimeChecker (Seconds (1)))
+                   MakeTimeChecker (Time (0)))
     .AddAttribute ("StopTime",
                    "The time to stop applications.",
                    TimeValue (Time (0)),
@@ -103,7 +103,7 @@ TrafficManager::AddSvelteClient (Ptr<SvelteClient> app)
     "AppError", MakeCallback (&TrafficManager::NotifyAppStop, this));
 
   // Schedule the first start attempt for this application.
-  Time firstTry = m_startTime;
+  Time firstTry = std::max (Seconds (1), m_startTime);
   firstTry += Seconds (std::abs (m_interArrivalRng->GetValue ()));
   Simulator::Schedule (firstTry, &TrafficManager::AppStartTry, this, app);
   NS_LOG_INFO ("First start attempt for app " << app->GetAppName () <<

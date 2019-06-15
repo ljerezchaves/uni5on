@@ -58,7 +58,7 @@ default ns3::TrafficHelper::FullAppsAt "0s"
 default ns3::TrafficHelper::HalfAppsAt "0s"
 default ns3::TrafficHelper::PoissonInterArrival "ns3::ExponentialRandomVariable[Mean=120.0]"
 default ns3::TrafficHelper::RestartApps "true"
-default ns3::TrafficHelper::StartAppsAt "1s"
+default ns3::TrafficHelper::StartAppsAt "0s"
 default ns3::TrafficHelper::StopAppsAt "0s"
 default ns3::TrafficHelper::UseOnlyDefaultBearer "false"
 
