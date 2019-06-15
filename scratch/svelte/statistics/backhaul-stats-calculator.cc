@@ -58,6 +58,9 @@ BackhaulStatsCalculator::BackhaulStatsCalculator ()
     "/NodeList/*/$ns3::OFSwitch13Device/MeterDrop",
     MakeCallback (&BackhaulStatsCalculator::MeterDropPacket, this));
   Config::Connect (
+    "/NodeList/*/$ns3::OFSwitch13Device/TableDrop",
+    MakeCallback (&BackhaulStatsCalculator::TableDropPacket, this));
+  Config::Connect (
     "/NodeList/*/$ns3::OFSwitch13Device/PortList/*/PortQueue/Drop",
     MakeCallback (&BackhaulStatsCalculator::QueueDropPacket, this));
 }
@@ -241,21 +244,11 @@ BackhaulStatsCalculator::OverloadDropPacket (std::string context,
     }
   else
     {
-      //
       // This only happens when a packet is dropped at the P-GW, before
-      // entering the logical port that is responsible for attaching the
+      // entering the TFT logical port that is responsible for attaching the
       // EpcGtpuTag and notifying that the packet is entering the EPC.
       // To keep consistent log results, we are doing this manually here.
-      //
-      EthernetHeader ethHeader;
-      Ipv4Header ipv4Header;
-
-      Ptr<Packet> packetCopy = packet->Copy ();
-      packetCopy->RemoveHeader (ethHeader);
-      packetCopy->PeekHeader (ipv4Header);
-
-      Ptr<UeInfo> ueInfo = UeInfo::GetPointer (ipv4Header.GetDestination ());
-      uint32_t teid = ueInfo->Classify (packetCopy);
+      uint32_t teid = PgwTftClassify (packet);
 
       Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
       SliceId slice = rInfo->GetSliceId ();
@@ -263,12 +256,12 @@ BackhaulStatsCalculator::OverloadDropPacket (std::string context,
       QosType type = rInfo->GetQosType ();
 
       sliStats = m_slices [slice].flowStats [dir][type];
-      sliStats->NotifyTx (packetCopy->GetSize ());
-      sliStats->NotifyDrop (packetCopy->GetSize (), FlowStatsCalculator::PLOAD);
+      sliStats->NotifyTx (packet->GetSize ());
+      sliStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::PLOAD);
 
       aggStats = m_slices [SliceId::ALL].flowStats [dir][type];
-      aggStats->NotifyTx (packetCopy->GetSize ());
-      aggStats->NotifyDrop (packetCopy->GetSize (), FlowStatsCalculator::PLOAD);
+      aggStats->NotifyTx (packet->GetSize ());
+      aggStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::PLOAD);
     }
 }
 
@@ -287,35 +280,32 @@ BackhaulStatsCalculator::MeterDropPacket (
       Direction dir = gtpuTag.GetDirection ();
       QosType type = gtpuTag.GetQosType ();
 
-      sliStats = m_slices [slice].flowStats [dir][type];
-      aggStats = m_slices [SliceId::ALL].flowStats [dir][type];
+      // Identify the meter type (traffic or slicing).
+      FlowStatsCalculator::DropReason dropReason =
+        (gtpuTag.GetTeid () == meterId) ?
+        FlowStatsCalculator::METER :
+        FlowStatsCalculator::SLICE;
 
-      // Notify the droped packet, based on meter type (traffic or slicing).
-      if (gtpuTag.GetTeid () == meterId)
-        {
-          sliStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::METER);
-          aggStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::METER);
-        }
-      else
-        {
-          sliStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::SLICE);
-          aggStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::SLICE);
-        }
+      sliStats = m_slices [slice].flowStats [dir][type];
+      sliStats->NotifyDrop (packet->GetSize (), dropReason);
+
+      aggStats = m_slices [SliceId::ALL].flowStats [dir][type];
+      aggStats->NotifyDrop (packet->GetSize (), dropReason);
     }
   else
     {
-      //
       // This only happens when a packet is dropped at the P-GW, before
-      // entering the logical port that is responsible for attaching the
+      // entering the TFT logical port that is responsible for attaching the
       // EpcGtpuTag and notifying that the packet is entering the EPC.
       // To keep consistent log results, we are doing this manually here.
-      //
-      // It must be a packed dropped by a traffic meter because we only have
-      // slicing meters on ring switches, not on the P-GW.
-      //
-      SliceId slice = gtpuTag.GetSliceId ();
+      // It must be a packed dropped by a traffic meter because this is the
+      // only type of meters that we have in the P-GW TFT switches.
+      uint32_t teid = PgwTftClassify (packet);
+
+      Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
+      SliceId slice = rInfo->GetSliceId ();
       Direction dir = Direction::DLINK;
-      QosType type = gtpuTag.GetQosType ();
+      QosType type = rInfo->GetQosType ();
 
       sliStats = m_slices [slice].flowStats [dir][type];
       sliStats->NotifyTx (packet->GetSize ());
@@ -347,6 +337,72 @@ BackhaulStatsCalculator::QueueDropPacket (std::string context,
 
       aggStats = m_slices [SliceId::ALL].flowStats [dir][type];
       aggStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::QUEUE);
+    }
+  else
+    {
+      // This only happens when a packet is dropped at the P-GW, before
+      // entering the TFT logical port that is responsible for attaching the
+      // EpcGtpuTag and notifying that the packet is entering the EPC.
+      // To keep consistent log results, we are doing this manually here.
+      uint32_t teid = PgwTftClassify (packet);
+
+      Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
+      SliceId slice = rInfo->GetSliceId ();
+      Direction dir = Direction::DLINK;
+      QosType type = rInfo->GetQosType ();
+
+      sliStats = m_slices [slice].flowStats [dir][type];
+      sliStats->NotifyTx (packet->GetSize ());
+      sliStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::QUEUE);
+
+      aggStats = m_slices [SliceId::ALL].flowStats [dir][type];
+      aggStats->NotifyTx (packet->GetSize ());
+      aggStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::QUEUE);
+    }
+}
+
+void
+BackhaulStatsCalculator::TableDropPacket (
+  std::string context, Ptr<const Packet> packet, uint8_t tableId)
+{
+  NS_LOG_FUNCTION (this << context << packet <<
+                   static_cast<uint16_t> (tableId));
+
+  EpcGtpuTag gtpuTag;
+  Ptr<FlowStatsCalculator> sliStats;
+  Ptr<FlowStatsCalculator> aggStats;
+  if (packet->PeekPacketTag (gtpuTag))
+    {
+      SliceId slice = gtpuTag.GetSliceId ();
+      Direction dir = gtpuTag.GetDirection ();
+      QosType type = gtpuTag.GetQosType ();
+
+      sliStats = m_slices [slice].flowStats [dir][type];
+      sliStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::TABLE);
+
+      aggStats = m_slices [SliceId::ALL].flowStats [dir][type];
+      aggStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::TABLE);
+    }
+  else
+    {
+      // This only happens when a packet is dropped at the P-GW, before
+      // entering the TFT logical port that is responsible for attaching the
+      // EpcGtpuTag and notifying that the packet is entering the EPC.
+      // To keep consistent log results, we are doing this manually here.
+      uint32_t teid = PgwTftClassify (packet);
+
+      Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
+      SliceId slice = rInfo->GetSliceId ();
+      Direction dir = Direction::DLINK;
+      QosType type = rInfo->GetQosType ();
+
+      sliStats = m_slices [slice].flowStats [dir][type];
+      sliStats->NotifyTx (packet->GetSize ());
+      sliStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::TABLE);
+
+      aggStats = m_slices [SliceId::ALL].flowStats [dir][type];
+      aggStats->NotifyTx (packet->GetSize ());
+      aggStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::TABLE);
     }
 }
 
@@ -394,6 +450,25 @@ BackhaulStatsCalculator::EpcOutputPacket (std::string context,
       aggStats = m_slices [SliceId::ALL].flowStats [dir][type];
       aggStats->NotifyRx (packet->GetSize (), gtpuTag.GetTimestamp ());
     }
+}
+
+uint32_t
+BackhaulStatsCalculator::PgwTftClassify (Ptr<const Packet> packet)
+{
+  NS_LOG_FUNCTION (this << packet);
+
+  Ptr<Packet> packetCopy = packet->Copy ();
+
+  EthernetHeader ethHeader;
+  packetCopy->RemoveHeader (ethHeader);
+
+  Ipv4Header ipv4Header;
+  packetCopy->PeekHeader (ipv4Header);
+
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (ipv4Header.GetDestination ());
+  NS_ASSERT_MSG (ueInfo, "No UE info for this IP adresses.");
+
+  return ueInfo->Classify (packetCopy);
 }
 
 } // Namespace ns3

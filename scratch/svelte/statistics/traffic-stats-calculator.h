@@ -102,6 +102,16 @@ private:
    */
   void QueueDropPacket (std::string context, Ptr<const Packet> packet);
 
+
+  /**
+   * Trace sink fired when an unmatched packets is dropped by a flow table.
+   * \param context Context information.
+   * \param packet The dropped packet.
+   * \param tableId The flow table ID that dropped the packet.
+   */
+  void TableDropPacket (std::string context, Ptr<const Packet> packet,
+                        uint8_t tableId);
+
   /**
    * Trace sink fired when a packet enters the EPC.
    * \param context Context information.
@@ -115,6 +125,13 @@ private:
    * \param packet The packet.
    */
   void EpcOutputPacket (std::string context, Ptr<const Packet> packet);
+
+  /**
+   * Classify the downlink packet as in the P-GWu TFT logical port.
+   * \param packet The packet to classify.
+   * \return The TEID for this packet.
+   */
+  uint32_t PgwTftClassify (Ptr<const Packet> packet);
 
   /**
    * Retrieve the LTE EPC QoS statistics information for the GTP tunnel id.

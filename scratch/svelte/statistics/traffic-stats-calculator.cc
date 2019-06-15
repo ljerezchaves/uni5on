@@ -56,6 +56,9 @@ TrafficStatsCalculator::TrafficStatsCalculator ()
     "/NodeList/*/$ns3::OFSwitch13Device/MeterDrop",
     MakeCallback (&TrafficStatsCalculator::MeterDropPacket, this));
   Config::Connect (
+    "/NodeList/*/$ns3::OFSwitch13Device/TableDrop",
+    MakeCallback (&TrafficStatsCalculator::TableDropPacket, this));
+  Config::Connect (
     "/NodeList/*/$ns3::OFSwitch13Device/PortList/*/PortQueue/Drop",
     MakeCallback (&TrafficStatsCalculator::QueueDropPacket, this));
   Config::Connect (
@@ -221,25 +224,13 @@ TrafficStatsCalculator::OverloadDropPacket (std::string context,
     }
   else
     {
-      //
       // This only happens when a packet is dropped at the P-GW, before
-      // entering the logical port that is responsible for attaching the
+      // entering the TFT logical port that is responsible for attaching the
       // EpcGtpuTag and notifying that the packet is entering the EPC.
       // To keep consistent log results, we are doing this manually here.
-      //
-      EthernetHeader ethHeader;
-      Ipv4Header ipv4Header;
-
-      Ptr<Packet> packetCopy = packet->Copy ();
-      packetCopy->RemoveHeader (ethHeader);
-      packetCopy->PeekHeader (ipv4Header);
-
-      Ptr<UeInfo> ueInfo = UeInfo::GetPointer (ipv4Header.GetDestination ());
-      uint32_t teid = ueInfo->Classify (packetCopy);
-
-      stats = GetFlowStats (teid, Direction::DLINK);
-      stats->NotifyTx (packetCopy->GetSize ());
-      stats->NotifyDrop (packetCopy->GetSize (), FlowStatsCalculator::PLOAD);
+      stats = GetFlowStats (PgwTftClassify (packet), Direction::DLINK);
+      stats->NotifyTx (packet->GetSize ());
+      stats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::PLOAD);
     }
 }
 
@@ -253,30 +244,24 @@ TrafficStatsCalculator::MeterDropPacket (
   Ptr<FlowStatsCalculator> stats;
   if (packet->PeekPacketTag (gtpuTag))
     {
-      stats = GetFlowStats (gtpuTag.GetTeid (), gtpuTag.GetDirection ());
+      // Identify the meter type (traffic or slicing).
+      FlowStatsCalculator::DropReason dropReason =
+        (gtpuTag.GetTeid () == meterId) ?
+        FlowStatsCalculator::METER :
+        FlowStatsCalculator::SLICE;
 
-      // Notify the droped packet, based on meter type (traffic or slicing).
-      if (gtpuTag.GetTeid () == meterId)
-        {
-          stats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::METER);
-        }
-      else
-        {
-          stats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::SLICE);
-        }
+      stats = GetFlowStats (gtpuTag.GetTeid (), gtpuTag.GetDirection ());
+      stats->NotifyDrop (packet->GetSize (), dropReason);
     }
   else
     {
-      //
       // This only happens when a packet is dropped at the P-GW, before
-      // entering the logical port that is responsible for attaching the
+      // entering the TFT logical port that is responsible for attaching the
       // EpcGtpuTag and notifying that the packet is entering the EPC.
       // To keep consistent log results, we are doing this manually here.
-      //
-      // It must be a packed dropped by a traffic meter because we only have
-      // slicing meters on ring switches, not on the P-GW.
-      //
-      stats = GetFlowStats (meterId, Direction::DLINK);
+      // It must be a packed dropped by a traffic meter because this is the
+      // only type of meters that we have in the P-GW TFT switches.
+      stats = GetFlowStats (PgwTftClassify (packet), Direction::DLINK);
       stats->NotifyTx (packet->GetSize ());
       stats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::METER);
     }
@@ -294,6 +279,42 @@ TrafficStatsCalculator::QueueDropPacket (std::string context,
     {
       stats = GetFlowStats (gtpuTag.GetTeid (), gtpuTag.GetDirection ());
       stats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::QUEUE);
+    }
+  else
+    {
+      // This only happens when a packet is dropped at the P-GW, before
+      // entering the TFT logical port that is responsible for attaching the
+      // EpcGtpuTag and notifying that the packet is entering the EPC.
+      // To keep consistent log results, we are doing this manually here.
+      stats = GetFlowStats (PgwTftClassify (packet), Direction::DLINK);
+      stats->NotifyTx (packet->GetSize ());
+      stats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::QUEUE);
+    }
+}
+
+void
+TrafficStatsCalculator::TableDropPacket (
+  std::string context, Ptr<const Packet> packet, uint8_t tableId)
+{
+  NS_LOG_FUNCTION (this << context << packet <<
+                   static_cast<uint16_t> (tableId));
+
+  EpcGtpuTag gtpuTag;
+  Ptr<FlowStatsCalculator> stats;
+  if (packet->PeekPacketTag (gtpuTag))
+    {
+      stats = GetFlowStats (gtpuTag.GetTeid (), gtpuTag.GetDirection ());
+      stats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::TABLE);
+    }
+  else
+    {
+      // This only happens when a packet is dropped at the P-GW, before
+      // entering the TFT logical port that is responsible for attaching the
+      // EpcGtpuTag and notifying that the packet is entering the EPC.
+      // To keep consistent log results, we are doing this manually here.
+      stats = GetFlowStats (PgwTftClassify (packet), Direction::DLINK);
+      stats->NotifyTx (packet->GetSize ());
+      stats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::TABLE);
     }
 }
 
@@ -325,6 +346,25 @@ TrafficStatsCalculator::EpcOutputPacket (std::string context,
       stats = GetFlowStats (gtpuTag.GetTeid (), gtpuTag.GetDirection ());
       stats->NotifyRx (packet->GetSize (), gtpuTag.GetTimestamp ());
     }
+}
+
+uint32_t
+TrafficStatsCalculator::PgwTftClassify (Ptr<const Packet> packet)
+{
+  NS_LOG_FUNCTION (this << packet);
+
+  Ptr<Packet> packetCopy = packet->Copy ();
+
+  EthernetHeader ethHeader;
+  packetCopy->RemoveHeader (ethHeader);
+
+  Ipv4Header ipv4Header;
+  packetCopy->PeekHeader (ipv4Header);
+
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (ipv4Header.GetDestination ());
+  NS_ASSERT_MSG (ueInfo, "No UE info for this IP adresses.");
+
+  return ueInfo->Classify (packetCopy);
 }
 
 Ptr<FlowStatsCalculator>
