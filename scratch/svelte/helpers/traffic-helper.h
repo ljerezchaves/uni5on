@@ -136,8 +136,10 @@ private:
   bool                        m_useOnlyDefault;   //!< Use only default bearer.
 
   // Traffic manager.
-  Time                        m_fullAppsAt;       //!< Time to 100% requests.
-  Time                        m_halfAppsAt;       //!< Time to 50% requests.
+  Time                        m_fullProbAt;       //!< Time to 100% requests.
+  Time                        m_halfProbAt;       //!< Time to 50% requests.
+  Time                        m_zeroProbAt;       //!< Time to 0% requests.
+  double                      m_initialProb;      //!< Initial start probab.
   ObjectFactory               m_managerFac;       //!< Traffic manager factory.
   Ptr<RandomVariableStream>   m_poissonRng;       //!< Inter-arrival traffic.
   bool                        m_restartApps;      //!< Continuous restart apps.

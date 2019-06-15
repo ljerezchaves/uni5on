@@ -120,15 +120,25 @@ TrafficHelper::GetTypeId (void)
                    MakeBooleanChecker ())
 
     // Traffic manager attributes.
+    .AddAttribute ("InitialProb",
+                   "The initial probability to start applications.",
+                   DoubleValue (1.0),
+                   MakeDoubleAccessor (&TrafficHelper::m_initialProb),
+                   MakeDoubleChecker<double> (0.0, 1.0))
     .AddAttribute ("FullAppsAt",
                    "The time to set application start probability to 100%.",
                    TimeValue (Time (0)),
-                   MakeTimeAccessor (&TrafficHelper::m_fullAppsAt),
+                   MakeTimeAccessor (&TrafficHelper::m_fullProbAt),
                    MakeTimeChecker (Time (0)))
     .AddAttribute ("HalfAppsAt",
                    "The time to set application start probability to 50%.",
                    TimeValue (Time (0)),
-                   MakeTimeAccessor (&TrafficHelper::m_halfAppsAt),
+                   MakeTimeAccessor (&TrafficHelper::m_halfProbAt),
+                   MakeTimeChecker (Time (0)))
+    .AddAttribute ("NoneAppsAt",
+                   "The time to set application start probability to 0%.",
+                   TimeValue (Time (0)),
+                   MakeTimeAccessor (&TrafficHelper::m_zeroProbAt),
                    MakeTimeChecker (Time (0)))
     .AddAttribute ("PoissonInterArrival",
                    "An exponential random variable used to get "
@@ -200,6 +210,7 @@ TrafficHelper::NotifyConstructionCompleted ()
   m_managerFac.SetTypeId (TrafficManager::GetTypeId ());
   m_managerFac.Set ("InterArrival", PointerValue (m_poissonRng));
   m_managerFac.Set ("RestartApps", BooleanValue (m_restartApps));
+  m_managerFac.Set ("StartProb", DoubleValue (m_initialProb));
   m_managerFac.Set ("StartTime", TimeValue (m_startAppsAt));
   m_managerFac.Set ("StopTime", TimeValue (m_stopAppsAt));
 
@@ -521,15 +532,20 @@ TrafficHelper::InstallApplications ()
       t_ueNode->AggregateObject (t_ueManager);
 
       // Schedule traffic manager start probability updates.
-      if (!m_fullAppsAt.IsZero ())
+      if (!m_fullProbAt.IsZero ())
         {
-          Simulator::Schedule (m_fullAppsAt, &TrafficManager::SetAttribute,
+          Simulator::Schedule (m_fullProbAt, &TrafficManager::SetAttribute,
                                t_ueManager, "StartProb", DoubleValue (1.0));
         }
-      if (!m_halfAppsAt.IsZero ())
+      if (!m_halfProbAt.IsZero ())
         {
-          Simulator::Schedule (m_halfAppsAt, &TrafficManager::SetAttribute,
+          Simulator::Schedule (m_halfProbAt, &TrafficManager::SetAttribute,
                                t_ueManager, "StartProb", DoubleValue (0.5));
+        }
+      if (!m_zeroProbAt.IsZero ())
+        {
+          Simulator::Schedule (m_zeroProbAt, &TrafficManager::SetAttribute,
+                               t_ueManager, "StartProb", DoubleValue (0.0));
         }
 
       // Connect the manager to the controller session created trace source.

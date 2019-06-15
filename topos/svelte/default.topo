@@ -74,6 +74,8 @@ default ns3::SliceNetwork::LinkMtu "1492"
 
 default ns3::TrafficHelper::FullAppsAt "0s"
 default ns3::TrafficHelper::HalfAppsAt "0s"
+default ns3::TrafficHelper::InitialProb "1.0"
+default ns3::TrafficHelper::NoneAppsAt "0s"
 default ns3::TrafficHelper::PoissonInterArrival "ns3::ExponentialRandomVariable[Mean=120.0]"
 default ns3::TrafficHelper::RestartApps "true"
 default ns3::TrafficHelper::StartAppsAt "0s"
