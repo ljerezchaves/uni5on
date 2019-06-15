@@ -694,17 +694,6 @@ void
 SliceController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 {
   NS_LOG_FUNCTION (this << swtch);
-
-  // Get the OpenFlow switch datapath ID.
-  uint64_t swDpId = swtch->GetDpId ();
-
-  // Table miss entry. Send to controller.
-  std::ostringstream cmd;
-  cmd << "flow-mod cmd=add,prio=0"
-      << ",table=0"
-      << ",flags=" << FLAGS_REMOVED_OVERLAP_RESET
-      << " apply:output=ctrl";
-  DpctlExecute (swDpId, cmd.str ());
 }
 
 void
