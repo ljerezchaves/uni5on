@@ -404,13 +404,13 @@ SliceController::NotifyPgwAttach (
     {
     case OpMode::ON:
       {
-        pgwInfo->SetTftLevel (pgwInfo->GetMaxLevel ());
+        pgwInfo->SetCurLevel (pgwInfo->GetMaxLevel ());
         break;
       }
     case OpMode::OFF:
     case OpMode::AUTO:
       {
-        pgwInfo->SetTftLevel (0);
+        pgwInfo->SetCurLevel (0);
         break;
       }
     }
@@ -1018,7 +1018,7 @@ SliceController::PgwTftLoadBalancing (void)
   m_pgwTftLoadBalTrace (m_pgwInfo, nextLevel, moved);
 
   // Update the load balancing level.
-  m_pgwInfo->SetTftLevel (nextLevel);
+  m_pgwInfo->SetCurLevel (nextLevel);
 
   // Schedule the next load balancing operation.
   Simulator::Schedule (

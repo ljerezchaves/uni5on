@@ -479,7 +479,7 @@ PgwInfo::SaveSwitchInfo (Ptr<OFSwitch13Device> device, Ipv4Address s5Addr,
 }
 
 void
-PgwInfo::SetTftLevel (uint16_t value)
+PgwInfo::SetCurLevel (uint16_t value)
 {
   NS_LOG_FUNCTION (this << value);
 

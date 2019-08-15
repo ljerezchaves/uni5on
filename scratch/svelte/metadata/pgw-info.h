@@ -206,7 +206,7 @@ private:
    * Update the current TFT adaptive mechanism level.
    * \param value The value to set.
    */
-  void SetTftLevel (uint16_t value);
+  void SetCurLevel (uint16_t value);
 
   // P-GW metadata.
   OFSwitch13DeviceContainer m_devices;            //!< OpenFlow switch devices.
