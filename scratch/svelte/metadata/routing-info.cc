@@ -914,8 +914,7 @@ RoutingInfo::UnsetBlocked (BlockReason reason)
 }
 
 void
-RoutingInfo::GetList (RoutingInfoList_t &returnList, SliceId slice,
-                      uint16_t pgwTftIdx)
+RoutingInfo::GetList (RoutingInfoList_t &returnList, SliceId slice)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
@@ -923,16 +922,10 @@ RoutingInfo::GetList (RoutingInfoList_t &returnList, SliceId slice,
   for (auto const &it : m_routingInfoByTeid)
     {
       Ptr<RoutingInfo> rInfo = it.second;
-
-      if (slice != SliceId::ALL && rInfo->GetSliceId () != slice)
+      if (slice == SliceId::ALL || rInfo->GetSliceId () == slice)
         {
-          continue;
+          returnList.push_back (rInfo);
         }
-      if (pgwTftIdx != 0 && rInfo->GetPgwTftIdx () != pgwTftIdx)
-        {
-          continue;
-        }
-      returnList.push_back (rInfo);
     }
 }
 
