@@ -941,6 +941,29 @@ RoutingInfo::GetGwInstalledList (RoutingInfoList_t &returnList, SliceId slice,
 }
 
 void
+RoutingInfo::GetList (RoutingInfoList_t &returnList, SliceId slice,
+                      uint16_t pgwTftIdx)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  NS_ASSERT_MSG (!returnList.size (), "The return list should be empty.");
+  for (auto const &it : m_routingInfoByTeid)
+    {
+      Ptr<RoutingInfo> rInfo = it.second;
+
+      if (slice != SliceId::ALL && rInfo->GetSliceId () != slice)
+        {
+          continue;
+        }
+      if (pgwTftIdx != 0 && rInfo->GetPgwTftIdx () != pgwTftIdx)
+        {
+          continue;
+        }
+      returnList.push_back (rInfo);
+    }
+}
+
+void
 RoutingInfo::RegisterRoutingInfo (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION_NOARGS ();
