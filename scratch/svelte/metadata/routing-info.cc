@@ -551,6 +551,14 @@ RoutingInfo::GetPgwTftDpId (void) const
   return m_ueInfo->GetPgwInfo ()->GetTftDpId (GetPgwTftIdx ());
 }
 
+uint32_t
+RoutingInfo::GetPgwTftS5PortNo (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_ueInfo->GetPgwInfo ()->GetTftS5PortNo (GetPgwTftIdx ());
+}
+
 uint64_t
 RoutingInfo::GetSgwDpId (void) const
 {

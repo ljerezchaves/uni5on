@@ -189,6 +189,7 @@ public:
   uint16_t    GetPgwInfraSwIdx  (void) const;
   Ipv4Address GetPgwS5Addr      (void) const;
   uint64_t    GetPgwTftDpId     (void) const;
+  uint32_t    GetPgwTftS5PortNo (void) const;
   //\}
 
   /**

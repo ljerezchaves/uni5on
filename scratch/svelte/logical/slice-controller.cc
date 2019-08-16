@@ -1110,7 +1110,7 @@ SliceController::PgwRulesInstall (Ptr<RoutingInfo> rInfo)
       // Instruction: apply action: set tunnel ID, output port.
       act << " apply:set_field=tunn_id:"
           << GetTunnelIdStr (rInfo->GetTeid (), rInfo->GetSgwS5Addr ())
-          << ",output=" << m_pgwInfo->GetTftS5PortNo (rInfo->GetPgwTftIdx ());
+          << ",output=" << rInfo->GetPgwTftS5PortNo ();
 
       // Install downlink OpenFlow TFT rules.
       success &= TftRulesInstall (rInfo->GetTft (), Direction::DLINK,
