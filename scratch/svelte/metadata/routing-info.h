@@ -309,16 +309,6 @@ protected:
   void UnsetBlocked (BlockReason reason);
 
   /**
-   * Get the list of the P-GW installed bearer routing information, optionally
-   * filtered by the LTE logical slice and by the P-GW TFT switch index.
-   * \param slice The LTE logical slice ID.
-   * \param pgwTftIdx The P-GW TFT index.
-   * \param [out] returnList The list of installed bearers.
-   */
-  static void GetGwInstalledList (RoutingInfoList_t &returnList,
-                                  SliceId slice = SliceId::ALL,
-                                  uint16_t pgwTftIdx = 0);
-  /**
    * Get the list of bearer routing information, optionally filtered by the
    * LTE logical slice and by the P-GW TFT switch index.
    * \param slice The LTE logical slice ID.
