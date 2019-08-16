@@ -544,6 +544,14 @@ RoutingInfo::GetPgwS5Addr (void) const
 }
 
 uint64_t
+RoutingInfo::GetPgwTftDpId (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_ueInfo->GetPgwInfo ()->GetTftDpId (GetPgwTftIdx ());
+}
+
+uint64_t
 RoutingInfo::GetSgwDpId (void) const
 {
   NS_LOG_FUNCTION (this);

@@ -1074,9 +1074,8 @@ SliceController::PgwRulesInstall (Ptr<RoutingInfo> rInfo)
   NS_LOG_INFO ("Installing P-GW rules for teid " << rInfo->GetTeidHex ());
   bool success = true;
 
-  uint16_t pgwTftIdx = rInfo->GetPgwTftIdx ();
-  uint64_t pgwTftDpId = m_pgwInfo->GetTftDpId (pgwTftIdx);
-  NS_LOG_DEBUG ("Installing into P-GW TFT switch index " << pgwTftIdx);
+  uint64_t pgwTftDpId = rInfo->GetPgwTftDpId ();
+  NS_LOG_DEBUG ("Installing into P-GW TFT idx " << rInfo->GetPgwTftIdx ());
 
   // Configure downlink.
   if (rInfo->HasDlTraffic ())
@@ -1111,7 +1110,7 @@ SliceController::PgwRulesInstall (Ptr<RoutingInfo> rInfo)
       // Instruction: apply action: set tunnel ID, output port.
       act << " apply:set_field=tunn_id:"
           << GetTunnelIdStr (rInfo->GetTeid (), rInfo->GetSgwS5Addr ())
-          << ",output=" << m_pgwInfo->GetTftS5PortNo (pgwTftIdx);
+          << ",output=" << m_pgwInfo->GetTftS5PortNo (rInfo->GetPgwTftIdx ());
 
       // Install downlink OpenFlow TFT rules.
       success &= TftRulesInstall (rInfo->GetTft (), Direction::DLINK,
@@ -1199,9 +1198,8 @@ SliceController::PgwRulesRemove (Ptr<RoutingInfo> rInfo)
   NS_ASSERT_MSG (rInfo->IsGwInstalled (), "Gateway rules not installed.");
   NS_LOG_INFO ("Removing P-GW rules for teid " << rInfo->GetTeidHex ());
 
-  uint16_t pgwTftIdx = rInfo->GetPgwTftIdx ();
-  uint64_t pgwTftDpId = m_pgwInfo->GetTftDpId (pgwTftIdx);
-  NS_LOG_DEBUG ("Removing from P-GW TFT switch index " << pgwTftIdx);
+  uint64_t pgwTftDpId = rInfo->GetPgwTftDpId ();
+  NS_LOG_DEBUG ("Removing from P-GW TFT idx " << rInfo->GetPgwTftIdx ());
 
   // Building the dpctl command. Matching cookie just for TEID.
   std::ostringstream cmd;
