@@ -196,10 +196,8 @@ SliceController::DedicatedBearerRequest (
   NS_ASSERT_MSG (!rInfo->IsDefault (), "Can't request the default bearer.");
   NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should be inactive.");
 
-  // Reseting the P-GW TFT index (the load balancing level may have changed
-  // since the last time this bearer was active), the blocked status, and the
-  // traffic aggregation flag (respecting the operation mode).
-  rInfo->SetPgwTftIdx (GetTftIdx (rInfo));
+  // Reseting the blocked flag and the traffic aggregation flag, respecting
+  // the operation mode.
   rInfo->ResetBlocked ();
   rInfo->SetAggregated (GetAggregation () == OpMode::ON);
 
@@ -975,34 +973,43 @@ SliceController::PgwTftLoadBalancing (void)
   uint32_t moved = 0;
   if (m_pgwInfo->GetCurLevel () != nextLevel)
     {
+      uint16_t futureTfts = 1 << nextLevel;
+
       // Random variable to avoid simultaneously moving all bearers.
       Ptr<RandomVariableStream> rand = CreateObject<UniformRandomVariable> ();
       rand->SetAttribute ("Min", DoubleValue (0));
       rand->SetAttribute ("Max", DoubleValue (250));
 
-      // Identify and move bearers to the correct P-GW TFT switches.
-      uint16_t futureTfts = 1 << nextLevel;
-      for (uint16_t currIdx = 1; currIdx <= m_pgwInfo->GetCurTfts (); currIdx++)
+      // Iterate over all bearers for this slice, updating the P-GW TFT switch
+      // index and moving the bearer when necessary.
+      RoutingInfoList_t bearerList;
+      RoutingInfo::GetList (bearerList, m_sliceId);
+      for (auto const &rInfo : bearerList)
         {
-          RoutingInfoList_t bearerList;
-          RoutingInfo::GetGwInstalledList (bearerList, m_sliceId, currIdx);
-          for (auto const &rInfo : bearerList)
+          uint16_t currIdx = rInfo->GetPgwTftIdx ();
+          uint16_t destIdx = GetTftIdx (rInfo, futureTfts);
+          if (destIdx != currIdx)
             {
-              uint16_t destIdx = GetTftIdx (rInfo, futureTfts);
-              if (destIdx != currIdx)
+              if (!rInfo->IsGwInstalled ())
                 {
-                  NS_LOG_INFO ("Move bearer teid " << (rInfo)->GetTeidHex () <<
+                  // Update the P-GW TFT switch index so new rules will be
+                  // installed in the new switch.
+                  rInfo->SetPgwTftIdx (destIdx);
+                }
+              else
+                {
+                  // Schedule the rules transfer from old to new switch.
+                  moved++;
+                  NS_LOG_INFO ("Move bearer teid " << rInfo->GetTeidHex () <<
                                " from TFT " << currIdx << " to " << destIdx);
                   Simulator::Schedule (MilliSeconds (rand->GetInteger ()),
                                        &SliceController::PgwRulesMove,
                                        this, rInfo, currIdx, destIdx);
-                  rInfo->SetPgwTftIdx (destIdx);
-                  moved++;
                 }
             }
         }
 
-      // Update the P-GW main switch.
+      // Schedule to update the P-GW main switch.
       std::ostringstream cmd;
       cmd << "flow-mod cmd=mods,prio=64"
           << ",table="    << PGW_MAIN_TAB
@@ -1126,17 +1133,19 @@ SliceController::PgwRulesMove (
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex () << srcTftIdx << dstTftIdx);
 
-  NS_ASSERT_MSG (rInfo->IsGwInstalled (), "Gateway rules not installed.");
   NS_LOG_INFO ("Moving P-GW rules for teid " << rInfo->GetTeidHex ());
   bool success = true;
 
-  uint64_t srcTftDpId = m_pgwInfo->GetTftDpId (srcTftIdx);
-  uint64_t dstTftDpId = m_pgwInfo->GetTftDpId (dstTftIdx);
-  NS_LOG_DEBUG ("Moving from P-GW TFT switch index " <<
-                srcTftIdx << " to " << dstTftIdx);
+  // Update the P-GW TFT switch index.
+  rInfo->SetPgwTftIdx (dstTftIdx);
 
-  if (rInfo->HasDlTraffic ())
+  if (rInfo->HasDlTraffic () && rInfo->IsGwInstalled ())
     {
+      uint64_t srcTftDpId = m_pgwInfo->GetTftDpId (srcTftIdx);
+      uint64_t dstTftDpId = m_pgwInfo->GetTftDpId (dstTftIdx);
+      NS_LOG_DEBUG ("Moving from P-GW TFT switch index " <<
+                    srcTftIdx << " to " << dstTftIdx);
+
       // Schedule the removal of rules from source switch.
       // Building the dpctl command. Matching cookie just for TEID.
       std::ostringstream del;
@@ -1180,7 +1189,7 @@ SliceController::PgwRulesMove (
       // Instruction: apply action: set tunnel ID, output port.
       act << " apply:set_field=tunn_id:"
           << GetTunnelIdStr (rInfo->GetTeid (), rInfo->GetSgwS5Addr ())
-          << ",output=" << m_pgwInfo->GetTftS5PortNo (dstTftIdx);
+          << ",output=" << rInfo->GetPgwTftS5PortNo ();
 
       // Install downlink OpenFlow TFT rules.
       success &= TftRulesInstall (rInfo->GetTft (), Direction::DLINK,
