@@ -147,7 +147,7 @@ SliceController::GetTypeId (void)
                    "The interval between P-GW TFT load balancing operations.",
                    TimeValue (Seconds (5)),
                    MakeTimeAccessor (&SliceController::m_tftTimeout),
-                   MakeTimeChecker ())
+                   MakeTimeChecker (Seconds (1)))
 
     // S-GW.
     .AddAttribute ("SgwBlockPolicy",
