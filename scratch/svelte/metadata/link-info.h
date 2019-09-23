@@ -63,6 +63,8 @@ typedef std::set<Ptr<LinkInfo> > LinkInfoSet_t;
  * |-- Reserved --|----------------- Free -----------------|
  *                                       :                 :
  * |-- GBR use --|---------- Non-GBR use ---------|        :
+ *                                                :        :
+ * |-------------------- Use ---------------------|        :
  *                                       :        :        :
  *                                       |- Over -|- Idle -|
  * \endverbatim
