@@ -220,7 +220,7 @@ LinkInfo::GetResBitRate (LinkDir dir, SliceId slice) const
 }
 
 int64_t
-LinkInfo::GetFreBitRate (LinkDir dir, SliceId slice) const
+LinkInfo::GetUnrBitRate (LinkDir dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
@@ -311,7 +311,7 @@ LinkInfo::PrintValues (std::ostream &os, LinkDir dir, SliceId slice) const
      << " " << setw (11) << Bps2Kbps (GetExtBitRate (dir, slice))
      << " " << setw (11) << Bps2Kbps (GetMaxBitRate (dir, slice))
      << " " << setw (11) << Bps2Kbps (GetResBitRate (dir, slice))
-     << " " << setw (11) << Bps2Kbps (GetFreBitRate (dir, slice))
+     << " " << setw (11) << Bps2Kbps (GetUnrBitRate (dir, slice))
      << " " << setw (11) << Bps2Kbps (GetMetBitRate (dir, slice))
      << " " << setw (11) << Bps2Kbps (GetUseBitRate (ST, dir, slice, GT))
      << " " << setw (11) << Bps2Kbps (GetUseBitRate (ST, dir, slice, NT))
@@ -376,7 +376,7 @@ LinkInfo::PrintHeader (std::ostream &os)
      << " " << setw (11) << "ExtKbps"
      << " " << setw (11) << "MaxKbps"
      << " " << setw (11) << "ResKpbs"
-     << " " << setw (11) << "FreKbps"
+     << " " << setw (11) << "UnrKbps"
      << " " << setw (11) << "MetKbps"
      << " " << setw (11) << "UseGbrSt"
      << " " << setw (11) << "UseNonSt"

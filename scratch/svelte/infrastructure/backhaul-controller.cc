@@ -807,7 +807,7 @@ BackhaulController::SlicingMeterAdjust (
     {
       LinkInfo::LinkDir dir = static_cast<LinkInfo::LinkDir> (d);
 
-      int64_t freeBitRate = 0;
+      int64_t unrBitRate = 0;
       if (slice == SliceId::ALL)
         {
           // Sum the bit rate from slices with enabled bandwidth sharing.
@@ -815,22 +815,22 @@ BackhaulController::SlicingMeterAdjust (
             {
               if (ctrl->GetSharing () == OpMode::ON)
                 {
-                  freeBitRate += lInfo->GetFreBitRate (dir, ctrl->GetSliceId ());
+                  unrBitRate += lInfo->GetUnrBitRate (dir, ctrl->GetSliceId ());
                 }
             }
           // Sum the spare bit rate when enabled.
           if (GetSpareUseMode () == OpMode::ON)
             {
-              freeBitRate += lInfo->GetFreBitRate (dir, SliceId::UNKN);
+              unrBitRate += lInfo->GetUnrBitRate (dir, SliceId::UNKN);
             }
         }
       else
         {
-          freeBitRate = lInfo->GetFreBitRate (dir, slice);
+          unrBitRate = lInfo->GetUnrBitRate (dir, slice);
         }
 
       uint64_t diffBitRate = std::abs (
-          lInfo->GetMetBitRate (dir, slice) - freeBitRate);
+          lInfo->GetMetBitRate (dir, slice) - unrBitRate);
       NS_LOG_DEBUG ("Current slice " << SliceIdStr (slice) <<
                     " direction "    << LinkInfo::LinkDirStr (dir) <<
                     " diff rate "    << diffBitRate);
@@ -838,7 +838,7 @@ BackhaulController::SlicingMeterAdjust (
       if (diffBitRate >= m_meterStep.GetBitRate ())
         {
           uint32_t meterId = MeterIdCreate (slice, d);
-          int64_t meterKbps = Bps2Kbps (freeBitRate);
+          int64_t meterKbps = Bps2Kbps (unrBitRate);
           bool success = lInfo->SetMetBitRate (dir, slice, meterKbps * 1000);
           NS_ASSERT_MSG (success, "Error when setting meter bit rate.");
 

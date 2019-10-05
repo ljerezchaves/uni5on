@@ -60,7 +60,7 @@ typedef std::set<Ptr<LinkInfo> > LinkInfoSet_t;
  *                                       :                 :
  * |----------------------- Maximum -----------------------|
  *                                       :                 :
- * |-- Reserved --|----------------- Free -----------------|
+ * |-- Reserved --|-------------- Unreserved --------------|
  *                                       :                 :
  * |-- GBR use --|---------- Non-GBR use ---------|        :
  *                                                :        :
@@ -197,14 +197,14 @@ public:
     LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**
-   * Get the free (not reserved) bit rate for this link on the given direction,
+   * Get the unreservedbit rate for this link on the given direction,
    * optionally filtered by the network slice.
    * \param dir The link direction.
    * \param slice The network slice.
    * \param type Traffic QoS type.
    * \return The available bit rate.
    */
-  int64_t GetFreBitRate (
+  int64_t GetUnrBitRate (
     LinkDir dir, SliceId slice = SliceId::ALL) const;
 
   /**
