@@ -48,6 +48,12 @@ namespace ns3 {
 #define COOKIE_IFACE_PRIO_TEID_MASK \
   ((COOKIE_IFACE_MASK | COOKIE_PRIO_MASK | COOKIE_TEID_MASK))
 
+// SVELTE meter ID masks.
+#define METER_SLC_TYPE      0xC0000000
+#define METER_MBR_TYPE      0x80000000
+#define METER_IFACE_MASK    0x30000000
+#define METER_SLICE_MASK    0x0F000000
+
 // UDP port numbers.
 #define GTPU_PORT         2152
 #define X2C_PORT          4444
@@ -425,7 +431,7 @@ uint64_t TeidGetUeImsi (uint32_t teid);
  *                                 A B
  *
  *  4 (A) bits are used to identify a MBR meter: the first 2 bits are fixed
- *        here at 01 and the next 2 bits are used to identify the LTE logical
+ *        here at 10 and the next 2 bits are used to identify the LTE logical
  *        interface.
  * 28 (B) bits are used to identify the GTP tunnel ID (TEID).
  * \endverbatim

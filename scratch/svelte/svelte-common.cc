@@ -380,7 +380,7 @@ MeterIdMbrCreate (LteIface iface, uint32_t teid)
   NS_ASSERT_MSG (iface <= 0x3, "LTE interface cannot exceed 2 bits.");
   NS_ASSERT_MSG (teid <= 0xFFFFFFF, "TEID cannot exceed 28 bits.");
 
-  uint32_t meterId = 0x1;
+  uint32_t meterId = 0x2;
   meterId <<= 2;
   meterId |= static_cast<uint32_t> (iface);
   meterId <<= 28;
