@@ -412,27 +412,48 @@ uint64_t TeidGetUeImsi (uint32_t teid);
 /**
  * \ingroup svelte
  * Compute the meter ID value globally used in the SVELTE architecture for
- * infrastructure slicing meters.
- * \param type The slicing meter type.
- * \param sliceId The SVELTE logical slice ID.
- * \param meterId The meter identification considering the network topology.
+ * infrastructure MBR meters.
+ * \param iface The LTE logical interface.
+ * \param teid The GTP tunnel ID.
  * \return The meter ID value.
  *
  * \internal
- * When the network slicing operation mode is active, the traffic of each
- * slice will be independently monitored by slicing meters using the
- * following meter ID allocation strategy:
+ * We are using the following meter ID allocation strategy:
  * \verbatim
- * Meter ID has 32 bits length: 0x 1 0 000000
- *                                |-|-|------|
- *                                 A B C
+ * Meter ID has 32 bits length: 0x 0 0000000
+ *                                |-|-------|
+ *                                 A B
  *
- *  4 (A) bits are used to idenfity a valid meter ID, here fixed at 0x1.
- *  4 (B) bits are used to identify the logical slice (slice ID).
- * 24 (C) bits are used to identify the meter withing topology (meter ID).
+ *  4 (A) bits are used to identify a MBR meter: the first 2 bits are fixed
+ *        here at 01 and the next 2 bits are used to identify the LTE logical
+ *        interface.
+ * 28 (B) bits are used to identify the GTP tunnel ID (TEID).
  * \endverbatim
  */
-uint32_t MeterIdCreate (SliceId sliceId, uint32_t meterId);
+uint32_t MeterIdMbrCreate (LteIface iface, uint32_t teid);
+
+/**
+ * \ingroup svelte
+ * Compute the meter ID value globally used in the SVELTE architecture for
+ * infrastructure slicing meters.
+ * \param sliceId The SVELTE logical slice ID.
+ * \param linkdir The link direction.
+ * \return The meter ID value.
+ *
+ * \internal
+ * We are using the following meter ID allocation strategy:
+ * \verbatim
+ * Meter ID has 32 bits length: 0x 0 0 00000 0
+ *                                |-|-|-----|-|
+ *                                 A B C     D
+ *
+ *  4 (A) bits are used to identify a slicing meter, here fixed at 0xC.
+ *  4 (B) bits are used to identify the logical slice (slice ID).
+ * 20 (C) bits are unused, here fixed at 0x00000.
+ *  4 (D) bits are used to identify the link direction.
+ * \endverbatim
+ */
+uint32_t MeterIdSlcCreate (SliceId sliceId, uint32_t linkdir);
 
 /**
  * \ingroup svelte

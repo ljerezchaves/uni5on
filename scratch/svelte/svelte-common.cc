@@ -375,17 +375,31 @@ TeidGetUeImsi (uint32_t teid)
 }
 
 uint32_t
-MeterIdCreate (SliceId sliceId, uint32_t meterId)
+MeterIdMbrCreate (LteIface iface, uint32_t teid)
+{
+  NS_ASSERT_MSG (iface <= 0x3, "LTE interface cannot exceed 2 bits.");
+  NS_ASSERT_MSG (teid <= 0xFFFFFFF, "TEID cannot exceed 28 bits.");
+
+  uint32_t meterId = 0x1;
+  meterId <<= 2;
+  meterId |= static_cast<uint32_t> (iface);
+  meterId <<= 28;
+  meterId |= teid;
+  return meterId;
+}
+
+uint32_t
+MeterIdSlcCreate (SliceId sliceId, uint32_t linkdir)
 {
   NS_ASSERT_MSG (sliceId <= 0xF, "Slice ID cannot exceed 4 bits.");
-  NS_ASSERT_MSG (meterId <= 0xFFFFFF, "Topo meter ID cannot exceed 24 bits.");
+  NS_ASSERT_MSG (linkdir <= 0xF, "Link direction cannot exceed 4 bits.");
 
-  uint32_t meter = 0x1;
-  meter <<= 4;
-  meter |= static_cast<uint32_t> (sliceId);
-  meter <<= 24;
-  meter |= meterId;
-  return meter;
+  uint32_t meterId = 0xC;
+  meterId <<= 4;
+  meterId |= static_cast<uint32_t> (sliceId);
+  meterId <<= 24;
+  meterId |= linkdir;
+  return meterId;
 }
 
 std::string

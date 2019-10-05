@@ -1030,7 +1030,7 @@ RingController::SlicingMeterApply (
     {
       LinkInfo::LinkDir dir = static_cast<LinkInfo::LinkDir> (d);
       RingInfo::RingPath path = RingInfo::LinkDirToRingPath (dir);
-      uint32_t meterId = MeterIdCreate (slice, d);
+      uint32_t meterId = MeterIdSlcCreate (slice, d);
 
       // We are using the IP DSCP field to identify Non-GBR traffic.
       // Non-GBR QCIs range is [5, 9].

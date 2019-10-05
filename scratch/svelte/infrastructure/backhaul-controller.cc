@@ -837,7 +837,7 @@ BackhaulController::SlicingMeterAdjust (
 
       if (diffBitRate >= m_meterStep.GetBitRate ())
         {
-          uint32_t meterId = MeterIdCreate (slice, d);
+          uint32_t meterId = MeterIdSlcCreate (slice, d);
           int64_t meterKbps = Bps2Kbps (unrBitRate);
           bool success = lInfo->SetMetBitRate (dir, slice, meterKbps * 1000);
           NS_ASSERT_MSG (success, "Error when setting meter bit rate.");
@@ -895,7 +895,7 @@ BackhaulController::SlicingMeterInstall (Ptr<LinkInfo> lInfo, SliceId slice)
           quotaBitRate = lInfo->GetQuoBitRate (dir, slice);
         }
 
-      uint32_t meterId = MeterIdCreate (slice, d);
+      uint32_t meterId = MeterIdSlcCreate (slice, d);
       int64_t meterKbps = Bps2Kbps (quotaBitRate);
       bool success = lInfo->SetMetBitRate (dir, slice, meterKbps * 1000);
       NS_ASSERT_MSG (success, "Error when setting meter bit rate.");
