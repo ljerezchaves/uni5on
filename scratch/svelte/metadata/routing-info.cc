@@ -45,8 +45,6 @@ RoutingInfo::RoutingInfo (uint32_t teid, BearerCreated_t bearer,
   m_isAggregated (false),
   m_isDefault (isDefault),
   m_isInstGw (false),
-  m_isMbrDlInst (false),
-  m_isMbrUlInst (false),
   m_pgwTftIdx (0),
   m_priority (1),
   m_sliceId (ueInfo->GetSliceId ()),
@@ -65,6 +63,10 @@ RoutingInfo::RoutingInfo (uint32_t teid, BearerCreated_t bearer,
   m_isGbrRes [LteIface::S5] = false;
   m_isInstIf [LteIface::S1] = false;
   m_isInstIf [LteIface::S5] = false;
+  m_isMbrDlInst [LteIface::S1] = false;
+  m_isMbrDlInst [LteIface::S5] = false;
+  m_isMbrUlInst [LteIface::S1] = false;
+  m_isMbrUlInst [LteIface::S5] = false;
 
   // Validate the default bearer.
   if (IsDefault ())
@@ -460,7 +462,7 @@ RoutingInfo::IsMbrDlInstalled (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_isMbrDlInst;
+  return m_isMbrDlInst [LteIface::S1] || m_isMbrDlInst [LteIface::S5];
 }
 
 bool
@@ -468,7 +470,23 @@ RoutingInfo::IsMbrUlInstalled (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_isMbrUlInst;
+  return m_isMbrUlInst [LteIface::S1] || m_isMbrUlInst [LteIface::S5];
+}
+
+bool
+RoutingInfo::IsMbrDlInstalled (LteIface iface) const
+{
+  NS_LOG_FUNCTION (this << iface);
+
+  return m_isMbrDlInst [iface];
+}
+
+bool
+RoutingInfo::IsMbrUlInstalled (LteIface iface) const
+{
+  NS_LOG_FUNCTION (this << iface);
+
+  return m_isMbrUlInst [iface];
 }
 
 Ipv4Address
@@ -810,19 +828,19 @@ RoutingInfo::SetGbrReserved (LteIface iface, bool value)
 }
 
 void
-RoutingInfo::SetMbrDlInstalled (bool value)
+RoutingInfo::SetMbrDlInstalled (LteIface iface, bool value)
 {
-  NS_LOG_FUNCTION (this << value);
+  NS_LOG_FUNCTION (this << iface << value);
 
-  m_isMbrDlInst = value;
+  m_isMbrDlInst [iface] = value;
 }
 
 void
-RoutingInfo::SetMbrUlInstalled (bool value)
+RoutingInfo::SetMbrUlInstalled (LteIface iface, bool value)
 {
-  NS_LOG_FUNCTION (this << value);
+  NS_LOG_FUNCTION (this << iface << value);
 
-  m_isMbrUlInst = value;
+  m_isMbrUlInst [iface] = value;
 }
 
 void

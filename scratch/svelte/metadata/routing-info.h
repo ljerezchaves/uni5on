@@ -78,6 +78,7 @@ public:
 
   /**
    * \name Private member accessors for bearer routing information.
+   * \param iface The LTE logical interface.
    * \return The requested information.
    */
   //\{
@@ -146,6 +147,7 @@ public:
   /**
    * \name Private member accessors for bearer maximum bit rate information.
    *       These methods are used for installing meter entries at S/P-GW.
+   * \param iface The LTE logical interface.
    * \return The requested information.
    */
   //\{
@@ -158,6 +160,8 @@ public:
   bool        HasMbrUl          (void) const;
   bool        IsMbrDlInstalled  (void) const;
   bool        IsMbrUlInstalled  (void) const;
+  bool        IsMbrDlInstalled  (LteIface iface) const;
+  bool        IsMbrUlInstalled  (LteIface iface) const;
   //\}
 
   /**
@@ -270,8 +274,8 @@ protected:
   void SetActive          (bool value);
   void SetAggregated      (bool value);
   void SetGbrReserved     (LteIface iface, bool value);
-  void SetMbrDlInstalled  (bool value);
-  void SetMbrUlInstalled  (bool value);
+  void SetMbrDlInstalled  (LteIface iface, bool value);
+  void SetMbrUlInstalled  (LteIface iface, bool value);
   void SetPgwTftIdx       (uint16_t value);
   void SetPriority        (uint16_t value);
   void SetTimeout         (uint16_t value);
@@ -324,22 +328,22 @@ private:
    */
   static void RegisterRoutingInfo (Ptr<RoutingInfo> rInfo);
 
-  BearerCreated_t      m_bearer;       //!< EPS bearer context created.
-  uint16_t             m_blockReason;  //!< Bitmap for blocked reasons.
-  bool                 m_isActive;     //!< True for active bearer.
-  bool                 m_isAggregated; //!< True for aggregated bearer.
-  bool                 m_isDefault;    //!< True for default bearer.
-  bool                 m_isGbrRes [2]; //!< True for GBR resources reserved.
-  bool                 m_isInstGw;     //!< True for installed gateway rules.
-  bool                 m_isInstIf [2]; //!< True for installed interface rules.
-  bool                 m_isMbrDlInst;  //!< True for downlink meter installed.
-  bool                 m_isMbrUlInst;  //!< True for uplink meter installed.
-  uint16_t             m_pgwTftIdx;    //!< P-GW TFT switch index.
-  uint16_t             m_priority;     //!< Flow table rule priority.
-  SliceId              m_sliceId;      //!< Slice ID for this bearer.
-  uint32_t             m_teid;         //!< GTP TEID.
-  uint16_t             m_timeout;      //!< Flow table idle timeout.
-  Ptr<UeInfo>          m_ueInfo;       //!< UE metadata pointer.
+  BearerCreated_t  m_bearer;         //!< EPS bearer context created.
+  uint16_t         m_blockReason;    //!< Bitmap for blocked reasons.
+  bool             m_isActive;       //!< True for active bearer.
+  bool             m_isAggregated;   //!< True for aggregated bearer.
+  bool             m_isDefault;      //!< True for default bearer.
+  bool             m_isGbrRes [2];   //!< True for GBR resources reserved.
+  bool             m_isInstGw;       //!< True for installed gateway rules.
+  bool             m_isInstIf [2];   //!< True for installed interface rules.
+  bool             m_isMbrDlInst [2]; //!< True for downlink meter installed.
+  bool             m_isMbrUlInst [2]; //!< True for uplink meter installed.
+  uint16_t         m_pgwTftIdx;      //!< P-GW TFT switch index.
+  uint16_t         m_priority;       //!< Flow table rule priority.
+  SliceId          m_sliceId;        //!< Slice ID for this bearer.
+  uint32_t         m_teid;           //!< GTP TEID.
+  uint16_t         m_timeout;        //!< Flow table idle timeout.
+  Ptr<UeInfo>      m_ueInfo;         //!< UE metadata pointer.
 
   /** Map saving TEID / routing information. */
   typedef std::map<uint32_t, Ptr<RoutingInfo> > TeidRoutingMap_t;
