@@ -189,12 +189,6 @@ SliceNetwork::GetTypeId (void)
                    UintegerValue (8192),
                    MakeUintegerAccessor (&SliceNetwork::m_tftFlowSize),
                    MakeUintegerChecker<uint16_t> (0, 65535))
-    .AddAttribute ("PgwTftMeterTableSize",
-                   "Meter table size for the P-GW TFT switches.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   UintegerValue (4096),
-                   MakeUintegerAccessor (&SliceNetwork::m_tftMeterSize),
-                   MakeUintegerChecker<uint16_t> (0, 65535))
     .AddAttribute ("PgwLinkDataRate",
                    "The data rate for the internal P-GW links.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -226,12 +220,6 @@ SliceNetwork::GetTypeId (void)
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    UintegerValue (8192),
                    MakeUintegerAccessor (&SliceNetwork::m_sgwFlowSize),
-                   MakeUintegerChecker<uint16_t> (0, 65535))
-    .AddAttribute ("SgwMeterTableSize",
-                   "Meter table size for the S-GW switches.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   UintegerValue (4096),
-                   MakeUintegerAccessor (&SliceNetwork::m_sgwMeterSize),
                    MakeUintegerChecker<uint16_t> (0, 65535))
 
     .AddAttribute ("LinkMtu",
@@ -506,7 +494,7 @@ SliceNetwork::CreatePgw (void)
   m_switchHelper->SetDeviceAttribute (
     "GroupTableSize", UintegerValue (0));
   m_switchHelper->SetDeviceAttribute (
-    "MeterTableSize", UintegerValue (m_tftMeterSize));
+    "MeterTableSize", UintegerValue (0));
   m_switchHelper->SetDeviceAttribute (
     "PipelineTables", UintegerValue (1));
 
@@ -580,7 +568,7 @@ SliceNetwork::CreateSgw (void)
   m_switchHelper->SetDeviceAttribute (
     "GroupTableSize", UintegerValue (0));
   m_switchHelper->SetDeviceAttribute (
-    "MeterTableSize", UintegerValue (m_sgwMeterSize));
+    "MeterTableSize", UintegerValue (0));
   m_switchHelper->SetDeviceAttribute (
     "PipelineTables", UintegerValue (3));
 

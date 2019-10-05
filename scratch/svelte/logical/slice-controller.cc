@@ -1100,20 +1100,6 @@ SliceController::PgwRulesInstall (Ptr<RoutingInfo> rInfo)
           << ",prio="   << rInfo->GetPriority ()
           << ",idle="   << rInfo->GetTimeout ();
 
-      // Check for meter entry.
-      if (rInfo->HasMbrDl ())
-        {
-          if (!rInfo->IsMbrDlInstalled ())
-            {
-              // Install the per-flow meter entry.
-              DpctlExecute (pgwTftDpId, rInfo->GetMbrDlAddCmd ());
-              rInfo->SetMbrDlInstalled (true);
-            }
-
-          // Instruction: meter.
-          act << " meter:" << rInfo->GetTeid ();
-        }
-
       // Instruction: apply action: set tunnel ID, output port.
       act << " apply:set_field=tunn_id:"
           << GetTunnelIdStr (rInfo->GetTeid (), rInfo->GetSgwS5Addr ())
@@ -1155,13 +1141,6 @@ SliceController::PgwRulesMove (
           << ",cookie_mask="  << GetUint64Hex (COOKIE_TEID_MASK);
       DpctlSchedule (MilliSeconds (750), srcTftDpId, del.str ());
 
-      // Remove the per-flow meter entry. Don't change the flag to false.
-      if (rInfo->IsMbrDlInstalled ())
-        {
-          DpctlSchedule (MilliSeconds (751), srcTftDpId,
-                         rInfo->GetMbrDelCmd ());
-        }
-
       // Install rules into target switch now.
       // Cookie for new downlink rules.
       uint64_t cookie = CookieCreate (
@@ -1175,16 +1154,6 @@ SliceController::PgwRulesMove (
           << ",cookie=" << GetUint64Hex (cookie)
           << ",prio="   << rInfo->GetPriority ()
           << ",idle="   << rInfo->GetTimeout ();
-
-      // Check for meter entry. The flag must be true.
-      if (rInfo->IsMbrDlInstalled ())
-        {
-          // Install the per-flow meter entry.
-          DpctlExecute (dstTftDpId, rInfo->GetMbrDlAddCmd ());
-
-          // Instruction: meter.
-          act << " meter:" << rInfo->GetTeid ();
-        }
 
       // Instruction: apply action: set tunnel ID, output port.
       act << " apply:set_field=tunn_id:"
@@ -1217,13 +1186,6 @@ SliceController::PgwRulesRemove (Ptr<RoutingInfo> rInfo)
       << ",cookie="       << GetUint64Hex (rInfo->GetTeid ())
       << ",cookie_mask="  << GetUint64Hex (COOKIE_TEID_MASK);
   DpctlExecute (pgwTftDpId, cmd.str ());
-
-  // Remove the per-flow meter entry.
-  if (rInfo->IsMbrDlInstalled ())
-    {
-      DpctlExecute (pgwTftDpId, rInfo->GetMbrDelCmd ());
-      rInfo->SetMbrDlInstalled (false);
-    }
 
   return true;
 }
@@ -1321,20 +1283,6 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
           << ",prio="   << rInfo->GetPriority ()
           << ",idle="   << rInfo->GetTimeout ();
 
-      // Check for meter entry.
-      if (rInfo->HasMbrUl ())
-        {
-          if (!rInfo->IsMbrUlInstalled ())
-            {
-              // Install the per-flow meter entry.
-              DpctlExecute (rInfo->GetSgwDpId (), rInfo->GetMbrUlAddCmd ());
-              rInfo->SetMbrUlInstalled (true);
-            }
-
-          // Instruction: meter.
-          act << " meter:" << rInfo->GetTeid ();
-        }
-
       // Instruction: apply action: set tunnel ID, output port.
       act << " apply:set_field=tunn_id:"
           << GetTunnelIdStr (rInfo->GetTeid (), rInfo->GetPgwS5Addr ())
@@ -1362,13 +1310,6 @@ SliceController::SgwRulesRemove (Ptr<RoutingInfo> rInfo)
       << ",cookie="       << GetUint64Hex (rInfo->GetTeid ())
       << ",cookie_mask="  << GetUint64Hex (COOKIE_TEID_MASK);
   DpctlExecute (rInfo->GetSgwDpId (), cmd.str ());
-
-  // Remove the per-flow meter entry.
-  if (rInfo->IsMbrUlInstalled ())
-    {
-      DpctlExecute (rInfo->GetSgwDpId (), rInfo->GetMbrDelCmd ());
-      rInfo->SetMbrUlInstalled (false);
-    }
 
   return true;
 }
