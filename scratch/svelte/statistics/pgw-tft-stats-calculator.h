@@ -70,7 +70,7 @@ private:
   };
 
   /** Metadata for each network slice. */
-  SliceMetadata             m_slices [SliceId::ALL];
+  SliceMetadata             m_slices [N_SLICE_IDS];
   std::string               m_tftFilename;    //!< TftStats filename.
 };
 

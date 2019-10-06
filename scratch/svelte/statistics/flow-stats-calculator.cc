@@ -82,7 +82,7 @@ FlowStatsCalculator::ResetCounters (void)
   m_jitter = 0;
   m_delaySum = Time ();
 
-  for (int r = 0; r <= DropReason::ALL; r++)
+  for (int r = 0; r < N_DROP_REASONS; r++)
     {
       m_dpBytes [r] = 0;
       m_dpPackets [r] = 0;

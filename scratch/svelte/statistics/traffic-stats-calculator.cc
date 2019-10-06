@@ -104,7 +104,7 @@ TrafficStatsCalculator::DoDispose ()
 
   for (auto &statsIt : m_qosByTeid)
     {
-      for (int d = 0; d <= Direction::ULINK; d++)
+      for (int d = 0; d < N_DIRECTIONS; d++)
         {
           statsIt.second.flowStats [d] = 0;
         }

@@ -66,7 +66,7 @@ PgwTftStatsCalculator::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
-  for (int s = 0; s < SliceId::ALL; s++)
+  for (int s = 0; s < N_SLICE_IDS; s++)
     {
       m_slices [s].tftWrapper = 0;
     }
@@ -83,7 +83,7 @@ PgwTftStatsCalculator::NotifyConstructionCompleted (void)
   std::string prefix = stringValue.Get ();
   SetAttribute ("LbmStatsFilename", StringValue (prefix + m_tftFilename));
 
-  for (int s = 0; s < SliceId::ALL; s++)
+  for (int s = 0; s < N_SLICE_IDS; s++)
     {
       std::string sliceStr = SliceIdStr (static_cast<SliceId> (s));
       SliceMetadata &slData = m_slices [s];

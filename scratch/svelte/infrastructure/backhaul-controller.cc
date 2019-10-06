@@ -536,7 +536,7 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // Classify GTP-U packets on the corresponding logical slice using
   // the GTP-U TEID masked value.
   // Send the packet to the corresponding slice table.
-  for (int s = 0; s < SliceId::ALL; s++)
+  for (int s = 0; s < N_SLICE_IDS; s++)
     {
       SliceId slice = static_cast<SliceId> (s);
       uint32_t sliceTeid = TeidCreate (slice, 0, 0);
@@ -619,7 +619,7 @@ BackhaulController::SlicingDynamicTimeout (void)
   // Adjust the extra bit rates in both directions for each backhaul link.
   for (auto &lInfo : LinkInfo::GetList ())
     {
-      for (int d = 0; d <= LinkInfo::BWD; d++)
+      for (int d = 0; d < N_LINK_DIRS; d++)
         {
           SlicingExtraAdjust (lInfo, static_cast<LinkInfo::LinkDir> (d));
         }
@@ -803,7 +803,7 @@ BackhaulController::SlicingMeterAdjust (
     }
 
   // Check for updated slicing meters in both link directions.
-  for (int d = 0; d <= LinkInfo::BWD; d++)
+  for (int d = 0; d < N_LINK_DIRS; d++)
     {
       LinkInfo::LinkDir dir = static_cast<LinkInfo::LinkDir> (d);
 
@@ -866,7 +866,7 @@ BackhaulController::SlicingMeterInstall (Ptr<LinkInfo> lInfo, SliceId slice)
                  "Invalid inter-slice operation mode.");
 
   // Install slicing meters in both link directions.
-  for (int d = 0; d <= LinkInfo::BWD; d++)
+  for (int d = 0; d < N_LINK_DIRS; d++)
     {
       LinkInfo::LinkDir dir = static_cast<LinkInfo::LinkDir> (d);
 

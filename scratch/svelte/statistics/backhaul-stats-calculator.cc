@@ -97,11 +97,11 @@ BackhaulStatsCalculator::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
-  for (int s = 0; s <= SliceId::ALL; s++)
+  for (int s = 0; s < N_SLICE_IDS_ALL; s++)
     {
-      for (int d = 0; d <= Direction::ULINK; d++)
+      for (int d = 0; d < N_DIRECTIONS; d++)
         {
-          for (int t = 0; t <= QosType::GBR; t++)
+          for (int t = 0; t < N_QOS_TYPES; t++)
             {
               m_slices [s].flowStats [d][t] = 0;
             }
@@ -124,13 +124,13 @@ BackhaulStatsCalculator::NotifyConstructionCompleted (void)
   SetAttribute ("BwdStatsFilename", StringValue (prefix + m_bwdFilename));
   SetAttribute ("TffStatsFilename", StringValue (prefix + m_tffFilename));
 
-  for (int s = 0; s <= SliceId::ALL; s++)
+  for (int s = 0; s < N_SLICE_IDS_ALL; s++)
     {
       std::string sliceStr = SliceIdStr (static_cast<SliceId> (s));
       SliceMetadata &slData = m_slices [s];
-      for (int d = 0; d <= Direction::ULINK; d++)
+      for (int d = 0; d < N_DIRECTIONS; d++)
         {
-          for (int t = 0; t <= QosType::GBR; t++)
+          for (int t = 0; t < N_QOS_TYPES; t++)
             {
               slData.flowStats [d][t] =
                 CreateObjectWithAttributes<FlowStatsCalculator> (
@@ -175,7 +175,7 @@ BackhaulStatsCalculator::DumpStatistics (Time nextDump)
   NS_LOG_FUNCTION (this);
 
   // Dump statistics for each network slice.
-  for (int s = 0; s <= SliceId::ALL; s++)
+  for (int s = 0; s < N_SLICE_IDS_ALL; s++)
     {
       SliceId slice = static_cast<SliceId> (s);
       SliceMetadata &slData = m_slices [s];
@@ -183,7 +183,7 @@ BackhaulStatsCalculator::DumpStatistics (Time nextDump)
       // Dump slice bandwidth usage for each link.
       for (auto const &lInfo : LinkInfo::GetList ())
         {
-          for (int d = 0; d <= LinkInfo::BWD; d++)
+          for (int d = 0; d < N_LINK_DIRS; d++)
             {
               LinkInfo::LinkDir dir = static_cast<LinkInfo::LinkDir> (d);
 
@@ -197,10 +197,10 @@ BackhaulStatsCalculator::DumpStatistics (Time nextDump)
       *slData.bwdWrapper->GetStream () << std::endl;
 
       // Dump slice traffic stats for each direction.
-      for (int t = 0; t <= QosType::GBR; t++)
+      for (int t = 0; t < N_QOS_TYPES; t++)
         {
           QosType type = static_cast<QosType> (t);
-          for (int d = 0; d <= Direction::ULINK; d++)
+          for (int d = 0; d < N_DIRECTIONS; d++)
             {
               Direction dir = static_cast<Direction> (d);
               Ptr<FlowStatsCalculator> flowStats = slData.flowStats [d][t];

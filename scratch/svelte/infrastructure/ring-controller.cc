@@ -1078,7 +1078,7 @@ RingController::SlicingMeterApply (
       << ",flags="      << FLAGS_REMOVED_OVERLAP_RESET;
 
   // Install rules on each port direction (FWD and BWD).
-  for (int d = 0; d <= LinkInfo::BWD; d++)
+  for (int d = 0; d < N_LINK_DIRS; d++)
     {
       LinkInfo::LinkDir dir = static_cast<LinkInfo::LinkDir> (d);
       uint32_t meterId = MeterIdSlcCreate (slice, d);

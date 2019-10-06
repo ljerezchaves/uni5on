@@ -541,12 +541,12 @@ void
 LinkInfo::EwmaUpdate (void)
 {
   double elapSecs = (Simulator::Now () - m_ewmaLastTime).GetSeconds ();
-  for (int s = 0; s <= SliceId::ALL; s++)
+  for (int s = 0; s < N_SLICE_IDS_ALL; s++)
     {
-      for (int d = 0; d <= LinkInfo::BWD; d++)
+      for (int d = 0; d < N_LINK_DIRS; d++)
         {
           SliceMetadata &slData = m_slices [d][s];
-          for (int t = 0; t <= QosType::BOTH; t++)
+          for (int t = 0; t < N_QOS_TYPES_BOTH; t++)
             {
               // Updating both long-term and short-term EWMA throughput.
               slData.ewmaThp [t][EwmaTerm::LTERM] =

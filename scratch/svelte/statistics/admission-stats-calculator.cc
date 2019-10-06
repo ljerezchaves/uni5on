@@ -161,7 +161,7 @@ AdmissionStatsCalculator::DoDispose ()
   NS_LOG_FUNCTION (this);
 
   m_brqWrapper = 0;
-  for (int s = 0; s <= SliceId::ALL; s++)
+  for (int s = 0; s < N_SLICE_IDS_ALL; s++)
     {
       m_slices [s].admWrapper = 0;
     }
@@ -179,7 +179,7 @@ AdmissionStatsCalculator::NotifyConstructionCompleted (void)
   SetAttribute ("AdmStatsFilename", StringValue (prefix + m_admFilename));
   SetAttribute ("BrqStatsFilename", StringValue (prefix + m_brqFilename));
 
-  for (int s = 0; s <= SliceId::ALL; s++)
+  for (int s = 0; s < N_SLICE_IDS_ALL; s++)
     {
       std::string sliceStr = SliceIdStr (static_cast<SliceId> (s));
       SliceMetadata &slData = m_slices [s];
@@ -234,7 +234,7 @@ AdmissionStatsCalculator::DumpStatistics (Time nextDump)
   NS_LOG_FUNCTION (this);
 
   // Iterate over all slices dumping statistics.
-  for (int s = 0; s <= SliceId::ALL; s++)
+  for (int s = 0; s < N_SLICE_IDS_ALL; s++)
     {
       SliceMetadata &slData = m_slices [s];
       *slData.admWrapper->GetStream ()
