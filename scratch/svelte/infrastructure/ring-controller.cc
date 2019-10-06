@@ -810,6 +810,7 @@ RingController::RulesInstall (
   // Building the instructions string for all switches.
   std::ostringstream ins;
   ins << " write:group=" << path
+      << " meta:"        << path
       << " goto:"        << BANDW_TAB;
   std::string insStr = ins.str ();
 
@@ -1080,7 +1081,6 @@ RingController::SlicingMeterApply (
   for (int d = 0; d <= LinkInfo::BWD; d++)
     {
       LinkInfo::LinkDir dir = static_cast<LinkInfo::LinkDir> (d);
-      RingInfo::RingPath path = RingInfo::LinkDirToRingPath (dir);
       uint32_t meterId = MeterIdSlcCreate (slice, d);
 
       // We are using the IP DSCP field to identify Non-GBR traffic.
@@ -1093,7 +1093,7 @@ RingController::SlicingMeterApply (
           // Build the match string.
           std::ostringstream mtc;
           mtc << " eth_type="   << IPV4_PROT_NUM
-              << ",meta="       << path
+              << ",meta="       << RingInfo::LinkDirToRingPath (dir)
               << ",ip_dscp="    << static_cast<uint16_t> (dscp)
               << ",ip_proto="   << UDP_PROT_NUM;
           if (slice != SliceId::ALL)
