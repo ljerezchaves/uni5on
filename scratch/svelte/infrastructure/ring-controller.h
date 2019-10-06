@@ -240,12 +240,13 @@ private:
    * \param teid The TEID value.
    * \param dstAddr The IP destination address.
    * \param dscp The DSCP value for this bearer.
+   * \param meter The MBR meter ID for this bearer.
    * \param cmdStr The OpenFlow dpctl flow mod command.
    * \return True if succeeded, false otherwise.
    */
   bool RulesInstall (uint16_t srcIdx, uint16_t dstIdx, RingInfo::RingPath path,
                      uint32_t teid, Ipv4Address dstAddr, uint16_t dscp,
-                     std::string cmdStr);
+                     uint32_t meter, std::string cmdStr);
 
   /**
    * Remove forwarding rules from switches for the given LTE interface.

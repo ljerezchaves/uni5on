@@ -720,6 +720,19 @@ RingController::RulesInstall (
   // Configuring downlink routing.
   if (rInfo->HasDlTraffic ())
     {
+      uint32_t meterId = 0;
+      if (rInfo->HasMbrDl () && !rInfo->IsMbrDlInstalled (iface))
+        {
+          // Install downlink MBR meter entry on the input switch.
+          meterId = MeterIdMbrCreate (iface, rInfo->GetTeid ());
+          std::ostringstream metCmd;
+          metCmd << "meter-mod cmd=add,flags=1,meter=" << meterId
+                 << " drop:rate=" << rInfo->GetMbrDlBitRate () / 1000;
+          DpctlExecute (GetDpId (rInfo->GetSrcDlInfraSwIdx (iface)),
+                        metCmd.str ());
+          rInfo->SetMbrDlInstalled (iface, true);
+        }
+
       success &= RulesInstall (
           rInfo->GetSrcDlInfraSwIdx (iface),
           rInfo->GetDstDlInfraSwIdx (iface),
@@ -727,12 +740,26 @@ RingController::RulesInstall (
           rInfo->GetTeid (),
           rInfo->GetDstDlAddr (iface),
           rInfo->GetDscpValue (),
+          meterId,
           cmd.str ());
     }
 
   // Configuring uplink routing.
   if (rInfo->HasUlTraffic ())
     {
+      uint32_t meterId = 0;
+      if (rInfo->HasMbrUl () && !rInfo->IsMbrUlInstalled (iface))
+        {
+          // Install uplink MBR meter entry on the input switch.
+          meterId = MeterIdMbrCreate (iface, rInfo->GetTeid ());
+          std::ostringstream metCmd;
+          metCmd << "meter-mod cmd=add,flags=1,meter=" << meterId
+                 << " drop:rate=" << rInfo->GetMbrUlBitRate () / 1000;
+          DpctlExecute (GetDpId (rInfo->GetSrcUlInfraSwIdx (iface)),
+                        metCmd.str ());
+          rInfo->SetMbrUlInstalled (iface, true);
+        }
+
       success &= RulesInstall (
           rInfo->GetSrcUlInfraSwIdx (iface),
           rInfo->GetDstUlInfraSwIdx (iface),
@@ -740,6 +767,7 @@ RingController::RulesInstall (
           rInfo->GetTeid (),
           rInfo->GetDstUlAddr (iface),
           rInfo->GetDscpValue (),
+          meterId,
           cmd.str ());
     }
 
@@ -751,10 +779,10 @@ RingController::RulesInstall (
 bool
 RingController::RulesInstall (
   uint16_t srcIdx, uint16_t dstIdx, RingInfo::RingPath path, uint32_t teid,
-  Ipv4Address dstAddr, uint16_t dscp, std::string cmdStr)
+  Ipv4Address dstAddr, uint16_t dscp, uint32_t meter, std::string cmdStr)
 {
   NS_LOG_FUNCTION (this << srcIdx << dstIdx << path << teid <<
-                   dstAddr << dscp << cmdStr);
+                   dstAddr << dscp << meter << cmdStr);
 
   NS_ASSERT_MSG (srcIdx != dstIdx, "Can't install rules for local routing.");
 
@@ -767,22 +795,26 @@ RingController::RulesInstall (
       << ",gtpu_teid="  << GetUint32Hex (teid);
   std::string matStr = mat.str ();
 
-  // Building the instructions string.
+  // Building the instructions string for the first switch.
+  std::ostringstream ins1st;
+  if (meter)
+    {
+      ins1st << " meter:" << meter;
+    }
+  if (dscp)
+    {
+      ins1st << " apply:set_field=ip_dscp:" << dscp;
+    }
+  std::string ins1stStr = ins1st.str ();
+
+  // Building the instructions string for all switches.
   std::ostringstream ins;
   ins << " write:group=" << path
       << " goto:"        << BANDW_TAB;
   std::string insStr = ins.str ();
 
-  // Building the DSCP set field instruction (only for non default values).
-  std::ostringstream set;
-  if (dscp)
-    {
-      set << " apply:set_field=ip_dscp:" << dscp;
-    }
-  std::string setStr = set.str ();
-
-  // Installing OpenFlow routing rules. DSCP rules just in the first switch.
-  DpctlExecute (GetDpId (srcIdx), cmdStr + matStr + setStr + insStr);
+  // Installing OpenFlow routing rules.
+  DpctlExecute (GetDpId (srcIdx), cmdStr + matStr + ins1stStr + insStr);
   srcIdx = GetNextSwIdx (srcIdx, path);
   while (srcIdx != dstIdx)
     {
@@ -823,6 +855,23 @@ RingController::RulesRemove (
       curr = GetNextSwIdx (curr, dlPath);
     }
   DpctlExecute (GetDpId (curr), cmdStr);
+
+  // Remove installed MBR meter entries.
+  uint32_t meterId = MeterIdMbrCreate (iface, rInfo->GetTeid ());
+  std::ostringstream metCmd;
+  metCmd << "meter-mod cmd=del,meter=" << meterId;
+  if (rInfo->IsMbrDlInstalled (iface))
+    {
+      DpctlExecute (GetDpId (rInfo->GetSrcDlInfraSwIdx (iface)),
+                    metCmd.str ());
+      rInfo->SetMbrDlInstalled (iface, false);
+    }
+  if (rInfo->IsMbrUlInstalled (iface))
+    {
+      DpctlExecute (GetDpId (rInfo->GetSrcUlInfraSwIdx (iface)),
+                    metCmd.str ());
+      rInfo->SetMbrUlInstalled (iface, false);
+    }
 
   // Update the installed flag for this interface.
   rInfo->SetIfInstalled (iface, false);
