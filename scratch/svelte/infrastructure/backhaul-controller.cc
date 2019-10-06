@@ -297,15 +297,15 @@ BackhaulController::NotifyEpcAttach (
   {
     std::ostringstream cmd;
     cmd << "flow-mod cmd=add,prio=32"
-        << ",table="                    << INPUT_TAB
-        << ",flags="                    << FLAGS_REMOVED_OVERLAP_RESET
-        << " eth_type="                 << IPV4_PROT_NUM
-        << ",ip_proto="                 << UDP_PROT_NUM
-        << ",udp_src="                  << X2C_PORT
-        << ",udp_dst="                  << X2C_PORT
-        << ",in_port="                  << portNo
-        << " apply:set_field=ip_dscp:"  << Ipv4Header::DSCP_EF
-        << " goto:"                     << CLASS_TAB;
+        << ",table="        << INPUT_TAB
+        << ",flags="        << FLAGS_REMOVED_OVERLAP_RESET
+        << " eth_type="     << IPV4_PROT_NUM
+        << ",ip_proto="     << UDP_PROT_NUM
+        << ",ip_dst="       << BackhaulNetwork::m_x2Addr
+        << "/"              << BackhaulNetwork::m_x2Mask.GetPrefixLength ()
+        << ",in_port="      << portNo
+        << " apply:set_field=ip_dscp:" << Ipv4Header::DSCP_EF
+        << " goto:"         << CLASS_TAB;
     DpctlExecute (swDev->GetDatapathId (), cmd.str ());
   }
 }

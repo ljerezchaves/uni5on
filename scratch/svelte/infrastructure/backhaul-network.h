@@ -46,6 +46,9 @@ class BackhaulController;
  */
 class BackhaulNetwork : public Object
 {
+  friend class BackhaulController;
+  friend class RingController;
+
 public:
   BackhaulNetwork ();          //!< Default constructor.
   virtual ~BackhaulNetwork (); //!< Dummy destructor, see DoDispose.

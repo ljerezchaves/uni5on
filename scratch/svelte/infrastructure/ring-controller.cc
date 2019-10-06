@@ -281,21 +281,21 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // -------------------------------------------------------------------------
   // Classification table -- [from higher to lower priority]
   //
-  // Skip slice classification for X2-C packets, routing them always in the
-  // clockwise direction.
+  // Skip slice classification for X2-C packets.
+  // Route them always in the clockwise direction.
   // Write the output group into action set.
   // Send the packet directly to the output table.
   {
     std::ostringstream cmd;
-    cmd << "flow-mod cmd=add,prio=32"
-        << ",table="                    << CLASS_TAB
-        << ",flags="                    << FLAGS_REMOVED_OVERLAP_RESET
-        << " eth_type="                 << IPV4_PROT_NUM
-        << ",ip_proto="                 << UDP_PROT_NUM
-        << ",udp_src="                  << X2C_PORT
-        << ",udp_dst="                  << X2C_PORT
-        << " write:group="              << RingInfo::CLOCK
-        << " goto:"                     << OUTPT_TAB;
+    cmd << "flow-mod cmd=add,prio=128"
+        << ",table="          << CLASS_TAB
+        << ",flags="          << FLAGS_REMOVED_OVERLAP_RESET
+        << " eth_type="       << IPV4_PROT_NUM
+        << ",ip_proto="       << UDP_PROT_NUM
+        << ",ip_dst="         << BackhaulNetwork::m_x2Addr
+        << "/"                << BackhaulNetwork::m_x2Mask.GetPrefixLength ()
+        << " write:group="    << RingInfo::CLOCK
+        << " goto:"           << OUTPT_TAB;
     DpctlExecute (swDpId, cmd.str ());
   }
 
