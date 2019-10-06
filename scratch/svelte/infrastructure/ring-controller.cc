@@ -1014,6 +1014,7 @@ RingController::RulesUpdate (
               rInfo->GetTeid (),
               dstEnbInfo->GetS1uAddr (),            // Target eNB address.
               rInfo->GetDscpValue (),
+              false,                                // FIXME
               cmd.str ());
         }
 
@@ -1027,6 +1028,7 @@ RingController::RulesUpdate (
               rInfo->GetTeid (),
               rInfo->GetSgwS1uAddr (),
               rInfo->GetDscpValue (),
+              false,                                // FIXME
               cmd.str ());
         }
 
