@@ -864,10 +864,10 @@ RingController::RulesRemove (
   // Remove installed MBR meter entries.
   if (rInfo->HasMbr ())
     {
-      uint32_t meterId = MeterIdMbrCreate (iface, rInfo->GetTeid ());
+      uint32_t mbrMeterId = MeterIdMbrCreate (iface, rInfo->GetTeid ());
 
       std::ostringstream met;
-      met << "meter-mod cmd=del,meter=" << meterId;
+      met << "meter-mod cmd=del,meter=" << mbrMeterId;
       std::string metStr = met.str ();
 
       if (rInfo->IsMbrDlInstalled (iface))
@@ -913,6 +913,10 @@ RingController::RulesUpdate (
 
   Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
 
+  // MBR meter ID for this bearer (won't change on update).
+  uint32_t mbrMeterId = MeterIdMbrCreate (iface, rInfo->GetTeid ());
+  bool success = true;
+
   // Schedule the removal of old low-priority OpenFlow rules.
   if (rInfo->IsIfInstalled (iface))
     {
@@ -945,20 +949,21 @@ RingController::RulesUpdate (
 
   // When changing the switch index, we must release any possible reserved bit
   // rate from the old path, update the ring routing path to the new (shortest)
-  // one, and reserve the bit rate on the new path.
+  // one, and reserve the bit rate on the new path. For bearers with MBR meter,
+  // also remove it from the old switch and install it into the new switch.
   if (rInfo->GetEnbInfraSwIdx () != dstEnbInfo->GetInfraSwIdx ())
     {
       // Release the bit rate from the old path.
       if (rInfo->IsGbrReserved (iface))
         {
-          bool success = BitRateRelease (
+          bool ok = BitRateRelease (
               rInfo->GetSgwInfraSwIdx (),
               rInfo->GetEnbInfraSwIdx (),
               rInfo->GetGbrDlBitRate (),
               rInfo->GetGbrUlBitRate (),
               ringInfo->GetDlPath (iface),
               rInfo->GetSliceId ());
-          rInfo->SetGbrReserved (iface, !success);
+          rInfo->SetGbrReserved (iface, !ok);
         }
 
       // Update the new shortest path from the S-GW to the target eNB.
@@ -983,14 +988,43 @@ RingController::RulesUpdate (
               GetSliceController (rInfo->GetSliceId ())->GetGbrBlockThs ());
           if (hasBitRate)
             {
-              bool success = BitRateReserve (
+              bool ok = BitRateReserve (
                   rInfo->GetSgwInfraSwIdx (),
                   dstEnbInfo->GetInfraSwIdx (),     // Target eNB switch idx.
                   rInfo->GetGbrDlBitRate (),
                   rInfo->GetGbrUlBitRate (),
                   ringInfo->GetDlPath (iface),      // New downlink path.
                   rInfo->GetSliceId ());
-              rInfo->SetGbrReserved (iface, success);
+              rInfo->SetGbrReserved (iface, ok);
+            }
+        }
+
+      // Remove the MBR meters from the old switches.
+      if (rInfo->HasMbr ())
+        {
+          std::ostringstream del;
+          del << "meter-mod cmd=del,meter=" << mbrMeterId;
+          std::string delStr = del.str ();
+
+          // In the uplink, the eNB switch will change for sure (we've already
+          // tested it!). So, schedule the removal of MBR meters from the old
+          // eNB switch.
+          if (rInfo->IsMbrUlInstalled (iface))
+            {
+              DpctlSchedule (MilliSeconds (300),
+                             GetDpId (rInfo->GetEnbInfraSwIdx ()), delStr);
+              rInfo->SetMbrUlInstalled (iface, false);
+            }
+
+          // In the downlink, the S-GW switch won't change. But, there's the
+          // speciall case when the new routing path becomes a local one and we
+          // must remove the meter. This must be checked here, after updating
+          // the new shortest path from the S-GW to the target eNB.
+          if (rInfo->IsMbrDlInstalled (iface) && ringInfo->IsLocalPath (iface))
+            {
+              DpctlSchedule (MilliSeconds (300),
+                             GetDpId (rInfo->GetSgwInfraSwIdx ()), delStr);
+              rInfo->SetMbrDlInstalled (iface, false);
             }
         }
     }
@@ -1010,12 +1044,23 @@ RingController::RulesUpdate (
           << ",cookie=" << GetUint64Hex (newCookie)
           << ",prio="   << rInfo->GetPriority () + 1
           << ",idle="   << rInfo->GetTimeout ();
-
-      bool success = true;
+      std::string cmdStr = cmd.str ();
 
       // Configuring downlink routing.
       if (rInfo->HasDlTraffic ())
         {
+          if (rInfo->HasMbrDl () && !rInfo->IsMbrDlInstalled (iface))
+            {
+              // Install downlink MBR meter entry on the input switch.
+              std::ostringstream met;
+              met << "meter-mod cmd=add,flags=1,meter=" << mbrMeterId
+                  << " drop:rate=" << rInfo->GetMbrDlBitRate () / 1000;
+              std::string metStr = met.str ();
+
+              DpctlExecute (GetDpId (rInfo->GetSgwInfraSwIdx ()), metStr);
+              rInfo->SetMbrDlInstalled (iface, true);
+            }
+
           success &= RulesInstall (
               rInfo->GetSgwInfraSwIdx (),
               dstEnbInfo->GetInfraSwIdx (),         // Target eNB switch idx.
@@ -1023,13 +1068,25 @@ RingController::RulesUpdate (
               rInfo->GetTeid (),
               dstEnbInfo->GetS1uAddr (),            // Target eNB address.
               rInfo->GetDscpValue (),
-              false,                                // FIXME
-              cmd.str ());
+              rInfo->IsMbrDlInstalled (iface) ? mbrMeterId : 0,
+              cmdStr);
         }
 
       // Configuring uplink routing.
       if (rInfo->HasUlTraffic ())
         {
+          if (rInfo->HasMbrUl () && !rInfo->IsMbrUlInstalled (iface))
+            {
+              // Install uplink MBR meter entry on the input switch.
+              std::ostringstream met;
+              met << "meter-mod cmd=add,flags=1,meter=" << mbrMeterId
+                  << " drop:rate=" << rInfo->GetMbrUlBitRate () / 1000;
+              std::string metStr = met.str ();
+
+              DpctlExecute (GetDpId (dstEnbInfo->GetInfraSwIdx ()), metStr);
+              rInfo->SetMbrUlInstalled (iface, true);
+            }
+
           success &= RulesInstall (
               dstEnbInfo->GetInfraSwIdx (),         // Target eNB switch idx.
               rInfo->GetSgwInfraSwIdx (),
@@ -1037,15 +1094,15 @@ RingController::RulesUpdate (
               rInfo->GetTeid (),
               rInfo->GetSgwS1uAddr (),
               rInfo->GetDscpValue (),
-              false,                                // FIXME
-              cmd.str ());
+              rInfo->IsMbrUlInstalled (iface) ? mbrMeterId : 0,
+              cmdStr);
         }
 
       // Update the installed flag for this interface.
       rInfo->SetIfInstalled (iface, success);
     }
 
-  return true;
+  return success;
 }
 
 void
