@@ -244,11 +244,12 @@ TrafficStatsCalculator::MeterDropPacket (
   Ptr<FlowStatsCalculator> stats;
   if (packet->PeekPacketTag (gtpuTag))
     {
-      // Identify the meter type (traffic or slicing).
-      FlowStatsCalculator::DropReason dropReason =
-        (gtpuTag.GetTeid () == meterId) ?
-        FlowStatsCalculator::METER :
-        FlowStatsCalculator::SLICE;
+      // Identify the meter type (MBR or slicing).
+      FlowStatsCalculator::DropReason dropReason = FlowStatsCalculator::METER;
+      if ((meterId & METER_SLC_TYPE) == METER_SLC_TYPE)
+        {
+          dropReason = FlowStatsCalculator::SLICE;
+        }
 
       stats = GetFlowStats (gtpuTag.GetTeid (), gtpuTag.GetDirection ());
       stats->NotifyDrop (packet->GetSize (), dropReason);
@@ -260,7 +261,7 @@ TrafficStatsCalculator::MeterDropPacket (
       // EpcGtpuTag and notifying that the packet is entering the EPC.
       // To keep consistent log results, we are doing this manually here.
       // It must be a packed dropped by a traffic meter because this is the
-      // only type of meters that we have in the P-GW TFT switches.
+      // only type of meters that we can have in the P-GW TFT switches.
       stats = GetFlowStats (PgwTftClassify (packet), Direction::DLINK);
       stats->NotifyTx (packet->GetSize ());
       stats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::METER);
