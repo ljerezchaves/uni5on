@@ -704,7 +704,8 @@ RingController::RulesInstall (
   // -------------------------------------------------------------------------
   // Slice table -- [from higher to lower priority]
   //
-  // Cookie for new rules.
+  // Cookie and MBR meter ID for new rules.
+  uint32_t mbrMeterId = MeterIdMbrCreate (iface, rInfo->GetTeid ());
   uint64_t cookie = CookieCreate (
       iface, rInfo->GetPriority (), rInfo->GetTeid ());
 
@@ -721,11 +722,9 @@ RingController::RulesInstall (
   // Configuring downlink routing.
   if (rInfo->HasDlTraffic ())
     {
-      uint32_t mbrMeterId = 0;
       if (rInfo->HasMbrDl ())
         {
           NS_ASSERT_MSG (!rInfo->IsMbrDlInstalled (iface), "Meter installed.");
-          mbrMeterId = MeterIdMbrCreate (iface, rInfo->GetTeid ());
 
           // Install downlink MBR meter entry on the input switch.
           std::ostringstream met;
@@ -744,17 +743,16 @@ RingController::RulesInstall (
           rInfo->GetTeid (),
           rInfo->GetDstDlAddr (iface),
           rInfo->GetDscpValue (),
-          mbrMeterId, cmdStr);
+          rInfo->IsMbrDlInstalled (iface) ? mbrMeterId : 0,
+          cmdStr);
     }
 
   // Configuring uplink routing.
   if (rInfo->HasUlTraffic ())
     {
-      uint32_t mbrMeterId = 0;
       if (rInfo->HasMbrUl ())
         {
           NS_ASSERT_MSG (!rInfo->IsMbrUlInstalled (iface), "Meter installed.");
-          mbrMeterId = MeterIdMbrCreate (iface, rInfo->GetTeid ());
 
           // Install uplink MBR meter entry on the input switch.
           std::ostringstream met;
@@ -773,7 +771,8 @@ RingController::RulesInstall (
           rInfo->GetTeid (),
           rInfo->GetDstUlAddr (iface),
           rInfo->GetDscpValue (),
-          mbrMeterId, cmdStr);
+          rInfo->IsMbrUlInstalled (iface) ? mbrMeterId : 0,
+          cmdStr);
     }
 
   // Update the installed flag for this interface.
