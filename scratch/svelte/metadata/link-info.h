@@ -84,7 +84,7 @@ public:
   };
 
   // Total number of valid LinkDir items + 1.
-  #define N_LINK_DIRS (static_cast<int> (LinkDir::BWD) + 1)
+  #define N_LINK_DIRS (static_cast<int> (LinkInfo::BWD) + 1)
 
   /** EWMA period of evaluation. */
   enum EwmaTerm
