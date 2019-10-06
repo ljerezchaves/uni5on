@@ -716,20 +716,24 @@ RingController::RulesInstall (
       << ",cookie=" << GetUint64Hex (cookie)
       << ",prio="   << rInfo->GetPriority ()
       << ",idle="   << rInfo->GetTimeout ();
+  std::string cmdStr = cmd.str ();
 
   // Configuring downlink routing.
   if (rInfo->HasDlTraffic ())
     {
-      uint32_t meterId = 0;
-      if (rInfo->HasMbrDl () && !rInfo->IsMbrDlInstalled (iface))
+      uint32_t mbrMeterId = 0;
+      if (rInfo->HasMbrDl ())
         {
+          NS_ASSERT_MSG (!rInfo->IsMbrDlInstalled (iface), "Meter installed.");
+          mbrMeterId = MeterIdMbrCreate (iface, rInfo->GetTeid ());
+
           // Install downlink MBR meter entry on the input switch.
-          meterId = MeterIdMbrCreate (iface, rInfo->GetTeid ());
-          std::ostringstream metCmd;
-          metCmd << "meter-mod cmd=add,flags=1,meter=" << meterId
-                 << " drop:rate=" << rInfo->GetMbrDlBitRate () / 1000;
-          DpctlExecute (GetDpId (rInfo->GetSrcDlInfraSwIdx (iface)),
-                        metCmd.str ());
+          std::ostringstream met;
+          met << "meter-mod cmd=add,flags=1,meter=" << mbrMeterId
+              << " drop:rate=" << rInfo->GetMbrDlBitRate () / 1000;
+          std::string metStr = met.str ();
+
+          DpctlExecute (GetDpId (rInfo->GetSrcDlInfraSwIdx (iface)), metStr);
           rInfo->SetMbrDlInstalled (iface, true);
         }
 
@@ -740,23 +744,25 @@ RingController::RulesInstall (
           rInfo->GetTeid (),
           rInfo->GetDstDlAddr (iface),
           rInfo->GetDscpValue (),
-          meterId,
-          cmd.str ());
+          mbrMeterId, cmdStr);
     }
 
   // Configuring uplink routing.
   if (rInfo->HasUlTraffic ())
     {
-      uint32_t meterId = 0;
-      if (rInfo->HasMbrUl () && !rInfo->IsMbrUlInstalled (iface))
+      uint32_t mbrMeterId = 0;
+      if (rInfo->HasMbrUl ())
         {
+          NS_ASSERT_MSG (!rInfo->IsMbrUlInstalled (iface), "Meter installed.");
+          mbrMeterId = MeterIdMbrCreate (iface, rInfo->GetTeid ());
+
           // Install uplink MBR meter entry on the input switch.
-          meterId = MeterIdMbrCreate (iface, rInfo->GetTeid ());
-          std::ostringstream metCmd;
-          metCmd << "meter-mod cmd=add,flags=1,meter=" << meterId
-                 << " drop:rate=" << rInfo->GetMbrUlBitRate () / 1000;
-          DpctlExecute (GetDpId (rInfo->GetSrcUlInfraSwIdx (iface)),
-                        metCmd.str ());
+          std::ostringstream met;
+          met << "meter-mod cmd=add,flags=1,meter=" << mbrMeterId
+              << " drop:rate=" << rInfo->GetMbrUlBitRate () / 1000;
+          std::string metStr = met.str ();
+
+          DpctlExecute (GetDpId (rInfo->GetSrcUlInfraSwIdx (iface)), metStr);
           rInfo->SetMbrUlInstalled (iface, true);
         }
 
@@ -767,8 +773,7 @@ RingController::RulesInstall (
           rInfo->GetTeid (),
           rInfo->GetDstUlAddr (iface),
           rInfo->GetDscpValue (),
-          meterId,
-          cmd.str ());
+          mbrMeterId, cmdStr);
     }
 
   // Update the installed flag for this interface.
@@ -796,16 +801,16 @@ RingController::RulesInstall (
   std::string matStr = mat.str ();
 
   // Building the instructions string for the first switch.
-  std::ostringstream ins1st;
+  std::ostringstream ins1;
   if (meter)
     {
-      ins1st << " meter:" << meter;
+      ins1 << " meter:" << meter;
     }
   if (dscp)
     {
-      ins1st << " apply:set_field=ip_dscp:" << dscp;
+      ins1 << " apply:set_field=ip_dscp:" << dscp;
     }
-  std::string ins1stStr = ins1st.str ();
+  std::string ins1Str = ins1.str ();
 
   // Building the instructions string for all switches.
   std::ostringstream ins;
@@ -815,7 +820,7 @@ RingController::RulesInstall (
   std::string insStr = ins.str ();
 
   // Installing OpenFlow routing rules.
-  DpctlExecute (GetDpId (srcIdx), cmdStr + matStr + ins1stStr + insStr);
+  DpctlExecute (GetDpId (srcIdx), cmdStr + matStr + ins1Str + insStr);
   srcIdx = GetNextSwIdx (srcIdx, path);
   while (srcIdx != dstIdx)
     {
@@ -858,20 +863,24 @@ RingController::RulesRemove (
   DpctlExecute (GetDpId (curr), cmdStr);
 
   // Remove installed MBR meter entries.
-  uint32_t meterId = MeterIdMbrCreate (iface, rInfo->GetTeid ());
-  std::ostringstream metCmd;
-  metCmd << "meter-mod cmd=del,meter=" << meterId;
-  if (rInfo->IsMbrDlInstalled (iface))
+  if (rInfo->HasMbr ())
     {
-      DpctlExecute (GetDpId (rInfo->GetSrcDlInfraSwIdx (iface)),
-                    metCmd.str ());
-      rInfo->SetMbrDlInstalled (iface, false);
-    }
-  if (rInfo->IsMbrUlInstalled (iface))
-    {
-      DpctlExecute (GetDpId (rInfo->GetSrcUlInfraSwIdx (iface)),
-                    metCmd.str ());
-      rInfo->SetMbrUlInstalled (iface, false);
+      uint32_t meterId = MeterIdMbrCreate (iface, rInfo->GetTeid ());
+
+      std::ostringstream met;
+      met << "meter-mod cmd=del,meter=" << meterId;
+      std::string metStr = met.str ();
+
+      if (rInfo->IsMbrDlInstalled (iface))
+        {
+          DpctlExecute (GetDpId (rInfo->GetSrcDlInfraSwIdx (iface)), metStr);
+          rInfo->SetMbrDlInstalled (iface, false);
+        }
+      if (rInfo->IsMbrUlInstalled (iface))
+        {
+          DpctlExecute (GetDpId (rInfo->GetSrcUlInfraSwIdx (iface)), metStr);
+          rInfo->SetMbrUlInstalled (iface, false);
+        }
     }
 
   // Update the installed flag for this interface.
