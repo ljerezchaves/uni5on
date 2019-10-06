@@ -151,9 +151,6 @@ public:
    * \return The requested information.
    */
   //\{
-  std::string GetMbrDelCmd      (void) const;
-  std::string GetMbrDlAddCmd    (void) const;
-  std::string GetMbrUlAddCmd    (void) const;
   int64_t     GetMbrDlBitRate   (void) const;
   int64_t     GetMbrUlBitRate   (void) const;
   bool        HasMbrDl          (void) const;

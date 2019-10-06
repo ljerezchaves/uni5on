@@ -393,38 +393,6 @@ RoutingInfo::IsNonGbr (void) const
   return !IsGbr ();
 }
 
-std::string
-RoutingInfo::GetMbrDelCmd (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  std::ostringstream meter;
-  meter << "meter-mod cmd=del,meter=" << m_teid;
-  return meter.str ();
-}
-
-std::string
-RoutingInfo::GetMbrDlAddCmd (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  std::ostringstream meter;
-  meter << "meter-mod cmd=add,flags=1,meter=" << m_teid
-        << " drop:rate=" << GetMbrDlBitRate () / 1000;
-  return meter.str ();
-}
-
-std::string
-RoutingInfo::GetMbrUlAddCmd (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  std::ostringstream meter;
-  meter << "meter-mod cmd=add,flags=1,meter=" << m_teid
-        << " drop:rate=" << GetMbrUlBitRate () / 1000;
-  return meter.str ();
-}
-
 int64_t
 RoutingInfo::GetMbrDlBitRate (void) const
 {
