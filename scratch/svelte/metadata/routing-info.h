@@ -138,7 +138,6 @@ public:
   bool        HasGbrBitRate     (void) const;
   bool        HasGbrUlBitRate   (void) const;
   bool        HasGbrDlBitRate   (void) const;
-  bool        HasGbrUl          (void) const;
   bool        IsGbr             (void) const;
   bool        IsNonGbr          (void) const;
   bool        IsGbrReserved     (LteIface iface) const;
@@ -155,6 +154,7 @@ public:
   int64_t     GetMbrUlBitRate   (void) const;
   bool        HasMbrDl          (void) const;
   bool        HasMbrUl          (void) const;
+  bool        HasMbr            (void) const;
   bool        IsMbrDlInstalled  (void) const;
   bool        IsMbrUlInstalled  (void) const;
   bool        IsMbrDlInstalled  (LteIface iface) const;

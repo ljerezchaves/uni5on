@@ -426,6 +426,14 @@ RoutingInfo::HasMbrUl (void) const
 }
 
 bool
+RoutingInfo::HasMbr (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return HasMbrDl () || HasMbrUl ();
+}
+
+bool
 RoutingInfo::IsMbrDlInstalled (void) const
 {
   NS_LOG_FUNCTION (this);
