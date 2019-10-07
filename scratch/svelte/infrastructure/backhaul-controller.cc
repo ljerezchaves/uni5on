@@ -807,30 +807,32 @@ BackhaulController::SlicingMeterAdjust (
     {
       LinkInfo::LinkDir dir = static_cast<LinkInfo::LinkDir> (d);
 
-      int64_t unrBitRate = 0;
+      int64_t meterBitRate = 0;
       if (slice == SliceId::ALL)
         {
-          // Sum the bit rate from slices with enabled bandwidth sharing.
+          // Iterate over slices with enabled bandwidth sharing
+          // to sum the quota bit rate.
           for (auto const &ctrl : GetSliceControllerList ())
             {
               if (ctrl->GetSharing () == OpMode::ON)
                 {
-                  unrBitRate += lInfo->GetUnrBitRate (dir, ctrl->GetSliceId ());
+                  SliceId slc = ctrl->GetSliceId ();
+                  meterBitRate += lInfo->GetUnrBitRate (dir, slc);
                 }
             }
-          // Sum the spare bit rate when enabled.
+          // When enable, sum the spare bit rate too.
           if (GetSpareUseMode () == OpMode::ON)
             {
-              unrBitRate += lInfo->GetUnrBitRate (dir, SliceId::UNKN);
+              meterBitRate += lInfo->GetUnrBitRate (dir, SliceId::UNKN);
             }
         }
       else
         {
-          unrBitRate = lInfo->GetUnrBitRate (dir, slice);
+          meterBitRate = lInfo->GetUnrBitRate (dir, slice);
         }
 
-      uint64_t diffBitRate = std::abs (
-          lInfo->GetMetBitRate (dir, slice) - unrBitRate);
+      int64_t currBitRate = lInfo->GetMetBitRate (dir, slice);
+      uint64_t diffBitRate = std::abs (currBitRate - meterBitRate);
       NS_LOG_DEBUG ("Current slice " << SliceIdStr (slice) <<
                     " direction "    << LinkInfo::LinkDirStr (dir) <<
                     " diff rate "    << diffBitRate);
@@ -838,7 +840,7 @@ BackhaulController::SlicingMeterAdjust (
       if (diffBitRate >= m_meterStep.GetBitRate ())
         {
           uint32_t meterId = MeterIdSlcCreate (slice, d);
-          int64_t meterKbps = Bps2Kbps (unrBitRate);
+          int64_t meterKbps = Bps2Kbps (meterBitRate);
           bool success = lInfo->SetMetBitRate (dir, slice, meterKbps * 1000);
           NS_ASSERT_MSG (success, "Error when setting meter bit rate.");
 
@@ -870,33 +872,35 @@ BackhaulController::SlicingMeterInstall (Ptr<LinkInfo> lInfo, SliceId slice)
     {
       LinkInfo::LinkDir dir = static_cast<LinkInfo::LinkDir> (d);
 
-      int64_t quotaBitRate = 0;
+      int64_t meterBitRate = 0;
       if (slice == SliceId::ALL)
         {
           NS_ASSERT_MSG (GetInterSliceMode () == SliceMode::SHAR,
                          "Invalid inter-slice operation mode.");
 
-          // Sum the bit rate from slices with enabled bandwidth sharing.
+          // Iterate over slices with enabled bandwidth sharing
+          // to sum the quota bit rate.
           for (auto const &ctrl : GetSliceControllerList ())
             {
               if (ctrl->GetSharing () == OpMode::ON)
                 {
-                  quotaBitRate += lInfo->GetQuoBitRate (dir, ctrl->GetSliceId ());
+                  SliceId slc = ctrl->GetSliceId ();
+                  meterBitRate += lInfo->GetQuoBitRate (dir, slc);
                 }
             }
-          // Sum the spare bit rate when enabled.
+          // When enable, sum the spare bit rate too.
           if (GetSpareUseMode () == OpMode::ON)
             {
-              quotaBitRate += lInfo->GetQuoBitRate (dir, SliceId::UNKN);
+              meterBitRate += lInfo->GetQuoBitRate (dir, SliceId::UNKN);
             }
         }
       else
         {
-          quotaBitRate = lInfo->GetQuoBitRate (dir, slice);
+          meterBitRate = lInfo->GetQuoBitRate (dir, slice);
         }
 
       uint32_t meterId = MeterIdSlcCreate (slice, d);
-      int64_t meterKbps = Bps2Kbps (quotaBitRate);
+      int64_t meterKbps = Bps2Kbps (meterBitRate);
       bool success = lInfo->SetMetBitRate (dir, slice, meterKbps * 1000);
       NS_ASSERT_MSG (success, "Error when setting meter bit rate.");
 
