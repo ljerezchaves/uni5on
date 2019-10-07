@@ -44,20 +44,15 @@ BackhaulController::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::BackhaulController")
     .SetParent<OFSwitch13Controller> ()
 
-    .AddAttribute ("DynamicGuard",
-                   "Dynamic inter-slice link guard bit rate.",
-                   DataRateValue (DataRate ("4Mbps")),
-                   MakeDataRateAccessor (&BackhaulController::m_dynGuard),
-                   MakeDataRateChecker ())
-    .AddAttribute ("DynamicTimeout",
-                   "Dynamic inter-slice adjustment timeout.",
-                   TimeValue (Seconds (5)),
-                   MakeTimeAccessor (&BackhaulController::m_dynTimeout),
-                   MakeTimeChecker ())
     .AddAttribute ("ExtraStep",
                    "Extra bit rate adjustment step.",
                    DataRateValue (DataRate ("4Mbps")),
                    MakeDataRateAccessor (&BackhaulController::m_extraStep),
+                   MakeDataRateChecker ())
+    .AddAttribute ("GuardStep",
+                   "Link guard bit rate.",
+                   DataRateValue (DataRate ("5Mbps")),
+                   MakeDataRateAccessor (&BackhaulController::m_guardStep),
                    MakeDataRateChecker ())
     .AddAttribute ("MeterStep",
                    "Meter bit rate adjustment step.",
@@ -84,6 +79,11 @@ BackhaulController::GetTypeId (void)
                                     SliceModeStr (SliceMode::STAT),
                                     SliceMode::DYNA,
                                     SliceModeStr (SliceMode::DYNA)))
+    .AddAttribute ("SliceTimeout",
+                   "Inter-slice adjustment timeout.",
+                   TimeValue (Seconds (5)),
+                   MakeTimeAccessor (&BackhaulController::m_sliceTimeout),
+                   MakeTimeChecker ())
     .AddAttribute ("SpareUse",
                    "Use spare link bit rate for sharing purposes.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -182,7 +182,7 @@ BackhaulController::NotifyConstructionCompleted (void)
   if (GetInterSliceMode () == SliceMode::DYNA)
     {
       Simulator::Schedule (
-        m_dynTimeout, &BackhaulController::SlicingDynamicTimeout, this);
+        m_sliceTimeout, &BackhaulController::SlicingDynamicTimeout, this);
     }
 
   OFSwitch13Controller::NotifyConstructionCompleted ();
@@ -627,7 +627,7 @@ BackhaulController::SlicingDynamicTimeout (void)
 
   // Schedule the next slicing extra timeout operation.
   Simulator::Schedule (
-    m_dynTimeout, &BackhaulController::SlicingDynamicTimeout, this);
+    m_sliceTimeout, &BackhaulController::SlicingDynamicTimeout, this);
 }
 
 void
@@ -640,7 +640,7 @@ BackhaulController::SlicingExtraAdjust (
                  "Invalid inter-slice operation mode.");
 
   const LinkInfo::EwmaTerm lTerm = LinkInfo::LTERM;
-  int64_t guardBitRate = static_cast<int64_t> (m_dynGuard.GetBitRate ());
+  int64_t guardBitRate = static_cast<int64_t> (m_guardStep.GetBitRate ());
   int64_t stepRate = static_cast<int64_t> (m_extraStep.GetBitRate ());
 
   // Iterate over slices with enabled bandwidth sharing

@@ -280,12 +280,12 @@ private:
   OFSwitch13DeviceContainer m_switchDevices;  //!< OpenFlow switch devices.
 
   // Internal mechanisms metadata.
-  DataRate              m_dynGuard;       //!< Dynamic slice link guard.
-  Time                  m_dynTimeout;     //!< Dynamic slice timeout interval.
   DataRate              m_extraStep;      //!< Extra adjustment step.
+  DataRate              m_guardStep;      //!< Dynamic slice link guard.
   DataRate              m_meterStep;      //!< Meter adjustment step.
   OpMode                m_qosQueues;      //!< QoS output queues mechanism.
   SliceMode             m_sliceMode;      //!< Inter-slicing operation mode.
+  Time                  m_sliceTimeout;   //!< Dynamic slice timeout interval.
   OpMode                m_spareUse;       //!< Spare bit rate sharing mode.
   OpMode                m_swBlockPolicy;  //!< Switch overload block policy.
   double                m_swBlockThs;     //!< Switch block threshold.
