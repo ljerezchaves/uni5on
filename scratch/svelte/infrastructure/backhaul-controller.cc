@@ -640,7 +640,6 @@ BackhaulController::SlicingExtraAdjust (
                  "Invalid inter-slice operation mode.");
 
   const LinkInfo::EwmaTerm lTerm = LinkInfo::LTERM;
-  int64_t guardBitRate = static_cast<int64_t> (m_guardStep.GetBitRate ());
   int64_t stepRate = static_cast<int64_t> (m_extraStep.GetBitRate ());
 
   // Iterate over slices with enabled bandwidth sharing
@@ -663,15 +662,18 @@ BackhaulController::SlicingExtraAdjust (
       maxShareBitRate += lInfo->GetQuoBitRate (dir, SliceId::UNKN);
     }
 
-  int64_t thsShareBitRate = maxShareBitRate - guardBitRate;
-  if (useShareBitRate <= thsShareBitRate)
-    {
-      // Link usage is below the safeguard threshold. Iterate over slices in
-      // decreasing priority order, assigning some extra bit rate to those
-      // slices that may benefit from it.
-      int64_t idlShareBitRate = maxShareBitRate - useShareBitRate;
-      int maxSteps = idlShareBitRate / stepRate;
+  // Get the idle bit rate (apart from the guard bit rate) that can be used as
+  // extra bit rate by overloaded slices.
+  int64_t guardBitRate = static_cast<int64_t> (m_guardStep.GetBitRate ());
+  int64_t idlShareBitRate = maxShareBitRate - guardBitRate - useShareBitRate;
 
+  if (idlShareBitRate > 0)
+    {
+      // We have some unused bit rate step that can be distributed as extra to
+      // any overloaded slice. Iterate over slices in decreasing priority
+      // order, assigning one extra bit rate to those slices that may benefit
+      // from it. Also, gets back one extra bit rate from underloaded slices to
+      // reduce unnecessary bit rate overbooking.
       for (auto it = m_sliceCtrls.rbegin (); it != m_sliceCtrls.rend (); ++it)
         {
           // Ignoring slices with disabled bandwidth sharing.
@@ -691,19 +693,20 @@ BackhaulController::SlicingExtraAdjust (
                         " over "         << sliceOve <<
                         " idle "         << sliceIdl);
 
-          if ((sliceIdl < (stepRate / 2)) && (maxSteps > 0))
+          if ((sliceIdl < (stepRate / 2)) && (idlShareBitRate >= stepRate))
             {
-              // Increase the extra bit rate by one step.
+              // This is an overloaded slice and we have idle bit rate.
+              // Increase the slice extra bit rate by one step.
               NS_LOG_DEBUG ("Increase extra bit rate.");
               bool success = lInfo->UpdateExtBitRate (dir, slice, stepRate);
               NS_ASSERT_MSG (success, "Error when updating extra bit rate.");
               SlicingMeterAdjust (lInfo, slice);
-              maxSteps--;
+              idlShareBitRate -= stepRate;
             }
           else if ((sliceIdl > (stepRate * 2)) && (sliceExt >= stepRate))
             {
-              // Decrease one extra bit rate step from those slices that are
-              // not using it to reduce unnecessary bit rate overbooking.
+              // This is an underloaded slice with some extra bit rate.
+              // Decrease the slice extra bit rate by one step.
               NS_LOG_DEBUG ("Decrease extra bit rate overbooking.");
               bool success = lInfo->UpdateExtBitRate (dir, slice, -stepRate);
               NS_ASSERT_MSG (success, "Error when updating extra bit rate.");
@@ -717,8 +720,6 @@ BackhaulController::SlicingExtraAdjust (
       // increasing priority order, removing some extra bit rate from those
       // slices that are using more than its quota to get the link usage below
       // the safeguard threshold again.
-      int64_t getBackBitRate = useShareBitRate - thsShareBitRate;
-
       for (auto it = m_sliceCtrls.begin (); it != m_sliceCtrls.end (); ++it)
         {
           // Ignoring slices with disabled bandwidth sharing.
@@ -738,33 +739,35 @@ BackhaulController::SlicingExtraAdjust (
                         " over "         << sliceOve <<
                         " idle "         << sliceIdl);
 
-          bool removed = false;
-          while ((sliceExt >= stepRate) && (getBackBitRate > 0))
+          // Keep removing any extra bit rate until the safeguard threshold.
+          bool removedFlag = false;
+          while ((sliceExt >= stepRate) && (idlShareBitRate < 0))
             {
-              removed = true;
+              removedFlag = true;
               NS_LOG_DEBUG ("Decrease extra bit rate for congested link.");
               bool success = lInfo->UpdateExtBitRate (dir, slice, -stepRate);
               NS_ASSERT_MSG (success, "Error when updating extra bit rate.");
               sliceExt -= stepRate;
-              if (sliceIdl > stepRate)
+              if (sliceIdl >= stepRate)
                 {
+                  // This decreased bit rate was not been used.
                   sliceIdl -= stepRate;
                 }
               else
                 {
-                  getBackBitRate -= stepRate - sliceIdl;
+                  // This decreased bit rate was being used.
+                  idlShareBitRate += stepRate - sliceIdl;
                   sliceIdl = 0;
                 }
             }
-
-          if (removed)
+          if (removedFlag)
             {
               SlicingMeterAdjust (lInfo, slice);
             }
           else if ((sliceIdl > (stepRate * 2)) && (sliceExt >= stepRate))
             {
-              // Decrease one extra bit rate step from those slices that are
-              // not using it to reduce unnecessary bit rate overbooking.
+              // This is an underloaded slice with some extra bit rate.
+              // Decrease the slice extra bit rate by one step.
               NS_LOG_DEBUG ("Decrease extra bit rate overbooking.");
               bool success = lInfo->UpdateExtBitRate (dir, slice, -stepRate);
               NS_ASSERT_MSG (success, "Error when updating extra bit rate.");
