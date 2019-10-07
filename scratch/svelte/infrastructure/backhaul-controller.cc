@@ -639,35 +639,37 @@ BackhaulController::SlicingExtraAdjust (
   NS_ASSERT_MSG (GetInterSliceMode () == SliceMode::DYNA,
                  "Invalid inter-slice operation mode.");
 
-  const LinkInfo::EwmaTerm longTerm = LinkInfo::LTERM;
-  int64_t guardRate = static_cast<int64_t> (m_dynGuard.GetBitRate ());
+  const LinkInfo::EwmaTerm lTerm = LinkInfo::LTERM;
+  int64_t guardBitRate = static_cast<int64_t> (m_dynGuard.GetBitRate ());
   int64_t stepRate = static_cast<int64_t> (m_extraStep.GetBitRate ());
 
-  // Sum the quota and use bit rate from slices with enabled bandwidth sharing.
-  int64_t quoShareBitRate = 0;
+  // Iterate over slices with enabled bandwidth sharing
+  // to sum the quota bit rate and the used bit rate.
+  int64_t maxShareBitRate = 0;
   int64_t useShareBitRate = 0;
   for (auto const &ctrl : GetSliceControllerList ())
     {
+      // Ignoring slices with disabled bandwidth sharing.
       if (ctrl->GetSharing () == OpMode::ON)
         {
           SliceId slice = ctrl->GetSliceId ();
-          quoShareBitRate += lInfo->GetQuoBitRate (dir, slice);
-          useShareBitRate += lInfo->GetUseBitRate (longTerm, dir, slice);
+          maxShareBitRate += lInfo->GetQuoBitRate (dir, slice);
+          useShareBitRate += lInfo->GetUseBitRate (lTerm, dir, slice);
         }
     }
-  // Sum the spare bit rate when enabled.
+  // When enable, sum the spare bit rate too.
   if (GetSpareUseMode () == OpMode::ON)
     {
-      quoShareBitRate += lInfo->GetQuoBitRate (dir, SliceId::UNKN);
+      maxShareBitRate += lInfo->GetQuoBitRate (dir, SliceId::UNKN);
     }
 
-  int64_t thsShareBitRate = quoShareBitRate - guardRate;
+  int64_t thsShareBitRate = maxShareBitRate - guardBitRate;
   if (useShareBitRate <= thsShareBitRate)
     {
       // Link usage is below the safeguard threshold. Iterate over slices in
       // decreasing priority order, assigning some extra bit rate to those
       // slices that may benefit from it.
-      int64_t idlShareBitRate = quoShareBitRate - useShareBitRate;
+      int64_t idlShareBitRate = maxShareBitRate - useShareBitRate;
       int maxSteps = idlShareBitRate / stepRate;
 
       for (auto it = m_sliceCtrls.rbegin (); it != m_sliceCtrls.rend (); ++it)
@@ -678,9 +680,10 @@ BackhaulController::SlicingExtraAdjust (
               continue;
             }
 
+          // Get the idle, over, and extra bit rates for this slice.
           SliceId slice = (*it)->GetSliceId ();
-          int64_t sliceIdl = lInfo->GetIdlBitRate (longTerm, dir, slice);
-          int64_t sliceOve = lInfo->GetOveBitRate (longTerm, dir, slice);
+          int64_t sliceIdl = lInfo->GetIdlBitRate (lTerm, dir, slice);
+          int64_t sliceOve = lInfo->GetOveBitRate (lTerm, dir, slice);
           int64_t sliceExt = lInfo->GetExtBitRate (dir, slice);
           NS_LOG_DEBUG ("Current slice " << SliceIdStr (slice) <<
                         " direction "    << LinkInfo::LinkDirStr (dir) <<
@@ -688,7 +691,7 @@ BackhaulController::SlicingExtraAdjust (
                         " over "         << sliceOve <<
                         " idle "         << sliceIdl);
 
-          if (maxSteps > 0 && (sliceIdl < (stepRate / 2)))
+          if ((sliceIdl < (stepRate / 2)) && (maxSteps > 0))
             {
               // Increase the extra bit rate by one step.
               NS_LOG_DEBUG ("Increase extra bit rate.");
@@ -724,9 +727,10 @@ BackhaulController::SlicingExtraAdjust (
               continue;
             }
 
+          // Get the idle, over, and extra bit rates for this slice.
           SliceId slice = (*it)->GetSliceId ();
-          int64_t sliceIdl = lInfo->GetIdlBitRate (longTerm, dir, slice);
-          int64_t sliceOve = lInfo->GetOveBitRate (longTerm, dir, slice);
+          int64_t sliceIdl = lInfo->GetIdlBitRate (lTerm, dir, slice);
+          int64_t sliceOve = lInfo->GetOveBitRate (lTerm, dir, slice);
           int64_t sliceExt = lInfo->GetExtBitRate (dir, slice);
           NS_LOG_DEBUG ("Current slice " << SliceIdStr (slice) <<
                         " direction "    << LinkInfo::LinkDirStr (dir) <<
