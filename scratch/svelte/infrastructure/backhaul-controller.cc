@@ -246,11 +246,11 @@ BackhaulController::GetSliceController (SliceId slice) const
 }
 
 const SliceControllerList_t&
-BackhaulController::GetSliceControllerList (void) const
+BackhaulController::GetSliceControllerList (bool sharing) const
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION (this << sharing);
 
-  return m_sliceCtrls;
+  return (sharing ? m_sliceCtrlsSha : m_sliceCtrlsAll);
 }
 
 uint16_t
@@ -312,7 +312,7 @@ BackhaulController::NotifyEpcAttach (
 
 // Comparator for slice priorities.
 static bool
-PriorityComp (Ptr<SliceController> ctrl1, Ptr<SliceController> ctrl2)
+PriComp (Ptr<SliceController> ctrl1, Ptr<SliceController> ctrl2)
 {
   return ctrl1->GetPriority () < ctrl2->GetPriority ();
 }
@@ -330,10 +330,15 @@ BackhaulController::NotifySlicesBuilt (ApplicationContainer &controllers)
       int quota = controller->GetQuota ();
 
       // Saving controller application pointers.
-      m_sliceCtrls.push_back (controller);
       std::pair<SliceId, Ptr<SliceController> > entry (slice, controller);
       auto ret = m_sliceCtrlById.insert (entry);
       NS_ABORT_MSG_IF (ret.second == false, "Existing slice controller.");
+
+      m_sliceCtrlsAll.push_back (controller);
+      if (controller->GetSharing () == OpMode::ON)
+        {
+          m_sliceCtrlsSha.push_back (controller);
+        }
 
       // Iterate over links configuring the initial quotas.
       for (auto const &lInfo : LinkInfo::GetList ())
@@ -345,8 +350,9 @@ BackhaulController::NotifySlicesBuilt (ApplicationContainer &controllers)
         }
     }
 
-  // Sort m_sliceCtrls in increasing priority order.
-  std::stable_sort (m_sliceCtrls.begin (), m_sliceCtrls.end (), PriorityComp);
+  // Sort slice controllers in increasing priority order.
+  std::stable_sort (m_sliceCtrlsAll.begin (), m_sliceCtrlsAll.end (), PriComp);
+  std::stable_sort (m_sliceCtrlsSha.begin (), m_sliceCtrlsSha.end (), PriComp);
 
   // ---------------------------------------------------------------------
   // Meter table
@@ -646,15 +652,11 @@ BackhaulController::SlicingExtraAdjust (
   // to sum the quota bit rate and the used bit rate.
   int64_t maxShareBitRate = 0;
   int64_t useShareBitRate = 0;
-  for (auto const &ctrl : GetSliceControllerList ())
+  for (auto const &ctrl : GetSliceControllerList (true))
     {
-      // Ignoring slices with disabled bandwidth sharing.
-      if (ctrl->GetSharing () == OpMode::ON)
-        {
-          SliceId slice = ctrl->GetSliceId ();
-          maxShareBitRate += lInfo->GetQuoBitRate (dir, slice);
-          useShareBitRate += lInfo->GetUseBitRate (lTerm, dir, slice);
-        }
+      SliceId slice = ctrl->GetSliceId ();
+      maxShareBitRate += lInfo->GetQuoBitRate (dir, slice);
+      useShareBitRate += lInfo->GetUseBitRate (lTerm, dir, slice);
     }
   // When enable, sum the spare bit rate too.
   if (GetSpareUseMode () == OpMode::ON)
@@ -670,18 +672,14 @@ BackhaulController::SlicingExtraAdjust (
   if (idlShareBitRate > 0)
     {
       // We have some unused bit rate step that can be distributed as extra to
-      // any overloaded slice. Iterate over slices in decreasing priority
-      // order, assigning one extra bit rate to those slices that may benefit
-      // from it. Also, gets back one extra bit rate from underloaded slices to
-      // reduce unnecessary bit rate overbooking.
-      for (auto it = m_sliceCtrls.rbegin (); it != m_sliceCtrls.rend (); ++it)
+      // any overloaded slice. Iterate over slices with enabled bandwidth
+      // sharing in decreasing priority order, assigning one extra bit rate to
+      // those slices that may benefit from it. Also, gets back one extra bit
+      // rate from underloaded slices to reduce unnecessary bit rate
+      // overbooking.
+      for (auto it = m_sliceCtrlsSha.rbegin ();
+           it != m_sliceCtrlsSha.rend (); ++it)
         {
-          // Ignoring slices with disabled bandwidth sharing.
-          if ((*it)->GetSharing () == OpMode::OFF)
-            {
-              continue;
-            }
-
           // Get the idle, over, and extra bit rates for this slice.
           SliceId slice = (*it)->GetSliceId ();
           int64_t sliceIdl = lInfo->GetIdlBitRate (lTerm, dir, slice);
@@ -716,18 +714,13 @@ BackhaulController::SlicingExtraAdjust (
     }
   else
     {
-      // Link usage is over the safeguard threshold. Iterate over slices in
-      // increasing priority order, removing some extra bit rate from those
-      // slices that are using more than its quota to get the link usage below
-      // the safeguard threshold again.
-      for (auto it = m_sliceCtrls.begin (); it != m_sliceCtrls.end (); ++it)
+      // Link usage is over the safeguard threshold. Iterate over slices with
+      // enabled bandwidth sharing in increasing priority order, removing some
+      // extra bit rate from those slices that are using more than its quota to
+      // get the link usage below the safeguard threshold again.
+      for (auto it = m_sliceCtrlsSha.begin ();
+           it != m_sliceCtrlsSha.end (); ++it)
         {
-          // Ignoring slices with disabled bandwidth sharing.
-          if ((*it)->GetSharing () == OpMode::OFF)
-            {
-              continue;
-            }
-
           // Get the idle, over, and extra bit rates for this slice.
           SliceId slice = (*it)->GetSliceId ();
           int64_t sliceIdl = lInfo->GetIdlBitRate (lTerm, dir, slice);
@@ -819,13 +812,10 @@ BackhaulController::SlicingMeterAdjust (
         {
           // Iterate over slices with enabled bandwidth sharing
           // to sum the quota bit rate.
-          for (auto const &ctrl : GetSliceControllerList ())
+          for (auto const &ctrl : GetSliceControllerList (true))
             {
-              if (ctrl->GetSharing () == OpMode::ON)
-                {
-                  SliceId slc = ctrl->GetSliceId ();
-                  meterBitRate += lInfo->GetUnrBitRate (dir, slc);
-                }
+              SliceId slc = ctrl->GetSliceId ();
+              meterBitRate += lInfo->GetUnrBitRate (dir, slc);
             }
           // When enable, sum the spare bit rate too.
           if (GetSpareUseMode () == OpMode::ON)
@@ -887,13 +877,10 @@ BackhaulController::SlicingMeterInstall (Ptr<LinkInfo> lInfo, SliceId slice)
 
           // Iterate over slices with enabled bandwidth sharing
           // to sum the quota bit rate.
-          for (auto const &ctrl : GetSliceControllerList ())
+          for (auto const &ctrl : GetSliceControllerList (true))
             {
-              if (ctrl->GetSharing () == OpMode::ON)
-                {
-                  SliceId slc = ctrl->GetSliceId ();
-                  meterBitRate += lInfo->GetQuoBitRate (dir, slc);
-                }
+              SliceId slc = ctrl->GetSliceId ();
+              meterBitRate += lInfo->GetQuoBitRate (dir, slc);
             }
           // When enable, sum the spare bit rate too.
           if (GetSpareUseMode () == OpMode::ON)

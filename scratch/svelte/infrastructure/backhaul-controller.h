@@ -192,9 +192,12 @@ protected:
 
   /**
    * Get the list of slice controller applications.
+   * \param sharing Filter controller applications with enabled backhaul
+   *        bandwdith sharing flag.
    * \return The list of controller applications.
    */
-  const SliceControllerList_t& GetSliceControllerList (void) const;
+  const SliceControllerList_t& GetSliceControllerList (
+    bool sharing = false) const;
 
   /**
    * Get the number of the OpenFlow pipeline table exclusively used by this
@@ -291,7 +294,10 @@ private:
   double                m_swBlockThs;     //!< Switch block threshold.
 
   /** Slice controllers sorted by increasing priority. */
-  SliceControllerList_t m_sliceCtrls;
+  SliceControllerList_t m_sliceCtrlsAll;
+
+  /** Slice controllers with enabled sharing sorted by increasing priority. */
+  SliceControllerList_t m_sliceCtrlsSha;
 
   /** Map saving Slice ID / Slice controller application. */
   typedef std::map<SliceId, Ptr<SliceController> > SliceIdCtrlAppMap_t;
