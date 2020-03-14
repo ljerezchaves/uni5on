@@ -647,6 +647,7 @@ BackhaulController::SlicingExtraAdjust (
 
   const LinkInfo::EwmaTerm lTerm = LinkInfo::LTERM;
   int64_t stepRate = static_cast<int64_t> (m_extraStep.GetBitRate ());
+  NS_ASSERT_MSG (stepRate > 0, "Invalid ExtraStep attribute value.");
 
   // Iterate over slices with enabled bandwidth sharing
   // to sum the quota bit rate and the used bit rate.
@@ -698,7 +699,6 @@ BackhaulController::SlicingExtraAdjust (
               NS_LOG_DEBUG ("Increase extra bit rate.");
               bool success = lInfo->UpdateExtBitRate (dir, slice, stepRate);
               NS_ASSERT_MSG (success, "Error when updating extra bit rate.");
-              SlicingMeterAdjust (lInfo, slice);
               idlShareBitRate -= stepRate;
             }
           else if ((sliceIdl > (stepRate * 2)) && (sliceExt >= stepRate))
@@ -708,7 +708,6 @@ BackhaulController::SlicingExtraAdjust (
               NS_LOG_DEBUG ("Decrease extra bit rate overbooking.");
               bool success = lInfo->UpdateExtBitRate (dir, slice, -stepRate);
               NS_ASSERT_MSG (success, "Error when updating extra bit rate.");
-              SlicingMeterAdjust (lInfo, slice);
             }
         }
     }
@@ -753,20 +752,23 @@ BackhaulController::SlicingExtraAdjust (
                   sliceIdl = 0;
                 }
             }
-          if (removedFlag)
-            {
-              SlicingMeterAdjust (lInfo, slice);
-            }
-          else if ((sliceIdl > (stepRate * 2)) && (sliceExt >= stepRate))
+
+          if ((sliceIdl > (stepRate * 2)) && (sliceExt >= stepRate)
+              && !removedFlag)
             {
               // This is an underloaded slice with some extra bit rate.
               // Decrease the slice extra bit rate by one step.
               NS_LOG_DEBUG ("Decrease extra bit rate overbooking.");
               bool success = lInfo->UpdateExtBitRate (dir, slice, -stepRate);
               NS_ASSERT_MSG (success, "Error when updating extra bit rate.");
-              SlicingMeterAdjust (lInfo, slice);
             }
         }
+    }
+
+  // Update the slicing meters for all slices over this link.
+  for (auto const &ctrl : GetSliceControllerList (true))
+    {
+      SlicingMeterAdjust (lInfo, ctrl->GetSliceId ());
     }
 }
 
