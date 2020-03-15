@@ -243,8 +243,9 @@ LinkInfo::GetIdlBitRate (EwmaTerm term, LinkDir dir, SliceId slice) const
   NS_LOG_FUNCTION (this << term << dir << slice);
 
   NS_ASSERT_MSG (slice <= SliceId::ALL, "Invalid slice for this operation.");
-  return GetMaxBitRate (dir, slice) -
-         GetUseBitRate (term, dir, slice, QosType::BOTH);
+  return std::max (static_cast<int64_t> (0),
+                   GetMaxBitRate (dir, slice) -
+                   GetUseBitRate (term, dir, slice, QosType::BOTH));
 }
 
 int64_t
