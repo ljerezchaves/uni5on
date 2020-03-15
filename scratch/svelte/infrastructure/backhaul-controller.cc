@@ -676,23 +676,20 @@ BackhaulController::SlicingExtraAdjust (
       // any overloaded slice. Iterate over slices with enabled bandwidth
       // sharing in decreasing priority order, assigning one extra bit rate to
       // those slices that may benefit from it. Also, gets back one extra bit
-      // rate from underloaded slices to reduce unnecessary bit rate
-      // overbooking.
+      // rate from underloaded slices to reduce unnecessary overbooking.
       for (auto it = m_sliceCtrlsSha.rbegin ();
            it != m_sliceCtrlsSha.rend (); ++it)
         {
-          // Get the idle, over, and extra bit rates for this slice.
+          // Get the idle and extra bit rates for this slice.
           SliceId slice = (*it)->GetSliceId ();
           int64_t sliceIdl = lInfo->GetIdlBitRate (lTerm, dir, slice);
-          int64_t sliceOve = lInfo->GetOveBitRate (lTerm, dir, slice);
           int64_t sliceExt = lInfo->GetExtBitRate (dir, slice);
           NS_LOG_DEBUG ("Current slice " << SliceIdStr (slice) <<
                         " direction "    << LinkInfo::LinkDirStr (dir) <<
                         " extra "        << sliceExt <<
-                        " over "         << sliceOve <<
                         " idle "         << sliceIdl);
 
-          if ((sliceIdl < (stepRate / 2)) && (idlShareBitRate >= stepRate))
+          if (sliceIdl < (stepRate / 2) && idlShareBitRate >= stepRate)
             {
               // This is an overloaded slice and we have idle bit rate.
               // Increase the slice extra bit rate by one step.
@@ -701,7 +698,7 @@ BackhaulController::SlicingExtraAdjust (
               NS_ASSERT_MSG (success, "Error when updating extra bit rate.");
               idlShareBitRate -= stepRate;
             }
-          else if ((sliceIdl > (stepRate * 2)) && (sliceExt >= stepRate))
+          else if (sliceIdl >= (stepRate * 2) && sliceExt >= stepRate)
             {
               // This is an underloaded slice with some extra bit rate.
               // Decrease the slice extra bit rate by one step.
