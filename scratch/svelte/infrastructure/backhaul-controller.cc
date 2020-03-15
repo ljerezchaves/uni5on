@@ -710,54 +710,86 @@ BackhaulController::SlicingExtraAdjust (
     }
   else
     {
-      // Link usage is over the safeguard threshold. Iterate over slices with
-      // enabled bandwidth sharing in increasing priority order, removing some
-      // extra bit rate from those slices that are using more than its quota to
-      // get the link usage below the safeguard threshold again.
-      for (auto it = m_sliceCtrlsSha.begin ();
-           it != m_sliceCtrlsSha.end (); ++it)
+      // Link usage is over the safeguard threshold. First, iterate over slices
+      // with enable bandwidth sharing and get back any unused extra bit rate
+      // to reduce unnecessary overbooking.
+      for (auto const &ctrl : GetSliceControllerList (true))
         {
-          // Get the idle, over, and extra bit rates for this slice.
-          SliceId slice = (*it)->GetSliceId ();
+          // Get the idle and extra bit rates for this slice.
+          SliceId slice = ctrl->GetSliceId ();
           int64_t sliceIdl = lInfo->GetIdlBitRate (lTerm, dir, slice);
-          int64_t sliceOve = lInfo->GetOveBitRate (lTerm, dir, slice);
           int64_t sliceExt = lInfo->GetExtBitRate (dir, slice);
           NS_LOG_DEBUG ("Current slice " << SliceIdStr (slice) <<
                         " direction "    << LinkInfo::LinkDirStr (dir) <<
                         " extra "        << sliceExt <<
-                        " over "         << sliceOve <<
                         " idle "         << sliceIdl);
 
-          // Keep removing any extra bit rate until the safeguard threshold.
-          bool removedFlag = false;
-          while ((sliceExt >= stepRate) && (idlShareBitRate < 0))
+          // Remove all unused extra bit rate (step by step) from this slice.
+          while (sliceIdl >= stepRate && sliceExt >= stepRate)
             {
-              removedFlag = true;
-              NS_LOG_DEBUG ("Decrease extra bit rate for congested link.");
-              bool success = lInfo->UpdateExtBitRate (dir, slice, -stepRate);
-              NS_ASSERT_MSG (success, "Error when updating extra bit rate.");
-              sliceExt -= stepRate;
-              if (sliceIdl >= stepRate)
-                {
-                  // This decreased bit rate was not been used.
-                  sliceIdl -= stepRate;
-                }
-              else
-                {
-                  // This decreased bit rate was being used.
-                  idlShareBitRate += stepRate - sliceIdl;
-                  sliceIdl = 0;
-                }
-            }
-
-          if ((sliceIdl > (stepRate * 2)) && (sliceExt >= stepRate)
-              && !removedFlag)
-            {
-              // This is an underloaded slice with some extra bit rate.
-              // Decrease the slice extra bit rate by one step.
               NS_LOG_DEBUG ("Decrease extra bit rate overbooking.");
               bool success = lInfo->UpdateExtBitRate (dir, slice, -stepRate);
               NS_ASSERT_MSG (success, "Error when updating extra bit rate.");
+              sliceIdl -= stepRate;
+              sliceExt -= stepRate;
+            }
+        }
+
+      // At this point there is no slices with more than one step of unused
+      // extra bit rate. Now, iterate again over slices with enabled bandwidth
+      // sharing in increasing priority order, removing some extra bit rate
+      // from those slices that are using more than its quota to get the link
+      // usage below the safeguard threshold again.
+      bool removedFlag = false;
+      auto it = m_sliceCtrlsSha.begin ();
+      auto sp = m_sliceCtrlsSha.begin ();
+      while (it != m_sliceCtrlsSha.end () && idlShareBitRate < 0)
+        {
+          // Check if the slice priority has increased to update the sp.
+          if ((*it)->GetPriority () > (*sp)->GetPriority ())
+            {
+              NS_ASSERT_MSG (!removedFlag, "Inconsistent removed flag.");
+              sp = it;
+            }
+
+          // Get the idle and extra bit rates for this slice.
+          SliceId slice = (*it)->GetSliceId ();
+          int64_t sliceIdl = lInfo->GetIdlBitRate (lTerm, dir, slice);
+          int64_t sliceExt = lInfo->GetExtBitRate (dir, slice);
+          NS_LOG_DEBUG ("Current slice " << SliceIdStr (slice) <<
+                        " direction "    << LinkInfo::LinkDirStr (dir) <<
+                        " extra "        << sliceExt <<
+                        " idle "         << sliceIdl);
+
+          // If possible, decrease the slice extra bit rate by one step.
+          if (sliceExt >= stepRate)
+            {
+              removedFlag = true;
+              NS_ASSERT_MSG (sliceIdl < stepRate, "Inconsistent bit rate.");
+              NS_LOG_DEBUG ("Decrease extra bit rate for congested link.");
+              bool success = lInfo->UpdateExtBitRate (dir, slice, -stepRate);
+              NS_ASSERT_MSG (success, "Error when updating extra bit rate.");
+              idlShareBitRate += stepRate - sliceIdl;
+            }
+
+          // Select the slice for the next loop iteration.
+          auto nextIt = std::next (it);
+          bool isLast = (nextIt == m_sliceCtrlsSha.end ());
+          if ((!isLast && (*nextIt)->GetPriority () == (*it)->GetPriority ())
+              || (removedFlag == false))
+            {
+              // Go to the next slice if it has the same priority of the
+              // current one or if no more extra bit rate can be recovered from
+              // slices with the current priority.
+              it = nextIt;
+            }
+          else
+            {
+              // Go back to the first slice with the current priority (can be
+              // the current slice) and reset the removed flag.
+              NS_ASSERT_MSG (removedFlag, "Inconsistent removed flag.");
+              it = sp;
+              removedFlag = false;
             }
         }
     }
