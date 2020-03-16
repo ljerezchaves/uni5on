@@ -78,7 +78,7 @@ main (int argc, char *argv[])
   bool        ofsLog   = false;
   int         pcapCfg  = 0;
   std::string prefix   = std::string ();
-  int         progress = 0;
+  int         progress = 1;
   bool        verbose  = false;
 
   // Configure some default attribute values. These values can be overridden by
