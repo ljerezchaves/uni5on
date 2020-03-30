@@ -2,7 +2,3 @@
 	path = src/ofswitch13
 	url = git@github.com:ljerezchaves/ofswitch13.git
 	branch = develop
-[submodule "ofsoftswitch13-gtp"]
-	path = ofsoftswitch13-gtp
-	url = git@github.com:ljerezchaves/ofsoftswitch13.git
-	branch = ns3lib-gtpu
