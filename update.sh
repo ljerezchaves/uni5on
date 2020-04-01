@@ -11,8 +11,9 @@ SIMNAME="svelte"
 BASEDIR="/local1/luciano"
 SIMDIR="${BASEDIR}/svelte-simulator"
 LIBDIR="${SIMDIR}/ofsoftswitch13-gtp"
-LOGDIR="${SIMDIR}/logs"
-MACHINELIST="atlas castor clio demeter eco esculapio heracles hercules hestia hydra kratos morfeu pollux satiros tetis zeus"
+LOGDIR="${SIMDIR}/logs/thesis"
+MACHINELIST="atlas castor clio demeter esculapio heracles hercules hestia morfeu pollux satiros tetis zeus"
+# MACHINELIST="atlas castor clio demeter eco esculapio heracles hercules hestia hydra kratos morfeu pollux satiros tetis zeus"
 
 function PrintHelp () {
   echo "Usage: $0 <action>"
@@ -37,12 +38,12 @@ function PrintHelp () {
   echo -e "  ${bold}fg${normal}:   \tExecute the command in foreground mode."
   echo
   echo "Available ${bold}commands${normal}:"
-  echo -e "  ${bold}git${normal}:      \tExecute the git [args] command on the simulator directory."
-  echo -e "  ${bold}make${normal}:     \tExecute the make [args] command on the simulator directory."
-  echo -e "  ${bold}pull-logs${normal}:\tPull changes for the logs/<dir> git repository."
-  echo -e "  ${bold}pull-sim${normal}: \tPull changes for the simulator git repository."
-  echo -e "  ${bold}stats-sim${normal}:\tShow the status for the simulator git repository."
-  echo -e "  ${bold}waf${normal}:      \tExecute the ./waf [args] command on the simulator directory."
+  echo -e "  ${bold}make [args]${normal}:     \tExecute the make [args] command on the ${SIMDIR} directory."
+  echo -e "  ${bold}waf [args]${normal}:      \tExecute the ./waf [args] command on the ${SIMDIR} directory."
+  echo -e "  ${bold}git-sim [args]${normal}:  \tExecute the git [args] command on the ${SIMDIR} directory."
+  echo -e "  ${bold}git-log [args]${normal}:  \tExecute the git [args] command on the ${LOGDIR} directory."
+  echo -e "  ${bold}pull${normal}:            \tRecursively pull changes on the ${SIMDIR} directory."
+  echo -e "  ${bold}head${normal}:            \tShow the HEAD commit log for all git repositories."
   exit 0
 }
 
@@ -92,14 +93,6 @@ case "${ACTION}" in
       local)
         OLDPWD=$(pwd)
         case "${COMMAND}" in
-          git)
-            cd ${SIMDIR}
-            if [ $? -eq 0 ];
-            then
-              git $@
-            fi;
-          ;;
-
           make)
             cd ${SIMDIR}
             if [ $? -eq 0 ];
@@ -108,24 +101,31 @@ case "${ACTION}" in
             fi;
           ;;
 
-          pull-logs)
-	          # Parsing positional arguments
-	          if [ $# -lt 1 ];
-	          then
-	            echo "Specify the logs/<directory>"
-	            PrintHelp;
-	          fi;
-	          DIR=$1
-	          shift
-
-            cd ${LOGDIR}/${DIR}
+          waf)
+            cd ${SIMDIR}
             if [ $? -eq 0 ];
             then
-              git pull
+              ./waf $@
             fi;
           ;;
 
-          pull-sim)
+          git-sim)
+            cd ${SIMDIR}
+            if [ $? -eq 0 ];
+            then
+              git $@
+            fi;
+          ;;
+
+          git-log)
+            cd ${LOGDIR}
+            if [ $? -eq 0 ];
+            then
+              git $@
+            fi;
+          ;;
+
+          pull)
             cd ${SIMDIR}
             if [ $? -eq 0 ];
             then
@@ -133,7 +133,7 @@ case "${ACTION}" in
             fi;
           ;;
 
-          stats-sim)
+          head)
             cd ${SIMDIR}
             if [ $? -eq 0 ];
             then
@@ -150,20 +150,17 @@ case "${ACTION}" in
               echo "${yellow}** Switch library::${normal}"
               git log -n1
               echo
+
+              cd ${LOGDIR}
+              echo "${yellow}** Output logs::${normal}"
+              git log -n1
+              echo
             fi;
             echo
           ;;
 
-          waf)
-            cd ${SIMDIR}
-            if [ $? -eq 0 ];
-            then
-              ./waf $@
-            fi;
-          ;;
-
           *)
-            echo "Invalid <command> argument"
+            echo "Invalid <command> [arguments]"
             PrintHelp
           ;;
         esac
