@@ -46,12 +46,12 @@ BackhaulController::GetTypeId (void)
 
     .AddAttribute ("ExtraStep",
                    "Extra bit rate adjustment step.",
-                   DataRateValue (DataRate ("4Mbps")),
+                   DataRateValue (DataRate ("12Mbps")),
                    MakeDataRateAccessor (&BackhaulController::m_extraStep),
                    MakeDataRateChecker ())
     .AddAttribute ("GuardStep",
                    "Link guard bit rate.",
-                   DataRateValue (DataRate ("5Mbps")),
+                   DataRateValue (DataRate ("10Mbps")),
                    MakeDataRateAccessor (&BackhaulController::m_guardStep),
                    MakeDataRateChecker ())
     .AddAttribute ("MeterStep",
@@ -81,7 +81,7 @@ BackhaulController::GetTypeId (void)
                                     SliceModeStr (SliceMode::DYNA)))
     .AddAttribute ("SliceTimeout",
                    "Inter-slice adjustment timeout.",
-                   TimeValue (Seconds (5)),
+                   TimeValue (Seconds (20)),
                    MakeTimeAccessor (&BackhaulController::m_sliceTimeout),
                    MakeTimeChecker ())
     .AddAttribute ("SpareUse",
