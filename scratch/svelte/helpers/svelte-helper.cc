@@ -547,9 +547,14 @@ SvelteHelper::AreFactoriesOk (ObjectFactory &controller,
 {
   NS_LOG_FUNCTION (this);
 
-  return (controller.GetTypeId () == SliceController::GetTypeId ()
-          && network.GetTypeId () == SliceNetwork::GetTypeId ()
-          && traffic.GetTypeId () == TrafficHelper::GetTypeId ());
+  bool ok = true;
+  ok &= (controller.GetTypeId () == SliceController::GetTypeId ()
+         || controller.GetTypeId ().IsChildOf (SliceController::GetTypeId ()));
+  ok &= (network.GetTypeId () == SliceNetwork::GetTypeId ()
+         || network.GetTypeId ().IsChildOf (SliceNetwork::GetTypeId ()));
+  ok &= (traffic.GetTypeId () == TrafficHelper::GetTypeId ()
+         || traffic.GetTypeId ().IsChildOf (TrafficHelper::GetTypeId ()));
+  return ok;
 }
 
 uint16_t
