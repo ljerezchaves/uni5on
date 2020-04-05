@@ -547,6 +547,11 @@ SvelteHelper::AreFactoriesOk (ObjectFactory &controller,
 {
   NS_LOG_FUNCTION (this);
 
+  if (controller.GetTypeId () == TypeId ()
+      || network.GetTypeId () == TypeId ()
+      || traffic.GetTypeId () == TypeId ())
+    return false;
+
   bool ok = true;
   ok &= (controller.GetTypeId () == SliceController::GetTypeId ()
          || controller.GetTypeId ().IsChildOf (SliceController::GetTypeId ()));
