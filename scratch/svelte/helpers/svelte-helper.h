@@ -75,6 +75,22 @@ public:
    * Configure PCAP traces on the SVELTE infrastructure.
    * \param prefix Filename prefix to use for PCAP files.
    * \param config The PCAP configuration bitmap.
+   *
+   * \internal
+   * We are using the following PCAP configuration bitmap:
+   * \verbatim
+   * 8 bits length: 0 0 0 0 0 0 0 0
+   *                A B C D E F G H
+   *
+   * A: Enable promiscuous mode
+   * B: Unused bit
+   * C: Enable PCAP on OpenFlow switch ports at backhaul
+   * D: Enable PCAP on EPC interfaces connected to the backhaul
+   * E: Enable PCAP on OpenFlow control channel at backhaul
+   * F: Enable PCAP on SGi intefaces connected to the Internet
+   * G: Enable PCAP on P-GW internal interfaces at logical slices
+   * H: Enable PCAP on OpenFlow control channels at logical slices
+   * \endverbatim
    */
   void ConfigurePcap (std::string prefix, uint8_t config);
 
