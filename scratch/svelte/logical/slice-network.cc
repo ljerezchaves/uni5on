@@ -189,6 +189,11 @@ SliceNetwork::GetTypeId (void)
                    UintegerValue (8192),
                    MakeUintegerAccessor (&SliceNetwork::m_tftFlowSize),
                    MakeUintegerChecker<uint16_t> (0, 65535))
+    .AddAttribute ("PgwTftTcamDelay",
+                   "Average time for a TCAM operation in P-GW TFT switches.",
+                   TimeValue (MicroSeconds (20)),
+                   MakeTimeAccessor (&SliceNetwork::m_tftTcamDelay),
+                   MakeTimeChecker (Time (0)))
     .AddAttribute ("PgwLinkDataRate",
                    "The data rate for the internal P-GW links.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -491,6 +496,8 @@ SliceNetwork::CreatePgw (void)
     "CpuCapacity", DataRateValue (m_tftCpuCapacity));
   m_switchHelper->SetDeviceAttribute (
     "FlowTableSize", UintegerValue (m_tftFlowSize));
+  m_switchHelper->SetDeviceAttribute (
+    "TcamDelay", TimeValue (m_tftTcamDelay));
   m_switchHelper->SetDeviceAttribute (
     "GroupTableSize", UintegerValue (0));
   m_switchHelper->SetDeviceAttribute (

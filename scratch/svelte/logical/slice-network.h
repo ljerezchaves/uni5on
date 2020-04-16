@@ -171,6 +171,7 @@ private:
   DataRate                      m_tftCpuCapacity;   //!< TFT CPU capacity.
   uint32_t                      m_tftFlowSize;      //!< TFT flow table size.
   uint32_t                      m_tftMeterSize;     //!< TFT meter table size.
+  Time                          m_tftTcamDelay;     //!< TFT TCAM delay.
 
   // S-GW user planes.
   Ptr<SgwInfo>                  m_sgwInfo;          //!< S-GW metadata.
