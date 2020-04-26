@@ -218,12 +218,13 @@ SvelteHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
   internet.Install (enb);
 
   // Attach the eNB node to the OpenFlow backhaul network over S1-U interface.
-  uint16_t infraSwIdx = GetEnbInfraSwIdx (cellId);
+  uint16_t infraSwIdx = m_backhaul->GetEnbSwIdx (cellId);
   Ptr<CsmaNetDevice> enbS1uDev;
   Ptr<OFSwitch13Port> infraSwPort;
   std::tie (enbS1uDev, infraSwPort) = m_backhaul->AttachEpcNode (
       enb, infraSwIdx, LteIface::S1);
   Ipv4Address enbS1uAddr = Ipv4AddressHelper::GetAddress (enbS1uDev);
+  NS_LOG_DEBUG ("eNB cell ID " << cellId << " at switch index " << infraSwIdx);
   NS_LOG_INFO ("eNB " << enb << " attached to s1u with IP " << enbS1uAddr);
 
   // Create the S1-U socket for the eNB node.
@@ -301,8 +302,8 @@ SvelteHelper::AddX2Interface (Ptr<Node> enb1Node, Ptr<Node> enb2Node)
   // Attach both eNB nodes to the OpenFlow backhaul network over X2 interface.
   uint16_t enb1CellId = enb1Dev->GetCellId ();
   uint16_t enb2CellId = enb2Dev->GetCellId ();
-  uint16_t enb1InfraSwIdx = GetEnbInfraSwIdx (enb1CellId);
-  uint16_t enb2InfraSwIdx = GetEnbInfraSwIdx (enb2CellId);
+  uint16_t enb1InfraSwIdx = m_backhaul->GetEnbSwIdx (enb1CellId);
+  uint16_t enb2InfraSwIdx = m_backhaul->GetEnbSwIdx (enb2CellId);
   Ptr<CsmaNetDevice> enb1X2Dev, enb2X2Dev;
   Ptr<OFSwitch13Port> enb1InfraSwPort, enb2InfraSwPort;
   std::tie (enb1X2Dev, enb1InfraSwPort) = m_backhaul->AttachEpcNode (
@@ -550,7 +551,9 @@ SvelteHelper::AreFactoriesOk (ObjectFactory &controller,
   if (controller.GetTypeId () == TypeId ()
       || network.GetTypeId () == TypeId ()
       || traffic.GetTypeId () == TypeId ())
-    return false;
+    {
+      return false;
+    }
 
   bool ok = true;
   ok &= (controller.GetTypeId () == SliceController::GetTypeId ()
@@ -560,21 +563,6 @@ SvelteHelper::AreFactoriesOk (ObjectFactory &controller,
   ok &= (traffic.GetTypeId () == TrafficHelper::GetTypeId ()
          || traffic.GetTypeId ().IsChildOf (TrafficHelper::GetTypeId ()));
   return ok;
-}
-
-uint16_t
-SvelteHelper::GetEnbInfraSwIdx (uint16_t cellId)
-{
-  NS_LOG_FUNCTION (this << cellId);
-
-  NS_ASSERT_MSG (cellId > 0, "Invalid cell ID.");
-  NS_ASSERT_MSG (m_backhaul->GetNSwitches () > 0, "Invalid number of switches.");
-
-  // Connect the eNBs to switches in increasing index order, skipping the first
-  // switch (index 0), which is exclusive for the P-GW connection. The three
-  // eNBs from the same cell site are always connected to the same switch.
-  uint16_t siteId = (cellId - 1) / 3;
-  return 1 + (siteId % (m_backhaul->GetNSwitches () - 1));
 }
 
 } // namespace ns3

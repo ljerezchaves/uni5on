@@ -66,6 +66,20 @@ RingNetwork::GetTypeId (void)
   return tid;
 }
 
+uint16_t
+RingNetwork::GetEnbSwIdx (uint16_t cellId) const
+{
+  NS_LOG_FUNCTION (this << cellId);
+
+  NS_ASSERT_MSG (cellId > 0, "Invalid cell ID.");
+
+  // Connect the eNBs to switches in increasing index order, skipping the first
+  // switch (index 0), which is exclusive for the P-GW connection. The three
+  // eNBs from the same cell site are always connected to the same switch.
+  uint16_t siteId = (cellId - 1) / 3;
+  return 1 + (siteId % (m_numNodes - 1));
+}
+
 void
 RingNetwork::DoDispose ()
 {

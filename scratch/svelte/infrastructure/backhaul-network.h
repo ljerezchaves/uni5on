@@ -85,6 +85,13 @@ public:
                  std::string ifaceStr = std::string ());
 
   /**
+   * Get the backahul switch index at which the given eNB should be connected.
+   * \param cellId The eNB cell ID.
+   * \return The backhaul switch index.
+   */
+  virtual uint16_t GetEnbSwIdx (uint16_t cellId) const = 0;
+
+  /**
    * Get the total number of OpenFlow switches in the backhaul network.
    * \return The number of OpenFlow switches.
    */

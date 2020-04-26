@@ -139,13 +139,6 @@ private:
   bool AreFactoriesOk (ObjectFactory &controller, ObjectFactory &network,
                        ObjectFactory &traffic) const;
 
-  /**
-   * Get the backahul switch index at which the given eNB should be connected.
-   * \param cellId The eNB cell ID.
-   * \return The backhaul switch index.
-   */
-  uint16_t GetEnbInfraSwIdx (uint16_t cellId);
-
   uint8_t                   m_pcapConfig;       //!< PCAP configuration bitmap.
 
   Ptr<RingNetwork>          m_backhaul;         //!< The backhaul network.

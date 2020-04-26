@@ -42,6 +42,9 @@ public:
    */
   static TypeId GetTypeId (void);
 
+  // Inherited from BackhaulNetwork.
+  uint16_t GetEnbSwIdx (uint16_t cellId) const;
+
 protected:
   /** Destructor implementation. */
   void DoDispose ();
