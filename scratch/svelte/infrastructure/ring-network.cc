@@ -62,6 +62,12 @@ RingNetwork::GetTypeId (void)
                    TimeValue (MicroSeconds (200)),
                    MakeTimeAccessor (&RingNetwork::m_linkDelay),
                    MakeTimeChecker ())
+    .AddAttribute ("SkipFirstSwitch",
+                   "Skip the first ring switch when attaching eNBs.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   BooleanValue (true),
+                   MakeBooleanAccessor (&RingNetwork::m_skipFirst),
+                   MakeBooleanChecker ())
   ;
   return tid;
 }
@@ -73,11 +79,18 @@ RingNetwork::GetEnbSwIdx (uint16_t cellId) const
 
   NS_ASSERT_MSG (cellId > 0, "Invalid cell ID.");
 
-  // Connect the eNBs to switches in increasing index order, skipping the first
-  // switch (index 0), which is exclusive for the P-GW connection. The three
-  // eNBs from the same cell site are always connected to the same switch.
+  // Connect the eNBs to switches in increasing index order. The three eNBs
+  // from the same cell site are always connected to the same switch.
   uint16_t siteId = (cellId - 1) / 3;
-  return 1 + (siteId % (m_numNodes - 1));
+  if (m_skipFirst)
+    {
+      // Skip the first switch (index 0), which is exclusive for the P-GW.
+      return 1 + (siteId % (m_numNodes - 1));
+    }
+  else
+    {
+      return siteId % m_numNodes;
+    }
 }
 
 void

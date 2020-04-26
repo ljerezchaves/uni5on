@@ -60,6 +60,7 @@ private:
   CsmaHelper                    m_csmaHelper;     //!< Connection helper.
   DataRate                      m_linkRate;       //!< Backhaul link data rate.
   Time                          m_linkDelay;      //!< Backhaul link delay.
+  bool                          m_skipFirst;      //!< Skip the first switch.
 
 }; // class RingNetwork
 
