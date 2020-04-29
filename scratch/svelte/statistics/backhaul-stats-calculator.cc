@@ -249,19 +249,21 @@ BackhaulStatsCalculator::OverloadDropPacket (std::string context,
       // EpcGtpuTag and notifying that the packet is entering the EPC.
       // To keep consistent log results, we are doing this manually here.
       uint32_t teid = PgwTftClassify (packet);
+      if (teid)
+        {
+          Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
+          SliceId slice = rInfo->GetSliceId ();
+          Direction dir = Direction::DLINK;
+          QosType type = rInfo->GetQosType ();
 
-      Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-      SliceId slice = rInfo->GetSliceId ();
-      Direction dir = Direction::DLINK;
-      QosType type = rInfo->GetQosType ();
+          sliStats = m_slices [slice].flowStats [dir][type];
+          sliStats->NotifyTx (packet->GetSize ());
+          sliStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::PLOAD);
 
-      sliStats = m_slices [slice].flowStats [dir][type];
-      sliStats->NotifyTx (packet->GetSize ());
-      sliStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::PLOAD);
-
-      aggStats = m_slices [SliceId::ALL].flowStats [dir][type];
-      aggStats->NotifyTx (packet->GetSize ());
-      aggStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::PLOAD);
+          aggStats = m_slices [SliceId::ALL].flowStats [dir][type];
+          aggStats->NotifyTx (packet->GetSize ());
+          aggStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::PLOAD);
+        }
     }
 }
 
@@ -302,19 +304,21 @@ BackhaulStatsCalculator::MeterDropPacket (
       // It must be a packed dropped by a traffic meter because this is the
       // only type of meters that we can have in the P-GW TFT switches.
       uint32_t teid = PgwTftClassify (packet);
+      if (teid)
+        {
+          Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
+          SliceId slice = rInfo->GetSliceId ();
+          Direction dir = Direction::DLINK;
+          QosType type = rInfo->GetQosType ();
 
-      Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-      SliceId slice = rInfo->GetSliceId ();
-      Direction dir = Direction::DLINK;
-      QosType type = rInfo->GetQosType ();
+          sliStats = m_slices [slice].flowStats [dir][type];
+          sliStats->NotifyTx (packet->GetSize ());
+          sliStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::METER);
 
-      sliStats = m_slices [slice].flowStats [dir][type];
-      sliStats->NotifyTx (packet->GetSize ());
-      sliStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::METER);
-
-      aggStats = m_slices [SliceId::ALL].flowStats [dir][type];
-      aggStats->NotifyTx (packet->GetSize ());
-      aggStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::METER);
+          aggStats = m_slices [SliceId::ALL].flowStats [dir][type];
+          aggStats->NotifyTx (packet->GetSize ());
+          aggStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::METER);
+        }
     }
 }
 
@@ -346,19 +350,21 @@ BackhaulStatsCalculator::QueueDropPacket (std::string context,
       // EpcGtpuTag and notifying that the packet is entering the EPC.
       // To keep consistent log results, we are doing this manually here.
       uint32_t teid = PgwTftClassify (packet);
+      if (teid)
+        {
+          Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
+          SliceId slice = rInfo->GetSliceId ();
+          Direction dir = Direction::DLINK;
+          QosType type = rInfo->GetQosType ();
 
-      Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-      SliceId slice = rInfo->GetSliceId ();
-      Direction dir = Direction::DLINK;
-      QosType type = rInfo->GetQosType ();
+          sliStats = m_slices [slice].flowStats [dir][type];
+          sliStats->NotifyTx (packet->GetSize ());
+          sliStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::QUEUE);
 
-      sliStats = m_slices [slice].flowStats [dir][type];
-      sliStats->NotifyTx (packet->GetSize ());
-      sliStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::QUEUE);
-
-      aggStats = m_slices [SliceId::ALL].flowStats [dir][type];
-      aggStats->NotifyTx (packet->GetSize ());
-      aggStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::QUEUE);
+          aggStats = m_slices [SliceId::ALL].flowStats [dir][type];
+          aggStats->NotifyTx (packet->GetSize ());
+          aggStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::QUEUE);
+        }
     }
 }
 
@@ -391,19 +397,21 @@ BackhaulStatsCalculator::TableDropPacket (
       // EpcGtpuTag and notifying that the packet is entering the EPC.
       // To keep consistent log results, we are doing this manually here.
       uint32_t teid = PgwTftClassify (packet);
+      if (teid)
+        {
+          Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
+          SliceId slice = rInfo->GetSliceId ();
+          Direction dir = Direction::DLINK;
+          QosType type = rInfo->GetQosType ();
 
-      Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-      SliceId slice = rInfo->GetSliceId ();
-      Direction dir = Direction::DLINK;
-      QosType type = rInfo->GetQosType ();
+          sliStats = m_slices [slice].flowStats [dir][type];
+          sliStats->NotifyTx (packet->GetSize ());
+          sliStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::TABLE);
 
-      sliStats = m_slices [slice].flowStats [dir][type];
-      sliStats->NotifyTx (packet->GetSize ());
-      sliStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::TABLE);
-
-      aggStats = m_slices [SliceId::ALL].flowStats [dir][type];
-      aggStats->NotifyTx (packet->GetSize ());
-      aggStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::TABLE);
+          aggStats = m_slices [SliceId::ALL].flowStats [dir][type];
+          aggStats->NotifyTx (packet->GetSize ());
+          aggStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::TABLE);
+        }
     }
 }
 
@@ -467,9 +475,7 @@ BackhaulStatsCalculator::PgwTftClassify (Ptr<const Packet> packet)
   packetCopy->PeekHeader (ipv4Header);
 
   Ptr<UeInfo> ueInfo = UeInfo::GetPointer (ipv4Header.GetDestination ());
-  NS_ASSERT_MSG (ueInfo, "No UE info for this IP adresses.");
-
-  return ueInfo->Classify (packetCopy);
+  return ueInfo ? ueInfo->Classify (packetCopy) : 0;
 }
 
 } // Namespace ns3

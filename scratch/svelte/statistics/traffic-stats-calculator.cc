@@ -228,9 +228,13 @@ TrafficStatsCalculator::OverloadDropPacket (std::string context,
       // entering the TFT logical port that is responsible for attaching the
       // EpcGtpuTag and notifying that the packet is entering the EPC.
       // To keep consistent log results, we are doing this manually here.
-      stats = GetFlowStats (PgwTftClassify (packet), Direction::DLINK);
-      stats->NotifyTx (packet->GetSize ());
-      stats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::PLOAD);
+      uint32_t teid = PgwTftClassify (packet);
+      if (teid)
+        {
+          stats = GetFlowStats (teid, Direction::DLINK);
+          stats->NotifyTx (packet->GetSize ());
+          stats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::PLOAD);
+        }
     }
 }
 
@@ -262,9 +266,13 @@ TrafficStatsCalculator::MeterDropPacket (
       // To keep consistent log results, we are doing this manually here.
       // It must be a packed dropped by a traffic meter because this is the
       // only type of meters that we can have in the P-GW TFT switches.
-      stats = GetFlowStats (PgwTftClassify (packet), Direction::DLINK);
-      stats->NotifyTx (packet->GetSize ());
-      stats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::METER);
+      uint32_t teid = PgwTftClassify (packet);
+      if (teid)
+        {
+          stats = GetFlowStats (teid, Direction::DLINK);
+          stats->NotifyTx (packet->GetSize ());
+          stats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::METER);
+        }
     }
 }
 
@@ -287,9 +295,13 @@ TrafficStatsCalculator::QueueDropPacket (std::string context,
       // entering the TFT logical port that is responsible for attaching the
       // EpcGtpuTag and notifying that the packet is entering the EPC.
       // To keep consistent log results, we are doing this manually here.
-      stats = GetFlowStats (PgwTftClassify (packet), Direction::DLINK);
-      stats->NotifyTx (packet->GetSize ());
-      stats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::QUEUE);
+      uint32_t teid = PgwTftClassify (packet);
+      if (teid)
+        {
+          stats = GetFlowStats (teid, Direction::DLINK);
+          stats->NotifyTx (packet->GetSize ());
+          stats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::QUEUE);
+        }
     }
 }
 
@@ -313,9 +325,13 @@ TrafficStatsCalculator::TableDropPacket (
       // entering the TFT logical port that is responsible for attaching the
       // EpcGtpuTag and notifying that the packet is entering the EPC.
       // To keep consistent log results, we are doing this manually here.
-      stats = GetFlowStats (PgwTftClassify (packet), Direction::DLINK);
-      stats->NotifyTx (packet->GetSize ());
-      stats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::TABLE);
+      uint32_t teid = PgwTftClassify (packet);
+      if (teid)
+        {
+          stats = GetFlowStats (teid, Direction::DLINK);
+          stats->NotifyTx (packet->GetSize ());
+          stats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::TABLE);
+        }
     }
 }
 
@@ -363,9 +379,7 @@ TrafficStatsCalculator::PgwTftClassify (Ptr<const Packet> packet)
   packetCopy->PeekHeader (ipv4Header);
 
   Ptr<UeInfo> ueInfo = UeInfo::GetPointer (ipv4Header.GetDestination ());
-  NS_ASSERT_MSG (ueInfo, "No UE info for this IP adresses.");
-
-  return ueInfo->Classify (packetCopy);
+  return ueInfo ? ueInfo->Classify (packetCopy) : 0;
 }
 
 Ptr<FlowStatsCalculator>

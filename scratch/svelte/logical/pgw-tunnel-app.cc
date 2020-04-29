@@ -87,6 +87,7 @@ PgwTunnelApp::AttachEpcGtpuTag (Ptr<Packet> packet, uint32_t teid)
   packetCopy->PeekHeader (ipv4Header);
 
   Ptr<UeInfo> ueInfo = UeInfo::GetPointer (ipv4Header.GetDestination ());
+  NS_ASSERT_MSG (ueInfo, "No UE info for this IP address.");
   teid = ueInfo->Classify (packetCopy);
 
   // Packet entering the EPC. Attach the tag and fire the S5 TX trace source.
