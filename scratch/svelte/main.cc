@@ -170,7 +170,7 @@ main (int argc, char *argv[])
   std::cout << "END OK";
   if (cerrValue.Get ())
     {
-      std::cout << " - WITH ERRORS" << std::endl;
+      std::cout << " - WITH ERRORS";
     }
   std::cout << std::endl;
   return 0;
