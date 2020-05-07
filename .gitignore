@@ -47,6 +47,5 @@ topos/tccsi
 
 logs
 
+.vscode/**
 .DS_Store
-*radio-map.pdf
-*radio-map.gpi
