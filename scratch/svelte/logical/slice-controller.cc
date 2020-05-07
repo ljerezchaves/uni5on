@@ -143,6 +143,11 @@ SliceController::GetTypeId (void)
                    DoubleValue (0.80),
                    MakeDoubleAccessor (&SliceController::m_tftSplitThs),
                    MakeDoubleChecker<double> (0.5, 1.0))
+    .AddAttribute ("PgwTftStartMax",
+                   "When in auto mode, start with maximum number of P-GW TFTs.",
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&SliceController::m_tftStartMax),
+                   MakeBooleanChecker ())
     .AddAttribute ("PgwTftTimeout",
                    "The interval between P-GW TFT load balancing operations.",
                    TimeValue (Seconds (5)),
@@ -400,15 +405,19 @@ SliceController::NotifyPgwAttach (
   // Set the P-GW TFT load balancing initial level.
   switch (GetPgwTftLoadBal ())
     {
+    case OpMode::OFF:
+      {
+        pgwInfo->SetCurLevel (0);
+        break;
+      }
     case OpMode::ON:
       {
         pgwInfo->SetCurLevel (pgwInfo->GetMaxLevel ());
         break;
       }
-    case OpMode::OFF:
     case OpMode::AUTO:
       {
-        pgwInfo->SetCurLevel (0);
+        pgwInfo->SetCurLevel (m_tftStartMax ? pgwInfo->GetMaxLevel () : 0);
         break;
       }
     }

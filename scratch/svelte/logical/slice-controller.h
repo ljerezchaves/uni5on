@@ -410,6 +410,7 @@ private:
   OpMode                  m_tftLoadBal;     //!< P-GW TFT load balancing.
   double                  m_tftJoinThs;     //!< P-GW TFT join threshold.
   double                  m_tftSplitThs;    //!< P-GW TFT split threshold.
+  bool                    m_tftStartMax;    //!< P-GW TFT start with maximum.
   Time                    m_tftTimeout;     //!< P-GW TFT load bal timeout.
 
   // S-GW metadata.
