@@ -83,6 +83,7 @@ public:
    * \return The requested information.
    */
   //\{
+  OpMode    GetAggBitRateCheck    (void) const;
   OpMode    GetSwBlockPolicy      (void) const;
   double    GetSwBlockThreshold   (void) const;
   SliceMode GetInterSliceMode     (void) const;
@@ -283,6 +284,7 @@ private:
   OFSwitch13DeviceContainer m_switchDevices;  //!< OpenFlow switch devices.
 
   // Internal mechanisms metadata.
+  OpMode                m_aggCheck;       //!< Check bit rate for agg bearers.
   DataRate              m_extraStep;      //!< Extra adjustment step.
   DataRate              m_guardStep;      //!< Dynamic slice link guard.
   DataRate              m_meterStep;      //!< Meter adjustment step.

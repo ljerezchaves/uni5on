@@ -44,6 +44,13 @@ BackhaulController::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::BackhaulController")
     .SetParent<OFSwitch13Controller> ()
 
+    .AddAttribute ("AggBitRateCheck",
+                   "Check for the available bit rate for aggregated bearers.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   EnumValue (OpMode::OFF),
+                   MakeEnumAccessor (&BackhaulController::m_aggCheck),
+                   MakeEnumChecker (OpMode::OFF, OpModeStr (OpMode::OFF),
+                                    OpMode::ON,  OpModeStr (OpMode::ON)))
     .AddAttribute ("ExtraStep",
                    "Extra bit rate adjustment step.",
                    DataRateValue (DataRate ("12Mbps")),
@@ -121,6 +128,14 @@ BackhaulController::GetNSwitches (void) const
   NS_LOG_FUNCTION (this);
 
   return m_switchDevices.GetN ();
+}
+
+OpMode
+BackhaulController::GetAggBitRateCheck (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_aggCheck;
 }
 
 OpMode

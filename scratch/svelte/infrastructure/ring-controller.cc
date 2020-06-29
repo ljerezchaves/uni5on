@@ -350,8 +350,8 @@ RingController::BitRateRequest (
   // Ignoring this check for Non-GBR bearers, aggregated bearers,
   // and local-routing bearers.
   Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
-  if (rInfo->IsNonGbr () || rInfo->IsAggregated ()
-      || ringInfo->IsLocalPath (iface))
+  if (rInfo->IsNonGbr () || ringInfo->IsLocalPath (iface)
+      || (rInfo->IsAggregated () && GetAggBitRateCheck () == OpMode::OFF))
     {
       return true;
     }
