@@ -19,15 +19,15 @@
  */
 
 #include <ns3/csma-module.h>
-#include "svelte-helper.h"
+#include "scenario-helper.h"
 #include "traffic-helper.h"
 #include "../infrastructure/backhaul-controller.h"
 #include "../infrastructure/radio-network.h"
 #include "../infrastructure/ring-network.h"
-#include "../infrastructure/svelte-enb-application.h"
+#include "../infrastructure/uni5on-enb-application.h"
 #include "../logical/slice-controller.h"
 #include "../logical/slice-network.h"
-#include "../logical/svelte-mme.h"
+#include "../logical/uni5on-mme.h"
 #include "../metadata/enb-info.h"
 #include "../metadata/ue-info.h"
 

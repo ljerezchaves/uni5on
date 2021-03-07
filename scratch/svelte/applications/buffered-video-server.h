@@ -20,7 +20,7 @@
 #ifndef BUFFERED_VIDEO_SERVER_H
 #define BUFFERED_VIDEO_SERVER_H
 
-#include "svelte-server.h"
+#include "uni5on-server.h"
 
 namespace ns3 {
 

@@ -24,7 +24,7 @@
 #include <ns3/core-module.h>
 #include <ns3/internet-module.h>
 #include <ns3/ofswitch13-module.h>
-#include "helpers/svelte-helper.h"
+#include "helpers/scenario-helper.h"
 
 using namespace ns3;
 

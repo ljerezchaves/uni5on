@@ -17,10 +17,10 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef SVELTE_UDP_CLIENT_H
-#define SVELTE_UDP_CLIENT_H
+#ifndef UNI5ON_UDP_CLIENT_H
+#define UNI5ON_UDP_CLIENT_H
 
-#include "svelte-client.h"
+#include "uni5on-client.h"
 
 namespace ns3 {
 
@@ -75,4 +75,4 @@ private:
 };
 
 } // namespace ns3
-#endif /* SVELTE_UDP_CLIENT_H */
+#endif /* UNI5ON_UDP_CLIENT_H */

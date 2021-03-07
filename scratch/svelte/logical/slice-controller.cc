@@ -27,7 +27,7 @@
 #include "../metadata/ue-info.h"
 #include "gtp-tunnel-app.h"
 #include "slice-network.h"
-#include "svelte-mme.h"
+#include "uni5on-mme.h"
 
 #undef NS_LOG_APPEND_CONTEXT
 #define NS_LOG_APPEND_CONTEXT \

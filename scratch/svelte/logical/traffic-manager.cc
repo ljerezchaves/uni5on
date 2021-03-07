@@ -20,7 +20,7 @@
 
 #include "traffic-manager.h"
 #include "slice-controller.h"
-#include "../applications/svelte-client.h"
+#include "../applications/uni5on-client.h"
 #include "../metadata/routing-info.h"
 #include "../metadata/ue-info.h"
 

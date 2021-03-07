@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef SVELTE_COMMON_H
-#define SVELTE_COMMON_H
+#ifndef UNI5ON_COMMON_H
+#define UNI5ON_COMMON_H
 
 #include <string>
 #include <ns3/core-module.h>
@@ -497,4 +497,4 @@ std::string GetUint64Hex (uint64_t value);
 void SetDeviceNames (Ptr<NetDevice> src, Ptr<NetDevice> dst, std::string desc);
 
 } // namespace ns3
-#endif // SVELTE_COMMON_H
+#endif // UNI5ON_COMMON_H

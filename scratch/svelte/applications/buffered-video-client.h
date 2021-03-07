@@ -20,7 +20,7 @@
 #ifndef BUFFERED_VIDEO_CLIENT_H
 #define BUFFERED_VIDEO_CLIENT_H
 
-#include "svelte-client.h"
+#include "uni5on-client.h"
 
 namespace ns3 {
 

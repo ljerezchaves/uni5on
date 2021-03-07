@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include "svelte-server.h"
-#include "svelte-client.h"
+#include "uni5on-server.h"
+#include "uni5on-client.h"
 
 #undef NS_LOG_APPEND_CONTEXT
 #define NS_LOG_APPEND_CONTEXT                             \

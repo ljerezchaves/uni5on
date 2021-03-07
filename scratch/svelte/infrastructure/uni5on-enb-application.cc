@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include "svelte-enb-application.h"
-#include "../svelte-common.h"
+#include "uni5on-enb-application.h"
+#include "../uni5on-common.h"
 #include "../logical/epc-gtpu-tag.h"
 #include "../metadata/ue-info.h"
 #include "../metadata/routing-info.h"

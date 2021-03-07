@@ -34,7 +34,7 @@
 #include <ns3/internet-module.h>
 #include <ns3/ofswitch13-module.h>
 #include "../metadata/sgw-info.h"
-#include "../svelte-common.h"
+#include "../uni5on-common.h"
 
 namespace ns3 {
 

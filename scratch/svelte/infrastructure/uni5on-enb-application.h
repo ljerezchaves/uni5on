@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef SVELTE_ENB_APPLICATION_H
-#define SVELTE_ENB_APPLICATION_H
+#ifndef UNI5ON_ENB_APPLICATION_H
+#define UNI5ON_ENB_APPLICATION_H
 
 #include <ns3/lte-module.h>
 
@@ -99,4 +99,4 @@ private:
 };
 
 } //namespace ns3
-#endif /* SVELTE_ENB_APPLICATION_H */
+#endif /* UNI5ON_ENB_APPLICATION_H */

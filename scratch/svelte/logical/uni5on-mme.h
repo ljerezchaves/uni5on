@@ -20,8 +20,8 @@
  *         Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef SVELTE_MME_H
-#define SVELTE_MME_H
+#ifndef UNI5ON_MME_H
+#define UNI5ON_MME_H
 
 #include <map>
 #include <list>
@@ -95,4 +95,4 @@ private:
 };
 
 } // namespace ns3
-#endif // SVELTE_MME_H
+#endif // UNI5ON_MME_H

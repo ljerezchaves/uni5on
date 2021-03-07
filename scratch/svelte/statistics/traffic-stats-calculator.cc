@@ -21,7 +21,7 @@
 #include <iomanip>
 #include <iostream>
 #include "traffic-stats-calculator.h"
-#include "../applications/svelte-client.h"
+#include "../applications/uni5on-client.h"
 #include "../metadata/ue-info.h"
 #include "../metadata/routing-info.h"
 

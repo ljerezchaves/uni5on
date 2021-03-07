@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef SVELTE_QOS_QUEUE_H
-#define SVELTE_QOS_QUEUE_H
+#ifndef UNI5ON_QOS_QUEUE_H
+#define UNI5ON_QOS_QUEUE_H
 
 #include <ns3/ofswitch13-module.h>
 
@@ -75,4 +75,4 @@ private:
 };
 
 } // namespace ns3
-#endif /* SVELTE_QOS_QUEUE_H */
+#endif /* UNI5ON_QOS_QUEUE_H */

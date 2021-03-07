@@ -22,7 +22,7 @@
 #define RING_INFO_H
 
 #include <ns3/core-module.h>
-#include "../svelte-common.h"
+#include "../uni5on-common.h"
 #include "link-info.h"
 
 namespace ns3 {

@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef SVELTE_CLIENT_H
-#define SVELTE_CLIENT_H
+#ifndef UNI5ON_CLIENT_H
+#define UNI5ON_CLIENT_H
 
 #include <ns3/core-module.h>
 #include <ns3/lte-module.h>
@@ -184,4 +184,4 @@ private:
 };
 
 } // namespace ns3
-#endif /* SVELTE_CLIENT_H */
+#endif /* UNI5ON_CLIENT_H */

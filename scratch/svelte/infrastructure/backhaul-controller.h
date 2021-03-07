@@ -35,7 +35,7 @@
 #include "../logical/slice-controller.h"
 #include "../metadata/link-info.h"
 #include "../metadata/routing-info.h"
-#include "../svelte-common.h"
+#include "../uni5on-common.h"
 
 namespace ns3 {
 

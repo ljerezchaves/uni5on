@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef SVELTE_EPC_HELPER_H
-#define SVELTE_EPC_HELPER_H
+#ifndef SCENARIO_EPC_HELPER_H
+#define SCENARIO_EPC_HELPER_H
 
 #include <ns3/core-module.h>
 #include <ns3/lte-module.h>
@@ -30,7 +30,7 @@
 #include "../statistics/lte-rrc-stats-calculator.h"
 #include "../statistics/pgw-tft-stats-calculator.h"
 #include "../statistics/traffic-stats-calculator.h"
-#include "../svelte-common.h"
+#include "../uni5on-common.h"
 
 namespace ns3 {
 
@@ -178,4 +178,4 @@ private:
 };
 
 } // namespace ns3
-#endif  // SVELTE_EPC_HELPER_H
+#endif  // SCENARIO_EPC_HELPER_H
