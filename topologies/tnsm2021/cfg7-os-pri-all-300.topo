@@ -1,0 +1,70 @@
+global SimTime "1000s"
+
+default ns3::RingNetwork::NumRingSwitches "5"
+default ns3::RadioNetwork::NumCellSites "5"
+default ns3::LteHexGridEnbTopologyHelper::GridWidth "2"
+default ns3::RingNetwork::SkipFirstSwitch "false"
+default ns3::RingNetwork::RingLinkDataRate "100Mbps"
+
+default ns3::RingController::Routing "spf"
+default ns3::BackhaulController::QosQueues "on"
+
+default ns3::BackhaulNetwork::CpuCapacity "1Gbps"
+default ns3::BackhaulNetwork::FlowTableSize "1536"
+default ns3::BackhaulNetwork::GroupTableSize "64"
+default ns3::BackhaulNetwork::MeterTableSize "256"
+default ns3::BackhaulController::SwBlockPolicy "on"
+default ns3::BackhaulController::SwBlockThs "0.95"
+
+default ns3::SliceNetwork::SgwCpuCapacity "2Gbps"
+default ns3::SliceNetwork::SgwFlowTableSize "8192"
+default ns3::SliceController::SgwBlockPolicy "on"
+default ns3::SliceController::SgwBlockThs "0.95"
+
+default ns3::SliceNetwork::PgwMainCpuCapacity "2Gbps"
+default ns3::SliceNetwork::PgwMainFlowTableSize "8192"
+default ns3::SliceController::PgwBlockPolicy "on"
+default ns3::SliceController::PgwBlockThs "0.95"
+
+default ns3::SliceController::PgwTftLoadBal "auto"
+default ns3::SliceController::PgwTftJoinThs "0.3"
+default ns3::SliceController::PgwTftSplitThs "0.9"
+default ns3::SliceController::PgwTftStartMax "true"
+default ns3::SliceController::PgwTftTimeout "5s"
+default ns3::SliceNetwork::NumPgwTftSwitches "4"
+
+default ns3::BackhaulController::SliceMode "dynamic"
+default ns3::BackhaulController::SpareUse "on"
+default ns3::BackhaulController::MeterStep "2Mbps"
+default ns3::BackhaulController::ExtraStep "12Mbps"
+default ns3::BackhaulController::GuardStep "5Mbps"
+default ns3::BackhaulController::SliceTimeout "20s"
+default ns3::SliceController::Sharing "on"
+
+default ns3::SliceController::Aggregation "auto"
+default ns3::BackhaulController::AggBitRateCheck "on"
+
+default ns3::SliceNetwork::UeMobility "true"
+default ns3::SliceNetwork::UeMobilityPause "ns3::ExponentialRandomVariable[Mean=30.0]"
+default ns3::RadioNetwork::EnableHandover "true"
+
+default ns3::TrafficHelper::InitialProb "1.0"
+default ns3::TrafficHelper::FullAppsAt "0s"
+default ns3::TrafficHelper::HalfAppsAt "0s"
+default ns3::TrafficHelper::NoneAppsAt "0s"
+default ns3::TrafficHelper::RestartApps "true"
+default ns3::TrafficHelper::StartAppsAt "0s"
+default ns3::TrafficHelper::StopAppsAt "900s"
+default ns3::TrafficHelper::UseOnlyDefaultBearer "false"
+
+default ns3::ScenarioHelper::HtcController "ns3::SliceController[Priority=3|Quota=40|GbrBlockThs=0.25]"
+default ns3::ScenarioHelper::HtcSlice "ns3::SliceNetwork[NumUes=90|UeCellSiteCoverage=0|PgwBackhaulSwitch=0|SgwBackhaulSwitch=0|PgwTftCpuCapacity=256Mbps|PgwTftFlowTableSize=512|PgwTftTcamDelay=20us|UeMobilitySpeed=ns3::ConstantRandomVariable[Constant=0.834]]"
+default ns3::ScenarioHelper::HtcTraffic "ns3::TrafficHelper[PoissonInterArrival=ns3::ExponentialRandomVariable[Mean=120.0]|InitialProb=0.5|FullAppsAt=450s]"
+
+default ns3::ScenarioHelper::MtcController "ns3::SliceController[Priority=1|Quota=15|GbrBlockThs=0.5]"
+default ns3::ScenarioHelper::MtcSlice "ns3::SliceNetwork[NumUes=150|UeCellSiteCoverage=0|PgwBackhaulSwitch=0|SgwBackhaulSwitch=3|PgwTftCpuCapacity=64Mbps|PgwTftFlowTableSize=2048|PgwTftTcamDelay=80us|UeMobilitySpeed=ns3::ConstantRandomVariable[Constant=8.340]]"
+default ns3::ScenarioHelper::MtcTraffic "ns3::TrafficHelper[PoissonInterArrival=ns3::ExponentialRandomVariable[Mean=100.0]]"
+
+default ns3::ScenarioHelper::TmpController "ns3::SliceController[Priority=2|Quota=25|GbrBlockThs=0.25]"
+default ns3::ScenarioHelper::TmpSlice "ns3::SliceNetwork[NumUes=60|UeCellSiteCoverage=2|PgwBackhaulSwitch=0|SgwBackhaulSwitch=2|PgwTftCpuCapacity=64Mbps|PgwTftFlowTableSize=2048|PgwTftTcamDelay=80us|UeMobilitySpeed=ns3::ConstantRandomVariable[Constant=0.834]]"
+default ns3::ScenarioHelper::TmpTraffic "ns3::TrafficHelper[PoissonInterArrival=ns3::ExponentialRandomVariable[Mean=80.0]|StartAppsAt=250s|StopAppsAt=650s]"
