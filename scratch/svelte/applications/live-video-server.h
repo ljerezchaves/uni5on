@@ -25,12 +25,12 @@
 namespace ns3 {
 
 /**
- * \ingroup svelteApps
+ * \ingroup uni5onApps
  * This is the server side of a live video traffic generator, sending and
  * receiving UDP datagrams following a MPEG video pattern with random
  * video length.
  */
-class LiveVideoServer : public SvelteServer
+class LiveVideoServer : public Uni5onServer
 {
 public:
   /**
@@ -51,7 +51,7 @@ private:
   virtual void StartApplication (void);
   virtual void StopApplication (void);
 
-  // Inherited from SvelteServer.
+  // Inherited from Uni5onServer.
   void NotifyStart ();
   void NotifyForceStop ();
 

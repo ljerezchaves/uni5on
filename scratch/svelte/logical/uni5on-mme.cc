@@ -27,34 +27,34 @@
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("SvelteMme");
-NS_OBJECT_ENSURE_REGISTERED (SvelteMme);
+NS_LOG_COMPONENT_DEFINE ("Uni5onMme");
+NS_OBJECT_ENSURE_REGISTERED (Uni5onMme);
 
-SvelteMme::SvelteMme ()
+Uni5onMme::Uni5onMme ()
 {
   NS_LOG_FUNCTION (this);
 
-  m_s1apSapMme = new MemberEpcS1apSapMme<SvelteMme> (this);
-  m_s11SapMme = new MemberEpcS11SapMme<SvelteMme> (this);
+  m_s1apSapMme = new MemberEpcS1apSapMme<Uni5onMme> (this);
+  m_s11SapMme = new MemberEpcS11SapMme<Uni5onMme> (this);
 }
 
-SvelteMme::~SvelteMme ()
+Uni5onMme::~Uni5onMme ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-SvelteMme::GetTypeId (void)
+Uni5onMme::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::SvelteMme")
+  static TypeId tid = TypeId ("ns3::Uni5onMme")
     .SetParent<Object> ()
-    .AddConstructor<SvelteMme> ()
+    .AddConstructor<Uni5onMme> ()
   ;
   return tid;
 }
 
 void
-SvelteMme::DoDispose ()
+Uni5onMme::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -64,7 +64,7 @@ SvelteMme::DoDispose ()
 }
 
 EpcS1apSapMme*
-SvelteMme::GetS1apSapMme (void) const
+Uni5onMme::GetS1apSapMme (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -72,7 +72,7 @@ SvelteMme::GetS1apSapMme (void) const
 }
 
 EpcS11SapMme*
-SvelteMme::GetS11SapMme (void) const
+Uni5onMme::GetS11SapMme (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -83,7 +83,7 @@ SvelteMme::GetS11SapMme (void) const
 // S1-AP SAP MME forwarded methods
 //
 void
-SvelteMme::DoInitialUeMessage (
+Uni5onMme::DoInitialUeMessage (
   uint64_t mmeUeS1Id, uint16_t enbUeS1Id, uint64_t imsi, uint16_t ecgi)
 {
   NS_LOG_FUNCTION (this << mmeUeS1Id << enbUeS1Id << imsi << ecgi);
@@ -112,7 +112,7 @@ SvelteMme::DoInitialUeMessage (
 }
 
 void
-SvelteMme::DoInitialContextSetupResponse (
+Uni5onMme::DoInitialContextSetupResponse (
   uint64_t mmeUeS1Id, uint16_t enbUeS1Id,
   std::list<EpcS1apSapMme::ErabSetupItem> erabList)
 {
@@ -126,7 +126,7 @@ SvelteMme::DoInitialContextSetupResponse (
 // allocating TEID on the S11 interface using the IMSI as identifier.
 //
 void
-SvelteMme::DoPathSwitchRequest (
+Uni5onMme::DoPathSwitchRequest (
   uint64_t enbUeS1Id, uint64_t mmeUeS1Id, uint16_t gci,
   std::list<EpcS1apSapMme::ErabSwitchedInDownlinkItem> erabList)
 {
@@ -157,7 +157,7 @@ SvelteMme::DoPathSwitchRequest (
 }
 
 void
-SvelteMme::DoErabReleaseIndication (
+Uni5onMme::DoErabReleaseIndication (
   uint64_t mmeUeS1Id, uint16_t enbUeS1Id,
   std::list<EpcS1apSapMme::ErabToBeReleasedIndication> erabList)
 {
@@ -183,7 +183,7 @@ SvelteMme::DoErabReleaseIndication (
 // S11 SAP MME forwarded methods
 //
 void
-SvelteMme::DoCreateSessionResponse (
+Uni5onMme::DoCreateSessionResponse (
   EpcS11SapMme::CreateSessionResponseMessage msg)
 {
   NS_LOG_FUNCTION (this << msg.teid);
@@ -207,7 +207,7 @@ SvelteMme::DoCreateSessionResponse (
 }
 
 void
-SvelteMme::DoModifyBearerResponse (
+Uni5onMme::DoModifyBearerResponse (
   EpcS11SapMme::ModifyBearerResponseMessage msg)
 {
   NS_LOG_FUNCTION (this << msg.teid);
@@ -231,7 +231,7 @@ SvelteMme::DoModifyBearerResponse (
 }
 
 void
-SvelteMme::DoDeleteBearerRequest (EpcS11SapMme::DeleteBearerRequestMessage msg)
+Uni5onMme::DoDeleteBearerRequest (EpcS11SapMme::DeleteBearerRequestMessage msg)
 {
   NS_LOG_FUNCTION (this);
 

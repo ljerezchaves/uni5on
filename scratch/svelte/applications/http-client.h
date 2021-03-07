@@ -28,7 +28,7 @@
 namespace ns3 {
 
 /**
- * \ingroup svelteApps
+ * \ingroup uni5onApps
  * This is the client side of a HTTP Traffic Generator. The client establishes
  * a TCP connection with the server and sends a request for the main object of
  * a given web page. When client gets the main object, it process the message
@@ -43,7 +43,7 @@ namespace ns3 {
  * proposed algorithm in other modules of ns-3. To allow deeper studies about
  * the HTTP Protocol it needs some improvements.
  */
-class HttpClient : public SvelteClient
+class HttpClient : public Uni5onClient
 {
 public:
   /**
@@ -55,14 +55,14 @@ public:
   HttpClient ();          //!< Default constructor.
   virtual ~HttpClient (); //!< Dummy destructor, see DoDispose.
 
-  // Inherited from SvelteClient.
+  // Inherited from Uni5onClient.
   void Start ();
 
 protected:
   // Inherited from Object.
   virtual void DoDispose (void);
 
-  // Inherited from SvelteClient.
+  // Inherited from Uni5onClient.
   void ForceStop ();
 
 private:

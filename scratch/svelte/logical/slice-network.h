@@ -34,13 +34,13 @@ class RadioNetwork;
 class SliceController;
 
 /**
- * \ingroup svelte
- * \defgroup svelteLogical Logical
- * SVELTE architecture logical network.
+ * \ingroup uni5on
+ * \defgroup uni5onLogical Logical
+ * eEPC architecture logical network.
  */
 
 /**
- * \ingroup svelteLogical
+ * \ingroup uni5onLogical
  * This is the class for a logical LTE network slice, sharing the common
  * OpenFlow backhaul and radio networks.
  */

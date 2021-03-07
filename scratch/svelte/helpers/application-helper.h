@@ -30,9 +30,9 @@
 namespace ns3 {
 
 /**
- * \ingroup svelteApps
+ * \ingroup uni5onApps
  * This helper will make life easier for people trying to set up client/server
- * applications on the SVELTE architecture.
+ * applications on the UNI5ON architecture.
  */
 class ApplicationHelper
 {
@@ -70,7 +70,7 @@ public:
    * \param dscp The DSCP value used to set the socket type of service field.
    * \return The client application created.
    */
-  Ptr<SvelteClient> Install (
+  Ptr<Uni5onClient> Install (
     Ptr<Node> clientNode, Ptr<Node> serverNode, Ipv4Address clientAddr,
     Ipv4Address serverAddr, uint16_t port,
     Ipv4Header::DscpType dscp = Ipv4Header::DscpDefault);

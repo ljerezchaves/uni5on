@@ -29,8 +29,8 @@
 using namespace ns3;
 
 /**
- * \defgroup svelte SVELTE architecture
- * Network simulation scenario for SVELTE architecture.
+ * \defgroup uni5on UNI5ON architecture
+ * Network simulation scenario for UNI5ON architecture.
  */
 NS_LOG_COMPONENT_DEFINE ("Main");
 
@@ -129,15 +129,15 @@ main (int argc, char *argv[])
   EnableVerbose (verbose);
   EnableOfsLogs (ofsLog);
 
-  // Create the SVELTE helper object, which is responsible for creating and
+  // Create the helper object, which is responsible for creating and
   // configuring the infrastructure and logical networks.
   NS_LOG_INFO ("Creating simulation scenario...");
-  Ptr<SvelteHelper> svelteHelper = CreateObject<SvelteHelper> ();
+  Ptr<ScenarioHelper> scenarioHelper = CreateObject<ScenarioHelper> ();
 
-  // Configure SVELTE helper with command line parameters.
-  svelteHelper->PrintLteRem (lteRem);
-  svelteHelper->ConfigurePcap (outputPrefix.str (),
-                               static_cast<uint8_t> (pcapCfg));
+  // Configure helper with command line parameters.
+  scenarioHelper->PrintLteRem (lteRem);
+  scenarioHelper->ConfigurePcap (outputPrefix.str (),
+                                 static_cast<uint8_t> (pcapCfg));
 
   // Populating routing and ARP tables. The 'perfect' ARP used here comes from
   // the patch at https://www.nsnam.org/bugzilla/show_bug.cgi?id=187. This
@@ -161,8 +161,8 @@ main (int argc, char *argv[])
 
   // Finish the simulation.
   Simulator::Destroy ();
-  svelteHelper->Dispose ();
-  svelteHelper = 0;
+  scenarioHelper->Dispose ();
+  scenarioHelper = 0;
 
   // Print the final status message.
   BooleanValue cerrValue;
@@ -336,7 +336,7 @@ void ForceDefaults ()
   // Customizing the OpenFlow queue type on switch ports.
   //
   Config::SetDefault (
-    "ns3::OFSwitch13Port::QueueFactory", StringValue ("ns3::SvelteQosQueue"));
+    "ns3::OFSwitch13Port::QueueFactory", StringValue ("ns3::Uni5onQosQueue"));
 
   //
   // Reducing the OpenFlow datapath timeout interval from 100ms to 50ms to
@@ -390,10 +390,10 @@ EnableVerbose (bool enable)
 
       // Common components.
       LogComponentEnable ("Main",                     logLevelWarnInfo);
-      LogComponentEnable ("SvelteCommon",             logLevelWarnInfo);
+      LogComponentEnable ("Uni5onCommon",             logLevelWarnInfo);
 
       // Helper components.
-      LogComponentEnable ("SvelteHelper",             logLevelWarnInfo);
+      LogComponentEnable ("ScenarioHelper",           logLevelWarnInfo);
       LogComponentEnable ("TrafficHelper",            logLevelWarnInfo);
 
       // Infrastructure components.
@@ -402,15 +402,15 @@ EnableVerbose (bool enable)
       LogComponentEnable ("RadioNetwork",             logLevelWarnInfo);
       LogComponentEnable ("RingController",           logLevelWarnInfo);
       LogComponentEnable ("RingNetwork",              logLevelWarnInfo);
-      LogComponentEnable ("SvelteEnbApplication",     logLevelWarnInfo);
-      LogComponentEnable ("SvelteQosQueue",           logLevelWarnInfo);
+      LogComponentEnable ("Uni5onEnbApplication",     logLevelWarnInfo);
+      LogComponentEnable ("Uni5onQosQueue",           logLevelWarnInfo);
 
       // Logical components.
       LogComponentEnable ("GtpTunnelApp",             logLevelWarnInfo);
       LogComponentEnable ("PgwTunnelApp",             logLevelWarnInfo);
       LogComponentEnable ("SliceController",          logLevelWarnInfo);
       LogComponentEnable ("SliceNetwork",             logLevelWarnInfo);
-      LogComponentEnable ("SvelteMme",                logLevelWarnInfo);
+      LogComponentEnable ("Uni5onMme",                logLevelWarnInfo);
       LogComponentEnable ("TrafficManager",           logLevelWarnInfo);
 
       // Metadata components.
@@ -429,10 +429,10 @@ EnableVerbose (bool enable)
       LogComponentEnable ("HttpServer",               logLevelWarnInfo);
       LogComponentEnable ("LiveVideoClient",          logLevelWarnInfo);
       LogComponentEnable ("LiveVideoServer",          logLevelWarnInfo);
-      LogComponentEnable ("SvelteClient",             logLevelWarnInfo);
-      LogComponentEnable ("SvelteServer",             logLevelWarnInfo);
-      LogComponentEnable ("SvelteUdpClient",          logLevelWarnInfo);
-      LogComponentEnable ("SvelteUdpServer",          logLevelWarnInfo);
+      LogComponentEnable ("Uni5onClient",             logLevelWarnInfo);
+      LogComponentEnable ("Uni5onServer",             logLevelWarnInfo);
+      LogComponentEnable ("Uni5onUdpClient",          logLevelWarnInfo);
+      LogComponentEnable ("Uni5onUdpServer",          logLevelWarnInfo);
 
       // Statistic components.
       LogComponentEnable ("AdmissionStatsCalculator", logLevelWarnInfo);

@@ -33,7 +33,7 @@ TypeId
 BufferedVideoClient::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::BufferedVideoClient")
-    .SetParent<SvelteClient> ()
+    .SetParent<Uni5onClient> ()
     .AddConstructor<BufferedVideoClient> ()
   ;
   return tid;
@@ -58,7 +58,7 @@ BufferedVideoClient::Start ()
   NS_LOG_FUNCTION (this);
 
   // Chain up to reset statistics, notify server, and fire start trace source.
-  SvelteClient::Start ();
+  Uni5onClient::Start ();
 
   NS_LOG_INFO ("Opening the TCP connection.");
   TypeId tcpFactory = TypeId::LookupByName ("ns3::TcpSocketFactory");
@@ -76,7 +76,7 @@ BufferedVideoClient::DoDispose (void)
   NS_LOG_FUNCTION (this);
 
   m_rxPacket = 0;
-  SvelteClient::DoDispose ();
+  Uni5onClient::DoDispose ();
 }
 
 void

@@ -29,16 +29,16 @@
 
 namespace ns3 {
 
-class SvelteServer;
+class Uni5onServer;
 
 /**
- * \ingroup svelte
- * \defgroup svelteApps Applications
- * Applications prepared to work with the SVELTE architecture.
+ * \ingroup uni5on
+ * \defgroup uni5onApps Applications
+ * Applications prepared to work with the UNI5ON architecture.
  */
 /**
- * \ingroup svelteApps
- * This class extends the Application class to proper work with the SVELTE
+ * \ingroup uni5onApps
+ * This class extends the Application class to proper work with the UNI5ON
  * architecture. Only clients applications (those which will be installed into
  * UEs) should extend this class. It includes a rx byte counter for traffic
  * statistics, and start/stop callbacks to notify the slice controller when the
@@ -46,13 +46,13 @@ class SvelteServer;
  * application traffic is sent within GTP tunnels over EPC interfaces. These
  * informations are also saved here for further usage.
  */
-class SvelteClient : public Application
+class Uni5onClient : public Application
 {
-  friend class SvelteServer;
+  friend class Uni5onServer;
 
 public:
-  SvelteClient ();            //!< Default constructor.
-  virtual ~SvelteClient ();   //!< Dummy destructor, see DoDispose.
+  Uni5onClient ();            //!< Default constructor.
+  virtual ~Uni5onClient ();   //!< Dummy destructor, see DoDispose.
 
   /**
    * Get the type ID.
@@ -70,7 +70,7 @@ public:
   uint8_t           GetEpsBearerId    (void) const;
   Time              GetMaxOnTime      (void) const;
   std::string       GetNameTeid       (void) const;
-  Ptr<SvelteServer> GetServerApp      (void) const;
+  Ptr<Uni5onServer> GetServerApp      (void) const;
   uint32_t          GetTeid           (void) const;
   std::string       GetTeidHex        (void) const;
   bool              IsActive          (void) const;
@@ -92,7 +92,7 @@ public:
    * \param serverApp The pointer to server application.
    * \param serverAddress The Inet socket address of the server.
    */
-  void SetServer (Ptr<SvelteServer> serverApp, Address serverAddress);
+  void SetServer (Ptr<Uni5onServer> serverApp, Address serverAddress);
 
   /**
    * Start this application. Update internal members, notify the server
@@ -113,10 +113,10 @@ public:
   DataRate GetUlGoodput (void) const;
 
   /**
-   * TracedCallback signature for Ptr<SvelteClient>.
+   * TracedCallback signature for Ptr<Uni5onClient>.
    * \param app The client application.
    */
-  typedef void (*EpcAppTracedCallback)(Ptr<SvelteClient> app);
+  typedef void (*EpcAppTracedCallback)(Ptr<Uni5onClient> app);
 
 protected:
   /** Destructor implementation */
@@ -153,16 +153,16 @@ protected:
   Ptr<Socket>               m_socket;           //!< Local socket.
   uint16_t                  m_localPort;        //!< Local port.
   Address                   m_serverAddress;    //!< Server address.
-  Ptr<SvelteServer>         m_serverApp;        //!< Server application.
+  Ptr<Uni5onServer>         m_serverApp;        //!< Server application.
 
   /** Trace source fired when application start. */
-  TracedCallback<Ptr<SvelteClient> > m_appStartTrace;
+  TracedCallback<Ptr<Uni5onClient> > m_appStartTrace;
 
   /** Trace source fired when application stops. */
-  TracedCallback<Ptr<SvelteClient> > m_appStopTrace;
+  TracedCallback<Ptr<Uni5onClient> > m_appStopTrace;
 
   /** Trace source fired when application reports an error. */
-  TracedCallback<Ptr<SvelteClient> > m_appErrorTrace;
+  TracedCallback<Ptr<Uni5onClient> > m_appErrorTrace;
 
 private:
   std::string               m_name;           //!< Application name.

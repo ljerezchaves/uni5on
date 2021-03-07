@@ -28,10 +28,10 @@
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("SvelteServer");
-NS_OBJECT_ENSURE_REGISTERED (SvelteServer);
+NS_LOG_COMPONENT_DEFINE ("Uni5onServer");
+NS_OBJECT_ENSURE_REGISTERED (Uni5onServer);
 
-SvelteServer::SvelteServer ()
+Uni5onServer::Uni5onServer ()
   : m_socket (0),
   m_clientApp (0),
   m_rxBytes (0),
@@ -41,38 +41,38 @@ SvelteServer::SvelteServer ()
   NS_LOG_FUNCTION (this);
 }
 
-SvelteServer::~SvelteServer ()
+Uni5onServer::~Uni5onServer ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-SvelteServer::GetTypeId (void)
+Uni5onServer::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::SvelteServer")
+  static TypeId tid = TypeId ("ns3::Uni5onServer")
     .SetParent<Application> ()
-    .AddConstructor<SvelteServer> ()
+    .AddConstructor<Uni5onServer> ()
     .AddAttribute ("ClientAddress", "The client socket address.",
                    AddressValue (),
-                   MakeAddressAccessor (&SvelteServer::m_clientAddress),
+                   MakeAddressAccessor (&Uni5onServer::m_clientAddress),
                    MakeAddressChecker ())
     .AddAttribute ("LocalPort", "Local port.",
                    UintegerValue (10000),
-                   MakeUintegerAccessor (&SvelteServer::m_localPort),
+                   MakeUintegerAccessor (&Uni5onServer::m_localPort),
                    MakeUintegerChecker<uint16_t> ())
   ;
   return tid;
 }
 
 std::string
-SvelteServer::GetAppName (void) const
+Uni5onServer::GetAppName (void) const
 {
   // No log to avoid infinite recursion.
   return m_clientApp ? m_clientApp->GetAppName () : std::string ();
 }
 
 bool
-SvelteServer::IsActive (void) const
+Uni5onServer::IsActive (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -81,7 +81,7 @@ SvelteServer::IsActive (void) const
 }
 
 bool
-SvelteServer::IsForceStop (void) const
+Uni5onServer::IsForceStop (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -90,14 +90,14 @@ SvelteServer::IsForceStop (void) const
 }
 
 std::string
-SvelteServer::GetTeidHex (void) const
+Uni5onServer::GetTeidHex (void) const
 {
   // No log to avoid infinite recursion.
   return m_clientApp ? m_clientApp->GetTeidHex () : "0x0";
 }
 
-Ptr<SvelteClient>
-SvelteServer::GetClientApp (void) const
+Ptr<Uni5onClient>
+Uni5onServer::GetClientApp (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -105,7 +105,7 @@ SvelteServer::GetClientApp (void) const
 }
 
 void
-SvelteServer::SetClient (Ptr<SvelteClient> clientApp, Address clientAddress)
+Uni5onServer::SetClient (Ptr<Uni5onClient> clientApp, Address clientAddress)
 {
   NS_LOG_FUNCTION (this << clientApp << clientAddress);
 
@@ -114,7 +114,7 @@ SvelteServer::SetClient (Ptr<SvelteClient> clientApp, Address clientAddress)
 }
 
 DataRate
-SvelteServer::GetUlGoodput (void) const
+Uni5onServer::GetUlGoodput (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -130,7 +130,7 @@ SvelteServer::GetUlGoodput (void) const
 }
 
 void
-SvelteServer::DoDispose (void)
+Uni5onServer::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -140,7 +140,7 @@ SvelteServer::DoDispose (void)
 }
 
 void
-SvelteServer::NotifyStart ()
+Uni5onServer::NotifyStart ()
 {
   NS_LOG_FUNCTION (this);
   NS_LOG_INFO ("Starting server application.");
@@ -152,7 +152,7 @@ SvelteServer::NotifyStart ()
 }
 
 void
-SvelteServer::NotifyStop ()
+Uni5onServer::NotifyStop ()
 {
   NS_LOG_FUNCTION (this);
   NS_LOG_INFO ("Stopping server application.");
@@ -162,14 +162,14 @@ SvelteServer::NotifyStop ()
 }
 
 void
-SvelteServer::NotifyForceStop ()
+Uni5onServer::NotifyForceStop ()
 {
   NS_LOG_FUNCTION (this);
   NS_LOG_INFO ("Forcing the server application to stop.");
 }
 
 void
-SvelteServer::NotifyRx (uint32_t bytes)
+Uni5onServer::NotifyRx (uint32_t bytes)
 {
   NS_LOG_FUNCTION (this << bytes);
 

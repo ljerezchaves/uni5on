@@ -30,7 +30,7 @@ using namespace std;
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("SvelteCommon");
+NS_LOG_COMPONENT_DEFINE ("Uni5onCommon");
 
 std::string
 DirectionStr (Direction dir)
@@ -116,7 +116,7 @@ SliceIdStr (SliceId slice)
     case SliceId::UNKN:
       return "unknown";
     default:
-      NS_LOG_ERROR ("Invalid SVELTE logical slice ID.");
+      NS_LOG_ERROR ("Invalid logical slice ID.");
       return std::string ();
     }
 }

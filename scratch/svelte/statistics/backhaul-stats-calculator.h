@@ -31,7 +31,7 @@
 namespace ns3 {
 
 /**
- * \ingroup svelteStats
+ * \ingroup uni5onStats
  * This class monitors the OpenFlow backhaul network and dump bandwidth usage
  * and resource reservation statistics on links between OpenFlow switches.
  */

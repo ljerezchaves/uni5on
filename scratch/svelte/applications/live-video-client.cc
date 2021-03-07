@@ -34,7 +34,7 @@ TypeId
 LiveVideoClient::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::LiveVideoClient")
-    .SetParent<SvelteClient> ()
+    .SetParent<Uni5onClient> ()
     .AddConstructor<LiveVideoClient> ()
     .AddAttribute ("MaxPayloadSize",
                    "The maximum payload size of packets [bytes].",
@@ -73,7 +73,7 @@ LiveVideoClient::Start ()
   NS_LOG_INFO ("Set traffic length to " << stop.GetSeconds () << "s.");
 
   // Chain up to reset statistics, notify server, and fire start trace source.
-  SvelteClient::Start ();
+  Uni5onClient::Start ();
 
   // Start traffic.
   m_sendEvent.Cancel ();
@@ -89,7 +89,7 @@ LiveVideoClient::DoDispose (void)
   m_stopEvent.Cancel ();
   m_sendEvent.Cancel ();
   m_entries.clear ();
-  SvelteClient::DoDispose ();
+  Uni5onClient::DoDispose ();
 }
 
 void
@@ -102,7 +102,7 @@ LiveVideoClient::ForceStop ()
   m_sendEvent.Cancel ();
 
   // Chain up to notify server.
-  SvelteClient::ForceStop ();
+  Uni5onClient::ForceStop ();
 
   // Notify the stopped application one second later.
   Simulator::Schedule (Seconds (1), &LiveVideoClient::NotifyStop, this, false);

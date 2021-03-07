@@ -32,16 +32,16 @@ namespace ns3 {
 class BackhaulController;
 
 /**
- * \ingroup svelte
- * \defgroup svelteInfra Infrastructure
- * SVELTE architecture infrastructure.
+ * \ingroup uni5on
+ * \defgroup uni5onInfra Infrastructure
+ * UNI5ON architecture infrastructure.
  */
 
 /**
- * \ingroup svelteInfra
+ * \ingroup uni5onInfra
  * This is the abstract base class for the OpenFlow backhaul network, which
  * should be extended in accordance to the desired backhaul network topology.
- * SVELTE EPC entities (eNB, S-GW, and P-GW) are connected to the OpenFlow
+ * The eEPC entities (eNB, S-GW, and P-GW) are connected to the OpenFlow
  * switches through CSMA devices.
  */
 class BackhaulNetwork : public Object

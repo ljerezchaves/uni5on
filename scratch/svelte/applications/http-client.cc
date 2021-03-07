@@ -36,7 +36,7 @@ TypeId
 HttpClient::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::HttpClient")
-    .SetParent<SvelteClient> ()
+    .SetParent<Uni5onClient> ()
     .AddConstructor<HttpClient> ()
   ;
   return tid;
@@ -83,7 +83,7 @@ HttpClient::Start ()
   NS_LOG_INFO ("Set traffic length to " << sTime.GetSeconds () << "s.");
 
   // Chain up to reset statistics, notify server, and fire start trace source.
-  SvelteClient::Start ();
+  Uni5onClient::Start ();
 
   NS_LOG_INFO ("Opening the TCP connection.");
   TypeId tcpFactory = TypeId::LookupByName ("ns3::TcpSocketFactory");
@@ -105,7 +105,7 @@ HttpClient::DoDispose (void)
   m_readingTimeAdjustStream = 0;
   m_nextRequest.Cancel ();
   m_stopEvent.Cancel ();
-  SvelteClient::DoDispose ();
+  Uni5onClient::DoDispose ();
 }
 
 void
@@ -117,7 +117,7 @@ HttpClient::ForceStop ()
   m_stopEvent.Cancel ();
 
   // Chain up to set flag and notify server.
-  SvelteClient::ForceStop ();
+  Uni5onClient::ForceStop ();
 
   // If we are on the reading time, cancel any further schedulled requests,
   // close the open socket and call NotifyStop (). Otherwise, the socket will

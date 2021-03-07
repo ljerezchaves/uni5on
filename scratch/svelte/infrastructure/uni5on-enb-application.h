@@ -26,10 +26,10 @@
 namespace ns3 {
 
 /**
- * \ingroup svelteInfra
+ * \ingroup uni5onInfra
  * This eNB specialized application can handle connection with multiple S-GWs.
  */
-class SvelteEnbApplication : public EpcEnbApplication
+class Uni5onEnbApplication : public EpcEnbApplication
 {
 public:
   /**
@@ -43,10 +43,10 @@ public:
    * \param enbS1uAddress The IPv4 address of the S1-U interface of this eNB.
    * \param cellId The identifier of the eNB.
    */
-  SvelteEnbApplication (Ptr<Socket> lteSocket, Ptr<Socket> lteSocket6,
+  Uni5onEnbApplication (Ptr<Socket> lteSocket, Ptr<Socket> lteSocket6,
                         Ptr<Socket> s1uSocket, Ipv4Address enbS1uAddress,
                         uint16_t cellId);
-  virtual ~SvelteEnbApplication (void); //!< Dummy destructor, see DoDispose.
+  virtual ~Uni5onEnbApplication (void); //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.

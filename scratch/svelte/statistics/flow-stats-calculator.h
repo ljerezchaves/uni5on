@@ -27,7 +27,7 @@
 namespace ns3 {
 
 /**
- * \ingroup svelteStats
+ * \ingroup uni5onStats
  * This class monitors basic QoS statistics at link level in the OpenFlow
  * backhaul network. This class monitors some basic QoS statistics of a traffic
  * flow. It counts the number of transmitted, received and dropped bytes and

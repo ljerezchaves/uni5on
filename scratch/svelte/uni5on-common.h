@@ -29,13 +29,13 @@
 
 namespace ns3 {
 
-// SVELTE TEID masks for OpenFlow matching.
+// TEID masks for OpenFlow matching.
 #define TEID_STRICT_MASK    0xFFFFFFFF
 #define TEID_SLICE_MASK     0x0F000000
 #define TEID_IMSI_MASK      0x00FFFFF0
 #define TEID_BID_MASK       0x0000000F
 
-// SVELTE cookie masks for OpenFlow matching.
+// Cookie masks for OpenFlow matching.
 #define COOKIE_STRICT_MASK  0xFFFFFFFFFFFFFFFF
 #define COOKIE_IFACE_MASK   0x000F000000000000
 #define COOKIE_PRIO_MASK    0x0000FFFF00000000
@@ -48,7 +48,7 @@ namespace ns3 {
 #define COOKIE_IFACE_PRIO_TEID_MASK \
   ((COOKIE_IFACE_MASK | COOKIE_PRIO_MASK | COOKIE_TEID_MASK))
 
-// SVELTE meter ID masks.
+// Meter ID masks.
 #define METER_SLC_TYPE      0xC0000000
 #define METER_MBR_TYPE      0x80000000
 #define METER_IFACE_MASK    0x30000000
@@ -88,7 +88,7 @@ typedef std::list<BearerModified_t> BearerModifiedList_t;
 typedef std::map<Ipv4Header::DscpType, uint32_t> DscpQueueMap_t;
 
 /**
- * \ingroup svelte
+ * \ingroup uni5on
  * Enumeration of available traffic directions.
  */
 typedef enum
@@ -102,7 +102,7 @@ typedef enum
 #define N_DIRECTIONS (static_cast<int> (Direction::ULINK) + 1)
 
 /**
- * \ingroup svelte
+ * \ingroup uni5on
  * Enumeration of LTE logical interfaces.
  */
 typedef enum
@@ -119,7 +119,7 @@ typedef enum
 #define N_IFACES_EPC (static_cast<int> (LteIface::S5) + 1)
 
 /**
- * \ingroup svelte
+ * \ingroup uni5on
  * Enumeration of available operation modes.
  */
 typedef enum
@@ -133,7 +133,7 @@ typedef enum
 #define N_OP_MODES (static_cast<int> (OpMode::AUTO) + 1)
 
 /**
- * \ingroup svelte
+ * \ingroup uni5on
  * Enumeration of available LTE QoS traffic types.
  */
 typedef enum
@@ -149,8 +149,8 @@ typedef enum
 #define N_QOS_TYPES_BOTH (static_cast<int> (QosType::BOTH) + 1)
 
 /**
- * \ingroup svelte
- * Enumeration of available SVELTE logical slices IDs.
+ * \ingroup uni5on
+ * Enumeration of available logical slices IDs.
  * \internal Slice IDs are restricted to the range [0, 14] by the current
  * TEID allocation strategy.
  */
@@ -170,7 +170,7 @@ typedef enum
 #define N_SLICE_IDS_UNKN (static_cast<int> (SliceId::UNKN) + 1)
 
 /**
- * \ingroup svelte
+ * \ingroup uni5on
  * Enumeration of available inter-slicing operation modes.
  */
 typedef enum
@@ -185,7 +185,7 @@ typedef enum
 #define N_SLICE_MODES (static_cast<int> (SliceMode::DYNA) + 1)
 
 /**
- * \ingroup svelte
+ * \ingroup uni5on
  * Get the direction name.
  * \param dir The direction.
  * \return The string with the direction string.
@@ -193,7 +193,7 @@ typedef enum
 std::string DirectionStr (Direction dir);
 
 /**
- * \ingroup svelte
+ * \ingroup uni5on
  * Get the LTE interface name.
  * \param iface The LTE interface.
  * \return The string with the LTE interface name.
@@ -201,7 +201,7 @@ std::string DirectionStr (Direction dir);
 std::string LteIfaceStr (LteIface iface);
 
 /**
- * \ingroup svelte
+ * \ingroup uni5on
  * Get the operation mode name.
  * \param mode The operation mode.
  * \return The string with the operation mode name.
@@ -209,7 +209,7 @@ std::string LteIfaceStr (LteIface iface);
 std::string OpModeStr (OpMode mode);
 
 /**
- * \ingroup svelte
+ * \ingroup uni5on
  * Get the LTE QoS traffic type name.
  * \param type The LTE QoS traffic type.
  * \return The string with the LTE QoS traffic type name.
@@ -217,7 +217,7 @@ std::string OpModeStr (OpMode mode);
 std::string QosTypeStr (QosType type);
 
 /**
- * \ingroup svelte
+ * \ingroup uni5on
  * Get the slice ID name.
  * \param slice The slice ID.
  * \return The string with the slice ID name.
@@ -225,7 +225,7 @@ std::string QosTypeStr (QosType type);
 std::string SliceIdStr (SliceId slice);
 
 /**
- * \ingroup svelte
+ * \ingroup uni5on
  * Get the inter-slicing operation mode name.
  * \param mode The inter-slicing operation mode.
  * \return The string with the inter-slicing operation mode name.
@@ -233,7 +233,7 @@ std::string SliceIdStr (SliceId slice);
 std::string SliceModeStr (SliceMode mode);
 
 /**
- * \ingroup svelte
+ * \ingroup uni5on
  * Convert the BPS to KBPS without precision loss.
  * \param bitrate The bit rate in BPS.
  * \return The bitrate in KBPS.
@@ -241,7 +241,7 @@ std::string SliceModeStr (SliceMode mode);
 double Bps2Kbps (int64_t bitrate);
 
 /**
- * \ingroup svelte
+ * \ingroup uni5on
  * Convert DataRate BPS to KBPS without precision loss.
  * \param bitrate The DataRate.
  * \return The bitrate in KBPS.
@@ -249,7 +249,7 @@ double Bps2Kbps (int64_t bitrate);
 double Bps2Kbps (DataRate datarate);
 
 /**
- * \ingroup svelte
+ * \ingroup uni5on
  * Get the mapped OpenFlow output queue ID for all DSCP used values.
  * \return The OpenFlow queue ID mapped values.
  *
@@ -268,7 +268,7 @@ double Bps2Kbps (DataRate datarate);
 const DscpQueueMap_t& Dscp2QueueMap (void);
 
 /**
- * \ingroup svelte
+ * \ingroup uni5on
  * Get the mapped IP ToS value for a specific DSCP.
  * \param dscp The IP DSCP value.
  * \return The IP ToS mapped for this DSCP.
@@ -293,7 +293,7 @@ const DscpQueueMap_t& Dscp2QueueMap (void);
 uint8_t Dscp2Tos (Ipv4Header::DscpType dscp);
 
 /**
- * \ingroup svelte
+ * \ingroup uni5on
  * Get the mapped DSCP value for a specific EPS QCI.
  * \param qci The EPS bearer QCI.
  * \return The IP DSCP mapped for this QCI.
@@ -317,7 +317,7 @@ uint8_t Dscp2Tos (Ipv4Header::DscpType dscp);
 Ipv4Header::DscpType Qci2Dscp (EpsBearer::Qci qci);
 
 /**
- * \ingroup svelte
+ * \ingroup uni5on
  * Get the DSCP type name.
  * \param dscp The DSCP type value.
  * \return The string with the DSCP type name.
@@ -325,8 +325,8 @@ Ipv4Header::DscpType Qci2Dscp (EpsBearer::Qci qci);
 std::string DscpTypeStr (Ipv4Header::DscpType dscp);
 
 /**
- * \ingroup svelte
- * Compute the cookie value globally used in the SVELTE architecture for
+ * \ingroup uni5on
+ * Compute the cookie value globally used in the UNI5ON architecture for
  * OpenFlow rules considering the bearer TEID, the rule priority, and the LTE
  * logical interface.
  * \param teid The TEID value.
@@ -371,10 +371,10 @@ uint16_t CookieGetPriority (uint64_t cookie);
 LteIface CookieGetIface (uint64_t cookie);
 
 /**
- * \ingroup svelte
- * Compute the TEID value globally used in the SVELTE architecture for a EPS
+ * \ingroup uni5on
+ * Compute the TEID value globally used in the UNI5ON architecture for a EPS
  * bearer considering the slice ID, the UE ISMI and bearer ID.
- * \param sliceId The SVELTE logical slice ID.
+ * \param sliceId The logical slice ID.
  * \param ueImsi The UE ISMI.
  * \param bearerId The UE bearer ID.
  * \return The TEID value.
@@ -416,8 +416,8 @@ SliceId TeidGetSliceId (uint32_t teid);
 uint64_t TeidGetUeImsi (uint32_t teid);
 
 /**
- * \ingroup svelte
- * Compute the meter ID value globally used in the SVELTE architecture for
+ * \ingroup uni5on
+ * Compute the meter ID value globally used in the UNI5ON architecture for
  * infrastructure MBR meters.
  * \param iface The LTE logical interface.
  * \param teid The GTP tunnel ID.
@@ -439,10 +439,10 @@ uint64_t TeidGetUeImsi (uint32_t teid);
 uint32_t MeterIdMbrCreate (LteIface iface, uint32_t teid);
 
 /**
- * \ingroup svelte
- * Compute the meter ID value globally used in the SVELTE architecture for
+ * \ingroup uni5on
+ * Compute the meter ID value globally used in the UNI5ON architecture for
  * infrastructure slicing meters.
- * \param sliceId The SVELTE logical slice ID.
+ * \param sliceId The logical slice ID.
  * \param linkdir The link direction.
  * \return The meter ID value.
  *
@@ -462,7 +462,7 @@ uint32_t MeterIdMbrCreate (LteIface iface, uint32_t teid);
 uint32_t MeterIdSlcCreate (SliceId sliceId, uint32_t linkdir);
 
 /**
- * \ingroup svelte
+ * \ingroup uni5on
  * Encapsulate the destination address in the 32 MSB of tunnel ID and the
  * TEID in the 32 LSB of tunnel ID.
  * \param dstIp The destination IP address.
@@ -472,7 +472,7 @@ uint32_t MeterIdSlcCreate (SliceId sliceId, uint32_t linkdir);
 std::string GetTunnelIdStr (uint32_t teid, Ipv4Address dstIp);
 
 /**
- * \ingroup svelte
+ * \ingroup uni5on
  * Convert the uint32_t parameter value to a hexadecimal string representation.
  * \param value The uint32_t value.
  * \return The hexadecimal string representation.
@@ -480,7 +480,7 @@ std::string GetTunnelIdStr (uint32_t teid, Ipv4Address dstIp);
 std::string GetUint32Hex (uint32_t value);
 
 /**
- * \ingroup svelte
+ * \ingroup uni5on
  * Convert the uint64_t parameter value to a hexadecimal string representation.
  * \param value The uint64_t value.
  * \return The hexadecimal string representation.
@@ -488,7 +488,7 @@ std::string GetUint32Hex (uint32_t value);
 std::string GetUint64Hex (uint64_t value);
 
 /**
- * \ingroup svelte
+ * \ingroup uni5on
  * Set the devices names identifying the connection between the nodes.
  * \param src The network device in the source node.
  * \param dst The network device in the destination node.

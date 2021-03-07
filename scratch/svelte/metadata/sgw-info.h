@@ -34,7 +34,7 @@ class SgwInfo;
 class SliceController;
 
 /**
- * \ingroup svelteMeta
+ * \ingroup uni5onMeta
  * Metadata associated to a logical S-GW.
  */
 class SgwInfo : public Object

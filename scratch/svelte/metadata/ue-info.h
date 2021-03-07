@@ -39,13 +39,13 @@ class SliceController;
 typedef std::map<uint8_t, Ptr<RoutingInfo> > BidRInfoMap_t;
 
 /**
- * \ingroup svelte
- * \defgroup svelteMeta Metadata
- * SVELTE architecture metadata.
+ * \ingroup uni5on
+ * \defgroup uni5onMeta Metadata
+ * UNI5ON architecture metadata.
  */
 
 /**
- * \ingroup svelteMeta
+ * \ingroup uni5onMeta
  * Metadata associated to a UE.
  */
 class UeInfo : public Object
@@ -53,8 +53,8 @@ class UeInfo : public Object
   friend class PgwTunnelApp;
   friend class RoutingInfo;
   friend class SliceController;
-  friend class SvelteHelper;
-  friend class SvelteMme;
+  friend class ScenarioHelper;
+  friend class Uni5onMme;
   friend class BackhaulStatsCalculator;
   friend class TrafficStatsCalculator;
 

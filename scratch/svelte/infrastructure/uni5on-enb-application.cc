@@ -26,9 +26,9 @@
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("SvelteEnbApplication");
+NS_LOG_COMPONENT_DEFINE ("Uni5onEnbApplication");
 
-SvelteEnbApplication::SvelteEnbApplication (
+Uni5onEnbApplication::Uni5onEnbApplication (
   Ptr<Socket> lteSocket, Ptr<Socket> lteSocket6, Ptr<Socket> s1uSocket,
   Ipv4Address enbS1uAddress, uint16_t cellId)
   : EpcEnbApplication (lteSocket, lteSocket6, s1uSocket, enbS1uAddress,
@@ -38,32 +38,32 @@ SvelteEnbApplication::SvelteEnbApplication (
                    enbS1uAddress << cellId);
 }
 
-SvelteEnbApplication::~SvelteEnbApplication (void)
+Uni5onEnbApplication::~Uni5onEnbApplication (void)
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-SvelteEnbApplication::GetTypeId (void)
+Uni5onEnbApplication::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::SvelteEnbApplication")
+  static TypeId tid = TypeId ("ns3::Uni5onEnbApplication")
     .SetParent<EpcEnbApplication> ()
     .AddTraceSource ("S1uRx",
                      "Trace source for a packet RX from the S1-U interface.",
                      MakeTraceSourceAccessor (
-                       &SvelteEnbApplication::m_rxS1uTrace),
+                       &Uni5onEnbApplication::m_rxS1uTrace),
                      "ns3::Packet::TracedCallback")
     .AddTraceSource ("S1uTx",
                      "Trace source for a packet TX to the S1-U interface.",
                      MakeTraceSourceAccessor (
-                       &SvelteEnbApplication::m_txS1uTrace),
+                       &Uni5onEnbApplication::m_txS1uTrace),
                      "ns3::Packet::TracedCallback")
   ;
   return tid;
 }
 
 void
-SvelteEnbApplication::RecvFromS1uSocket (Ptr<Socket> socket)
+Uni5onEnbApplication::RecvFromS1uSocket (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
   NS_ASSERT (socket == m_s1uSocket);
@@ -93,14 +93,14 @@ SvelteEnbApplication::RecvFromS1uSocket (Ptr<Socket> socket)
 }
 
 void
-SvelteEnbApplication::DoDispose (void)
+Uni5onEnbApplication::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
   EpcEnbApplication::DoDispose ();
 }
 
 void
-SvelteEnbApplication::DoInitialContextSetupRequest (
+Uni5onEnbApplication::DoInitialContextSetupRequest (
   uint64_t mmeUeS1Id, uint16_t enbUeS1Id,
   std::list<EpcS1apSapEnb::ErabToBeSetupItem> erabToBeSetupList)
 {
@@ -121,7 +121,7 @@ SvelteEnbApplication::DoInitialContextSetupRequest (
 }
 
 void
-SvelteEnbApplication::DoPathSwitchRequestAcknowledge (
+Uni5onEnbApplication::DoPathSwitchRequestAcknowledge (
   uint64_t enbUeS1Id, uint64_t mmeUeS1Id, uint16_t cgi,
   std::list<EpcS1apSapEnb::ErabSwitchedInUplinkItem>
   erabToBeSwitchedInUplinkList)
@@ -143,7 +143,7 @@ SvelteEnbApplication::DoPathSwitchRequestAcknowledge (
 }
 
 void
-SvelteEnbApplication::DoUeContextRelease (uint16_t rnti)
+Uni5onEnbApplication::DoUeContextRelease (uint16_t rnti)
 {
   NS_LOG_FUNCTION (this << rnti);
 
@@ -165,7 +165,7 @@ SvelteEnbApplication::DoUeContextRelease (uint16_t rnti)
 }
 
 void
-SvelteEnbApplication::SendToS1uSocket (Ptr<Packet> packet, uint32_t teid)
+Uni5onEnbApplication::SendToS1uSocket (Ptr<Packet> packet, uint32_t teid)
 {
   NS_LOG_FUNCTION (this << packet << teid <<  packet->GetSize ());
 

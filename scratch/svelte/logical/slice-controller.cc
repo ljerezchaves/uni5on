@@ -107,11 +107,11 @@ SliceController::GetTypeId (void)
                                     OpMode::ON,  OpModeStr (OpMode::ON)))
 
     // MME.
-    .AddAttribute ("Mme", "The SVELTE MME pointer.",
+    .AddAttribute ("Mme", "The MME pointer.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    PointerValue (),
                    MakePointerAccessor (&SliceController::m_mme),
-                   MakePointerChecker<SvelteMme> ())
+                   MakePointerChecker<Uni5onMme> ())
 
     // P-GW.
     .AddAttribute ("PgwBlockPolicy",
@@ -577,7 +577,7 @@ SliceController::NotifyConstructionCompleted (void)
 
   NS_ABORT_MSG_IF (m_sliceId == SliceId::UNKN, "Unknown slice ID.");
   NS_ABORT_MSG_IF (!m_backhaulCtrl, "No backhaul controller application.");
-  NS_ABORT_MSG_IF (!m_mme, "No SVELTE MME.");
+  NS_ABORT_MSG_IF (!m_mme, "No MME object.");
 
   m_sliceIdStr = SliceIdStr (m_sliceId);
 

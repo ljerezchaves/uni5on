@@ -33,23 +33,23 @@ class Node;
 class NetDevice;
 
 /**
- * \ingroup svelteLogical
- * The EPS MME entity. The SVELTE architecture expects one MME entity inside
+ * \ingroup uni5onLogical
+ * The EPS MME entity. The UNI5ON architecture expects one MME entity inside
  * each LTE slice controller. However, in this implementation we are using a
  * single shared stateless MME entity. The current ns-3 LTE implementation
- * limits the eNB connected to a single MME. Considering that in SVELTE
+ * limits the eNB connected to a single MME. Considering that in UNI5ON
  * architecture the eNBs share their resources with all slices, we decided to
  * use a single shared stateless MME entity. Then, internally it can forward
  * the control messages to the correct LTE slice controller.
  */
-class SvelteMme : public Object
+class Uni5onMme : public Object
 {
-  friend class MemberEpcS1apSapMme<SvelteMme>;
-  friend class MemberEpcS11SapMme<SvelteMme>;
+  friend class MemberEpcS1apSapMme<Uni5onMme>;
+  friend class MemberEpcS11SapMme<Uni5onMme>;
 
 public:
-  SvelteMme ();          //!< Default constructor.
-  virtual ~SvelteMme (); //!< Dummy destructor, see DoDispose.
+  Uni5onMme ();          //!< Default constructor.
+  virtual ~Uni5onMme (); //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.

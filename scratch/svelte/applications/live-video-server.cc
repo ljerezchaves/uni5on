@@ -37,7 +37,7 @@ TypeId
 LiveVideoServer::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::LiveVideoServer")
-    .SetParent<SvelteServer> ()
+    .SetParent<Uni5onServer> ()
     .AddConstructor<LiveVideoServer> ()
     .AddAttribute ("MaxPayloadSize",
                    "The maximum payload size of packets [bytes].",
@@ -71,7 +71,7 @@ LiveVideoServer::DoDispose (void)
 
   m_sendEvent.Cancel ();
   m_entries.clear ();
-  SvelteServer::DoDispose ();
+  Uni5onServer::DoDispose ();
 }
 
 void
@@ -107,7 +107,7 @@ LiveVideoServer::NotifyStart ()
   NS_LOG_FUNCTION (this);
 
   // Chain up to reset statistics.
-  SvelteServer::NotifyStart ();
+  Uni5onServer::NotifyStart ();
 
   // Start traffic.
   m_sendEvent.Cancel ();
@@ -121,7 +121,7 @@ LiveVideoServer::NotifyForceStop ()
   NS_LOG_FUNCTION (this);
 
   // Chain up just for log.
-  SvelteServer::NotifyForceStop ();
+  Uni5onServer::NotifyForceStop ();
 
   // Stop traffic.
   m_sendEvent.Cancel ();

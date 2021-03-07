@@ -27,54 +27,54 @@
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("SvelteUdpServer");
-NS_OBJECT_ENSURE_REGISTERED (SvelteUdpServer);
+NS_LOG_COMPONENT_DEFINE ("Uni5onUdpServer");
+NS_OBJECT_ENSURE_REGISTERED (Uni5onUdpServer);
 
 TypeId
-SvelteUdpServer::GetTypeId (void)
+Uni5onUdpServer::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::SvelteUdpServer")
-    .SetParent<SvelteServer> ()
-    .AddConstructor<SvelteUdpServer> ()
+  static TypeId tid = TypeId ("ns3::Uni5onUdpServer")
+    .SetParent<Uni5onServer> ()
+    .AddConstructor<Uni5onUdpServer> ()
 
     // These attributes must be configured for the desired traffic pattern.
     .AddAttribute ("PktInterval",
                    "A random variable used to pick the packet "
                    "inter-arrival time [s].",
                    StringValue ("ns3::ConstantRandomVariable[Constant=1]"),
-                   MakePointerAccessor (&SvelteUdpServer::m_pktInterRng),
+                   MakePointerAccessor (&Uni5onUdpServer::m_pktInterRng),
                    MakePointerChecker <RandomVariableStream> ())
     .AddAttribute ("PktSize",
                    "A random variable used to pick the packet size [bytes].",
                    StringValue ("ns3::ConstantRandomVariable[Constant=100]"),
-                   MakePointerAccessor (&SvelteUdpServer::m_pktSizeRng),
+                   MakePointerAccessor (&Uni5onUdpServer::m_pktSizeRng),
                    MakePointerChecker <RandomVariableStream> ())
   ;
   return tid;
 }
 
-SvelteUdpServer::SvelteUdpServer ()
+Uni5onUdpServer::Uni5onUdpServer ()
   : m_sendEvent (EventId ())
 {
   NS_LOG_FUNCTION (this);
 }
 
-SvelteUdpServer::~SvelteUdpServer ()
+Uni5onUdpServer::~Uni5onUdpServer ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 void
-SvelteUdpServer::DoDispose (void)
+Uni5onUdpServer::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
 
   m_sendEvent.Cancel ();
-  SvelteServer::DoDispose ();
+  Uni5onServer::DoDispose ();
 }
 
 void
-SvelteUdpServer::StartApplication (void)
+Uni5onUdpServer::StartApplication (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -84,11 +84,11 @@ SvelteUdpServer::StartApplication (void)
   m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
   m_socket->Connect (InetSocketAddress::ConvertFrom (m_clientAddress));
   m_socket->SetRecvCallback (
-    MakeCallback (&SvelteUdpServer::ReadPacket, this));
+    MakeCallback (&Uni5onUdpServer::ReadPacket, this));
 }
 
 void
-SvelteUdpServer::StopApplication ()
+Uni5onUdpServer::StopApplication ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -101,35 +101,35 @@ SvelteUdpServer::StopApplication ()
 }
 
 void
-SvelteUdpServer::NotifyStart ()
+Uni5onUdpServer::NotifyStart ()
 {
   NS_LOG_FUNCTION (this);
 
   // Chain up to reset statistics.
-  SvelteServer::NotifyStart ();
+  Uni5onServer::NotifyStart ();
 
   // Start traffic.
   m_sendEvent.Cancel ();
   Time sendTime = Seconds (std::abs (m_pktInterRng->GetValue ()));
   uint32_t newSize = m_pktSizeRng->GetInteger ();
-  m_sendEvent = Simulator::Schedule (sendTime, &SvelteUdpServer::SendPacket,
+  m_sendEvent = Simulator::Schedule (sendTime, &Uni5onUdpServer::SendPacket,
                                      this, newSize);
 }
 
 void
-SvelteUdpServer::NotifyForceStop ()
+Uni5onUdpServer::NotifyForceStop ()
 {
   NS_LOG_FUNCTION (this);
 
   // Chain up just for log.
-  SvelteServer::NotifyForceStop ();
+  Uni5onServer::NotifyForceStop ();
 
   // Stop traffic.
   m_sendEvent.Cancel ();
 }
 
 void
-SvelteUdpServer::SendPacket (uint32_t size)
+Uni5onUdpServer::SendPacket (uint32_t size)
 {
   NS_LOG_FUNCTION (this << size);
 
@@ -147,12 +147,12 @@ SvelteUdpServer::SendPacket (uint32_t size)
   // Schedule next packet transmission.
   Time sendTime = Seconds (std::abs (m_pktInterRng->GetValue ()));
   uint32_t newSize = m_pktSizeRng->GetInteger ();
-  m_sendEvent = Simulator::Schedule (sendTime, &SvelteUdpServer::SendPacket,
+  m_sendEvent = Simulator::Schedule (sendTime, &Uni5onUdpServer::SendPacket,
                                      this, newSize);
 }
 
 void
-SvelteUdpServer::ReadPacket (Ptr<Socket> socket)
+Uni5onUdpServer::ReadPacket (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 

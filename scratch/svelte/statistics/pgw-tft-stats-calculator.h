@@ -30,7 +30,7 @@ namespace ns3 {
 class PgwInfo;
 
 /**
- * \ingroup svelteStats
+ * \ingroup uni5onStats
  * This class monitors the P-GW TFT adaptive mechanism.
  */
 class PgwTftStatsCalculator : public Object

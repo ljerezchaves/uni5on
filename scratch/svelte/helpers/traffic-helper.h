@@ -36,7 +36,7 @@ class SliceNetwork;
 class TrafficManager;
 
 /**
- * \ingroup svelte
+ * \ingroup uni5on
  * Traffic helper which installs client and server applications for all
  * applications into UEs and WebServer. This helper creates and aggregates a
  * traffic manager for each UE.

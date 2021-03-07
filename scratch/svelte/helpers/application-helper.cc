@@ -25,8 +25,8 @@ namespace ns3 {
 
 ApplicationHelper::ApplicationHelper ()
 {
-  m_clientFactory.SetTypeId (SvelteClient::GetTypeId ());
-  m_serverFactory.SetTypeId (SvelteServer::GetTypeId ());
+  m_clientFactory.SetTypeId (Uni5onClient::GetTypeId ());
+  m_serverFactory.SetTypeId (Uni5onServer::GetTypeId ());
 }
 
 ApplicationHelper::ApplicationHelper (TypeId clientType, TypeId serverType)
@@ -49,17 +49,17 @@ ApplicationHelper::SetServerAttribute (std::string name,
   m_serverFactory.Set (name, value);
 }
 
-Ptr<SvelteClient>
+Ptr<Uni5onClient>
 ApplicationHelper::Install (Ptr<Node> clientNode, Ptr<Node> serverNode,
                             Ipv4Address clientAddr, Ipv4Address serverAddr,
                             uint16_t port, Ipv4Header::DscpType dscp)
 {
-  Ptr<SvelteClient> clientApp;
-  clientApp = m_clientFactory.Create ()->GetObject<SvelteClient> ();
+  Ptr<Uni5onClient> clientApp;
+  clientApp = m_clientFactory.Create ()->GetObject<Uni5onClient> ();
   NS_ASSERT_MSG (clientApp, "Invalid client type id.");
 
-  Ptr<SvelteServer> serverApp;
-  serverApp = m_serverFactory.Create ()->GetObject<SvelteServer> ();
+  Ptr<Uni5onServer> serverApp;
+  serverApp = m_serverFactory.Create ()->GetObject<Uni5onServer> ();
   NS_ASSERT_MSG (serverApp, "Invalid server type id.");
 
   InetSocketAddress serverInetAddr (serverAddr, port);

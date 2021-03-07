@@ -33,10 +33,10 @@
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("SvelteHelper");
-NS_OBJECT_ENSURE_REGISTERED (SvelteHelper);
+NS_LOG_COMPONENT_DEFINE ("ScenarioHelper");
+NS_OBJECT_ENSURE_REGISTERED (ScenarioHelper);
 
-SvelteHelper::SvelteHelper ()
+ScenarioHelper::ScenarioHelper ()
   : m_pcapConfig (0),
   m_backhaul (0),
   m_radio (0),
@@ -59,81 +59,81 @@ SvelteHelper::SvelteHelper ()
   NS_LOG_FUNCTION (this);
 }
 
-SvelteHelper::~SvelteHelper ()
+ScenarioHelper::~ScenarioHelper ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-SvelteHelper::GetTypeId (void)
+ScenarioHelper::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::SvelteHelper")
+  static TypeId tid = TypeId ("ns3::ScenarioHelper")
     .SetParent<EpcHelper> ()
     .AddAttribute ("HtcController", "The HTC slice controller configuration.",
                    ObjectFactoryValue (ObjectFactory ()),
                    MakeObjectFactoryAccessor (
-                     &SvelteHelper::m_htcControllerFac),
+                     &ScenarioHelper::m_htcControllerFac),
                    MakeObjectFactoryChecker ())
     .AddAttribute ("HtcSlice", "The HTC slice network configuration.",
                    ObjectFactoryValue (ObjectFactory ()),
                    MakeObjectFactoryAccessor (
-                     &SvelteHelper::m_htcNetworkFac),
+                     &ScenarioHelper::m_htcNetworkFac),
                    MakeObjectFactoryChecker ())
     .AddAttribute ("HtcTraffic", "The HTC slice traffic configuration.",
                    ObjectFactoryValue (ObjectFactory ()),
                    MakeObjectFactoryAccessor (
-                     &SvelteHelper::m_htcTrafficFac),
+                     &ScenarioHelper::m_htcTrafficFac),
                    MakeObjectFactoryChecker ())
     .AddAttribute ("MtcController", "The MTC slice controller configuration.",
                    ObjectFactoryValue (ObjectFactory ()),
                    MakeObjectFactoryAccessor (
-                     &SvelteHelper::m_mtcControllerFac),
+                     &ScenarioHelper::m_mtcControllerFac),
                    MakeObjectFactoryChecker ())
     .AddAttribute ("MtcSlice", "The MTC slice network configuration.",
                    ObjectFactoryValue (ObjectFactory ()),
                    MakeObjectFactoryAccessor (
-                     &SvelteHelper::m_mtcNetworkFac),
+                     &ScenarioHelper::m_mtcNetworkFac),
                    MakeObjectFactoryChecker ())
     .AddAttribute ("MtcTraffic", "The MTC slice traffic configuration.",
                    ObjectFactoryValue (ObjectFactory ()),
                    MakeObjectFactoryAccessor (
-                     &SvelteHelper::m_mtcTrafficFac),
+                     &ScenarioHelper::m_mtcTrafficFac),
                    MakeObjectFactoryChecker ())
     .AddAttribute ("TmpController", "The TMP slice controller configuration.",
                    ObjectFactoryValue (ObjectFactory ()),
                    MakeObjectFactoryAccessor (
-                     &SvelteHelper::m_tmpControllerFac),
+                     &ScenarioHelper::m_tmpControllerFac),
                    MakeObjectFactoryChecker ())
     .AddAttribute ("TmpSlice", "The TMP slice network configuration.",
                    ObjectFactoryValue (ObjectFactory ()),
                    MakeObjectFactoryAccessor (
-                     &SvelteHelper::m_tmpNetworkFac),
+                     &ScenarioHelper::m_tmpNetworkFac),
                    MakeObjectFactoryChecker ())
     .AddAttribute ("TmpTraffic", "The TMP slice traffic configuration.",
                    ObjectFactoryValue (ObjectFactory ()),
                    MakeObjectFactoryAccessor (
-                     &SvelteHelper::m_tmpTrafficFac),
+                     &ScenarioHelper::m_tmpTrafficFac),
                    MakeObjectFactoryChecker ())
   ;
   return tid;
 }
 
 void
-SvelteHelper::ConfigurePcap (std::string prefix, uint8_t config)
+ScenarioHelper::ConfigurePcap (std::string prefix, uint8_t config)
 {
   NS_LOG_FUNCTION (this << prefix);
 
   m_pcapConfig = config;
-  bool promisc = HasPcapFlag (SvelteHelper::PCPROMISC);
-  bool ofpFlag = HasPcapFlag (SvelteHelper::PCSLCOFP);
-  bool sgiFlag = HasPcapFlag (SvelteHelper::PCSLCSGI);
-  bool pgwFlag = HasPcapFlag (SvelteHelper::PCSLCPGW);
+  bool promisc = HasPcapFlag (ScenarioHelper::PCPROMISC);
+  bool ofpFlag = HasPcapFlag (ScenarioHelper::PCSLCOFP);
+  bool sgiFlag = HasPcapFlag (ScenarioHelper::PCSLCSGI);
+  bool pgwFlag = HasPcapFlag (ScenarioHelper::PCSLCPGW);
 
   // Enable PCAP on the backhaul network.
   m_backhaul->EnablePcap (prefix, promisc,
-                          HasPcapFlag (SvelteHelper::PCBACKOFP),
-                          HasPcapFlag (SvelteHelper::PCBACKEPC),
-                          HasPcapFlag (SvelteHelper::PCBACKSWT));
+                          HasPcapFlag (ScenarioHelper::PCBACKOFP),
+                          HasPcapFlag (ScenarioHelper::PCBACKEPC),
+                          HasPcapFlag (ScenarioHelper::PCBACKSWT));
 
   // Enable PCAP on the logical network slices.
   if (m_htcNetwork)
@@ -151,7 +151,7 @@ SvelteHelper::ConfigurePcap (std::string prefix, uint8_t config)
 }
 
 void
-SvelteHelper::PrintLteRem (bool enable)
+ScenarioHelper::PrintLteRem (bool enable)
 {
   NS_LOG_FUNCTION (this);
 
@@ -166,8 +166,8 @@ SvelteHelper::PrintLteRem (bool enable)
 // Implementing methods inherited from EpcHelper.
 //
 uint8_t
-SvelteHelper::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi,
-                                 Ptr<EpcTft> tft, EpsBearer bearer)
+ScenarioHelper::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi,
+                                   Ptr<EpcTft> tft, EpsBearer bearer)
 {
   NS_LOG_FUNCTION (this << ueDevice << imsi);
 
@@ -206,8 +206,8 @@ SvelteHelper::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi,
 }
 
 void
-SvelteHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
-                      uint16_t cellId)
+ScenarioHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
+                        uint16_t cellId)
 {
   NS_LOG_FUNCTION (this << enb << lteEnbNetDevice << cellId);
 
@@ -258,8 +258,8 @@ SvelteHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
   enbLteSocketAddress6.SetProtocol (Ipv6L3Protocol::PROT_NUMBER);
   enbLteSocket6->Connect (enbLteSocketAddress6);
 
-  // Create the custom eNB application for the SVELTE architecture.
-  Ptr<SvelteEnbApplication> enbApp = CreateObject<SvelteEnbApplication> (
+  // Create the custom eNB application for the UNI5ON architecture.
+  Ptr<Uni5onEnbApplication> enbApp = CreateObject<Uni5onEnbApplication> (
       enbLteSocket, enbLteSocket6, enbS1uSocket, enbS1uAddr, cellId);
   enbApp->SetS1apSapMme (m_mme->GetS1apSapMme ());
   enb->AddApplication (enbApp);
@@ -274,7 +274,7 @@ SvelteHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
 }
 
 void
-SvelteHelper::AddX2Interface (Ptr<Node> enb1Node, Ptr<Node> enb2Node)
+ScenarioHelper::AddX2Interface (Ptr<Node> enb1Node, Ptr<Node> enb2Node)
 {
   NS_LOG_FUNCTION (this << enb1Node << enb1Node);
 
@@ -327,13 +327,13 @@ SvelteHelper::AddX2Interface (Ptr<Node> enb1Node, Ptr<Node> enb2Node)
 }
 
 void
-SvelteHelper::AddUe (Ptr<NetDevice> ueDevice, uint64_t imsi)
+ScenarioHelper::AddUe (Ptr<NetDevice> ueDevice, uint64_t imsi)
 {
   NS_LOG_FUNCTION (this << imsi << ueDevice);
 }
 
 Ptr<Node>
-SvelteHelper::GetPgwNode ()
+ScenarioHelper::GetPgwNode ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -341,7 +341,7 @@ SvelteHelper::GetPgwNode ()
 }
 
 Ipv4InterfaceContainer
-SvelteHelper::AssignUeIpv4Address (NetDeviceContainer ueDevices)
+ScenarioHelper::AssignUeIpv4Address (NetDeviceContainer ueDevices)
 {
   NS_LOG_FUNCTION (this);
 
@@ -349,7 +349,7 @@ SvelteHelper::AssignUeIpv4Address (NetDeviceContainer ueDevices)
 }
 
 Ipv6InterfaceContainer
-SvelteHelper::AssignUeIpv6Address (NetDeviceContainer ueDevices)
+ScenarioHelper::AssignUeIpv6Address (NetDeviceContainer ueDevices)
 {
   NS_LOG_FUNCTION (this);
 
@@ -357,7 +357,7 @@ SvelteHelper::AssignUeIpv6Address (NetDeviceContainer ueDevices)
 }
 
 Ipv4Address
-SvelteHelper::GetUeDefaultGatewayAddress ()
+ScenarioHelper::GetUeDefaultGatewayAddress ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -365,7 +365,7 @@ SvelteHelper::GetUeDefaultGatewayAddress ()
 }
 
 Ipv6Address
-SvelteHelper::GetUeDefaultGatewayAddress6 ()
+ScenarioHelper::GetUeDefaultGatewayAddress6 ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -373,7 +373,7 @@ SvelteHelper::GetUeDefaultGatewayAddress6 ()
 }
 
 void
-SvelteHelper::DoDispose (void)
+ScenarioHelper::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -408,14 +408,14 @@ SvelteHelper::DoDispose (void)
 }
 
 void
-SvelteHelper::NotifyConstructionCompleted (void)
+ScenarioHelper::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
-  // Create the SVELTE infrastructure.
-  m_mme = CreateObject<SvelteMme> ();
+  // Create the UNI5ON infrastructure.
+  m_mme = CreateObject<Uni5onMme> ();
   m_backhaul = CreateObject<RingNetwork> ();
-  m_radio = CreateObject<RadioNetwork> (Ptr<SvelteHelper> (this));
+  m_radio = CreateObject<RadioNetwork> (Ptr<ScenarioHelper> (this));
 
   Ptr<BackhaulController> backahulCtrl = m_backhaul->GetControllerApp ();
   ApplicationContainer sliceControllers;
@@ -534,7 +534,7 @@ SvelteHelper::NotifyConstructionCompleted (void)
 }
 
 bool
-SvelteHelper::HasPcapFlag (PcapConfig flag) const
+ScenarioHelper::HasPcapFlag (PcapConfig flag) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -542,9 +542,9 @@ SvelteHelper::HasPcapFlag (PcapConfig flag) const
 }
 
 bool
-SvelteHelper::AreFactoriesOk (ObjectFactory &controller,
-                              ObjectFactory &network,
-                              ObjectFactory &traffic) const
+ScenarioHelper::AreFactoriesOk (ObjectFactory &controller,
+                                ObjectFactory &network,
+                                ObjectFactory &traffic) const
 {
   NS_LOG_FUNCTION (this);
 

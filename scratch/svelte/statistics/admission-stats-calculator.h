@@ -30,7 +30,7 @@ namespace ns3 {
 class RoutingInfo;
 
 /**
- * \ingroup svelteStats
+ * \ingroup uni5onStats
  * This class monitors the SDN EPC bearer admission control and dump bearer
  * requests and blocking statistics.
  */

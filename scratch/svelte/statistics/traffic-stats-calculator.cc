@@ -38,10 +38,10 @@ TrafficStatsCalculator::TrafficStatsCalculator ()
 
   // Connect this stats calculator to required trace sources.
   Config::Connect (
-    "/NodeList/*/ApplicationList/*/$ns3::SvelteEnbApplication/S1uRx",
+    "/NodeList/*/ApplicationList/*/$ns3::Uni5onEnbApplication/S1uRx",
     MakeCallback (&TrafficStatsCalculator::EpcOutputPacket, this));
   Config::Connect (
-    "/NodeList/*/ApplicationList/*/$ns3::SvelteEnbApplication/S1uTx",
+    "/NodeList/*/ApplicationList/*/$ns3::Uni5onEnbApplication/S1uTx",
     MakeCallback (&TrafficStatsCalculator::EpcInputPacket, this));
   Config::Connect (
     "/NodeList/*/ApplicationList/*/$ns3::PgwTunnelApp/S5Rx",
@@ -62,13 +62,13 @@ TrafficStatsCalculator::TrafficStatsCalculator ()
     "/NodeList/*/$ns3::OFSwitch13Device/PortList/*/PortQueue/Drop",
     MakeCallback (&TrafficStatsCalculator::QueueDropPacket, this));
   Config::Connect (
-    "/NodeList/*/ApplicationList/*/$ns3::SvelteClient/AppStart",
+    "/NodeList/*/ApplicationList/*/$ns3::Uni5onClient/AppStart",
     MakeCallback (&TrafficStatsCalculator::ResetCounters, this));
   Config::Connect (
-    "/NodeList/*/ApplicationList/*/$ns3::SvelteClient/AppStop",
+    "/NodeList/*/ApplicationList/*/$ns3::Uni5onClient/AppStop",
     MakeCallback (&TrafficStatsCalculator::DumpStatistics, this));
   Config::Connect (
-    "/NodeList/*/ApplicationList/*/$ns3::SvelteClient/AppError",
+    "/NodeList/*/ApplicationList/*/$ns3::Uni5onClient/AppError",
     MakeCallback (&TrafficStatsCalculator::DumpStatistics, this));
 }
 
@@ -156,7 +156,7 @@ TrafficStatsCalculator::NotifyConstructionCompleted (void)
 
 void
 TrafficStatsCalculator::DumpStatistics (std::string context,
-                                        Ptr<SvelteClient> app)
+                                        Ptr<Uni5onClient> app)
 {
   NS_LOG_FUNCTION (this << context << app->GetTeidHex ());
 
@@ -201,7 +201,7 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
 
 void
 TrafficStatsCalculator::ResetCounters (std::string context,
-                                       Ptr<SvelteClient> app)
+                                       Ptr<Uni5onClient> app)
 {
   NS_LOG_FUNCTION (this << context << app);
 

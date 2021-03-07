@@ -40,10 +40,10 @@ BackhaulStatsCalculator::BackhaulStatsCalculator ()
 
   // Connect this stats calculator to required trace sources.
   Config::Connect (
-    "/NodeList/*/ApplicationList/*/$ns3::SvelteEnbApplication/S1uRx",
+    "/NodeList/*/ApplicationList/*/$ns3::Uni5onEnbApplication/S1uRx",
     MakeCallback (&BackhaulStatsCalculator::EpcOutputPacket, this));
   Config::Connect (
-    "/NodeList/*/ApplicationList/*/$ns3::SvelteEnbApplication/S1uTx",
+    "/NodeList/*/ApplicationList/*/$ns3::Uni5onEnbApplication/S1uTx",
     MakeCallback (&BackhaulStatsCalculator::EpcInputPacket, this));
   Config::Connect (
     "/NodeList/*/ApplicationList/*/$ns3::PgwTunnelApp/S5Rx",

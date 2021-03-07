@@ -25,13 +25,13 @@
 namespace ns3 {
 
 /**
- * \ingroup svelteApps
+ * \ingroup uni5onApps
  * This is the client side of a buffered video traffic generator. The client
  * establishes a TCP connection with the server and sends a HTTP request for
  * the main video object. After receiving all video chunks, the client closes
  * the connection.
  */
-class BufferedVideoClient : public SvelteClient
+class BufferedVideoClient : public Uni5onClient
 {
 public:
   /**
@@ -43,7 +43,7 @@ public:
   BufferedVideoClient ();           //!< Default constructor.
   virtual ~BufferedVideoClient ();  //!< Dummy destructor, see DoDispose.
 
-  // Inherited from SvelteClient.
+  // Inherited from Uni5onClient.
   void Start ();
 
 protected:

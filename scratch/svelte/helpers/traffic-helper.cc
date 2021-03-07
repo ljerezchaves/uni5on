@@ -295,8 +295,8 @@ TrafficHelper::ConfigureHelpers ()
   //
   // The VoIP application with the G.729 codec.
   //
-  m_voipCallHelper = ApplicationHelper (SvelteUdpClient::GetTypeId (),
-                                        SvelteUdpServer::GetTypeId ());
+  m_voipCallHelper = ApplicationHelper (Uni5onUdpClient::GetTypeId (),
+                                        Uni5onUdpServer::GetTypeId ());
   m_voipCallHelper.SetClientAttribute ("AppName", StringValue ("VoipCall"));
 
   // Traffic length: we are considering an estimative from Vodafone that
@@ -325,8 +325,8 @@ TrafficHelper::ConfigureHelpers ()
   //
   // The online game Open Arena.
   //
-  m_gameOpenHelper = ApplicationHelper (SvelteUdpClient::GetTypeId (),
-                                        SvelteUdpServer::GetTypeId ());
+  m_gameOpenHelper = ApplicationHelper (Uni5onUdpClient::GetTypeId (),
+                                        Uni5onUdpServer::GetTypeId ());
   m_gameOpenHelper.SetClientAttribute ("AppName", StringValue ("GameOpen"));
 
   // Traffic length: we are using a arbitrary normally-distributed short
@@ -353,8 +353,8 @@ TrafficHelper::ConfigureHelpers ()
   //
   // The online game Team Fortress.
   //
-  m_gameTeamHelper = ApplicationHelper (SvelteUdpClient::GetTypeId (),
-                                        SvelteUdpServer::GetTypeId ());
+  m_gameTeamHelper = ApplicationHelper (Uni5onUdpClient::GetTypeId (),
+                                        Uni5onUdpServer::GetTypeId ());
   m_gameTeamHelper.SetClientAttribute ("AppName", StringValue ("GameTeam"));
 
   // Traffic length: we are using a arbitrary normally-distributed short
@@ -391,8 +391,8 @@ TrafficHelper::ConfigureHelpers ()
   // vehicle speed, while server performs calculations, collision detection
   // etc., and sends back control information.
   //
-  m_autPilotHelper = ApplicationHelper (SvelteUdpClient::GetTypeId (),
-                                        SvelteUdpServer::GetTypeId ());
+  m_autPilotHelper = ApplicationHelper (Uni5onUdpClient::GetTypeId (),
+                                        Uni5onUdpServer::GetTypeId ());
   m_autPilotHelper.SetClientAttribute ("AppName", StringValue ("AutPilot"));
 
   // Traffic length: we are using a arbitrary normally-distributed short
@@ -424,8 +424,8 @@ TrafficHelper::ConfigureHelpers ()
   // calculate the equivalent positions of the participants and to show them
   // the corresponding state of the race.
   //
-  m_bikeRaceHelper = ApplicationHelper (SvelteUdpClient::GetTypeId (),
-                                        SvelteUdpServer::GetTypeId ());
+  m_bikeRaceHelper = ApplicationHelper (Uni5onUdpClient::GetTypeId (),
+                                        Uni5onUdpServer::GetTypeId ());
   m_bikeRaceHelper.SetClientAttribute ("AppName", StringValue ("BikeRace"));
 
   // Traffic length: we are using a arbitrary normally-distributed short
@@ -454,8 +454,8 @@ TrafficHelper::ConfigureHelpers ()
   // The GPS Keep Alive messages in Team Tracking application model clients
   // with team members sending data on position, depending on activity.
   //
-  m_gpsTrackHelper = ApplicationHelper (SvelteUdpClient::GetTypeId (),
-                                        SvelteUdpServer::GetTypeId ());
+  m_gpsTrackHelper = ApplicationHelper (Uni5onUdpClient::GetTypeId (),
+                                        Uni5onUdpServer::GetTypeId ());
   m_gpsTrackHelper.SetClientAttribute ("AppName", StringValue ("GpsTrack"));
 
   // Traffic length: we are using a arbitrary normally-distributed long traffic
@@ -815,9 +815,9 @@ TrafficHelper::InstallAppDedicated (
 
   // Create the client and server applications.
   uint16_t port = GetNextPortNo ();
-  Ptr<SvelteClient> clientApp = helper.Install (
+  Ptr<Uni5onClient> clientApp = helper.Install (
       t_ueNode, m_webNode, t_ueAddr, m_webAddr, port, Qci2Dscp (bearer.qci));
-  t_ueManager->AddSvelteClient (clientApp);
+  t_ueManager->AddUni5onClient (clientApp);
 
   // Setup common packet filter parameters.
   filter.remoteAddress   = m_webAddr;
@@ -851,9 +851,9 @@ TrafficHelper::InstallAppDefault (ApplicationHelper& helper)
 
   // Create the client and server applications.
   uint16_t port = GetNextPortNo ();
-  Ptr<SvelteClient> clientApp = helper.Install (
+  Ptr<Uni5onClient> clientApp = helper.Install (
       t_ueNode, m_webNode, t_ueAddr, m_webAddr, port, Qci2Dscp (bearer.qci));
-  t_ueManager->AddSvelteClient (clientApp);
+  t_ueManager->AddUni5onClient (clientApp);
   clientApp->SetEpsBearer (bearer);
   clientApp->SetEpsBearerId (bid);
 }

@@ -30,7 +30,7 @@ namespace ns3 {
 class RoutingInfo;
 
 /**
- * \ingroup svelteMeta
+ * \ingroup uni5onMeta
  * Metadata associated to the routing path for a single EPS bearer among the
  * switches in the OpenFlow ring backhaul network.
  */

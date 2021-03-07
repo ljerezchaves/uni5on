@@ -29,21 +29,21 @@
 
 namespace ns3 {
 
-class SvelteClient;
+class Uni5onClient;
 
 /**
- * \ingroup svelteApps
- * This class extends the Application class to proper work with SVELTE
+ * \ingroup uni5onApps
+ * This class extends the Application class to proper work with UNI5ON
  * architecture. Only server applications (those which will be installed into
  * web server node) should extend this class.
  */
-class SvelteServer : public Application
+class Uni5onServer : public Application
 {
-  friend class SvelteClient;
+  friend class Uni5onClient;
 
 public:
-  SvelteServer ();            //!< Default constructor.
-  virtual ~SvelteServer ();   //!< Dummy destructor, see DoDispose.
+  Uni5onServer ();            //!< Default constructor.
+  virtual ~Uni5onServer ();   //!< Dummy destructor, see DoDispose.
 
   /**
    * Get the type ID.
@@ -57,7 +57,7 @@ public:
    */
   //\{
   std::string       GetAppName    (void) const;
-  Ptr<SvelteClient> GetClientApp  (void) const;
+  Ptr<Uni5onClient> GetClientApp  (void) const;
   std::string       GetTeidHex    (void) const;
   bool              IsActive      (void) const;
   bool              IsForceStop   (void) const;
@@ -68,7 +68,7 @@ public:
    * \param clientApp The pointer to client application.
    * \param clientAddress The Inet socket address of the client.
    */
-  void SetClient (Ptr<SvelteClient> clientApp, Address clientAddress);
+  void SetClient (Ptr<Uni5onClient> clientApp, Address clientAddress);
 
   /**
    * Get the uplink goodput for this application.
@@ -107,7 +107,7 @@ protected:
   Ptr<Socket>               m_socket;           //!< Local socket.
   uint16_t                  m_localPort;        //!< Local port.
   Address                   m_clientAddress;    //!< Client address.
-  Ptr<SvelteClient>         m_clientApp;        //!< Client application.
+  Ptr<Uni5onClient>         m_clientApp;        //!< Client application.
 
   // Traffic statistics.
   uint64_t                  m_rxBytes;        //!< Number of RX bytes.

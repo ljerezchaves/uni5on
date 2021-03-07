@@ -30,7 +30,7 @@ namespace ns3 {
 class EnbInfo;
 
 /**
- * \ingroup svelteInfra
+ * \ingroup uni5onInfra
  * OpenFlow backhaul controller for ring topology.
  */
 class RingController : public BackhaulController

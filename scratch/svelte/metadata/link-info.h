@@ -38,7 +38,7 @@ typedef std::vector<Ptr<LinkInfo> > LinkInfoList_t;
 typedef std::set<Ptr<LinkInfo> > LinkInfoSet_t;
 
 /**
- * \ingroup svelteInfra
+ * \ingroup uni5onInfra
  * Metadata associated to a link between two OpenFlow backhaul switches.
  *
  * The link is prepared to handle inter-slicing, and each slice has the

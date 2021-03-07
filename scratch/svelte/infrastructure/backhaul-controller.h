@@ -43,7 +43,7 @@ class EnbInfo;
 class LinkInfo;
 
 /**
- * \ingroup svelteInfra
+ * \ingroup uni5onInfra
  * This is the abstract base class for the OpenFlow backhaul controller, which
  * should be extended in accordance to the desired backhaul network topology.
  * This controller implements the logic for traffic routing and engineering
@@ -53,7 +53,7 @@ class BackhaulController : public OFSwitch13Controller
 {
   friend class BackhaulNetwork;
   friend class SliceController;
-  friend class SvelteHelper;
+  friend class ScenarioHelper;
 
 public:
   BackhaulController ();           //!< Default constructor.

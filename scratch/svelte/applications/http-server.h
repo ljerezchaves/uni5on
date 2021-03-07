@@ -28,7 +28,7 @@
 namespace ns3 {
 
 /**
- * \ingroup svelteApps
+ * \ingroup uni5onApps
  * This is the server side of a HTTP Traffic Generator. The server listen for
  * client object requests. The implementation of this application is simplistic
  * and it does not support pipelining in this current version. The model used
@@ -39,7 +39,7 @@ namespace ns3 {
  * modules of ns-3. To allow deeper studies about the HTTP Protocol it needs
  * some improvements.
  */
-class HttpServer : public SvelteServer
+class HttpServer : public Uni5onServer
 {
 public:
   /**

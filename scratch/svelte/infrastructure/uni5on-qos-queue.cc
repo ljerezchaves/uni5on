@@ -26,33 +26,33 @@
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("SvelteQosQueue");
-NS_OBJECT_ENSURE_REGISTERED (SvelteQosQueue);
+NS_LOG_COMPONENT_DEFINE ("Uni5onQosQueue");
+NS_OBJECT_ENSURE_REGISTERED (Uni5onQosQueue);
 
 TypeId
-SvelteQosQueue::GetTypeId (void)
+Uni5onQosQueue::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::SvelteQosQueue")
+  static TypeId tid = TypeId ("ns3::Uni5onQosQueue")
     .SetParent<OFSwitch13Queue> ()
-    .AddConstructor<SvelteQosQueue> ()
+    .AddConstructor<Uni5onQosQueue> ()
   ;
   return tid;
 }
 
-SvelteQosQueue::SvelteQosQueue ()
+Uni5onQosQueue::Uni5onQosQueue ()
   : OFSwitch13Queue (),
-  NS_LOG_TEMPLATE_DEFINE ("SvelteQosQueue")
+  NS_LOG_TEMPLATE_DEFINE ("Uni5onQosQueue")
 {
   NS_LOG_FUNCTION (this);
 }
 
-SvelteQosQueue::~SvelteQosQueue ()
+Uni5onQosQueue::~Uni5onQosQueue ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 Ptr<Packet>
-SvelteQosQueue::Dequeue (void)
+Uni5onQosQueue::Dequeue (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -70,7 +70,7 @@ SvelteQosQueue::Dequeue (void)
 }
 
 Ptr<Packet>
-SvelteQosQueue::Remove (void)
+Uni5onQosQueue::Remove (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -88,7 +88,7 @@ SvelteQosQueue::Remove (void)
 }
 
 Ptr<const Packet>
-SvelteQosQueue::Peek (void) const
+Uni5onQosQueue::Peek (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -96,7 +96,7 @@ SvelteQosQueue::Peek (void) const
 }
 
 void
-SvelteQosQueue::DoInitialize ()
+Uni5onQosQueue::DoInitialize ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -119,7 +119,7 @@ SvelteQosQueue::DoInitialize ()
 }
 
 int
-SvelteQosQueue::GetNextQueueToServe (void)
+Uni5onQosQueue::GetNextQueueToServe (void)
 {
   NS_LOG_FUNCTION (this);
 

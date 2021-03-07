@@ -36,7 +36,7 @@ TypeId
 HttpServer::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::HttpServer")
-    .SetParent<SvelteServer> ()
+    .SetParent<Uni5onServer> ()
     .AddConstructor<HttpServer> ()
   ;
   return tid;
@@ -75,7 +75,7 @@ HttpServer::DoDispose (void)
   m_mainObjectSizeStream = 0;
   m_numOfInlineObjStream = 0;
   m_inlineObjSizeStream = 0;
-  SvelteServer::DoDispose ();
+  Uni5onServer::DoDispose ();
 }
 
 void

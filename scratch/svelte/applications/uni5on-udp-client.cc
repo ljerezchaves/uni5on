@@ -27,77 +27,77 @@
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("SvelteUdpClient");
-NS_OBJECT_ENSURE_REGISTERED (SvelteUdpClient);
+NS_LOG_COMPONENT_DEFINE ("Uni5onUdpClient");
+NS_OBJECT_ENSURE_REGISTERED (Uni5onUdpClient);
 
 TypeId
-SvelteUdpClient::GetTypeId (void)
+Uni5onUdpClient::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::SvelteUdpClient")
-    .SetParent<SvelteClient> ()
-    .AddConstructor<SvelteUdpClient> ()
+  static TypeId tid = TypeId ("ns3::Uni5onUdpClient")
+    .SetParent<Uni5onClient> ()
+    .AddConstructor<Uni5onUdpClient> ()
 
     // These attributes must be configured for the desired traffic pattern.
     .AddAttribute ("PktInterval",
                    "A random variable used to pick the packet "
                    "inter-arrival time [s].",
                    StringValue ("ns3::ConstantRandomVariable[Constant=1]"),
-                   MakePointerAccessor (&SvelteUdpClient::m_pktInterRng),
+                   MakePointerAccessor (&Uni5onUdpClient::m_pktInterRng),
                    MakePointerChecker <RandomVariableStream> ())
     .AddAttribute ("PktSize",
                    "A random variable used to pick the packet size [bytes].",
                    StringValue ("ns3::ConstantRandomVariable[Constant=100]"),
-                   MakePointerAccessor (&SvelteUdpClient::m_pktSizeRng),
+                   MakePointerAccessor (&Uni5onUdpClient::m_pktSizeRng),
                    MakePointerChecker <RandomVariableStream> ())
   ;
   return tid;
 }
 
-SvelteUdpClient::SvelteUdpClient ()
+Uni5onUdpClient::Uni5onUdpClient ()
   : m_sendEvent (EventId ()),
   m_stopEvent (EventId ())
 {
   NS_LOG_FUNCTION (this);
 }
 
-SvelteUdpClient::~SvelteUdpClient ()
+Uni5onUdpClient::~Uni5onUdpClient ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 void
-SvelteUdpClient::Start ()
+Uni5onUdpClient::Start ()
 {
   NS_LOG_FUNCTION (this);
 
   // Schedule the ForceStop method to stop traffic based on traffic length.
   Time stop = GetTrafficLength ();
-  m_stopEvent = Simulator::Schedule (stop, &SvelteUdpClient::ForceStop, this);
+  m_stopEvent = Simulator::Schedule (stop, &Uni5onUdpClient::ForceStop, this);
   NS_LOG_INFO ("Set traffic length to " << stop.GetSeconds () << "s.");
 
   // Chain up to reset statistics, notify server, and fire start trace source.
-  SvelteClient::Start ();
+  Uni5onClient::Start ();
 
   // Start traffic.
   m_sendEvent.Cancel ();
   Time sendTime = Seconds (std::abs (m_pktInterRng->GetValue ()));
   uint32_t newSize = m_pktSizeRng->GetInteger ();
-  m_sendEvent = Simulator::Schedule (sendTime, &SvelteUdpClient::SendPacket,
+  m_sendEvent = Simulator::Schedule (sendTime, &Uni5onUdpClient::SendPacket,
                                      this, newSize);
 }
 
 void
-SvelteUdpClient::DoDispose (void)
+Uni5onUdpClient::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
 
   m_stopEvent.Cancel ();
   m_sendEvent.Cancel ();
-  SvelteClient::DoDispose ();
+  Uni5onClient::DoDispose ();
 }
 
 void
-SvelteUdpClient::ForceStop ()
+Uni5onUdpClient::ForceStop ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -106,14 +106,14 @@ SvelteUdpClient::ForceStop ()
   m_sendEvent.Cancel ();
 
   // Chain up to notify server.
-  SvelteClient::ForceStop ();
+  Uni5onClient::ForceStop ();
 
   // Notify the stopped application one second later.
-  Simulator::Schedule (Seconds (1), &SvelteUdpClient::NotifyStop, this, false);
+  Simulator::Schedule (Seconds (1), &Uni5onUdpClient::NotifyStop, this, false);
 }
 
 void
-SvelteUdpClient::StartApplication (void)
+Uni5onUdpClient::StartApplication (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -123,11 +123,11 @@ SvelteUdpClient::StartApplication (void)
   m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
   m_socket->Connect (InetSocketAddress::ConvertFrom (m_serverAddress));
   m_socket->SetRecvCallback (
-    MakeCallback (&SvelteUdpClient::ReadPacket, this));
+    MakeCallback (&Uni5onUdpClient::ReadPacket, this));
 }
 
 void
-SvelteUdpClient::StopApplication ()
+Uni5onUdpClient::StopApplication ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -140,7 +140,7 @@ SvelteUdpClient::StopApplication ()
 }
 
 void
-SvelteUdpClient::SendPacket (uint32_t size)
+Uni5onUdpClient::SendPacket (uint32_t size)
 {
   NS_LOG_FUNCTION (this << size);
 
@@ -158,12 +158,12 @@ SvelteUdpClient::SendPacket (uint32_t size)
   // Schedule next packet transmission.
   Time sendTime = Seconds (std::abs (m_pktInterRng->GetValue ()));
   uint32_t newSize = m_pktSizeRng->GetInteger ();
-  m_sendEvent = Simulator::Schedule (sendTime, &SvelteUdpClient::SendPacket,
+  m_sendEvent = Simulator::Schedule (sendTime, &Uni5onUdpClient::SendPacket,
                                      this, newSize);
 }
 
 void
-SvelteUdpClient::ReadPacket (Ptr<Socket> socket)
+Uni5onUdpClient::ReadPacket (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 

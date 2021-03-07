@@ -33,7 +33,7 @@ namespace ns3 {
 class SliceController;
 
 /**
- * \ingroup svelteMeta
+ * \ingroup uni5onMeta
  * Metadata associated to a logical P-GW.
  */
 class PgwInfo : public Object

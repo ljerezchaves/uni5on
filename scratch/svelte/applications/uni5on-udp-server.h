@@ -25,11 +25,11 @@
 namespace ns3 {
 
 /**
- * \ingroup svelteApps
+ * \ingroup uni5onApps
  * This is the server side of a generic UDP traffic generator, sending and
  * receiving UDP datagrams following the configure traffic pattern.
  */
-class SvelteUdpServer : public SvelteServer
+class Uni5onUdpServer : public Uni5onServer
 {
 public:
   /**
@@ -38,8 +38,8 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  SvelteUdpServer ();             //!< Default constructor.
-  virtual ~SvelteUdpServer ();    //!< Dummy destructor, see DoDispose.
+  Uni5onUdpServer ();             //!< Default constructor.
+  virtual ~Uni5onUdpServer ();    //!< Dummy destructor, see DoDispose.
 
 protected:
   // Inherited from Object.
@@ -50,7 +50,7 @@ private:
   virtual void StartApplication (void);
   virtual void StopApplication (void);
 
-  // Inherited from SvelteServer.
+  // Inherited from Uni5onServer.
   void NotifyStart ();
   void NotifyForceStop ();
 

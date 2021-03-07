@@ -26,14 +26,14 @@
 namespace ns3 {
 
 /**
- * \ingroup svelteInfra
- * This class implements the specialized QoS queue for the SVELTE architecture.
+ * \ingroup uni5onInfra
+ * This class implements the specialized QoS queue for the UNI5ON architecture.
  * It holds a priority queue (ID 0) that is always served first, while other
  * queues (IDs 1 to N-1) are served in weighted rounding robin (WRR) order.
  * The drop tail queues are operating in packet mode with size of 100 packets.
  * The total number of queues and the WRR weights can be customized.
  */
-class SvelteQosQueue : public OFSwitch13Queue
+class Uni5onQosQueue : public OFSwitch13Queue
 {
 public:
   /**
@@ -42,8 +42,8 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  SvelteQosQueue ();           //!< Default constructor.
-  virtual ~SvelteQosQueue ();  //!< Dummy destructor, see DoDispose.
+  Uni5onQosQueue ();           //!< Default constructor.
+  virtual ~Uni5onQosQueue ();  //!< Dummy destructor, see DoDispose.
 
   // Inherited from Queue.
   Ptr<Packet> Dequeue (void);
@@ -57,7 +57,7 @@ protected:
 private:
   /**
    * Identify the next non-empty queue to serve, respecting the custom
-   * output scheduling algorithm for the SVELTE architecture.
+   * output scheduling algorithm for the UNI5ON architecture.
    * \return The queue ID.
    */
   int GetNextQueueToServe (void);

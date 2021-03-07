@@ -27,7 +27,7 @@
 namespace ns3 {
 
 /**
- * \ingroup svelteStats
+ * \ingroup uni5onStats
  * This class monitors the LTE RRC protocol and mobility model to dump RRC
  * procedures, including handover statistics and mobility course changes.
  */

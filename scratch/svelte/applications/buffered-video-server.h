@@ -25,12 +25,12 @@
 namespace ns3 {
 
 /**
- * \ingroup svelteApps
+ * \ingroup uni5onApps
  * This is the server side of a buffered video traffic generator. The server
  * listen for a client requesting video chunks and send the chunks back as fast
  * as possible.
  */
-class BufferedVideoServer : public SvelteServer
+class BufferedVideoServer : public Uni5onServer
 {
 public:
   /**

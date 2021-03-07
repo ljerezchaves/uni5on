@@ -41,7 +41,7 @@ namespace ns3 {
 class BackhaulController;
 class EnbInfo;
 class RoutingInfo;
-class SvelteMme;
+class Uni5onMme;
 class SgwInfo;
 class PgwInfo;
 
@@ -49,7 +49,7 @@ class PgwInfo;
 typedef std::vector<Ptr<SliceController> > SliceControllerList_t;
 
 /**
- * \ingroup svelteLogical
+ * \ingroup uni5onLogical
  * This is the abstract base class for a logical LTE slice controller, which
  * should be extended in accordance to the desired network configuration. This
  * slice controller is responsible for implementing S/P-GW control planes and
@@ -393,7 +393,7 @@ private:
   OpMode                  m_aggregation;    //!< Bearer traffic aggregation.
 
   // MME interface.
-  Ptr<SvelteMme>          m_mme;            //!< MME element.
+  Ptr<Uni5onMme>          m_mme;            //!< MME element.
   EpcS11SapMme*           m_s11SapMme;      //!< MME side of the S11 SAP.
   EpcS11SapSgw*           m_s11SapSgw;      //!< S-GW side of the S11 SAP.
 

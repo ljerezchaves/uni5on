@@ -29,10 +29,10 @@
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("SvelteClient");
-NS_OBJECT_ENSURE_REGISTERED (SvelteClient);
+NS_LOG_COMPONENT_DEFINE ("Uni5onClient");
+NS_OBJECT_ENSURE_REGISTERED (Uni5onClient);
 
-SvelteClient::SvelteClient ()
+Uni5onClient::Uni5onClient ()
   : m_socket (0),
   m_serverApp (0),
   m_active (false),
@@ -47,62 +47,62 @@ SvelteClient::SvelteClient ()
   NS_LOG_FUNCTION (this);
 }
 
-SvelteClient::~SvelteClient ()
+Uni5onClient::~Uni5onClient ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-SvelteClient::GetTypeId (void)
+Uni5onClient::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::SvelteClient")
+  static TypeId tid = TypeId ("ns3::Uni5onClient")
     .SetParent<Application> ()
-    .AddConstructor<SvelteClient> ()
+    .AddConstructor<Uni5onClient> ()
     .AddAttribute ("AppName", "The application name.",
                    StringValue ("NoName"),
-                   MakeStringAccessor (&SvelteClient::m_name),
+                   MakeStringAccessor (&Uni5onClient::m_name),
                    MakeStringChecker ())
     .AddAttribute ("MaxOnTime", "A hard duration time threshold.",
                    TimeValue (Time ()),
-                   MakeTimeAccessor (&SvelteClient::m_maxOnTime),
+                   MakeTimeAccessor (&Uni5onClient::m_maxOnTime),
                    MakeTimeChecker ())
     .AddAttribute ("TrafficLength",
                    "A random variable used to pick the traffic length [s].",
                    StringValue ("ns3::ConstantRandomVariable[Constant=30.0]"),
-                   MakePointerAccessor (&SvelteClient::m_lengthRng),
+                   MakePointerAccessor (&Uni5onClient::m_lengthRng),
                    MakePointerChecker <RandomVariableStream> ())
 
     .AddAttribute ("ServerAddress", "The server socket address.",
                    AddressValue (),
-                   MakeAddressAccessor (&SvelteClient::m_serverAddress),
+                   MakeAddressAccessor (&Uni5onClient::m_serverAddress),
                    MakeAddressChecker ())
     .AddAttribute ("LocalPort", "Local port.",
                    UintegerValue (10000),
-                   MakeUintegerAccessor (&SvelteClient::m_localPort),
+                   MakeUintegerAccessor (&Uni5onClient::m_localPort),
                    MakeUintegerChecker<uint16_t> ())
 
-    .AddTraceSource ("AppStart", "SvelteClient start trace source.",
-                     MakeTraceSourceAccessor (&SvelteClient::m_appStartTrace),
-                     "ns3::SvelteClient::EpcAppTracedCallback")
-    .AddTraceSource ("AppStop", "SvelteClient stop trace source.",
-                     MakeTraceSourceAccessor (&SvelteClient::m_appStopTrace),
-                     "ns3::SvelteClient::EpcAppTracedCallback")
-    .AddTraceSource ("AppError", "SvelteClient error trace source.",
-                     MakeTraceSourceAccessor (&SvelteClient::m_appErrorTrace),
-                     "ns3::SvelteClient::EpcAppTracedCallback")
+    .AddTraceSource ("AppStart", "Uni5onClient start trace source.",
+                     MakeTraceSourceAccessor (&Uni5onClient::m_appStartTrace),
+                     "ns3::Uni5onClient::EpcAppTracedCallback")
+    .AddTraceSource ("AppStop", "Uni5onClient stop trace source.",
+                     MakeTraceSourceAccessor (&Uni5onClient::m_appStopTrace),
+                     "ns3::Uni5onClient::EpcAppTracedCallback")
+    .AddTraceSource ("AppError", "Uni5onClient error trace source.",
+                     MakeTraceSourceAccessor (&Uni5onClient::m_appErrorTrace),
+                     "ns3::Uni5onClient::EpcAppTracedCallback")
   ;
   return tid;
 }
 
 std::string
-SvelteClient::GetAppName (void) const
+Uni5onClient::GetAppName (void) const
 {
   // No log to avoid infinite recursion.
   return m_name;
 }
 
 std::string
-SvelteClient::GetNameTeid (void) const
+Uni5onClient::GetNameTeid (void) const
 {
   // No log to avoid infinite recursion.
   std::ostringstream value;
@@ -111,7 +111,7 @@ SvelteClient::GetNameTeid (void) const
 }
 
 bool
-SvelteClient::IsActive (void) const
+Uni5onClient::IsActive (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -119,7 +119,7 @@ SvelteClient::IsActive (void) const
 }
 
 Time
-SvelteClient::GetMaxOnTime (void) const
+Uni5onClient::GetMaxOnTime (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -127,7 +127,7 @@ SvelteClient::GetMaxOnTime (void) const
 }
 
 bool
-SvelteClient::IsForceStop (void) const
+Uni5onClient::IsForceStop (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -135,7 +135,7 @@ SvelteClient::IsForceStop (void) const
 }
 
 EpsBearer
-SvelteClient::GetEpsBearer (void) const
+Uni5onClient::GetEpsBearer (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -143,7 +143,7 @@ SvelteClient::GetEpsBearer (void) const
 }
 
 uint8_t
-SvelteClient::GetEpsBearerId (void) const
+Uni5onClient::GetEpsBearerId (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -151,7 +151,7 @@ SvelteClient::GetEpsBearerId (void) const
 }
 
 uint32_t
-SvelteClient::GetTeid (void) const
+Uni5onClient::GetTeid (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -159,14 +159,14 @@ SvelteClient::GetTeid (void) const
 }
 
 std::string
-SvelteClient::GetTeidHex (void) const
+Uni5onClient::GetTeidHex (void) const
 {
   // No log to avoid infinite recursion.
   return GetUint32Hex (m_teid);
 }
 
-Ptr<SvelteServer>
-SvelteClient::GetServerApp (void) const
+Ptr<Uni5onServer>
+Uni5onClient::GetServerApp (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -174,7 +174,7 @@ SvelteClient::GetServerApp (void) const
 }
 
 void
-SvelteClient::SetEpsBearer (EpsBearer value)
+Uni5onClient::SetEpsBearer (EpsBearer value)
 {
   NS_LOG_FUNCTION (this);
 
@@ -182,7 +182,7 @@ SvelteClient::SetEpsBearer (EpsBearer value)
 }
 
 void
-SvelteClient::SetEpsBearerId (uint8_t value)
+Uni5onClient::SetEpsBearerId (uint8_t value)
 {
   NS_LOG_FUNCTION (this << value);
 
@@ -190,7 +190,7 @@ SvelteClient::SetEpsBearerId (uint8_t value)
 }
 
 void
-SvelteClient::SetTeid (uint32_t value)
+Uni5onClient::SetTeid (uint32_t value)
 {
   NS_LOG_FUNCTION (this << value);
 
@@ -198,7 +198,7 @@ SvelteClient::SetTeid (uint32_t value)
 }
 
 void
-SvelteClient::SetServer (Ptr<SvelteServer> serverApp, Address serverAddress)
+Uni5onClient::SetServer (Ptr<Uni5onServer> serverApp, Address serverAddress)
 {
   NS_LOG_FUNCTION (this << serverApp << serverAddress);
 
@@ -207,7 +207,7 @@ SvelteClient::SetServer (Ptr<SvelteServer> serverApp, Address serverAddress)
 }
 
 void
-SvelteClient::Start ()
+Uni5onClient::Start ()
 {
   NS_LOG_FUNCTION (this);
   NS_LOG_INFO ("Starting client application.");
@@ -226,7 +226,7 @@ SvelteClient::Start ()
   if (!m_maxOnTime.IsZero ())
     {
       m_forceStop =
-        Simulator::Schedule (m_maxOnTime, &SvelteClient::ForceStop, this);
+        Simulator::Schedule (m_maxOnTime, &Uni5onClient::ForceStop, this);
     }
 
   // Notify the server and fire start trace source.
@@ -236,7 +236,7 @@ SvelteClient::Start ()
 }
 
 DataRate
-SvelteClient::GetDlGoodput (void) const
+Uni5onClient::GetDlGoodput (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -252,7 +252,7 @@ SvelteClient::GetDlGoodput (void) const
 }
 
 DataRate
-SvelteClient::GetUlGoodput (void) const
+Uni5onClient::GetUlGoodput (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -260,7 +260,7 @@ SvelteClient::GetUlGoodput (void) const
 }
 
 void
-SvelteClient::DoDispose (void)
+Uni5onClient::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -272,7 +272,7 @@ SvelteClient::DoDispose (void)
 }
 
 void
-SvelteClient::ForceStop ()
+Uni5onClient::ForceStop ()
 {
   NS_LOG_FUNCTION (this);
   NS_LOG_INFO ("Forcing the client application to stop.");
@@ -288,7 +288,7 @@ SvelteClient::ForceStop ()
 }
 
 Time
-SvelteClient::GetTrafficLength ()
+Uni5onClient::GetTrafficLength ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -296,7 +296,7 @@ SvelteClient::GetTrafficLength ()
 }
 
 void
-SvelteClient::NotifyStop (bool withError)
+Uni5onClient::NotifyStop (bool withError)
 {
   NS_LOG_FUNCTION (this << withError);
   NS_LOG_INFO ("Client application stopped.");
@@ -326,7 +326,7 @@ SvelteClient::NotifyStop (bool withError)
 }
 
 void
-SvelteClient::NotifyRx (uint32_t bytes)
+Uni5onClient::NotifyRx (uint32_t bytes)
 {
   NS_LOG_FUNCTION (this << bytes);
 

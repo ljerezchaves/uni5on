@@ -87,12 +87,12 @@ TrafficManager::GetTypeId (void)
 }
 
 void
-TrafficManager::AddSvelteClient (Ptr<SvelteClient> app)
+TrafficManager::AddUni5onClient (Ptr<Uni5onClient> app)
 {
   NS_LOG_FUNCTION (this << app);
 
   // Save the application pointer.
-  std::pair<Ptr<SvelteClient>, Time> entry (app, Time ());
+  std::pair<Ptr<Uni5onClient>, Time> entry (app, Time ());
   auto ret = m_timeByApp.insert (entry);
   NS_ABORT_MSG_IF (ret.second == false, "Error when saving application.");
 
@@ -129,7 +129,7 @@ TrafficManager::NotifySessionCreated (
   // For each application, set the corresponding TEID.
   for (auto const &ait : m_timeByApp)
     {
-      Ptr<SvelteClient> app = ait.first;
+      Ptr<Uni5onClient> app = ait.first;
       app->SetTeid (ueInfo->GetTeid (app->GetEpsBearerId ()));
       NS_LOG_INFO ("App " << app->GetNameTeid ());
     }
@@ -163,7 +163,7 @@ TrafficManager::DoDispose ()
 }
 
 void
-TrafficManager::AppStartTry (Ptr<SvelteClient> app)
+TrafficManager::AppStartTry (Ptr<Uni5onClient> app)
 {
   NS_LOG_FUNCTION (this << app);
 
@@ -214,13 +214,13 @@ TrafficManager::AppStartTry (Ptr<SvelteClient> app)
     }
 
   // Schedule the application start for +1 second.
-  Simulator::Schedule (Seconds (1), &SvelteClient::Start, app);
+  Simulator::Schedule (Seconds (1), &Uni5onClient::Start, app);
   NS_LOG_INFO ("App " << app->GetNameTeid () << " will start in +1sec with " <<
                "max duration set to " << app->GetMaxOnTime ().GetSeconds ());
 }
 
 void
-TrafficManager::NotifyAppStop (Ptr<SvelteClient> app)
+TrafficManager::NotifyAppStop (Ptr<Uni5onClient> app)
 {
   NS_LOG_FUNCTION (this << app);
 
@@ -257,7 +257,7 @@ TrafficManager::NotifyAppStop (Ptr<SvelteClient> app)
 }
 
 void
-TrafficManager::SetNextAppStartTry (Ptr<SvelteClient> app)
+TrafficManager::SetNextAppStartTry (Ptr<Uni5onClient> app)
 {
   NS_LOG_FUNCTION (this << app);
 
@@ -318,7 +318,7 @@ TrafficManager::SetNextAppStartTry (Ptr<SvelteClient> app)
 }
 
 Time
-TrafficManager::GetNextAppStartTry (Ptr<SvelteClient> app) const
+TrafficManager::GetNextAppStartTry (Ptr<Uni5onClient> app) const
 {
   NS_LOG_FUNCTION (this << app);
 

@@ -38,15 +38,15 @@ class RadioNetwork;
 class RingNetwork;
 class SliceController;
 class SliceNetwork;
-class SvelteMme;
+class Uni5onMme;
 class TrafficHelper;
 
 /**
- * \ingroup svelte
- * This class creates and configures the SVELTE architecture, including the
+ * \ingroup uni5on
+ * This class creates and configures the UNI5ON architecture, including the
  * shared infrastructure and logical networks.
  */
-class SvelteHelper : public EpcHelper
+class ScenarioHelper : public EpcHelper
 {
 public:
   /** The reason for any blocked request. */
@@ -62,8 +62,8 @@ public:
     PCPROMISC = (1U << 7),  //!< Enable promiscuous mode.
   };
 
-  SvelteHelper ();          //!< Default constructor.
-  virtual ~SvelteHelper (); //!< Dummy destructor, see DoDispose.
+  ScenarioHelper ();          //!< Default constructor.
+  virtual ~ScenarioHelper (); //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
@@ -72,7 +72,7 @@ public:
   static TypeId GetTypeId (void);
 
   /**
-   * Configure PCAP traces on the SVELTE infrastructure.
+   * Configure PCAP traces on the infrastructure.
    * \param prefix Filename prefix to use for PCAP files.
    * \param config The PCAP configuration bitmap.
    *
@@ -143,7 +143,7 @@ private:
 
   Ptr<RingNetwork>          m_backhaul;         //!< The backhaul network.
   Ptr<RadioNetwork>         m_radio;            //!< The LTE RAN network.
-  Ptr<SvelteMme>            m_mme;              //!< SVELTE MME entity.
+  Ptr<Uni5onMme>            m_mme;              //!< The MME entity.
 
   // HTC network slice.
   ObjectFactory             m_htcControllerFac; //!< HTC controller factory.

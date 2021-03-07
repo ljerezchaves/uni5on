@@ -29,16 +29,16 @@
 namespace ns3 {
 
 class RoutingInfo;
-class SvelteClient;
+class Uni5onClient;
 
 /**
- * \ingroup svelte
- * \defgroup svelteStats Statistics
- * Statistics calculators for monitoring the SVELTE architecture.
+ * \ingroup uni5on
+ * \defgroup uni5onStats Statistics
+ * Statistics calculators for monitoring the UNI5ON architecture.
  */
 
 /**
- * \ingroup svelteStats
+ * \ingroup uni5onStats
  * This class monitors the network traffic at application L7 level and also at
  * L2 OpenFlow link level for traffic within the LTE backhaul.
  */
@@ -68,7 +68,7 @@ private:
    * \param context Context information.
    * \param app The client application.
    */
-  void DumpStatistics (std::string context, Ptr<SvelteClient> app);
+  void DumpStatistics (std::string context, Ptr<Uni5onClient> app);
 
   /**
    * Reset internal counters.
@@ -76,7 +76,7 @@ private:
    * \param context Context information.
    * \param app The client application.
    */
-  void ResetCounters (std::string context, Ptr<SvelteClient> app);
+  void ResetCounters (std::string context, Ptr<Uni5onClient> app);
 
   /**
    * Trace sink fired when a packet is dropped while exceeding pipeline load

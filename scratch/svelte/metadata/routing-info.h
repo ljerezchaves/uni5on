@@ -36,7 +36,7 @@ class UeInfo;
 typedef std::vector<Ptr<RoutingInfo> > RoutingInfoList_t;
 
 /**
- * \ingroup svelteMeta
+ * \ingroup uni5onMeta
  * Metadata associated to the EPS bearer.
  */
 class RoutingInfo : public Object
