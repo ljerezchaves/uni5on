@@ -1,4 +1,4 @@
-# Custom Makefile for SVELTE
+# Custom Makefile for UNI5ON
 
 all: ## Execute the ./waf command in simulator directory
 	@./waf
