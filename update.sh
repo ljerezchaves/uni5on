@@ -7,13 +7,12 @@ yellow=$(tput setaf 3)
 bold=$(tput bold)
 normal=$(tput sgr0)
 
-SIMNAME="svelte"
+SIMNAME="uni5on"
 BASEDIR="/local1/luciano"
-SIMDIR="${BASEDIR}/svelte-simulator"
+SIMDIR="${BASEDIR}/${SIMNAME}"
 LIBDIR="${SIMDIR}/ofsoftswitch13-gtp"
 LOGDIR="${SIMDIR}/logs/thesis"
-MACHINELIST="atlas castor clio demeter esculapio heracles hercules hestia morfeu pollux satiros tetis zeus"
-# MACHINELIST="atlas castor clio demeter eco esculapio heracles hercules hestia hydra kratos morfeu pollux satiros tetis zeus"
+MACHINELIST="atlas castor clio esculapio heracles hercules satiros tetis"
 
 function PrintHelp () {
   echo "Usage: $0 <action>"
