@@ -17,7 +17,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * Author: Nicola Baldo <nbaldo@cttc.es>
- *         Luciano Chaves <luciano@lrc.ic.unicamp.br>
+ *         Luciano Jerez Chaves <luciano@lrc.ic.unicamp.br>
  */
 
 #ifndef UNI5ON_MME_H
