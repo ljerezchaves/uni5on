@@ -27,7 +27,7 @@ namespace ns3 {
 /**
  * \ingroup uni5onApps
  * This is the server side of a generic UDP traffic generator, sending and
- * receiving UDP datagrams following the configure traffic pattern.
+ * receiving UDP datagrams following the configured traffic pattern.
  */
 class UdpGenericServer : public Uni5onServer
 {

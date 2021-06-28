@@ -33,7 +33,7 @@ class Uni5onClient;
 
 /**
  * \ingroup uni5onApps
- * This class extends the Application class to proper work with UNI5ON
+ * This class extends the Application class to proper work with the UNI5ON
  * architecture. Only server applications (those which will be installed into
  * web server node) should extend this class.
  */
