@@ -149,12 +149,12 @@ private:
   // Application helpers.
   ApplicationHelper           m_autPilotHelper;   //!< Auto-pilot helper.
   ApplicationHelper           m_bikeRaceHelper;   //!< Bicycle race helper.
-  ApplicationHelper           m_bufVideoHelper;   //!< Buffered video helper.
   ApplicationHelper           m_gameOpenHelper;   //!< Open Arena helper.
   ApplicationHelper           m_gameTeamHelper;   //!< Team Fortress helper.
   ApplicationHelper           m_gpsTrackHelper;   //!< GPS tracking helper.
   ApplicationHelper           m_httpPageHelper;   //!< HTTP page helper.
   ApplicationHelper           m_livVideoHelper;   //!< Live video helper.
+  ApplicationHelper           m_recVideoHelper;   //!< Recorded video helper.
   ApplicationHelper           m_voipCallHelper;   //!< VoIP call helper.
 
   // Temporary variables used only when installing applications.

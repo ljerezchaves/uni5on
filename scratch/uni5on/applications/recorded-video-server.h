@@ -17,8 +17,8 @@
  * Author: Luciano Jerez Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef BUFFERED_VIDEO_SERVER_H
-#define BUFFERED_VIDEO_SERVER_H
+#ifndef RECORDED_VIDEO_SERVER_H
+#define RECORDED_VIDEO_SERVER_H
 
 #include "uni5on-server.h"
 
@@ -26,11 +26,11 @@ namespace ns3 {
 
 /**
  * \ingroup uni5onApps
- * This is the server side of a buffered video traffic generator. The server
+ * This is the server side of a pre-recorded video traffic generator. The server
  * listen for a client requesting video chunks and send the chunks back as fast
  * as possible.
  */
-class BufferedVideoServer : public Uni5onServer
+class RecordedVideoServer : public Uni5onServer
 {
 public:
   /**
@@ -39,8 +39,8 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  BufferedVideoServer ();           //!< Default constructor.
-  virtual ~BufferedVideoServer ();  //!< Dummy destructor, see DoDispose.
+  RecordedVideoServer ();           //!< Default constructor.
+  virtual ~RecordedVideoServer ();  //!< Dummy destructor, see DoDispose.
 
 protected:
   // Inherited from Object.
@@ -129,4 +129,4 @@ private:
 };
 
 } // Namespace ns3
-#endif /* BUFFERED_VIDEO_SERVER_H */
+#endif /* RECORDED_VIDEO_SERVER_H */

@@ -17,8 +17,8 @@
  * Author: Luciano Jerez Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef BUFFERED_VIDEO_CLIENT_H
-#define BUFFERED_VIDEO_CLIENT_H
+#ifndef RECORDED_VIDEO_CLIENT_H
+#define RECORDED_VIDEO_CLIENT_H
 
 #include "uni5on-client.h"
 
@@ -26,12 +26,12 @@ namespace ns3 {
 
 /**
  * \ingroup uni5onApps
- * This is the client side of a buffered video traffic generator. The client
- * establishes a TCP connection with the server and sends a HTTP request for
- * the main video object. After receiving all video chunks, the client closes
- * the connection.
+ * This is the client side of a pre-recorded video traffic generator. The client
+ * establishes a TCP connection with the server and sends a HTTP request for the
+ * main video object. After receiving all video chunks, the client closes the
+ * connection.
  */
-class BufferedVideoClient : public Uni5onClient
+class RecordedVideoClient : public Uni5onClient
 {
 public:
   /**
@@ -40,8 +40,8 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  BufferedVideoClient ();           //!< Default constructor.
-  virtual ~BufferedVideoClient ();  //!< Dummy destructor, see DoDispose.
+  RecordedVideoClient ();           //!< Default constructor.
+  virtual ~RecordedVideoClient ();  //!< Dummy destructor, see DoDispose.
 
   // Inherited from Uni5onClient.
   void Start ();
@@ -82,4 +82,4 @@ private:
 };
 
 } // Namespace ns3
-#endif /* BUFFERED_VIDEO_CLIENT_H */
+#endif /* RECORDED_VIDEO_CLIENT_H */

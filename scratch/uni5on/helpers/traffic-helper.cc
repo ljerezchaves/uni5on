@@ -19,8 +19,8 @@
  */
 
 #include "traffic-helper.h"
-#include "../applications/buffered-video-client.h"
-#include "../applications/buffered-video-server.h"
+#include "../applications/recorded-video-client.h"
+#include "../applications/recorded-video-server.h"
 #include "../applications/http-client.h"
 #include "../applications/http-server.h"
 #include "../applications/live-video-client.h"
@@ -239,25 +239,6 @@ TrafficHelper::ConfigureHelpers ()
   // Configuring HTC application helpers.
 
   //
-  // Buffered video application based on MPEG-4 video traces from
-  // http://www-tkn.ee.tu-berlin.de/publications/papers/TKN0006.pdf.
-  //
-  m_bufVideoHelper = ApplicationHelper (BufferedVideoClient::GetTypeId (),
-                                        BufferedVideoServer::GetTypeId ());
-  m_bufVideoHelper.SetClientAttribute ("AppName", StringValue ("BufVideo"));
-
-  // Traffic length: we are considering a statistic that the majority of
-  // YouTube brand videos are somewhere between 31 and 120 seconds long.
-  // So we are using the average length of 1 min 30 sec, with 15 sec stdev.
-  // See http://tinyurl.com/q5xkwnn and http://tinyurl.com/klraxum for details.
-  // Note that this length will only be used to get the size of the video which
-  // will be sent to the client over a TCP connection.
-  m_bufVideoHelper.SetClientAttribute (
-    "TrafficLength",
-    StringValue ("ns3::NormalRandomVariable[Mean=90.0|Variance=225.0]"));
-
-
-  //
   // The HTTP model is based on the distributions indicated in the paper 'An
   // HTTP Web Traffic Model Based on the Top One Million Visited Web Pages' by
   // Rastin Pries et. al. Each client will send a request to the server and
@@ -291,6 +272,23 @@ TrafficHelper::ConfigureHelpers ()
     "TrafficLength",
     StringValue ("ns3::NormalRandomVariable[Mean=90.0|Variance=225.0]"));
 
+  //
+  // Pre-recorded video application based on MPEG-4 video traces from
+  // http://www-tkn.ee.tu-berlin.de/publications/papers/TKN0006.pdf.
+  //
+  m_recVideoHelper = ApplicationHelper (RecordedVideoClient::GetTypeId (),
+                                        RecordedVideoServer::GetTypeId ());
+  m_recVideoHelper.SetClientAttribute ("AppName", StringValue ("RecVideo"));
+
+  // Traffic length: we are considering a statistic that the majority of
+  // YouTube brand videos are somewhere between 31 and 120 seconds long.
+  // So we are using the average length of 1 min 30 sec, with 15 sec stdev.
+  // See http://tinyurl.com/q5xkwnn and http://tinyurl.com/klraxum for details.
+  // Note that this length will only be used to get the size of the video which
+  // will be sent to the client over a TCP connection.
+  m_recVideoHelper.SetClientAttribute (
+    "TrafficLength",
+    StringValue ("ns3::NormalRandomVariable[Mean=90.0|Variance=225.0]"));
 
   //
   // The VoIP application with the G.729 codec.
@@ -636,13 +634,13 @@ TrafficHelper::InstallApplications ()
             InstallAppDedicated (m_livVideoHelper, bearer, filter);
           }
           {
-            // Buffered video streaming over dedicated Non-GBR EPS bearer.
+            // Pre-recorded video streaming over dedicated Non-GBR EPS bearer.
             // QCI 8 is typically associated with buffered video streaming and
             // TCP-based applications. It could be used for a dedicated
             // 'premium bearer' for any subscriber, or could be used for the
             // default bearer of a UE for 'premium subscribers'.
             int videoIdx = m_nonVidRng->GetInteger ();
-            m_bufVideoHelper.SetServerAttribute (
+            m_recVideoHelper.SetServerAttribute (
               "TraceFilename", StringValue (GetVideoFilename (videoIdx)));
             EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM);
 
@@ -650,7 +648,7 @@ TrafficHelper::InstallApplications ()
             EpcTft::PacketFilter filter;
             filter.direction = EpcTft::BIDIRECTIONAL;
             filter.protocol = TcpL4Protocol::PROT_NUMBER;
-            InstallAppDedicated (m_bufVideoHelper, bearer, filter);
+            InstallAppDedicated (m_recVideoHelper, bearer, filter);
           }
           {
             // HTTP webpage traffic over dedicated Non-GBR EPS bearer.

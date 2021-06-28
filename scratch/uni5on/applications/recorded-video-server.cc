@@ -17,7 +17,7 @@
  * Author: Luciano Jerez Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include "buffered-video-server.h"
+#include "recorded-video-server.h"
 #include <cstdlib>
 #include <cstdio>
 #include <fstream>
@@ -29,25 +29,25 @@
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("BufferedVideoServer");
-NS_OBJECT_ENSURE_REGISTERED (BufferedVideoServer);
+NS_LOG_COMPONENT_DEFINE ("RecordedVideoServer");
+NS_OBJECT_ENSURE_REGISTERED (RecordedVideoServer);
 
 TypeId
-BufferedVideoServer::GetTypeId (void)
+RecordedVideoServer::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::BufferedVideoServer")
+  static TypeId tid = TypeId ("ns3::RecordedVideoServer")
     .SetParent<Uni5onServer> ()
-    .AddConstructor<BufferedVideoServer> ()
+    .AddConstructor<RecordedVideoServer> ()
     .AddAttribute ("TraceFilename",
                    "Name of file to load a trace from.",
                    StringValue (std::string ()),
-                   MakeStringAccessor (&BufferedVideoServer::LoadTrace),
+                   MakeStringAccessor (&RecordedVideoServer::LoadTrace),
                    MakeStringChecker ())
   ;
   return tid;
 }
 
-BufferedVideoServer::BufferedVideoServer ()
+RecordedVideoServer::RecordedVideoServer ()
   : m_connected (false),
   m_pendingBytes (0),
   m_chunkSize (128000)
@@ -55,13 +55,13 @@ BufferedVideoServer::BufferedVideoServer ()
   NS_LOG_FUNCTION (this);
 }
 
-BufferedVideoServer::~BufferedVideoServer ()
+RecordedVideoServer::~RecordedVideoServer ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 void
-BufferedVideoServer::DoDispose (void)
+RecordedVideoServer::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -70,7 +70,7 @@ BufferedVideoServer::DoDispose (void)
 }
 
 void
-BufferedVideoServer::StartApplication ()
+RecordedVideoServer::StartApplication ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -81,15 +81,15 @@ BufferedVideoServer::StartApplication ()
   m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
   m_socket->Listen ();
   m_socket->SetAcceptCallback (
-    MakeCallback (&BufferedVideoServer::NotifyConnectionRequest, this),
-    MakeCallback (&BufferedVideoServer::NotifyNewConnectionCreated, this));
+    MakeCallback (&RecordedVideoServer::NotifyConnectionRequest, this),
+    MakeCallback (&RecordedVideoServer::NotifyNewConnectionCreated, this));
   m_socket->SetCloseCallbacks (
-    MakeCallback (&BufferedVideoServer::NotifyNormalClose, this),
-    MakeCallback (&BufferedVideoServer::NotifyErrorClose, this));
+    MakeCallback (&RecordedVideoServer::NotifyNormalClose, this),
+    MakeCallback (&RecordedVideoServer::NotifyErrorClose, this));
 }
 
 void
-BufferedVideoServer::StopApplication ()
+RecordedVideoServer::StopApplication ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -102,7 +102,7 @@ BufferedVideoServer::StopApplication ()
 }
 
 bool
-BufferedVideoServer::NotifyConnectionRequest (Ptr<Socket> socket,
+RecordedVideoServer::NotifyConnectionRequest (Ptr<Socket> socket,
                                               const Address& address)
 {
   NS_LOG_FUNCTION (this << socket << address);
@@ -115,7 +115,7 @@ BufferedVideoServer::NotifyConnectionRequest (Ptr<Socket> socket,
 }
 
 void
-BufferedVideoServer::NotifyNewConnectionCreated (Ptr<Socket> socket,
+RecordedVideoServer::NotifyNewConnectionCreated (Ptr<Socket> socket,
                                                  const Address& address)
 {
   NS_LOG_FUNCTION (this << socket << address);
@@ -127,13 +127,13 @@ BufferedVideoServer::NotifyNewConnectionCreated (Ptr<Socket> socket,
   m_pendingBytes = 0;
 
   socket->SetSendCallback (
-    MakeCallback (&BufferedVideoServer::SendData, this));
+    MakeCallback (&RecordedVideoServer::SendData, this));
   socket->SetRecvCallback (
-    MakeCallback (&BufferedVideoServer::DataReceived, this));
+    MakeCallback (&RecordedVideoServer::DataReceived, this));
 }
 
 void
-BufferedVideoServer::NotifyNormalClose (Ptr<Socket> socket)
+RecordedVideoServer::NotifyNormalClose (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 
@@ -145,7 +145,7 @@ BufferedVideoServer::NotifyNormalClose (Ptr<Socket> socket)
 }
 
 void
-BufferedVideoServer::NotifyErrorClose (Ptr<Socket> socket)
+RecordedVideoServer::NotifyErrorClose (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 
@@ -157,7 +157,7 @@ BufferedVideoServer::NotifyErrorClose (Ptr<Socket> socket)
 }
 
 void
-BufferedVideoServer::DataReceived (Ptr<Socket> socket)
+RecordedVideoServer::DataReceived (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 
@@ -175,7 +175,7 @@ BufferedVideoServer::DataReceived (Ptr<Socket> socket)
 }
 
 void
-BufferedVideoServer::SendData (Ptr<Socket> socket, uint32_t available)
+RecordedVideoServer::SendData (Ptr<Socket> socket, uint32_t available)
 {
   NS_LOG_FUNCTION (this << socket << available);
 
@@ -200,7 +200,7 @@ BufferedVideoServer::SendData (Ptr<Socket> socket, uint32_t available)
 }
 
 void
-BufferedVideoServer::ProccessHttpRequest (Ptr<Socket> socket,
+RecordedVideoServer::ProccessHttpRequest (Ptr<Socket> socket,
                                           HttpHeader header)
 {
   NS_LOG_FUNCTION (this << socket);
@@ -275,7 +275,7 @@ BufferedVideoServer::ProccessHttpRequest (Ptr<Socket> socket,
 }
 
 void
-BufferedVideoServer::LoadTrace (std::string filename)
+RecordedVideoServer::LoadTrace (std::string filename)
 {
   NS_LOG_FUNCTION (this << filename);
 
@@ -313,7 +313,7 @@ BufferedVideoServer::LoadTrace (std::string filename)
 }
 
 uint32_t
-BufferedVideoServer::GetVideoChunks (Time length)
+RecordedVideoServer::GetVideoChunks (Time length)
 {
   uint32_t currentEntry = 0;
   Time elapsed = Seconds (0);

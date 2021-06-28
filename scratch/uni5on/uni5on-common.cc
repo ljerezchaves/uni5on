@@ -219,7 +219,7 @@ Qci2Dscp (EpsBearer::Qci qci)
     case EpsBearer::NGBR_IMS:
       return Ipv4Header::DSCP_AF31;
 
-    // QCI 6: Buffered video.
+    // QCI 6: Pre-recorded video.
     case EpsBearer::NGBR_VIDEO_TCP_OPERATOR:
       return Ipv4Header::DSCP_AF32;
 
