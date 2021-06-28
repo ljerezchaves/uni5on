@@ -40,11 +40,10 @@ class Uni5onServer;
  * \ingroup uni5onApps
  * This class extends the Application class to proper work with the UNI5ON
  * architecture. Only clients applications (those which will be installed into
- * UEs) should extend this class. It includes a rx byte counter for traffic
- * statistics, and start/stop callbacks to notify the slice controller when the
- * traffic stats/stops. Each application is associated with an EPS bearer, and
- * application traffic is sent within GTP tunnels over EPC interfaces. These
- * informations are also saved here for further usage.
+ * UEs) should extend this class. It includes traffic start/stop callbacks. Each
+ * application is associated with an EPS bearer, and application traffic is sent
+ * within GTP tunnels over EPC interfaces. These informations are also saved
+ * here for further usage.
  */
 class Uni5onClient : public Application
 {
