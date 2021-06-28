@@ -72,13 +72,13 @@ private:
    * Trace source fired when a packet arrives this P-GW from
    * the S5 interface (leaving the EPC).
    */
-  TracedCallback<Ptr<const Packet>>m_rxS5Trace;
+  TracedCallback<Ptr<const Packet>> m_rxS5Trace;
 
   /**
    * Trace source fired when a packet leaves this P-GW over
    * the S5 interface (entering the EPC).
    */
-  TracedCallback<Ptr<const Packet>>m_txS5Trace;
+  TracedCallback<Ptr<const Packet>> m_txS5Trace;
 };
 
 } // namespace ns3

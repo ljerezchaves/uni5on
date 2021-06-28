@@ -88,6 +88,8 @@ sp_func_class_paren=Add
 sp_after_type=Add
 sp_type_func=Add
 sp_angle_paren=Add
+sp_angle_shift=Remove
+sp_permit_cpp11_shift=True
 """
     level0 = """
 sp_func_proto_paren=Add

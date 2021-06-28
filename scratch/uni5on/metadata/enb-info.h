@@ -110,7 +110,7 @@ private:
   Ipv4Address               m_s1uAddr;            //!< eNB S1-U IP address.
 
   /** Map saving cell ID / eNB information. */
-  typedef std::map<uint16_t, Ptr<EnbInfo>>CellIdEnbInfoMap_t;
+  typedef std::map<uint16_t, Ptr<EnbInfo>> CellIdEnbInfoMap_t;
   static CellIdEnbInfoMap_t m_enbInfoByCellId;    //!< Global eNB info map.
 };
 

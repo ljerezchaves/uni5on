@@ -46,7 +46,7 @@ class SgwInfo;
 class PgwInfo;
 
 /** A list of slice controller applications. */
-typedef std::vector<Ptr<SliceController>>SliceControllerList_t;
+typedef std::vector<Ptr<SliceController>> SliceControllerList_t;
 
 /**
  * \ingroup uni5onLogical
@@ -366,10 +366,10 @@ private:
                         std::string cmdStr, std::string actStr);
 
   /** The bearer request trace source, fired at RequestDedicatedBearer. */
-  TracedCallback<Ptr<const RoutingInfo>>m_bearerRequestTrace;
+  TracedCallback<Ptr<const RoutingInfo>> m_bearerRequestTrace;
 
   /** The bearer release trace source, fired at ReleaseDedicatedBearer. */
-  TracedCallback<Ptr<const RoutingInfo>>m_bearerReleaseTrace;
+  TracedCallback<Ptr<const RoutingInfo>> m_bearerReleaseTrace;
 
   /** The context created trace source, fired at DoCreateSessionRequest. */
   TracedCallback<uint64_t, BearerCreatedList_t> m_sessionCreatedTrace;

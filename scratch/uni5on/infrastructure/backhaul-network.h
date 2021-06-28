@@ -80,7 +80,7 @@ public:
    * \return The pair with the network device created at the EPC node and the
    *         port device create at the backhaul switch.
    */
-  virtual std::pair<Ptr<CsmaNetDevice>, Ptr<OFSwitch13Port> >
+  virtual std::pair<Ptr<CsmaNetDevice>, Ptr<OFSwitch13Port>>
   AttachEpcNode (Ptr<Node> enbNode, uint16_t swIdx, LteIface iface,
                  std::string ifaceStr = std::string ());
 

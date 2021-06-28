@@ -19,12 +19,12 @@
  */
 
 #include "traffic-helper.h"
-#include "../applications/recorded-video-client.h"
-#include "../applications/recorded-video-server.h"
 #include "../applications/http-client.h"
 #include "../applications/http-server.h"
 #include "../applications/live-video-client.h"
 #include "../applications/live-video-server.h"
+#include "../applications/recorded-video-client.h"
+#include "../applications/recorded-video-server.h"
 #include "../applications/udp-generic-client.h"
 #include "../applications/udp-generic-server.h"
 #include "../infrastructure/radio-network.h"
@@ -45,7 +45,7 @@ uint16_t TrafficHelper::m_port = 10000;
 // Trace files directory
 const std::string TrafficHelper::m_videoDir = "./movies/";
 
-// Trace files are sorted in increasing gbr bit rate
+// Trace files are sorted in increasing average GBR bit rate
 const std::string TrafficHelper::m_videoTrace [] = {
   "office-cam-low.txt", "office-cam-medium.txt", "office-cam-high.txt",
   "first-contact.txt", "star-wars-iv.txt", "ard-talk.txt", "mr-bean.txt",
@@ -86,14 +86,14 @@ TrafficHelper::GetTypeId (void)
     .AddConstructor<TrafficHelper> ()
 
     // Slice.
-    .AddAttribute ("SliceId", "The LTE logical slice identification.",
+    .AddAttribute ("SliceId", "The logical slice identification.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    EnumValue (SliceId::UNKN),
                    MakeEnumAccessor (&TrafficHelper::m_sliceId),
                    MakeEnumChecker (SliceId::HTC, SliceIdStr (SliceId::HTC),
                                     SliceId::MTC, SliceIdStr (SliceId::MTC),
                                     SliceId::TMP, SliceIdStr (SliceId::TMP)))
-    .AddAttribute ("SliceCtrl", "The LTE logical slice controller pointer.",
+    .AddAttribute ("SliceCtrl", "The logical slice controller pointer.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    PointerValue (),
                    MakePointerAccessor (&TrafficHelper::m_controller),
@@ -141,8 +141,7 @@ TrafficHelper::GetTypeId (void)
                    MakeTimeAccessor (&TrafficHelper::m_zeroProbAt),
                    MakeTimeChecker (Time (0)))
     .AddAttribute ("PoissonInterArrival",
-                   "An exponential random variable used to get "
-                   "application inter-arrival start times.",
+                   "A random variable to get inter-arrival start times.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    StringValue ("ns3::ExponentialRandomVariable[Mean=120.0]"),
                    MakePointerAccessor (&TrafficHelper::m_poissonRng),
@@ -272,6 +271,7 @@ TrafficHelper::ConfigureHelpers ()
     "TrafficLength",
     StringValue ("ns3::NormalRandomVariable[Mean=90.0|Variance=225.0]"));
 
+
   //
   // Pre-recorded video application based on MPEG-4 video traces from
   // http://www-tkn.ee.tu-berlin.de/publications/papers/TKN0006.pdf.
@@ -289,6 +289,7 @@ TrafficHelper::ConfigureHelpers ()
   m_recVideoHelper.SetClientAttribute (
     "TrafficLength",
     StringValue ("ns3::NormalRandomVariable[Mean=90.0|Variance=225.0]"));
+
 
   //
   // The VoIP application with the G.729 codec.

@@ -128,7 +128,7 @@ BackhaulNetwork::EnablePcap (std::string prefix, bool promiscuous,
     }
 }
 
-std::pair<Ptr<CsmaNetDevice>, Ptr<OFSwitch13Port> >
+std::pair<Ptr<CsmaNetDevice>, Ptr<OFSwitch13Port>>
 BackhaulNetwork::AttachEpcNode (Ptr<Node> epcNode, uint16_t swIdx,
                                 LteIface iface, std::string ifaceStr)
 {
