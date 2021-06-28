@@ -18,7 +18,7 @@
  */
 
 #include <ns3/seq-ts-header.h>
-#include "uni5on-udp-client.h"
+#include "udp-generic-client.h"
 
 #undef NS_LOG_APPEND_CONTEXT
 #define NS_LOG_APPEND_CONTEXT \
@@ -27,52 +27,52 @@
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("Uni5onUdpClient");
-NS_OBJECT_ENSURE_REGISTERED (Uni5onUdpClient);
+NS_LOG_COMPONENT_DEFINE ("UdpGenericClient");
+NS_OBJECT_ENSURE_REGISTERED (UdpGenericClient);
 
 TypeId
-Uni5onUdpClient::GetTypeId (void)
+UdpGenericClient::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::Uni5onUdpClient")
+  static TypeId tid = TypeId ("ns3::UdpGenericClient")
     .SetParent<Uni5onClient> ()
-    .AddConstructor<Uni5onUdpClient> ()
+    .AddConstructor<UdpGenericClient> ()
 
     // These attributes must be configured for the desired traffic pattern.
     .AddAttribute ("PktInterval",
                    "A random variable used to pick the packet "
                    "inter-arrival time [s].",
                    StringValue ("ns3::ConstantRandomVariable[Constant=1]"),
-                   MakePointerAccessor (&Uni5onUdpClient::m_pktInterRng),
+                   MakePointerAccessor (&UdpGenericClient::m_pktInterRng),
                    MakePointerChecker <RandomVariableStream> ())
     .AddAttribute ("PktSize",
                    "A random variable used to pick the packet size [bytes].",
                    StringValue ("ns3::ConstantRandomVariable[Constant=100]"),
-                   MakePointerAccessor (&Uni5onUdpClient::m_pktSizeRng),
+                   MakePointerAccessor (&UdpGenericClient::m_pktSizeRng),
                    MakePointerChecker <RandomVariableStream> ())
   ;
   return tid;
 }
 
-Uni5onUdpClient::Uni5onUdpClient ()
+UdpGenericClient::UdpGenericClient ()
   : m_sendEvent (EventId ()),
   m_stopEvent (EventId ())
 {
   NS_LOG_FUNCTION (this);
 }
 
-Uni5onUdpClient::~Uni5onUdpClient ()
+UdpGenericClient::~UdpGenericClient ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 void
-Uni5onUdpClient::Start ()
+UdpGenericClient::Start ()
 {
   NS_LOG_FUNCTION (this);
 
   // Schedule the ForceStop method to stop traffic based on traffic length.
   Time stop = GetTrafficLength ();
-  m_stopEvent = Simulator::Schedule (stop, &Uni5onUdpClient::ForceStop, this);
+  m_stopEvent = Simulator::Schedule (stop, &UdpGenericClient::ForceStop, this);
   NS_LOG_INFO ("Set traffic length to " << stop.GetSeconds () << "s.");
 
   // Chain up to reset statistics, notify server, and fire start trace source.
@@ -82,12 +82,12 @@ Uni5onUdpClient::Start ()
   m_sendEvent.Cancel ();
   Time sendTime = Seconds (std::abs (m_pktInterRng->GetValue ()));
   uint32_t newSize = m_pktSizeRng->GetInteger ();
-  m_sendEvent = Simulator::Schedule (sendTime, &Uni5onUdpClient::SendPacket,
+  m_sendEvent = Simulator::Schedule (sendTime, &UdpGenericClient::SendPacket,
                                      this, newSize);
 }
 
 void
-Uni5onUdpClient::DoDispose (void)
+UdpGenericClient::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -97,7 +97,7 @@ Uni5onUdpClient::DoDispose (void)
 }
 
 void
-Uni5onUdpClient::ForceStop ()
+UdpGenericClient::ForceStop ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -109,11 +109,11 @@ Uni5onUdpClient::ForceStop ()
   Uni5onClient::ForceStop ();
 
   // Notify the stopped application one second later.
-  Simulator::Schedule (Seconds (1), &Uni5onUdpClient::NotifyStop, this, false);
+  Simulator::Schedule (Seconds (1), &UdpGenericClient::NotifyStop, this, false);
 }
 
 void
-Uni5onUdpClient::StartApplication (void)
+UdpGenericClient::StartApplication (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -123,11 +123,11 @@ Uni5onUdpClient::StartApplication (void)
   m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
   m_socket->Connect (InetSocketAddress::ConvertFrom (m_serverAddress));
   m_socket->SetRecvCallback (
-    MakeCallback (&Uni5onUdpClient::ReadPacket, this));
+    MakeCallback (&UdpGenericClient::ReadPacket, this));
 }
 
 void
-Uni5onUdpClient::StopApplication ()
+UdpGenericClient::StopApplication ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -140,7 +140,7 @@ Uni5onUdpClient::StopApplication ()
 }
 
 void
-Uni5onUdpClient::SendPacket (uint32_t size)
+UdpGenericClient::SendPacket (uint32_t size)
 {
   NS_LOG_FUNCTION (this << size);
 
@@ -158,12 +158,12 @@ Uni5onUdpClient::SendPacket (uint32_t size)
   // Schedule next packet transmission.
   Time sendTime = Seconds (std::abs (m_pktInterRng->GetValue ()));
   uint32_t newSize = m_pktSizeRng->GetInteger ();
-  m_sendEvent = Simulator::Schedule (sendTime, &Uni5onUdpClient::SendPacket,
+  m_sendEvent = Simulator::Schedule (sendTime, &UdpGenericClient::SendPacket,
                                      this, newSize);
 }
 
 void
-Uni5onUdpClient::ReadPacket (Ptr<Socket> socket)
+UdpGenericClient::ReadPacket (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 

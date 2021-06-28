@@ -18,7 +18,7 @@
  */
 
 #include <ns3/seq-ts-header.h>
-#include "uni5on-udp-server.h"
+#include "udp-generic-server.h"
 
 #undef NS_LOG_APPEND_CONTEXT
 #define NS_LOG_APPEND_CONTEXT                             \
@@ -27,45 +27,45 @@
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("Uni5onUdpServer");
-NS_OBJECT_ENSURE_REGISTERED (Uni5onUdpServer);
+NS_LOG_COMPONENT_DEFINE ("UdpGenericServer");
+NS_OBJECT_ENSURE_REGISTERED (UdpGenericServer);
 
 TypeId
-Uni5onUdpServer::GetTypeId (void)
+UdpGenericServer::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::Uni5onUdpServer")
+  static TypeId tid = TypeId ("ns3::UdpGenericServer")
     .SetParent<Uni5onServer> ()
-    .AddConstructor<Uni5onUdpServer> ()
+    .AddConstructor<UdpGenericServer> ()
 
     // These attributes must be configured for the desired traffic pattern.
     .AddAttribute ("PktInterval",
                    "A random variable used to pick the packet "
                    "inter-arrival time [s].",
                    StringValue ("ns3::ConstantRandomVariable[Constant=1]"),
-                   MakePointerAccessor (&Uni5onUdpServer::m_pktInterRng),
+                   MakePointerAccessor (&UdpGenericServer::m_pktInterRng),
                    MakePointerChecker <RandomVariableStream> ())
     .AddAttribute ("PktSize",
                    "A random variable used to pick the packet size [bytes].",
                    StringValue ("ns3::ConstantRandomVariable[Constant=100]"),
-                   MakePointerAccessor (&Uni5onUdpServer::m_pktSizeRng),
+                   MakePointerAccessor (&UdpGenericServer::m_pktSizeRng),
                    MakePointerChecker <RandomVariableStream> ())
   ;
   return tid;
 }
 
-Uni5onUdpServer::Uni5onUdpServer ()
+UdpGenericServer::UdpGenericServer ()
   : m_sendEvent (EventId ())
 {
   NS_LOG_FUNCTION (this);
 }
 
-Uni5onUdpServer::~Uni5onUdpServer ()
+UdpGenericServer::~UdpGenericServer ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 void
-Uni5onUdpServer::DoDispose (void)
+UdpGenericServer::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -74,7 +74,7 @@ Uni5onUdpServer::DoDispose (void)
 }
 
 void
-Uni5onUdpServer::StartApplication (void)
+UdpGenericServer::StartApplication (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -84,11 +84,11 @@ Uni5onUdpServer::StartApplication (void)
   m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
   m_socket->Connect (InetSocketAddress::ConvertFrom (m_clientAddress));
   m_socket->SetRecvCallback (
-    MakeCallback (&Uni5onUdpServer::ReadPacket, this));
+    MakeCallback (&UdpGenericServer::ReadPacket, this));
 }
 
 void
-Uni5onUdpServer::StopApplication ()
+UdpGenericServer::StopApplication ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -101,7 +101,7 @@ Uni5onUdpServer::StopApplication ()
 }
 
 void
-Uni5onUdpServer::NotifyStart ()
+UdpGenericServer::NotifyStart ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -112,12 +112,12 @@ Uni5onUdpServer::NotifyStart ()
   m_sendEvent.Cancel ();
   Time sendTime = Seconds (std::abs (m_pktInterRng->GetValue ()));
   uint32_t newSize = m_pktSizeRng->GetInteger ();
-  m_sendEvent = Simulator::Schedule (sendTime, &Uni5onUdpServer::SendPacket,
+  m_sendEvent = Simulator::Schedule (sendTime, &UdpGenericServer::SendPacket,
                                      this, newSize);
 }
 
 void
-Uni5onUdpServer::NotifyForceStop ()
+UdpGenericServer::NotifyForceStop ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -129,7 +129,7 @@ Uni5onUdpServer::NotifyForceStop ()
 }
 
 void
-Uni5onUdpServer::SendPacket (uint32_t size)
+UdpGenericServer::SendPacket (uint32_t size)
 {
   NS_LOG_FUNCTION (this << size);
 
@@ -147,12 +147,12 @@ Uni5onUdpServer::SendPacket (uint32_t size)
   // Schedule next packet transmission.
   Time sendTime = Seconds (std::abs (m_pktInterRng->GetValue ()));
   uint32_t newSize = m_pktSizeRng->GetInteger ();
-  m_sendEvent = Simulator::Schedule (sendTime, &Uni5onUdpServer::SendPacket,
+  m_sendEvent = Simulator::Schedule (sendTime, &UdpGenericServer::SendPacket,
                                      this, newSize);
 }
 
 void
-Uni5onUdpServer::ReadPacket (Ptr<Socket> socket)
+UdpGenericServer::ReadPacket (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 

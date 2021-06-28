@@ -431,8 +431,8 @@ EnableVerbose (bool enable)
       LogComponentEnable ("LiveVideoServer",          logLevelWarnInfo);
       LogComponentEnable ("Uni5onClient",             logLevelWarnInfo);
       LogComponentEnable ("Uni5onServer",             logLevelWarnInfo);
-      LogComponentEnable ("Uni5onUdpClient",          logLevelWarnInfo);
-      LogComponentEnable ("Uni5onUdpServer",          logLevelWarnInfo);
+      LogComponentEnable ("UdpGenericClient",         logLevelWarnInfo);
+      LogComponentEnable ("UdpGenericServer",         logLevelWarnInfo);
 
       // Statistic components.
       LogComponentEnable ("AdmissionStatsCalculator", logLevelWarnInfo);

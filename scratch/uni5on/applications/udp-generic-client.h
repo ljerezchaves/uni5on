@@ -17,19 +17,19 @@
  * Author: Luciano Jerez Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef UNI5ON_UDP_SERVER_H
-#define UNI5ON_UDP_SERVER_H
+#ifndef UDP_GENERIC_CLIENT_H
+#define UDP_GENERIC_CLIENT_H
 
-#include "uni5on-server.h"
+#include "uni5on-client.h"
 
 namespace ns3 {
 
 /**
  * \ingroup uni5onApps
- * This is the server side of a generic UDP traffic generator, sending and
+ * This is the client side of a generic UDP traffic generator, sending and
  * receiving UDP datagrams following the configure traffic pattern.
  */
-class Uni5onUdpServer : public Uni5onServer
+class UdpGenericClient : public Uni5onClient
 {
 public:
   /**
@@ -38,21 +38,23 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  Uni5onUdpServer ();             //!< Default constructor.
-  virtual ~Uni5onUdpServer ();    //!< Dummy destructor, see DoDispose.
+  UdpGenericClient ();             //!< Default constructor.
+  virtual ~UdpGenericClient ();    //!< Dummy destructor, see DoDispose.
+
+  // Inherited from Uni5onClient.
+  void Start ();
 
 protected:
   // Inherited from Object.
   virtual void DoDispose (void);
 
+  // Inherited from Uni5onClient.
+  void ForceStop ();
+
 private:
   // Inherited from Application.
   virtual void StartApplication (void);
   virtual void StopApplication (void);
-
-  // Inherited from Uni5onServer.
-  void NotifyStart ();
-  void NotifyForceStop ();
 
   /**
    * \brief Socket receive callback.
@@ -69,7 +71,8 @@ private:
   Ptr<RandomVariableStream>   m_pktInterRng;  //!< Pkt inter-arrival time.
   Ptr<RandomVariableStream>   m_pktSizeRng;   //!< Pkt size.
   EventId                     m_sendEvent;    //!< SendPacket event.
+  EventId                     m_stopEvent;    //!< Stop event.
 };
 
 } // namespace ns3
-#endif /* UNI5ON_UDP_SERVER_H */
+#endif /* UDP_GENERIC_CLIENT_H */

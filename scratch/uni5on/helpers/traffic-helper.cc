@@ -25,8 +25,8 @@
 #include "../applications/http-server.h"
 #include "../applications/live-video-client.h"
 #include "../applications/live-video-server.h"
-#include "../applications/uni5on-udp-client.h"
-#include "../applications/uni5on-udp-server.h"
+#include "../applications/udp-generic-client.h"
+#include "../applications/udp-generic-server.h"
 #include "../infrastructure/radio-network.h"
 #include "../logical/slice-controller.h"
 #include "../logical/slice-network.h"
@@ -295,8 +295,8 @@ TrafficHelper::ConfigureHelpers ()
   //
   // The VoIP application with the G.729 codec.
   //
-  m_voipCallHelper = ApplicationHelper (Uni5onUdpClient::GetTypeId (),
-                                        Uni5onUdpServer::GetTypeId ());
+  m_voipCallHelper = ApplicationHelper (UdpGenericClient::GetTypeId (),
+                                        UdpGenericServer::GetTypeId ());
   m_voipCallHelper.SetClientAttribute ("AppName", StringValue ("VoipCall"));
 
   // Traffic length: we are considering an estimative from Vodafone that
@@ -325,8 +325,8 @@ TrafficHelper::ConfigureHelpers ()
   //
   // The online game Open Arena.
   //
-  m_gameOpenHelper = ApplicationHelper (Uni5onUdpClient::GetTypeId (),
-                                        Uni5onUdpServer::GetTypeId ());
+  m_gameOpenHelper = ApplicationHelper (UdpGenericClient::GetTypeId (),
+                                        UdpGenericServer::GetTypeId ());
   m_gameOpenHelper.SetClientAttribute ("AppName", StringValue ("GameOpen"));
 
   // Traffic length: we are using a arbitrary normally-distributed short
@@ -353,8 +353,8 @@ TrafficHelper::ConfigureHelpers ()
   //
   // The online game Team Fortress.
   //
-  m_gameTeamHelper = ApplicationHelper (Uni5onUdpClient::GetTypeId (),
-                                        Uni5onUdpServer::GetTypeId ());
+  m_gameTeamHelper = ApplicationHelper (UdpGenericClient::GetTypeId (),
+                                        UdpGenericServer::GetTypeId ());
   m_gameTeamHelper.SetClientAttribute ("AppName", StringValue ("GameTeam"));
 
   // Traffic length: we are using a arbitrary normally-distributed short
@@ -391,8 +391,8 @@ TrafficHelper::ConfigureHelpers ()
   // vehicle speed, while server performs calculations, collision detection
   // etc., and sends back control information.
   //
-  m_autPilotHelper = ApplicationHelper (Uni5onUdpClient::GetTypeId (),
-                                        Uni5onUdpServer::GetTypeId ());
+  m_autPilotHelper = ApplicationHelper (UdpGenericClient::GetTypeId (),
+                                        UdpGenericServer::GetTypeId ());
   m_autPilotHelper.SetClientAttribute ("AppName", StringValue ("AutPilot"));
 
   // Traffic length: we are using a arbitrary normally-distributed short
@@ -424,8 +424,8 @@ TrafficHelper::ConfigureHelpers ()
   // calculate the equivalent positions of the participants and to show them
   // the corresponding state of the race.
   //
-  m_bikeRaceHelper = ApplicationHelper (Uni5onUdpClient::GetTypeId (),
-                                        Uni5onUdpServer::GetTypeId ());
+  m_bikeRaceHelper = ApplicationHelper (UdpGenericClient::GetTypeId (),
+                                        UdpGenericServer::GetTypeId ());
   m_bikeRaceHelper.SetClientAttribute ("AppName", StringValue ("BikeRace"));
 
   // Traffic length: we are using a arbitrary normally-distributed short
@@ -454,8 +454,8 @@ TrafficHelper::ConfigureHelpers ()
   // The GPS Keep Alive messages in Team Tracking application model clients
   // with team members sending data on position, depending on activity.
   //
-  m_gpsTrackHelper = ApplicationHelper (Uni5onUdpClient::GetTypeId (),
-                                        Uni5onUdpServer::GetTypeId ());
+  m_gpsTrackHelper = ApplicationHelper (UdpGenericClient::GetTypeId (),
+                                        UdpGenericServer::GetTypeId ());
   m_gpsTrackHelper.SetClientAttribute ("AppName", StringValue ("GpsTrack"));
 
   // Traffic length: we are using a arbitrary normally-distributed long traffic
