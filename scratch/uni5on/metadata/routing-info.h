@@ -33,7 +33,7 @@ class RoutingInfo;
 class UeInfo;
 
 /** List of bearer routing information. */
-typedef std::vector<Ptr<RoutingInfo> > RoutingInfoList_t;
+typedef std::vector<Ptr<RoutingInfo>>RoutingInfoList_t;
 
 /**
  * \ingroup uni5onMeta
@@ -343,7 +343,7 @@ private:
   Ptr<UeInfo>      m_ueInfo;         //!< UE metadata pointer.
 
   /** Map saving TEID / routing information. */
-  typedef std::map<uint32_t, Ptr<RoutingInfo> > TeidRoutingMap_t;
+  typedef std::map<uint32_t, Ptr<RoutingInfo>>TeidRoutingMap_t;
   static TeidRoutingMap_t m_routingInfoByTeid;  //!< Global routing info map.
 };
 

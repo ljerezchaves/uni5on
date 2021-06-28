@@ -155,7 +155,7 @@ EnbInfo::RegisterEnbInfo (Ptr<EnbInfo> enbInfo)
   NS_LOG_FUNCTION_NOARGS ();
 
   uint16_t cellId = enbInfo->GetCellId ();
-  std::pair<uint16_t, Ptr<EnbInfo> > entry (cellId, enbInfo);
+  std::pair<uint16_t, Ptr<EnbInfo>>entry (cellId, enbInfo);
   auto ret = EnbInfo::m_enbInfoByCellId.insert (entry);
   NS_ABORT_MSG_IF (ret.second == false, "Existing eNB info for this cell ID.");
 }

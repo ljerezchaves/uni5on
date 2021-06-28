@@ -929,7 +929,7 @@ RoutingInfo::RegisterRoutingInfo (Ptr<RoutingInfo> rInfo)
   NS_LOG_FUNCTION_NOARGS ();
 
   uint32_t teid = rInfo->GetTeid ();
-  std::pair<uint32_t, Ptr<RoutingInfo> > entry (teid, rInfo);
+  std::pair<uint32_t, Ptr<RoutingInfo>>entry (teid, rInfo);
   auto ret = RoutingInfo::m_routingInfoByTeid.insert (entry);
   NS_ABORT_MSG_IF (ret.second == false, "Existing routing info for this TEID");
 }

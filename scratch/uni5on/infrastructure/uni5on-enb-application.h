@@ -87,12 +87,12 @@ private:
   /**
    * Trace source fired when a packet arrives at this eNB from S1-U interface.
    */
-  TracedCallback<Ptr<const Packet> > m_rxS1uTrace;
+  TracedCallback<Ptr<const Packet>> m_rxS1uTrace;
 
   /**
    * Trace source fired when a packet leaves this eNB over the S1-U interface.
    */
-  TracedCallback<Ptr<const Packet> > m_txS1uTrace;
+  TracedCallback<Ptr<const Packet>> m_txS1uTrace;
 
   /** Map telling for each S1-U TEID the corresponding S-GW S1-U address. */
   std::map<uint32_t, Ipv4Address> m_teidSgwAddrMap;

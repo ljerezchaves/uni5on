@@ -356,7 +356,7 @@ UeInfo::AddRoutingInfo (Ptr<RoutingInfo> rInfo)
                  "Inconsistent bearer TFTs for this bearer ID.");
 
   // Save routing info.
-  std::pair<uint8_t, Ptr<RoutingInfo> > entry (rInfo->GetBearerId (), rInfo);
+  std::pair<uint8_t, Ptr<RoutingInfo>>entry (rInfo->GetBearerId (), rInfo);
   auto ret = m_rInfoByBid.insert (entry);
   NS_ABORT_MSG_IF (ret.second == false, "Existing routing info for this BID.");
 
@@ -383,12 +383,12 @@ UeInfo::RegisterUeInfo (Ptr<UeInfo> ueInfo)
   NS_LOG_FUNCTION_NOARGS ();
 
   uint64_t imsi = ueInfo->GetImsi ();
-  std::pair<uint64_t, Ptr<UeInfo> > entryImsi (imsi, ueInfo);
+  std::pair<uint64_t, Ptr<UeInfo>>entryImsi (imsi, ueInfo);
   auto retImsi = UeInfo::m_ueInfoByImsi.insert (entryImsi);
   NS_ABORT_MSG_IF (retImsi.second == false, "Existing UE info for this ISMI.");
 
   Ipv4Address ipv4 = ueInfo->GetAddr ();
-  std::pair<Ipv4Address, Ptr<UeInfo> > entryIpv4 (ipv4, ueInfo);
+  std::pair<Ipv4Address, Ptr<UeInfo>>entryIpv4 (ipv4, ueInfo);
   auto retIpv4 = UeInfo::m_ueInfoByAddr.insert (entryIpv4);
   NS_ABORT_MSG_IF (retIpv4.second == false, "Existing UE info for this IP.");
 }

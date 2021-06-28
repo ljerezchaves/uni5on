@@ -302,7 +302,7 @@ private:
   SliceControllerList_t m_sliceCtrlsSha;
 
   /** Map saving Slice ID / Slice controller application. */
-  typedef std::map<SliceId, Ptr<SliceController> > SliceIdCtrlAppMap_t;
+  typedef std::map<SliceId, Ptr<SliceController>> SliceIdCtrlAppMap_t;
   SliceIdCtrlAppMap_t   m_sliceCtrlById;  //!< Slice controller mapped values.
 };
 

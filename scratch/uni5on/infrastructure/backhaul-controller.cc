@@ -345,7 +345,7 @@ BackhaulController::NotifySlicesBuilt (ApplicationContainer &controllers)
       int quota = controller->GetQuota ();
 
       // Saving controller application pointers.
-      std::pair<SliceId, Ptr<SliceController> > entry (slice, controller);
+      std::pair<SliceId, Ptr<SliceController>> entry (slice, controller);
       auto ret = m_sliceCtrlById.insert (entry);
       NS_ABORT_MSG_IF (ret.second == false, "Existing slice controller.");
 

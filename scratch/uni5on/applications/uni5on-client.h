@@ -155,13 +155,13 @@ protected:
   Ptr<Uni5onServer>         m_serverApp;        //!< Server application.
 
   /** Trace source fired when application start. */
-  TracedCallback<Ptr<Uni5onClient> > m_appStartTrace;
+  TracedCallback<Ptr<Uni5onClient>> m_appStartTrace;
 
   /** Trace source fired when application stops. */
-  TracedCallback<Ptr<Uni5onClient> > m_appStopTrace;
+  TracedCallback<Ptr<Uni5onClient>> m_appStopTrace;
 
   /** Trace source fired when application reports an error. */
-  TracedCallback<Ptr<Uni5onClient> > m_appErrorTrace;
+  TracedCallback<Ptr<Uni5onClient>> m_appErrorTrace;
 
 private:
   std::string               m_name;           //!< Application name.

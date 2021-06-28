@@ -36,7 +36,7 @@ class RoutingInfo;
 class SliceController;
 
 /** Map saving Bearer ID / Routing information. */
-typedef std::map<uint8_t, Ptr<RoutingInfo> > BidRInfoMap_t;
+typedef std::map<uint8_t, Ptr<RoutingInfo>>BidRInfoMap_t;
 
 /**
  * \ingroup uni5on
@@ -220,11 +220,11 @@ private:
   BidRInfoMap_t           m_rInfoByBid;           //!< Routing info map by BID.
 
   /** Map saving UE IMSI / UE information. */
-  typedef std::map<uint64_t, Ptr<UeInfo> > ImsiUeInfoMap_t;
+  typedef std::map<uint64_t, Ptr<UeInfo>>ImsiUeInfoMap_t;
   static ImsiUeInfoMap_t  m_ueInfoByImsi;   //!< Global UE info map by IMSI.
 
   /** Map saving UE IPv4 / UE information. */
-  typedef std::map<Ipv4Address, Ptr<UeInfo> > Ipv4UeInfoMap_t;
+  typedef std::map<Ipv4Address, Ptr<UeInfo>>Ipv4UeInfoMap_t;
   static Ipv4UeInfoMap_t  m_ueInfoByAddr;   //!< Global UE info map by IPv4.
 };
 

@@ -108,7 +108,7 @@ Uni5onQosQueue::DoInitialize ()
   // Creating the internal queues.
   for (int queueId = 0; queueId < m_queueNum; queueId++)
     {
-      AddQueue (queueFactory.Create<Queue<Packet> > ());
+      AddQueue (queueFactory.Create<Queue<Packet>> ());
     }
 
   // Initializing weights for the WRR algorithm.
