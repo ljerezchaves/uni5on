@@ -16,7 +16,6 @@
 *.routes
 *.tr
 [D|U]l[A-Z][a-z]*Stats.txt
-seventh-packet-byte-count.png
 
 \#*#
 ~*
@@ -38,13 +37,13 @@ build/
 /.cproject
 /.project
 
+version.cache
+
 topologies/**/*.log
 topologies/**/*.dat
 topologies/**/*.gpi
 topologies/**/*.pdf
 topologies/**/*.topo
-
-logs
 
 .vscode/**
 .DS_Store
