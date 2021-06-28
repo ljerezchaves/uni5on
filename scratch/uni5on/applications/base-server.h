@@ -18,8 +18,8 @@
  * Author: Luciano Jerez Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef UNI5ON_SERVER_H
-#define UNI5ON_SERVER_H
+#ifndef BASE_SERVER_H
+#define BASE_SERVER_H
 
 #include <ns3/core-module.h>
 #include <ns3/lte-module.h>
@@ -29,21 +29,21 @@
 
 namespace ns3 {
 
-class Uni5onClient;
+class BaseClient;
 
 /**
  * \ingroup uni5onApps
- * This class extends the Application class to proper work with the UNI5ON
- * architecture. Only server applications (those which will be installed into
- * web server node) should extend this class.
+ * This base class extends the Application class to proper work with the UNI5ON
+ * architecture. Server applications that will be installed into web nodes
+ * should extend this class.
  */
-class Uni5onServer : public Application
+class BaseServer : public Application
 {
-  friend class Uni5onClient;
+  friend class BaseClient;
 
 public:
-  Uni5onServer ();            //!< Default constructor.
-  virtual ~Uni5onServer ();   //!< Dummy destructor, see DoDispose.
+  BaseServer ();            //!< Default constructor.
+  virtual ~BaseServer ();   //!< Dummy destructor, see DoDispose.
 
   /**
    * Get the type ID.
@@ -57,7 +57,7 @@ public:
    */
   //\{
   std::string       GetAppName    (void) const;
-  Ptr<Uni5onClient> GetClientApp  (void) const;
+  Ptr<BaseClient> GetClientApp  (void) const;
   std::string       GetTeidHex    (void) const;
   bool              IsActive      (void) const;
   bool              IsForceStop   (void) const;
@@ -68,7 +68,7 @@ public:
    * \param clientApp The pointer to client application.
    * \param clientAddress The Inet socket address of the client.
    */
-  void SetClient (Ptr<Uni5onClient> clientApp, Address clientAddress);
+  void SetClient (Ptr<BaseClient> clientApp, Address clientAddress);
 
   /**
    * Get the uplink goodput for this application.
@@ -107,7 +107,7 @@ protected:
   Ptr<Socket>               m_socket;           //!< Local socket.
   uint16_t                  m_localPort;        //!< Local port.
   Address                   m_clientAddress;    //!< Client address.
-  Ptr<Uni5onClient>         m_clientApp;        //!< Client application.
+  Ptr<BaseClient>         m_clientApp;        //!< Client application.
 
   // Traffic statistics.
   uint64_t                  m_rxBytes;        //!< Number of RX bytes.
@@ -116,4 +116,4 @@ protected:
 };
 
 } // namespace ns3
-#endif /* UNI5ON_SERVER_H */
+#endif /* BASE_SERVER_H */

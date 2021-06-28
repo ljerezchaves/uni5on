@@ -18,8 +18,8 @@
  * Author: Luciano Jerez Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include "uni5on-server.h"
-#include "uni5on-client.h"
+#include "base-server.h"
+#include "base-client.h"
 
 #undef NS_LOG_APPEND_CONTEXT
 #define NS_LOG_APPEND_CONTEXT                             \
@@ -29,9 +29,9 @@
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("Uni5onServer");
-NS_OBJECT_ENSURE_REGISTERED (Uni5onServer);
+NS_OBJECT_ENSURE_REGISTERED (BaseServer);
 
-Uni5onServer::Uni5onServer ()
+BaseServer::BaseServer ()
   : m_socket (0),
   m_clientApp (0),
   m_rxBytes (0),
@@ -41,38 +41,38 @@ Uni5onServer::Uni5onServer ()
   NS_LOG_FUNCTION (this);
 }
 
-Uni5onServer::~Uni5onServer ()
+BaseServer::~BaseServer ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-Uni5onServer::GetTypeId (void)
+BaseServer::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::Uni5onServer")
     .SetParent<Application> ()
-    .AddConstructor<Uni5onServer> ()
+    .AddConstructor<BaseServer> ()
     .AddAttribute ("ClientAddress", "The client socket address.",
                    AddressValue (),
-                   MakeAddressAccessor (&Uni5onServer::m_clientAddress),
+                   MakeAddressAccessor (&BaseServer::m_clientAddress),
                    MakeAddressChecker ())
     .AddAttribute ("LocalPort", "Local port.",
                    UintegerValue (10000),
-                   MakeUintegerAccessor (&Uni5onServer::m_localPort),
+                   MakeUintegerAccessor (&BaseServer::m_localPort),
                    MakeUintegerChecker<uint16_t> ())
   ;
   return tid;
 }
 
 std::string
-Uni5onServer::GetAppName (void) const
+BaseServer::GetAppName (void) const
 {
   // No log to avoid infinite recursion.
   return m_clientApp ? m_clientApp->GetAppName () : std::string ();
 }
 
 bool
-Uni5onServer::IsActive (void) const
+BaseServer::IsActive (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -81,7 +81,7 @@ Uni5onServer::IsActive (void) const
 }
 
 bool
-Uni5onServer::IsForceStop (void) const
+BaseServer::IsForceStop (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -90,14 +90,14 @@ Uni5onServer::IsForceStop (void) const
 }
 
 std::string
-Uni5onServer::GetTeidHex (void) const
+BaseServer::GetTeidHex (void) const
 {
   // No log to avoid infinite recursion.
   return m_clientApp ? m_clientApp->GetTeidHex () : "0x0";
 }
 
-Ptr<Uni5onClient>
-Uni5onServer::GetClientApp (void) const
+Ptr<BaseClient>
+BaseServer::GetClientApp (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -105,7 +105,7 @@ Uni5onServer::GetClientApp (void) const
 }
 
 void
-Uni5onServer::SetClient (Ptr<Uni5onClient> clientApp, Address clientAddress)
+BaseServer::SetClient (Ptr<BaseClient> clientApp, Address clientAddress)
 {
   NS_LOG_FUNCTION (this << clientApp << clientAddress);
 
@@ -114,7 +114,7 @@ Uni5onServer::SetClient (Ptr<Uni5onClient> clientApp, Address clientAddress)
 }
 
 DataRate
-Uni5onServer::GetUlGoodput (void) const
+BaseServer::GetUlGoodput (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -130,7 +130,7 @@ Uni5onServer::GetUlGoodput (void) const
 }
 
 void
-Uni5onServer::DoDispose (void)
+BaseServer::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -140,7 +140,7 @@ Uni5onServer::DoDispose (void)
 }
 
 void
-Uni5onServer::NotifyStart ()
+BaseServer::NotifyStart ()
 {
   NS_LOG_FUNCTION (this);
   NS_LOG_INFO ("Starting server application.");
@@ -152,7 +152,7 @@ Uni5onServer::NotifyStart ()
 }
 
 void
-Uni5onServer::NotifyStop ()
+BaseServer::NotifyStop ()
 {
   NS_LOG_FUNCTION (this);
   NS_LOG_INFO ("Stopping server application.");
@@ -162,14 +162,14 @@ Uni5onServer::NotifyStop ()
 }
 
 void
-Uni5onServer::NotifyForceStop ()
+BaseServer::NotifyForceStop ()
 {
   NS_LOG_FUNCTION (this);
   NS_LOG_INFO ("Forcing the server application to stop.");
 }
 
 void
-Uni5onServer::NotifyRx (uint32_t bytes)
+BaseServer::NotifyRx (uint32_t bytes)
 {
   NS_LOG_FUNCTION (this << bytes);
 

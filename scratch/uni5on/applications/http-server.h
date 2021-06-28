@@ -23,7 +23,7 @@
 #ifndef HTTP_SERVER_H
 #define HTTP_SERVER_H
 
-#include "uni5on-server.h"
+#include "base-server.h"
 
 namespace ns3 {
 
@@ -39,7 +39,7 @@ namespace ns3 {
  * modules of ns-3. To allow deeper studies about the HTTP Protocol it needs
  * some improvements.
  */
-class HttpServer : public Uni5onServer
+class HttpServer : public BaseServer
 {
 public:
   /**

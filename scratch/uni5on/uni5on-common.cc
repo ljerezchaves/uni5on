@@ -172,28 +172,6 @@ Dscp2QueueMap ()
   return queueByDscp;
 }
 
-uint8_t
-Dscp2Tos (Ipv4Header::DscpType dscp)
-{
-  switch (dscp)
-    {
-    case Ipv4Header::DSCP_EF:
-      return 0x10;
-    case Ipv4Header::DSCP_AF41:
-      return 0x18;
-    case Ipv4Header::DSCP_AF32:
-    case Ipv4Header::DSCP_AF31:
-    case Ipv4Header::DSCP_AF21:
-    case Ipv4Header::DSCP_AF11:
-      return 0x00;
-    case Ipv4Header::DscpDefault:
-      return 0x08;
-    default:
-      NS_ABORT_MSG ("No ToS mapped value for DSCP " << dscp);
-      return 0x00;
-    }
-}
-
 Ipv4Header::DscpType
 Qci2Dscp (EpsBearer::Qci qci)
 {

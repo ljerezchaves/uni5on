@@ -33,7 +33,7 @@ TypeId
 RecordedVideoClient::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::RecordedVideoClient")
-    .SetParent<Uni5onClient> ()
+    .SetParent<BaseClient> ()
     .AddConstructor<RecordedVideoClient> ()
   ;
   return tid;
@@ -58,7 +58,7 @@ RecordedVideoClient::Start ()
   NS_LOG_FUNCTION (this);
 
   // Chain up to reset statistics, notify server, and fire start trace source.
-  Uni5onClient::Start ();
+  BaseClient::Start ();
 
   NS_LOG_INFO ("Opening the TCP connection.");
   TypeId tcpFactory = TypeId::LookupByName ("ns3::TcpSocketFactory");
@@ -76,7 +76,7 @@ RecordedVideoClient::DoDispose (void)
   NS_LOG_FUNCTION (this);
 
   m_rxPacket = 0;
-  Uni5onClient::DoDispose ();
+  BaseClient::DoDispose ();
 }
 
 void

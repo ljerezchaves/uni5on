@@ -814,7 +814,7 @@ TrafficHelper::InstallAppDedicated (
 
   // Create the client and server applications.
   uint16_t port = GetNextPortNo ();
-  Ptr<Uni5onClient> clientApp = helper.Install (
+  Ptr<BaseClient> clientApp = helper.Install (
       t_ueNode, m_webNode, t_ueAddr, m_webAddr, port, Qci2Dscp (bearer.qci));
   t_ueManager->AddUni5onClient (clientApp);
 
@@ -850,7 +850,7 @@ TrafficHelper::InstallAppDefault (ApplicationHelper& helper)
 
   // Create the client and server applications.
   uint16_t port = GetNextPortNo ();
-  Ptr<Uni5onClient> clientApp = helper.Install (
+  Ptr<BaseClient> clientApp = helper.Install (
       t_ueNode, m_webNode, t_ueAddr, m_webAddr, port, Qci2Dscp (bearer.qci));
   t_ueManager->AddUni5onClient (clientApp);
   clientApp->SetEpsBearer (bearer);

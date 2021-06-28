@@ -21,7 +21,7 @@
 #include <iomanip>
 #include <iostream>
 #include "traffic-stats-calculator.h"
-#include "../applications/uni5on-client.h"
+#include "../applications/base-client.h"
 #include "../metadata/ue-info.h"
 #include "../metadata/routing-info.h"
 
@@ -156,7 +156,7 @@ TrafficStatsCalculator::NotifyConstructionCompleted (void)
 
 void
 TrafficStatsCalculator::DumpStatistics (std::string context,
-                                        Ptr<Uni5onClient> app)
+                                        Ptr<BaseClient> app)
 {
   NS_LOG_FUNCTION (this << context << app->GetTeidHex ());
 
@@ -201,7 +201,7 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
 
 void
 TrafficStatsCalculator::ResetCounters (std::string context,
-                                       Ptr<Uni5onClient> app)
+                                       Ptr<BaseClient> app)
 {
   NS_LOG_FUNCTION (this << context << app);
 

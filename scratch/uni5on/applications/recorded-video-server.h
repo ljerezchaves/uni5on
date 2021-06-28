@@ -20,7 +20,7 @@
 #ifndef RECORDED_VIDEO_SERVER_H
 #define RECORDED_VIDEO_SERVER_H
 
-#include "uni5on-server.h"
+#include "base-server.h"
 
 namespace ns3 {
 
@@ -30,7 +30,7 @@ namespace ns3 {
  * listen for a client requesting video chunks and send the chunks back as fast
  * as possible.
  */
-class RecordedVideoServer : public Uni5onServer
+class RecordedVideoServer : public BaseServer
 {
 public:
   /**

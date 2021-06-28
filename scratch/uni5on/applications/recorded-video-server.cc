@@ -36,7 +36,7 @@ TypeId
 RecordedVideoServer::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::RecordedVideoServer")
-    .SetParent<Uni5onServer> ()
+    .SetParent<BaseServer> ()
     .AddConstructor<RecordedVideoServer> ()
     .AddAttribute ("TraceFilename",
                    "Name of file to load a trace from.",
@@ -66,7 +66,7 @@ RecordedVideoServer::DoDispose (void)
   NS_LOG_FUNCTION (this);
 
   m_entries.clear ();
-  Uni5onServer::DoDispose ();
+  BaseServer::DoDispose ();
 }
 
 void

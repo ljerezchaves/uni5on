@@ -20,7 +20,7 @@
 #ifndef LIVE_VIDEO_CLIENT_H
 #define LIVE_VIDEO_CLIENT_H
 
-#include "uni5on-client.h"
+#include "base-client.h"
 
 namespace ns3 {
 
@@ -30,7 +30,7 @@ namespace ns3 {
  * receiving UDP datagrams following a MPEG video pattern with random
  * video length.
  */
-class LiveVideoClient : public Uni5onClient
+class LiveVideoClient : public BaseClient
 {
 public:
   /**

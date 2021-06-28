@@ -30,7 +30,7 @@
 namespace ns3 {
 
 class SliceController;
-class Uni5onClient;
+class BaseClient;
 
 /**
  * \ingroup uni5onLogical
@@ -54,7 +54,7 @@ public:
    * Add a new application to this manager.
    * \param app The application pointer.
    */
-  void AddUni5onClient (Ptr<Uni5onClient> app);
+  void AddUni5onClient (Ptr<BaseClient> app);
 
   /**
    * Notify this manager when a new session is created in the controller.
@@ -89,7 +89,7 @@ private:
    * application associated with each bearer/tunnel.
    * \param app The application pointer.
    */
-  void AppStartTry (Ptr<Uni5onClient> app);
+  void AppStartTry (Ptr<BaseClient> app);
 
   /**
    * Member function called by applications to notify this manager when traffic
@@ -97,7 +97,7 @@ private:
    * application restart attempt.
    * \param app The application pointer.
    */
-  void NotifyAppStop (Ptr<Uni5onClient> app);
+  void NotifyAppStop (Ptr<BaseClient> app);
 
   /**
    * Set the time for the next attempt to start the application.
@@ -107,13 +107,13 @@ private:
    * simulation.
    * \param app The application pointer.
    */
-  void SetNextAppStartTry (Ptr<Uni5onClient> app);
+  void SetNextAppStartTry (Ptr<BaseClient> app);
 
   /**
    * Get the absolute time for the next attemp to start the application.
    * \param app The application pointer.
    */
-  Time GetNextAppStartTry (Ptr<Uni5onClient> app) const;
+  Time GetNextAppStartTry (Ptr<BaseClient> app) const;
 
   Ptr<RandomVariableStream> m_interArrivalRng;  //!< Inter-arrival random time.
   bool                      m_restartApps;      //!< Restart apps after stop.
@@ -126,7 +126,7 @@ private:
   uint32_t                  m_defaultTeid;      //!< Default UE tunnel TEID.
 
   /** Map saving application pointer / next start time. */
-  typedef std::map<Ptr<Uni5onClient>, Time> AppTimeMap_t;
+  typedef std::map<Ptr<BaseClient>, Time> AppTimeMap_t;
   AppTimeMap_t              m_timeByApp;        //!< Application map.
 };
 

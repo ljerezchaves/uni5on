@@ -29,7 +29,7 @@
 namespace ns3 {
 
 class RoutingInfo;
-class Uni5onClient;
+class BaseClient;
 
 /**
  * \ingroup uni5on
@@ -68,7 +68,7 @@ private:
    * \param context Context information.
    * \param app The client application.
    */
-  void DumpStatistics (std::string context, Ptr<Uni5onClient> app);
+  void DumpStatistics (std::string context, Ptr<BaseClient> app);
 
   /**
    * Reset internal counters.
@@ -76,7 +76,7 @@ private:
    * \param context Context information.
    * \param app The client application.
    */
-  void ResetCounters (std::string context, Ptr<Uni5onClient> app);
+  void ResetCounters (std::string context, Ptr<BaseClient> app);
 
   /**
    * Trace sink fired when a packet is dropped while exceeding pipeline load

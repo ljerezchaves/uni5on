@@ -20,7 +20,7 @@
 #ifndef LIVE_VIDEO_SERVER_H
 #define LIVE_VIDEO_SERVER_H
 
-#include "uni5on-server.h"
+#include "base-server.h"
 
 namespace ns3 {
 
@@ -30,7 +30,7 @@ namespace ns3 {
  * receiving UDP datagrams following a MPEG video pattern with random
  * video length.
  */
-class LiveVideoServer : public Uni5onServer
+class LiveVideoServer : public BaseServer
 {
 public:
   /**

@@ -34,7 +34,7 @@ TypeId
 UdpGenericClient::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::UdpGenericClient")
-    .SetParent<Uni5onClient> ()
+    .SetParent<BaseClient> ()
     .AddConstructor<UdpGenericClient> ()
 
     // These attributes must be configured for the desired traffic pattern.
@@ -76,7 +76,7 @@ UdpGenericClient::Start ()
   NS_LOG_INFO ("Set traffic length to " << stop.GetSeconds () << "s.");
 
   // Chain up to reset statistics, notify server, and fire start trace source.
-  Uni5onClient::Start ();
+  BaseClient::Start ();
 
   // Start traffic.
   m_sendEvent.Cancel ();
@@ -93,7 +93,7 @@ UdpGenericClient::DoDispose (void)
 
   m_stopEvent.Cancel ();
   m_sendEvent.Cancel ();
-  Uni5onClient::DoDispose ();
+  BaseClient::DoDispose ();
 }
 
 void
@@ -106,7 +106,7 @@ UdpGenericClient::ForceStop ()
   m_sendEvent.Cancel ();
 
   // Chain up to notify server.
-  Uni5onClient::ForceStop ();
+  BaseClient::ForceStop ();
 
   // Notify the stopped application one second later.
   Simulator::Schedule (Seconds (1), &UdpGenericClient::NotifyStop, this, false);

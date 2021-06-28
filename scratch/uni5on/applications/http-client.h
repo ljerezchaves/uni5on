@@ -23,7 +23,7 @@
 #ifndef HTTP_CLIENT_H
 #define HTTP_CLIENT_H
 
-#include "uni5on-client.h"
+#include "base-client.h"
 
 namespace ns3 {
 
@@ -43,7 +43,7 @@ namespace ns3 {
  * proposed algorithm in other modules of ns-3. To allow deeper studies about
  * the HTTP Protocol it needs some improvements.
  */
-class HttpClient : public Uni5onClient
+class HttpClient : public BaseClient
 {
 public:
   /**

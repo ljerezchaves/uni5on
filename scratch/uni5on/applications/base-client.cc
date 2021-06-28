@@ -18,8 +18,8 @@
  * Author: Luciano Jerez Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include "uni5on-client.h"
-#include "uni5on-server.h"
+#include "base-client.h"
+#include "base-server.h"
 #include "../uni5on-common.h"
 
 #undef NS_LOG_APPEND_CONTEXT
@@ -30,9 +30,9 @@
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("Uni5onClient");
-NS_OBJECT_ENSURE_REGISTERED (Uni5onClient);
+NS_OBJECT_ENSURE_REGISTERED (BaseClient);
 
-Uni5onClient::Uni5onClient ()
+BaseClient::BaseClient ()
   : m_socket (0),
   m_serverApp (0),
   m_active (false),
@@ -47,62 +47,62 @@ Uni5onClient::Uni5onClient ()
   NS_LOG_FUNCTION (this);
 }
 
-Uni5onClient::~Uni5onClient ()
+BaseClient::~BaseClient ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-Uni5onClient::GetTypeId (void)
+BaseClient::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::Uni5onClient")
     .SetParent<Application> ()
-    .AddConstructor<Uni5onClient> ()
+    .AddConstructor<BaseClient> ()
     .AddAttribute ("AppName", "The application name.",
                    StringValue ("NoName"),
-                   MakeStringAccessor (&Uni5onClient::m_name),
+                   MakeStringAccessor (&BaseClient::m_name),
                    MakeStringChecker ())
     .AddAttribute ("MaxOnTime", "A hard duration time threshold.",
                    TimeValue (Time ()),
-                   MakeTimeAccessor (&Uni5onClient::m_maxOnTime),
+                   MakeTimeAccessor (&BaseClient::m_maxOnTime),
                    MakeTimeChecker ())
     .AddAttribute ("TrafficLength",
                    "A random variable used to pick the traffic length [s].",
                    StringValue ("ns3::ConstantRandomVariable[Constant=30.0]"),
-                   MakePointerAccessor (&Uni5onClient::m_lengthRng),
+                   MakePointerAccessor (&BaseClient::m_lengthRng),
                    MakePointerChecker <RandomVariableStream> ())
 
     .AddAttribute ("ServerAddress", "The server socket address.",
                    AddressValue (),
-                   MakeAddressAccessor (&Uni5onClient::m_serverAddress),
+                   MakeAddressAccessor (&BaseClient::m_serverAddress),
                    MakeAddressChecker ())
     .AddAttribute ("LocalPort", "Local port.",
                    UintegerValue (10000),
-                   MakeUintegerAccessor (&Uni5onClient::m_localPort),
+                   MakeUintegerAccessor (&BaseClient::m_localPort),
                    MakeUintegerChecker<uint16_t> ())
 
     .AddTraceSource ("AppStart", "Uni5onClient start trace source.",
-                     MakeTraceSourceAccessor (&Uni5onClient::m_appStartTrace),
+                     MakeTraceSourceAccessor (&BaseClient::m_appStartTrace),
                      "ns3::Uni5onClient::AppTracedCallback")
     .AddTraceSource ("AppStop", "Uni5onClient stop trace source.",
-                     MakeTraceSourceAccessor (&Uni5onClient::m_appStopTrace),
+                     MakeTraceSourceAccessor (&BaseClient::m_appStopTrace),
                      "ns3::Uni5onClient::AppTracedCallback")
     .AddTraceSource ("AppError", "Uni5onClient error trace source.",
-                     MakeTraceSourceAccessor (&Uni5onClient::m_appErrorTrace),
+                     MakeTraceSourceAccessor (&BaseClient::m_appErrorTrace),
                      "ns3::Uni5onClient::AppTracedCallback")
   ;
   return tid;
 }
 
 std::string
-Uni5onClient::GetAppName (void) const
+BaseClient::GetAppName (void) const
 {
   // No log to avoid infinite recursion.
   return m_name;
 }
 
 std::string
-Uni5onClient::GetNameTeid (void) const
+BaseClient::GetNameTeid (void) const
 {
   // No log to avoid infinite recursion.
   std::ostringstream value;
@@ -111,7 +111,7 @@ Uni5onClient::GetNameTeid (void) const
 }
 
 bool
-Uni5onClient::IsActive (void) const
+BaseClient::IsActive (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -119,7 +119,7 @@ Uni5onClient::IsActive (void) const
 }
 
 Time
-Uni5onClient::GetMaxOnTime (void) const
+BaseClient::GetMaxOnTime (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -127,7 +127,7 @@ Uni5onClient::GetMaxOnTime (void) const
 }
 
 bool
-Uni5onClient::IsForceStop (void) const
+BaseClient::IsForceStop (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -135,7 +135,7 @@ Uni5onClient::IsForceStop (void) const
 }
 
 EpsBearer
-Uni5onClient::GetEpsBearer (void) const
+BaseClient::GetEpsBearer (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -143,7 +143,7 @@ Uni5onClient::GetEpsBearer (void) const
 }
 
 uint8_t
-Uni5onClient::GetEpsBearerId (void) const
+BaseClient::GetEpsBearerId (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -151,7 +151,7 @@ Uni5onClient::GetEpsBearerId (void) const
 }
 
 uint32_t
-Uni5onClient::GetTeid (void) const
+BaseClient::GetTeid (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -159,14 +159,14 @@ Uni5onClient::GetTeid (void) const
 }
 
 std::string
-Uni5onClient::GetTeidHex (void) const
+BaseClient::GetTeidHex (void) const
 {
   // No log to avoid infinite recursion.
   return GetUint32Hex (m_teid);
 }
 
-Ptr<Uni5onServer>
-Uni5onClient::GetServerApp (void) const
+Ptr<BaseServer>
+BaseClient::GetServerApp (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -174,7 +174,7 @@ Uni5onClient::GetServerApp (void) const
 }
 
 void
-Uni5onClient::SetEpsBearer (EpsBearer value)
+BaseClient::SetEpsBearer (EpsBearer value)
 {
   NS_LOG_FUNCTION (this);
 
@@ -182,7 +182,7 @@ Uni5onClient::SetEpsBearer (EpsBearer value)
 }
 
 void
-Uni5onClient::SetEpsBearerId (uint8_t value)
+BaseClient::SetEpsBearerId (uint8_t value)
 {
   NS_LOG_FUNCTION (this << value);
 
@@ -190,7 +190,7 @@ Uni5onClient::SetEpsBearerId (uint8_t value)
 }
 
 void
-Uni5onClient::SetTeid (uint32_t value)
+BaseClient::SetTeid (uint32_t value)
 {
   NS_LOG_FUNCTION (this << value);
 
@@ -198,7 +198,7 @@ Uni5onClient::SetTeid (uint32_t value)
 }
 
 void
-Uni5onClient::SetServer (Ptr<Uni5onServer> serverApp, Address serverAddress)
+BaseClient::SetServer (Ptr<BaseServer> serverApp, Address serverAddress)
 {
   NS_LOG_FUNCTION (this << serverApp << serverAddress);
 
@@ -207,7 +207,7 @@ Uni5onClient::SetServer (Ptr<Uni5onServer> serverApp, Address serverAddress)
 }
 
 void
-Uni5onClient::Start ()
+BaseClient::Start ()
 {
   NS_LOG_FUNCTION (this);
   NS_LOG_INFO ("Starting client application.");
@@ -226,7 +226,7 @@ Uni5onClient::Start ()
   if (!m_maxOnTime.IsZero ())
     {
       m_forceStop =
-        Simulator::Schedule (m_maxOnTime, &Uni5onClient::ForceStop, this);
+        Simulator::Schedule (m_maxOnTime, &BaseClient::ForceStop, this);
     }
 
   // Notify the server and fire start trace source.
@@ -236,7 +236,7 @@ Uni5onClient::Start ()
 }
 
 DataRate
-Uni5onClient::GetDlGoodput (void) const
+BaseClient::GetDlGoodput (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -252,7 +252,7 @@ Uni5onClient::GetDlGoodput (void) const
 }
 
 DataRate
-Uni5onClient::GetUlGoodput (void) const
+BaseClient::GetUlGoodput (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -260,7 +260,7 @@ Uni5onClient::GetUlGoodput (void) const
 }
 
 void
-Uni5onClient::DoDispose (void)
+BaseClient::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -272,7 +272,7 @@ Uni5onClient::DoDispose (void)
 }
 
 void
-Uni5onClient::ForceStop ()
+BaseClient::ForceStop ()
 {
   NS_LOG_FUNCTION (this);
   NS_LOG_INFO ("Forcing the client application to stop.");
@@ -288,7 +288,7 @@ Uni5onClient::ForceStop ()
 }
 
 Time
-Uni5onClient::GetTrafficLength ()
+BaseClient::GetTrafficLength ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -296,7 +296,7 @@ Uni5onClient::GetTrafficLength ()
 }
 
 void
-Uni5onClient::NotifyStop (bool withError)
+BaseClient::NotifyStop (bool withError)
 {
   NS_LOG_FUNCTION (this << withError);
   NS_LOG_INFO ("Client application stopped.");
@@ -326,7 +326,7 @@ Uni5onClient::NotifyStop (bool withError)
 }
 
 void
-Uni5onClient::NotifyRx (uint32_t bytes)
+BaseClient::NotifyRx (uint32_t bytes)
 {
   NS_LOG_FUNCTION (this << bytes);
 

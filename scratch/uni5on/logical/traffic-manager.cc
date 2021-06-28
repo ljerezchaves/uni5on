@@ -20,7 +20,7 @@
 
 #include "traffic-manager.h"
 #include "slice-controller.h"
-#include "../applications/uni5on-client.h"
+#include "../applications/base-client.h"
 #include "../metadata/routing-info.h"
 #include "../metadata/ue-info.h"
 
@@ -87,12 +87,12 @@ TrafficManager::GetTypeId (void)
 }
 
 void
-TrafficManager::AddUni5onClient (Ptr<Uni5onClient> app)
+TrafficManager::AddUni5onClient (Ptr<BaseClient> app)
 {
   NS_LOG_FUNCTION (this << app);
 
   // Save the application pointer.
-  std::pair<Ptr<Uni5onClient>, Time> entry (app, Time ());
+  std::pair<Ptr<BaseClient>, Time> entry (app, Time ());
   auto ret = m_timeByApp.insert (entry);
   NS_ABORT_MSG_IF (ret.second == false, "Error when saving application.");
 
@@ -129,7 +129,7 @@ TrafficManager::NotifySessionCreated (
   // For each application, set the corresponding TEID.
   for (auto const &ait : m_timeByApp)
     {
-      Ptr<Uni5onClient> app = ait.first;
+      Ptr<BaseClient> app = ait.first;
       app->SetTeid (ueInfo->GetTeid (app->GetEpsBearerId ()));
       NS_LOG_INFO ("App " << app->GetNameTeid ());
     }
@@ -163,7 +163,7 @@ TrafficManager::DoDispose ()
 }
 
 void
-TrafficManager::AppStartTry (Ptr<Uni5onClient> app)
+TrafficManager::AppStartTry (Ptr<BaseClient> app)
 {
   NS_LOG_FUNCTION (this << app);
 
@@ -214,13 +214,13 @@ TrafficManager::AppStartTry (Ptr<Uni5onClient> app)
     }
 
   // Schedule the application start for +1 second.
-  Simulator::Schedule (Seconds (1), &Uni5onClient::Start, app);
+  Simulator::Schedule (Seconds (1), &BaseClient::Start, app);
   NS_LOG_INFO ("App " << app->GetNameTeid () << " will start in +1sec with " <<
                "max duration set to " << app->GetMaxOnTime ().GetSeconds ());
 }
 
 void
-TrafficManager::NotifyAppStop (Ptr<Uni5onClient> app)
+TrafficManager::NotifyAppStop (Ptr<BaseClient> app)
 {
   NS_LOG_FUNCTION (this << app);
 
@@ -257,7 +257,7 @@ TrafficManager::NotifyAppStop (Ptr<Uni5onClient> app)
 }
 
 void
-TrafficManager::SetNextAppStartTry (Ptr<Uni5onClient> app)
+TrafficManager::SetNextAppStartTry (Ptr<BaseClient> app)
 {
   NS_LOG_FUNCTION (this << app);
 
@@ -318,7 +318,7 @@ TrafficManager::SetNextAppStartTry (Ptr<Uni5onClient> app)
 }
 
 Time
-TrafficManager::GetNextAppStartTry (Ptr<Uni5onClient> app) const
+TrafficManager::GetNextAppStartTry (Ptr<BaseClient> app) const
 {
   NS_LOG_FUNCTION (this << app);
 

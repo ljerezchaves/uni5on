@@ -20,7 +20,7 @@
 #ifndef UDP_GENERIC_CLIENT_H
 #define UDP_GENERIC_CLIENT_H
 
-#include "uni5on-client.h"
+#include "base-client.h"
 
 namespace ns3 {
 
@@ -29,7 +29,7 @@ namespace ns3 {
  * This is the client side of a generic UDP traffic generator, sending and
  * receiving UDP datagrams following the configured traffic pattern.
  */
-class UdpGenericClient : public Uni5onClient
+class UdpGenericClient : public BaseClient
 {
 public:
   /**

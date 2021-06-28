@@ -36,7 +36,7 @@ TypeId
 HttpClient::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::HttpClient")
-    .SetParent<Uni5onClient> ()
+    .SetParent<BaseClient> ()
     .AddConstructor<HttpClient> ()
   ;
   return tid;
@@ -83,7 +83,7 @@ HttpClient::Start ()
   NS_LOG_INFO ("Set traffic length to " << sTime.GetSeconds () << "s.");
 
   // Chain up to reset statistics, notify server, and fire start trace source.
-  Uni5onClient::Start ();
+  BaseClient::Start ();
 
   NS_LOG_INFO ("Opening the TCP connection.");
   TypeId tcpFactory = TypeId::LookupByName ("ns3::TcpSocketFactory");
@@ -105,7 +105,7 @@ HttpClient::DoDispose (void)
   m_readingTimeAdjustStream = 0;
   m_nextRequest.Cancel ();
   m_stopEvent.Cancel ();
-  Uni5onClient::DoDispose ();
+  BaseClient::DoDispose ();
 }
 
 void
@@ -117,7 +117,7 @@ HttpClient::ForceStop ()
   m_stopEvent.Cancel ();
 
   // Chain up to set flag and notify server.
-  Uni5onClient::ForceStop ();
+  BaseClient::ForceStop ();
 
   // If we are on the reading time, cancel any further schedulled requests,
   // close the open socket and call NotifyStop (). Otherwise, the socket will

@@ -18,8 +18,8 @@
  * Author: Luciano Jerez Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef UNI5ON_CLIENT_H
-#define UNI5ON_CLIENT_H
+#ifndef BASE_CLIENT_H
+#define BASE_CLIENT_H
 
 #include <ns3/core-module.h>
 #include <ns3/lte-module.h>
@@ -29,7 +29,7 @@
 
 namespace ns3 {
 
-class Uni5onServer;
+class BaseServer;
 
 /**
  * \ingroup uni5on
@@ -38,17 +38,17 @@ class Uni5onServer;
  */
 /**
  * \ingroup uni5onApps
- * This class extends the Application class to proper work with the UNI5ON
- * architecture. Only clients applications (those which will be installed into
- * UEs) should extend this class.
+ * This base class extends the Application class to proper work with the UNI5ON
+ * architecture. Clients applications that will be installed into UEs should
+ * extend this class.
  */
-class Uni5onClient : public Application
+class BaseClient : public Application
 {
-  friend class Uni5onServer;
+  friend class BaseServer;
 
 public:
-  Uni5onClient ();            //!< Default constructor.
-  virtual ~Uni5onClient ();   //!< Dummy destructor, see DoDispose.
+  BaseClient ();            //!< Default constructor.
+  virtual ~BaseClient ();   //!< Dummy destructor, see DoDispose.
 
   /**
    * Get the type ID.
@@ -66,7 +66,7 @@ public:
   uint8_t           GetEpsBearerId    (void) const;
   Time              GetMaxOnTime      (void) const;
   std::string       GetNameTeid       (void) const;
-  Ptr<Uni5onServer> GetServerApp      (void) const;
+  Ptr<BaseServer> GetServerApp      (void) const;
   uint32_t          GetTeid           (void) const;
   std::string       GetTeidHex        (void) const;
   bool              IsActive          (void) const;
@@ -88,7 +88,7 @@ public:
    * \param serverApp The pointer to server application.
    * \param serverAddress The Inet socket address of the server.
    */
-  void SetServer (Ptr<Uni5onServer> serverApp, Address serverAddress);
+  void SetServer (Ptr<BaseServer> serverApp, Address serverAddress);
 
   /**
    * Start this application. Update internal members, notify the server
@@ -112,7 +112,7 @@ public:
    * TracedCallback signature for Ptr<Uni5onClient>.
    * \param app The client application.
    */
-  typedef void (*AppTracedCallback)(Ptr<Uni5onClient> app);
+  typedef void (*AppTracedCallback)(Ptr<BaseClient> app);
 
 protected:
   /** Destructor implementation */
@@ -149,16 +149,16 @@ protected:
   Ptr<Socket>               m_socket;           //!< Local socket.
   uint16_t                  m_localPort;        //!< Local port.
   Address                   m_serverAddress;    //!< Server address.
-  Ptr<Uni5onServer>         m_serverApp;        //!< Server application.
+  Ptr<BaseServer>         m_serverApp;        //!< Server application.
 
   /** Trace source fired when application start. */
-  TracedCallback<Ptr<Uni5onClient>> m_appStartTrace;
+  TracedCallback<Ptr<BaseClient>> m_appStartTrace;
 
   /** Trace source fired when application stops. */
-  TracedCallback<Ptr<Uni5onClient>> m_appStopTrace;
+  TracedCallback<Ptr<BaseClient>> m_appStopTrace;
 
   /** Trace source fired when application reports an error. */
-  TracedCallback<Ptr<Uni5onClient>> m_appErrorTrace;
+  TracedCallback<Ptr<BaseClient>> m_appErrorTrace;
 
 private:
   std::string               m_name;           //!< Application name.
@@ -180,4 +180,4 @@ private:
 };
 
 } // namespace ns3
-#endif /* UNI5ON_CLIENT_H */
+#endif /* BASE_CLIENT_H */

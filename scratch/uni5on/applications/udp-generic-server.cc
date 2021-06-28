@@ -34,7 +34,7 @@ TypeId
 UdpGenericServer::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::UdpGenericServer")
-    .SetParent<Uni5onServer> ()
+    .SetParent<BaseServer> ()
     .AddConstructor<UdpGenericServer> ()
 
     // These attributes must be configured for the desired traffic pattern.
@@ -70,7 +70,7 @@ UdpGenericServer::DoDispose (void)
   NS_LOG_FUNCTION (this);
 
   m_sendEvent.Cancel ();
-  Uni5onServer::DoDispose ();
+  BaseServer::DoDispose ();
 }
 
 void
@@ -106,7 +106,7 @@ UdpGenericServer::NotifyStart ()
   NS_LOG_FUNCTION (this);
 
   // Chain up to reset statistics.
-  Uni5onServer::NotifyStart ();
+  BaseServer::NotifyStart ();
 
   // Start traffic.
   m_sendEvent.Cancel ();
@@ -122,7 +122,7 @@ UdpGenericServer::NotifyForceStop ()
   NS_LOG_FUNCTION (this);
 
   // Chain up just for log.
-  Uni5onServer::NotifyForceStop ();
+  BaseServer::NotifyForceStop ();
 
   // Stop traffic.
   m_sendEvent.Cancel ();

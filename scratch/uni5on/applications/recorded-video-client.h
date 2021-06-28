@@ -20,7 +20,7 @@
 #ifndef RECORDED_VIDEO_CLIENT_H
 #define RECORDED_VIDEO_CLIENT_H
 
-#include "uni5on-client.h"
+#include "base-client.h"
 
 namespace ns3 {
 
@@ -31,7 +31,7 @@ namespace ns3 {
  * main video object. After receiving all video chunks, the client closes the
  * connection.
  */
-class RecordedVideoClient : public Uni5onClient
+class RecordedVideoClient : public BaseClient
 {
 public:
   /**
