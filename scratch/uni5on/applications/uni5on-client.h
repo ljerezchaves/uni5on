@@ -116,7 +116,7 @@ public:
    * TracedCallback signature for Ptr<Uni5onClient>.
    * \param app The client application.
    */
-  typedef void (*EpcAppTracedCallback)(Ptr<Uni5onClient> app);
+  typedef void (*AppTracedCallback)(Ptr<Uni5onClient> app);
 
 protected:
   /** Destructor implementation */

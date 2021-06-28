@@ -83,13 +83,13 @@ Uni5onClient::GetTypeId (void)
 
     .AddTraceSource ("AppStart", "Uni5onClient start trace source.",
                      MakeTraceSourceAccessor (&Uni5onClient::m_appStartTrace),
-                     "ns3::Uni5onClient::EpcAppTracedCallback")
+                     "ns3::Uni5onClient::AppTracedCallback")
     .AddTraceSource ("AppStop", "Uni5onClient stop trace source.",
                      MakeTraceSourceAccessor (&Uni5onClient::m_appStopTrace),
-                     "ns3::Uni5onClient::EpcAppTracedCallback")
+                     "ns3::Uni5onClient::AppTracedCallback")
     .AddTraceSource ("AppError", "Uni5onClient error trace source.",
                      MakeTraceSourceAccessor (&Uni5onClient::m_appErrorTrace),
-                     "ns3::Uni5onClient::EpcAppTracedCallback")
+                     "ns3::Uni5onClient::AppTracedCallback")
   ;
   return tid;
 }
