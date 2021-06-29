@@ -410,7 +410,7 @@ EnableVerbose (bool enable)
       LogComponentEnable ("PgwTunnelApp",             logLevelWarnInfo);
       LogComponentEnable ("SliceController",          logLevelWarnInfo);
       LogComponentEnable ("SliceNetwork",             logLevelWarnInfo);
-      LogComponentEnable ("Uni5onMme",                logLevelWarnInfo);
+      LogComponentEnable ("StatelessMme",                logLevelWarnInfo);
       LogComponentEnable ("TrafficManager",           logLevelWarnInfo);
 
       // Metadata components.

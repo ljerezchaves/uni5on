@@ -27,7 +27,7 @@
 #include "../logical/enb-application.h"
 #include "../logical/slice-controller.h"
 #include "../logical/slice-network.h"
-#include "../logical/uni5on-mme.h"
+#include "../logical/stateless-mme.h"
 #include "../metadata/enb-info.h"
 #include "../metadata/ue-info.h"
 
@@ -422,7 +422,7 @@ ScenarioHelper::NotifyConstructionCompleted (void)
   NS_LOG_FUNCTION (this);
 
   // Create the UNI5ON infrastructure.
-  m_mme = CreateObject<Uni5onMme> ();
+  m_mme = CreateObject<StatelessMme> ();
   m_backhaul = CreateObject<RingNetwork> ();
   m_radio = CreateObject<RadioNetwork> (Ptr<ScenarioHelper> (this));
 

@@ -27,7 +27,7 @@
 #include "../metadata/ue-info.h"
 #include "gtp-tunnel-app.h"
 #include "slice-network.h"
-#include "uni5on-mme.h"
+#include "stateless-mme.h"
 
 #undef NS_LOG_APPEND_CONTEXT
 #define NS_LOG_APPEND_CONTEXT \
@@ -111,7 +111,7 @@ SliceController::GetTypeId (void)
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    PointerValue (),
                    MakePointerAccessor (&SliceController::m_mme),
-                   MakePointerChecker<Uni5onMme> ())
+                   MakePointerChecker<StatelessMme> ())
 
     // P-GW.
     .AddAttribute ("PgwBlockPolicy",

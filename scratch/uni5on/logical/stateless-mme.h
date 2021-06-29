@@ -20,8 +20,8 @@
  *         Luciano Jerez Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef UNI5ON_MME_H
-#define UNI5ON_MME_H
+#ifndef STATELESS_MME_H
+#define STATELESS_MME_H
 
 #include <map>
 #include <list>
@@ -34,7 +34,7 @@ class NetDevice;
 
 /**
  * \ingroup uni5onLogical
- * The EPS MME entity. The UNI5ON architecture expects one MME entity inside
+ * The MME entity. The UNI5ON architecture expects one MME entity inside
  * each LTE slice controller. However, in this implementation we are using a
  * single shared stateless MME entity. The current ns-3 LTE implementation
  * limits the eNB connected to a single MME. Considering that in UNI5ON
@@ -42,14 +42,14 @@ class NetDevice;
  * use a single shared stateless MME entity. Then, internally it can forward
  * the control messages to the correct LTE slice controller.
  */
-class Uni5onMme : public Object
+class StatelessMme : public Object
 {
-  friend class MemberEpcS1apSapMme<Uni5onMme>;
-  friend class MemberEpcS11SapMme<Uni5onMme>;
+  friend class MemberEpcS1apSapMme<StatelessMme>;
+  friend class MemberEpcS11SapMme<StatelessMme>;
 
 public:
-  Uni5onMme ();          //!< Default constructor.
-  virtual ~Uni5onMme (); //!< Dummy destructor, see DoDispose.
+  StatelessMme ();          //!< Default constructor.
+  virtual ~StatelessMme (); //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
@@ -95,4 +95,4 @@ private:
 };
 
 } // namespace ns3
-#endif // UNI5ON_MME_H
+#endif // STATELESS_MME_H

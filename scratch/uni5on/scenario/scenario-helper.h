@@ -38,7 +38,7 @@ class RadioNetwork;
 class RingNetwork;
 class SliceController;
 class SliceNetwork;
-class Uni5onMme;
+class StatelessMme;
 class TrafficHelper;
 
 /**
@@ -142,7 +142,7 @@ private:
 
   Ptr<RingNetwork>          m_backhaul;         //!< The backhaul network.
   Ptr<RadioNetwork>         m_radio;            //!< The LTE RAN network.
-  Ptr<Uni5onMme>            m_mme;              //!< The MME entity.
+  Ptr<StatelessMme>         m_mme;              //!< The MME entity.
 
   // MBB network slice.
   ObjectFactory             m_mbbControllerFac; //!< MBB controller factory.

@@ -20,41 +20,41 @@
  *         Luciano Jerez Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include "uni5on-mme.h"
+#include "stateless-mme.h"
 #include "../metadata/enb-info.h"
 #include "../metadata/sgw-info.h"
 #include "../metadata/ue-info.h"
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("Uni5onMme");
-NS_OBJECT_ENSURE_REGISTERED (Uni5onMme);
+NS_LOG_COMPONENT_DEFINE ("StatelessMme");
+NS_OBJECT_ENSURE_REGISTERED (StatelessMme);
 
-Uni5onMme::Uni5onMme ()
+StatelessMme::StatelessMme ()
 {
   NS_LOG_FUNCTION (this);
 
-  m_s1apSapMme = new MemberEpcS1apSapMme<Uni5onMme> (this);
-  m_s11SapMme = new MemberEpcS11SapMme<Uni5onMme> (this);
+  m_s1apSapMme = new MemberEpcS1apSapMme<StatelessMme> (this);
+  m_s11SapMme = new MemberEpcS11SapMme<StatelessMme> (this);
 }
 
-Uni5onMme::~Uni5onMme ()
+StatelessMme::~StatelessMme ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-Uni5onMme::GetTypeId (void)
+StatelessMme::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::Uni5onMme")
+  static TypeId tid = TypeId ("ns3::StatelessMme")
     .SetParent<Object> ()
-    .AddConstructor<Uni5onMme> ()
+    .AddConstructor<StatelessMme> ()
   ;
   return tid;
 }
 
 void
-Uni5onMme::DoDispose ()
+StatelessMme::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -64,7 +64,7 @@ Uni5onMme::DoDispose ()
 }
 
 EpcS1apSapMme*
-Uni5onMme::GetS1apSapMme (void) const
+StatelessMme::GetS1apSapMme (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -72,7 +72,7 @@ Uni5onMme::GetS1apSapMme (void) const
 }
 
 EpcS11SapMme*
-Uni5onMme::GetS11SapMme (void) const
+StatelessMme::GetS11SapMme (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -83,7 +83,7 @@ Uni5onMme::GetS11SapMme (void) const
 // S1-AP SAP MME forwarded methods
 //
 void
-Uni5onMme::DoInitialUeMessage (
+StatelessMme::DoInitialUeMessage (
   uint64_t mmeUeS1Id, uint16_t enbUeS1Id, uint64_t imsi, uint16_t ecgi)
 {
   NS_LOG_FUNCTION (this << mmeUeS1Id << enbUeS1Id << imsi << ecgi);
@@ -112,7 +112,7 @@ Uni5onMme::DoInitialUeMessage (
 }
 
 void
-Uni5onMme::DoInitialContextSetupResponse (
+StatelessMme::DoInitialContextSetupResponse (
   uint64_t mmeUeS1Id, uint16_t enbUeS1Id,
   std::list<EpcS1apSapMme::ErabSetupItem> erabList)
 {
@@ -126,7 +126,7 @@ Uni5onMme::DoInitialContextSetupResponse (
 // allocating TEID on the S11 interface using the IMSI as identifier.
 //
 void
-Uni5onMme::DoPathSwitchRequest (
+StatelessMme::DoPathSwitchRequest (
   uint64_t enbUeS1Id, uint64_t mmeUeS1Id, uint16_t gci,
   std::list<EpcS1apSapMme::ErabSwitchedInDownlinkItem> erabList)
 {
@@ -157,7 +157,7 @@ Uni5onMme::DoPathSwitchRequest (
 }
 
 void
-Uni5onMme::DoErabReleaseIndication (
+StatelessMme::DoErabReleaseIndication (
   uint64_t mmeUeS1Id, uint16_t enbUeS1Id,
   std::list<EpcS1apSapMme::ErabToBeReleasedIndication> erabList)
 {
@@ -183,7 +183,7 @@ Uni5onMme::DoErabReleaseIndication (
 // S11 SAP MME forwarded methods
 //
 void
-Uni5onMme::DoCreateSessionResponse (
+StatelessMme::DoCreateSessionResponse (
   EpcS11SapMme::CreateSessionResponseMessage msg)
 {
   NS_LOG_FUNCTION (this << msg.teid);
@@ -207,7 +207,7 @@ Uni5onMme::DoCreateSessionResponse (
 }
 
 void
-Uni5onMme::DoModifyBearerResponse (
+StatelessMme::DoModifyBearerResponse (
   EpcS11SapMme::ModifyBearerResponseMessage msg)
 {
   NS_LOG_FUNCTION (this << msg.teid);
@@ -231,7 +231,8 @@ Uni5onMme::DoModifyBearerResponse (
 }
 
 void
-Uni5onMme::DoDeleteBearerRequest (EpcS11SapMme::DeleteBearerRequestMessage msg)
+StatelessMme::DoDeleteBearerRequest (
+  EpcS11SapMme::DeleteBearerRequestMessage msg)
 {
   NS_LOG_FUNCTION (this);
 

@@ -41,7 +41,7 @@ namespace ns3 {
 class BackhaulController;
 class EnbInfo;
 class RoutingInfo;
-class Uni5onMme;
+class StatelessMme;
 class SgwInfo;
 class PgwInfo;
 
@@ -393,7 +393,7 @@ private:
   OpMode                  m_aggregation;    //!< Bearer traffic aggregation.
 
   // MME interface.
-  Ptr<Uni5onMme>          m_mme;            //!< MME element.
+  Ptr<StatelessMme>       m_mme;            //!< MME element.
   EpcS11SapMme*           m_s11SapMme;      //!< MME side of the S11 SAP.
   EpcS11SapSgw*           m_s11SapSgw;      //!< S-GW side of the S11 SAP.
 
