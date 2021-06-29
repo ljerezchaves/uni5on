@@ -37,8 +37,7 @@ NS_LOG_COMPONENT_DEFINE ("ScenarioHelper");
 NS_OBJECT_ENSURE_REGISTERED (ScenarioHelper);
 
 ScenarioHelper::ScenarioHelper ()
-  : m_pcapConfig (0),
-  m_backhaul (0),
+  : m_backhaul (0),
   m_radio (0),
   m_mme (0),
   m_htcController (0),
@@ -69,6 +68,7 @@ ScenarioHelper::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::ScenarioHelper")
     .SetParent<EpcHelper> ()
+
     .AddAttribute ("HtcController", "The HTC slice controller configuration.",
                    ObjectFactoryValue (ObjectFactory ()),
                    MakeObjectFactoryAccessor (
@@ -84,6 +84,7 @@ ScenarioHelper::GetTypeId (void)
                    MakeObjectFactoryAccessor (
                      &ScenarioHelper::m_htcTrafficFac),
                    MakeObjectFactoryChecker ())
+
     .AddAttribute ("MtcController", "The MTC slice controller configuration.",
                    ObjectFactoryValue (ObjectFactory ()),
                    MakeObjectFactoryAccessor (
@@ -99,6 +100,7 @@ ScenarioHelper::GetTypeId (void)
                    MakeObjectFactoryAccessor (
                      &ScenarioHelper::m_mtcTrafficFac),
                    MakeObjectFactoryChecker ())
+
     .AddAttribute ("TmpController", "The TMP slice controller configuration.",
                    ObjectFactoryValue (ObjectFactory ()),
                    MakeObjectFactoryAccessor (
@@ -123,31 +125,38 @@ ScenarioHelper::ConfigurePcap (std::string prefix, uint8_t config)
 {
   NS_LOG_FUNCTION (this << prefix);
 
-  m_pcapConfig = config;
-  bool promisc = HasPcapFlag (ScenarioHelper::PCPROMISC);
-  bool ofpFlag = HasPcapFlag (ScenarioHelper::PCSLCOFP);
-  bool sgiFlag = HasPcapFlag (ScenarioHelper::PCSLCSGI);
-  bool pgwFlag = HasPcapFlag (ScenarioHelper::PCSLCPGW);
+  bool slcofp  = HasPcapFlag (config, ScenarioHelper::PCSLCOFP);
+  bool slcpgw  = HasPcapFlag (config, ScenarioHelper::PCSLCPGW);
+  bool slcsgi  = HasPcapFlag (config, ScenarioHelper::PCSLCSGI);
+  bool backofp = HasPcapFlag (config, ScenarioHelper::PCBACKOFP);
+  bool backepc = HasPcapFlag (config, ScenarioHelper::PCBACKEPC);
+  bool backswt = HasPcapFlag (config, ScenarioHelper::PCBACKSWT);
+  bool promisc = HasPcapFlag (config, ScenarioHelper::PCPROMISC);
 
   // Enable PCAP on the backhaul network.
-  m_backhaul->EnablePcap (prefix, promisc,
-                          HasPcapFlag (ScenarioHelper::PCBACKOFP),
-                          HasPcapFlag (ScenarioHelper::PCBACKEPC),
-                          HasPcapFlag (ScenarioHelper::PCBACKSWT));
+  m_backhaul->EnablePcap (prefix, promisc, backofp, backepc, backswt);
 
   // Enable PCAP on the logical network slices.
   if (m_htcNetwork)
     {
-      m_htcNetwork->EnablePcap (prefix, promisc, ofpFlag, sgiFlag, pgwFlag);
+      m_htcNetwork->EnablePcap (prefix, promisc, slcofp, slcsgi, slcpgw);
     }
   if (m_mtcNetwork)
     {
-      m_mtcNetwork->EnablePcap (prefix, promisc, ofpFlag, sgiFlag, pgwFlag);
+      m_mtcNetwork->EnablePcap (prefix, promisc, slcofp, slcsgi, slcpgw);
     }
   if (m_tmpNetwork)
     {
-      m_tmpNetwork->EnablePcap (prefix, promisc, ofpFlag, sgiFlag, pgwFlag);
+      m_tmpNetwork->EnablePcap (prefix, promisc, slcofp, slcsgi, slcpgw);
     }
+}
+
+bool
+ScenarioHelper::HasPcapFlag (uint8_t config, PcapConfig flag) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return (config & (static_cast<uint8_t> (flag)));
 }
 
 void
@@ -531,14 +540,6 @@ ScenarioHelper::NotifyConstructionCompleted (void)
   m_trafficStats    = CreateObject<TrafficStatsCalculator> ();
 
   Object::NotifyConstructionCompleted ();
-}
-
-bool
-ScenarioHelper::HasPcapFlag (PcapConfig flag) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return (m_pcapConfig & (static_cast<uint8_t> (flag)));
 }
 
 bool

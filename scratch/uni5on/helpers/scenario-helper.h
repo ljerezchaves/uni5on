@@ -43,13 +43,13 @@ class TrafficHelper;
 
 /**
  * \ingroup uni5on
- * This class creates and configures the UNI5ON architecture, including the
- * shared infrastructure and logical networks.
+ * This helper creates and configures the infrastructure and logical networks
+ * for UNI5ON architecture simulations.
  */
 class ScenarioHelper : public EpcHelper
 {
 public:
-  /** The reason for any blocked request. */
+  /** The bitmap for PCAP configuration. */
   enum PcapConfig
   {
     PCSLCOFP  = (1U << 0),  //!< Slice OpenFlow control channels.
@@ -72,7 +72,7 @@ public:
   static TypeId GetTypeId (void);
 
   /**
-   * Configure PCAP traces on the infrastructure.
+   * Configure PCAP traces.
    * \param prefix Filename prefix to use for PCAP files.
    * \param config The PCAP configuration bitmap.
    *
@@ -93,6 +93,14 @@ public:
    * \endverbatim
    */
   void ConfigurePcap (std::string prefix, uint8_t config);
+
+  /**
+   * Check the PCAP configuration bitmap for the following flag.
+   * \param config The PCAP configuration bitmap.
+   * \param flag PCAP configuration flag.
+   * \return True if the flag is set in PCAP config bitmap, false otherwise.
+   */
+  bool HasPcapFlag (uint8_t config, PcapConfig flag) const;
 
   /**
    * Print the LTE radio environment map.
@@ -121,16 +129,9 @@ protected:
   // Inherited from ObjectBase.
   virtual void NotifyConstructionCompleted (void);
 
-  /**
-   * Check the PCAP configuration bitmap for the following flag.
-   * \param flag PCAP configuration flag.
-   * \return True if the flag is set in PCAP config bitmap, false otherwise.
-   */
-  bool HasPcapFlag (PcapConfig flag) const;
-
 private:
   /**
-   * Check the object factories for proper types.
+   * Check the object factories for valid types.
    * \param controller The SliceController object factory.
    * \param network The SliceNetwork object factory.
    * \param traffic The TrafficHelper object factory.
@@ -138,8 +139,6 @@ private:
    */
   bool AreFactoriesOk (ObjectFactory &controller, ObjectFactory &network,
                        ObjectFactory &traffic) const;
-
-  uint8_t                   m_pcapConfig;       //!< PCAP configuration bitmap.
 
   Ptr<RingNetwork>          m_backhaul;         //!< The backhaul network.
   Ptr<RadioNetwork>         m_radio;            //!< The LTE RAN network.
