@@ -144,13 +144,13 @@ private:
   Ptr<RadioNetwork>         m_radio;            //!< The LTE RAN network.
   Ptr<Uni5onMme>            m_mme;              //!< The MME entity.
 
-  // HTC network slice.
-  ObjectFactory             m_htcControllerFac; //!< HTC controller factory.
-  ObjectFactory             m_htcNetworkFac;    //!< HTC network factory.
-  ObjectFactory             m_htcTrafficFac;    //!< HTC traffic factory.
-  Ptr<SliceController>      m_htcController;    //!< HTC slice controller.
-  Ptr<SliceNetwork>         m_htcNetwork;       //!< HTC slice network.
-  Ptr<TrafficHelper>        m_htcTraffic;       //!< HTC slice traffic.
+  // MBB network slice.
+  ObjectFactory             m_mbbControllerFac; //!< MBB controller factory.
+  ObjectFactory             m_mbbNetworkFac;    //!< MBB network factory.
+  ObjectFactory             m_mbbTrafficFac;    //!< MBB traffic factory.
+  Ptr<SliceController>      m_mbbController;    //!< MBB slice controller.
+  Ptr<SliceNetwork>         m_mbbNetwork;       //!< MBB slice network.
+  Ptr<TrafficHelper>        m_mbbTraffic;       //!< MBB slice traffic.
 
   // MTC network slice.
   ObjectFactory             m_mtcControllerFac; //!< MTC controller factory.

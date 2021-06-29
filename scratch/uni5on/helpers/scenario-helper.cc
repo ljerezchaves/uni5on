@@ -40,9 +40,9 @@ ScenarioHelper::ScenarioHelper ()
   : m_backhaul (0),
   m_radio (0),
   m_mme (0),
-  m_htcController (0),
-  m_htcNetwork (0),
-  m_htcTraffic (0),
+  m_mbbController (0),
+  m_mbbNetwork (0),
+  m_mbbTraffic (0),
   m_mtcController (0),
   m_mtcNetwork (0),
   m_mtcTraffic (0),
@@ -69,20 +69,20 @@ ScenarioHelper::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::ScenarioHelper")
     .SetParent<EpcHelper> ()
 
-    .AddAttribute ("HtcController", "The HTC slice controller configuration.",
+    .AddAttribute ("MbbController", "The MBB slice controller configuration.",
                    ObjectFactoryValue (ObjectFactory ()),
                    MakeObjectFactoryAccessor (
-                     &ScenarioHelper::m_htcControllerFac),
+                     &ScenarioHelper::m_mbbControllerFac),
                    MakeObjectFactoryChecker ())
-    .AddAttribute ("HtcSlice", "The HTC slice network configuration.",
+    .AddAttribute ("MbbSlice", "The MBB slice network configuration.",
                    ObjectFactoryValue (ObjectFactory ()),
                    MakeObjectFactoryAccessor (
-                     &ScenarioHelper::m_htcNetworkFac),
+                     &ScenarioHelper::m_mbbNetworkFac),
                    MakeObjectFactoryChecker ())
-    .AddAttribute ("HtcTraffic", "The HTC slice traffic configuration.",
+    .AddAttribute ("MbbTraffic", "The MBB slice traffic configuration.",
                    ObjectFactoryValue (ObjectFactory ()),
                    MakeObjectFactoryAccessor (
-                     &ScenarioHelper::m_htcTrafficFac),
+                     &ScenarioHelper::m_mbbTrafficFac),
                    MakeObjectFactoryChecker ())
 
     .AddAttribute ("MtcController", "The MTC slice controller configuration.",
@@ -137,9 +137,9 @@ ScenarioHelper::ConfigurePcap (std::string prefix, uint8_t config)
   m_backhaul->EnablePcap (prefix, promisc, backofp, backepc, backswt);
 
   // Enable PCAP on the logical network slices.
-  if (m_htcNetwork)
+  if (m_mbbNetwork)
     {
-      m_htcNetwork->EnablePcap (prefix, promisc, slcofp, slcsgi, slcpgw);
+      m_mbbNetwork->EnablePcap (prefix, promisc, slcofp, slcsgi, slcpgw);
     }
   if (m_mtcNetwork)
     {
@@ -397,9 +397,9 @@ ScenarioHelper::DoDispose (void)
   m_backhaul = 0;
   m_radio = 0;
 
-  m_htcController = 0;
-  m_htcNetwork = 0;
-  m_htcTraffic = 0;
+  m_mbbController = 0;
+  m_mbbNetwork = 0;
+  m_mbbTraffic = 0;
   m_mtcController = 0;
   m_mtcNetwork = 0;
   m_mtcTraffic = 0;
@@ -430,36 +430,36 @@ ScenarioHelper::NotifyConstructionCompleted (void)
   ApplicationContainer sliceControllers;
   int sumQuota = 0;
 
-  // Create the HTC logical slice controller, network, and traffic helper.
-  if (AreFactoriesOk (m_htcControllerFac, m_htcNetworkFac, m_htcTrafficFac))
+  // Create the MBB logical slice controller, network, and traffic helper.
+  if (AreFactoriesOk (m_mbbControllerFac, m_mbbNetworkFac, m_mbbTrafficFac))
     {
-      m_htcControllerFac.Set ("SliceId", EnumValue (SliceId::HTC));
-      m_htcControllerFac.Set ("Mme", PointerValue (m_mme));
-      m_htcControllerFac.Set ("BackhaulCtrl", PointerValue (backahulCtrl));
-      m_htcController = m_htcControllerFac.Create<SliceController> ();
+      m_mbbControllerFac.Set ("SliceId", EnumValue (SliceId::MBB));
+      m_mbbControllerFac.Set ("Mme", PointerValue (m_mme));
+      m_mbbControllerFac.Set ("BackhaulCtrl", PointerValue (backahulCtrl));
+      m_mbbController = m_mbbControllerFac.Create<SliceController> ();
 
-      sliceControllers.Add (m_htcController);
-      sumQuota += m_htcController->GetQuota ();
+      sliceControllers.Add (m_mbbController);
+      sumQuota += m_mbbController->GetQuota ();
 
-      m_htcNetworkFac.Set ("SliceId", EnumValue (SliceId::HTC));
-      m_htcNetworkFac.Set ("SliceCtrl", PointerValue (m_htcController));
-      m_htcNetworkFac.Set ("BackhaulNet", PointerValue (m_backhaul));
-      m_htcNetworkFac.Set ("RadioNet", PointerValue (m_radio));
-      m_htcNetworkFac.Set ("UeAddress", Ipv4AddressValue ("7.2.0.0"));
-      m_htcNetworkFac.Set ("UeMask", Ipv4MaskValue ("255.255.0.0"));
-      m_htcNetworkFac.Set ("WebAddress", Ipv4AddressValue ("8.2.0.0"));
-      m_htcNetworkFac.Set ("WebMask", Ipv4MaskValue ("255.255.0.0"));
-      m_htcNetwork = m_htcNetworkFac.Create<SliceNetwork> ();
+      m_mbbNetworkFac.Set ("SliceId", EnumValue (SliceId::MBB));
+      m_mbbNetworkFac.Set ("SliceCtrl", PointerValue (m_mbbController));
+      m_mbbNetworkFac.Set ("BackhaulNet", PointerValue (m_backhaul));
+      m_mbbNetworkFac.Set ("RadioNet", PointerValue (m_radio));
+      m_mbbNetworkFac.Set ("UeAddress", Ipv4AddressValue ("7.2.0.0"));
+      m_mbbNetworkFac.Set ("UeMask", Ipv4MaskValue ("255.255.0.0"));
+      m_mbbNetworkFac.Set ("WebAddress", Ipv4AddressValue ("8.2.0.0"));
+      m_mbbNetworkFac.Set ("WebMask", Ipv4MaskValue ("255.255.0.0"));
+      m_mbbNetwork = m_mbbNetworkFac.Create<SliceNetwork> ();
 
-      m_htcTrafficFac.Set ("SliceId", EnumValue (SliceId::HTC));
-      m_htcTrafficFac.Set ("SliceCtrl", PointerValue (m_htcController));
-      m_htcTrafficFac.Set ("SliceNet", PointerValue (m_htcNetwork));
-      m_htcTrafficFac.Set ("RadioNet", PointerValue (m_radio));
-      m_htcTraffic = m_htcTrafficFac.Create<TrafficHelper> ();
+      m_mbbTrafficFac.Set ("SliceId", EnumValue (SliceId::MBB));
+      m_mbbTrafficFac.Set ("SliceCtrl", PointerValue (m_mbbController));
+      m_mbbTrafficFac.Set ("SliceNet", PointerValue (m_mbbNetwork));
+      m_mbbTrafficFac.Set ("RadioNet", PointerValue (m_radio));
+      m_mbbTraffic = m_mbbTrafficFac.Create<TrafficHelper> ();
     }
   else
     {
-      NS_LOG_WARN ("HTC slice being ignored by now.");
+      NS_LOG_WARN ("MBB slice being ignored by now.");
     }
 
   // Create the MTC logical slice controller, network, and traffic helper.

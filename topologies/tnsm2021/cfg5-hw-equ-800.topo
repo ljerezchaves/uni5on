@@ -57,9 +57,9 @@ default ns3::TrafficHelper::StartAppsAt "0s"
 default ns3::TrafficHelper::StopAppsAt "900s"
 default ns3::TrafficHelper::UseOnlyDefaultBearer "false"
 
-default ns3::ScenarioHelper::HtcController "ns3::SliceController[Priority=1|Quota=40|GbrBlockThs=0.25]"
-default ns3::ScenarioHelper::HtcSlice "ns3::SliceNetwork[NumUes=240|UeCellSiteCoverage=0|PgwBackhaulSwitch=0|SgwBackhaulSwitch=0|PgwTftCpuCapacity=256Mbps|PgwTftFlowTableSize=512|PgwTftTcamDelay=20us|UeMobilitySpeed=ns3::ConstantRandomVariable[Constant=0.834]]"
-default ns3::ScenarioHelper::HtcTraffic "ns3::TrafficHelper[PoissonInterArrival=ns3::ExponentialRandomVariable[Mean=120.0]|InitialProb=0.5|FullAppsAt=450s]"
+default ns3::ScenarioHelper::MbbController "ns3::SliceController[Priority=1|Quota=40|GbrBlockThs=0.25]"
+default ns3::ScenarioHelper::MbbSlice "ns3::SliceNetwork[NumUes=240|UeCellSiteCoverage=0|PgwBackhaulSwitch=0|SgwBackhaulSwitch=0|PgwTftCpuCapacity=256Mbps|PgwTftFlowTableSize=512|PgwTftTcamDelay=20us|UeMobilitySpeed=ns3::ConstantRandomVariable[Constant=0.834]]"
+default ns3::ScenarioHelper::MbbTraffic "ns3::TrafficHelper[PoissonInterArrival=ns3::ExponentialRandomVariable[Mean=120.0]|InitialProb=0.5|FullAppsAt=450s]"
 
 default ns3::ScenarioHelper::MtcController "ns3::SliceController[Priority=1|Quota=15|GbrBlockThs=0.5]"
 default ns3::ScenarioHelper::MtcSlice "ns3::SliceNetwork[NumUes=400|UeCellSiteCoverage=0|PgwBackhaulSwitch=0|SgwBackhaulSwitch=3|PgwTftCpuCapacity=256Mbps|PgwTftFlowTableSize=512|PgwTftTcamDelay=20us|UeMobilitySpeed=ns3::ConstantRandomVariable[Constant=8.340]]"

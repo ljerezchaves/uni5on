@@ -62,7 +62,7 @@ SliceController::GetTypeId (void)
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    EnumValue (SliceId::UNKN),
                    MakeEnumAccessor (&SliceController::m_sliceId),
-                   MakeEnumChecker (SliceId::HTC, SliceIdStr (SliceId::HTC),
+                   MakeEnumChecker (SliceId::MBB, SliceIdStr (SliceId::MBB),
                                     SliceId::MTC, SliceIdStr (SliceId::MTC),
                                     SliceId::TMP, SliceIdStr (SliceId::TMP)))
 

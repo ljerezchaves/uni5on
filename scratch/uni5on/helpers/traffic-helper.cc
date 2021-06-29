@@ -90,7 +90,7 @@ TrafficHelper::GetTypeId (void)
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    EnumValue (SliceId::UNKN),
                    MakeEnumAccessor (&TrafficHelper::m_sliceId),
-                   MakeEnumChecker (SliceId::HTC, SliceIdStr (SliceId::HTC),
+                   MakeEnumChecker (SliceId::MBB, SliceIdStr (SliceId::MBB),
                                     SliceId::MTC, SliceIdStr (SliceId::MTC),
                                     SliceId::TMP, SliceIdStr (SliceId::TMP)))
     .AddAttribute ("SliceCtrl", "The logical slice controller pointer.",
@@ -235,7 +235,7 @@ TrafficHelper::ConfigureHelpers ()
   NS_LOG_FUNCTION (this);
 
   // -------------------------------------------------------------------------
-  // Configuring HTC application helpers.
+  // Configuring application helpers for MBB and TMP slices.
 
   //
   // The HTTP model is based on the distributions indicated in the paper 'An
@@ -378,7 +378,7 @@ TrafficHelper::ConfigureHelpers ()
 
 
   // -------------------------------------------------------------------------
-  // Configuring MTC application helpers.
+  // Configuring application helpers for MTC slice.
   //
   // The following applications were adapted from the MTC models presented on
   // the "Machine-to-Machine Communications: Architectures, Technology,
@@ -553,7 +553,7 @@ TrafficHelper::InstallApplications ()
         MakeCallback (&TrafficManager::NotifySessionCreated, t_ueManager));
 
       // Install applications into this UE according to network slice.
-      if (m_sliceId == SliceId::HTC)
+      if (m_sliceId == SliceId::MBB)
         {
           {
             // VoIP call over dedicated GBR EPS bearer.

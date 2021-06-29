@@ -157,7 +157,7 @@ typedef enum
 typedef enum
 {
   // Don't change the order. Enum values are used as array indexes.
-  HTC  = 0,  //!< Slice for HTC UEs.
+  MBB  = 0,  //!< Slice for MBB UEs.
   MTC  = 1,  //!< Slice for MTC UEs.
   TMP  = 2,  //!< Slice for TMP UEs.
   ALL  = 3,  //!< ALL previous slices.
