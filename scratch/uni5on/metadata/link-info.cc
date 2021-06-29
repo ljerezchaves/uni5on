@@ -21,7 +21,7 @@
 #include <iomanip>
 #include <iostream>
 #include "link-info.h"
-#include "../logical/epc-gtpu-tag.h"
+#include "../logical/gtpu-tag.h"
 
 using namespace std;
 
@@ -422,7 +422,7 @@ LinkInfo::NotifyTxPacket (std::string context, Ptr<const Packet> packet)
   dir = (context == "Forward") ? LinkInfo::FWD : LinkInfo::BWD;
 
   // Update TX packets for the packet slice.
-  EpcGtpuTag gtpuTag;
+  GtpuTag gtpuTag;
   if (packet->PeekPacketTag (gtpuTag))
     {
       SliceId slice = gtpuTag.GetSliceId ();

@@ -19,46 +19,46 @@
  */
 
 #include <ns3/tunnel-id-tag.h>
-#include "gtp-tunnel-app.h"
+#include "gtpu-tunnel-app.h"
 #include "../infrastructure/backhaul-network.h"
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("GtpTunnelApp");
-NS_OBJECT_ENSURE_REGISTERED (GtpTunnelApp);
+NS_LOG_COMPONENT_DEFINE ("GtpuTunnelApp");
+NS_OBJECT_ENSURE_REGISTERED (GtpuTunnelApp);
 
-GtpTunnelApp::GtpTunnelApp (Ptr<VirtualNetDevice> logicalPort,
-                            Ptr<CsmaNetDevice> physicalDev)
+GtpuTunnelApp::GtpuTunnelApp (Ptr<VirtualNetDevice> logicalPort,
+                              Ptr<CsmaNetDevice> physicalDev)
 {
   NS_LOG_FUNCTION (this << logicalPort << physicalDev);
 
   // Save the pointers and set the send callback.
   m_logicalPort = logicalPort;
   m_logicalPort->SetSendCallback (
-    MakeCallback (&GtpTunnelApp::RecvFromLogicalPort, this));
+    MakeCallback (&GtpuTunnelApp::RecvFromLogicalPort, this));
   m_physicalDev = physicalDev;
 
   m_txSocket = MakeNullCallback<void, Ptr<Packet>, uint32_t> ();
   m_rxSocket = MakeNullCallback<void, Ptr<Packet>, uint32_t> ();
 }
 
-GtpTunnelApp::~GtpTunnelApp ()
+GtpuTunnelApp::~GtpuTunnelApp ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-GtpTunnelApp::GetTypeId (void)
+GtpuTunnelApp::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::GtpTunnelApp")
+  static TypeId tid = TypeId ("ns3::GtpuTunnelApp")
     .SetParent<Application> ()
   ;
   return tid;
 }
 
 bool
-GtpTunnelApp::RecvFromLogicalPort (Ptr<Packet> packet, const Address& source,
-                                   const Address& dest, uint16_t protocolNo)
+GtpuTunnelApp::RecvFromLogicalPort (Ptr<Packet> packet, const Address& source,
+                                    const Address& dest, uint16_t protocolNo)
 {
   NS_LOG_FUNCTION (this << packet << source << dest << protocolNo);
 
@@ -101,7 +101,7 @@ GtpTunnelApp::RecvFromLogicalPort (Ptr<Packet> packet, const Address& source,
 }
 
 void
-GtpTunnelApp::RecvFromTunnelSocket (Ptr<Socket> socket)
+GtpuTunnelApp::RecvFromTunnelSocket (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 
@@ -141,7 +141,7 @@ GtpTunnelApp::RecvFromTunnelSocket (Ptr<Socket> socket)
 }
 
 void
-GtpTunnelApp::DoDispose ()
+GtpuTunnelApp::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -152,7 +152,7 @@ GtpTunnelApp::DoDispose ()
 }
 
 void
-GtpTunnelApp::StartApplication ()
+GtpuTunnelApp::StartApplication ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -166,12 +166,12 @@ GtpTunnelApp::StartApplication ()
   m_tunnelSocket->Bind (inetAddr);
   m_tunnelSocket->BindToNetDevice (m_physicalDev);
   m_tunnelSocket->SetRecvCallback (
-    MakeCallback (&GtpTunnelApp::RecvFromTunnelSocket, this));
+    MakeCallback (&GtpuTunnelApp::RecvFromTunnelSocket, this));
 }
 
 void
-GtpTunnelApp::AddHeader (Ptr<Packet> packet, Mac48Address source,
-                         Mac48Address dest, uint16_t protocolNo)
+GtpuTunnelApp::AddHeader (Ptr<Packet> packet, Mac48Address source,
+                          Mac48Address dest, uint16_t protocolNo)
 {
   NS_LOG_FUNCTION (this << packet << source << dest << protocolNo);
 

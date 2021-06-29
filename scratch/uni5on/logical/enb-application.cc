@@ -19,7 +19,7 @@
  */
 
 #include "enb-application.h"
-#include "epc-gtpu-tag.h"
+#include "gtpu-tag.h"
 #include "../uni5on-common.h"
 #include "../metadata/ue-info.h"
 #include "../metadata/routing-info.h"
@@ -69,8 +69,8 @@ EnbApplication::RecvFromS1uSocket (Ptr<Socket> socket)
 
   // Remove the EPC GTP-U packet tag from the packet.
   m_rxS1uTrace (packet);
-  EpcGtpuTag teidTag;
-  packet->RemovePacketTag (teidTag);
+  GtpuTag gtpuTag;
+  packet->RemovePacketTag (gtpuTag);
 
   // Remove the GTP-U header.
   GtpuHeader gtpu;
@@ -183,9 +183,9 @@ EnbApplication::SendToS1uSocket (Ptr<Packet> packet, uint32_t teid)
   packet->AddHeader (gtpu);
 
   // Add the EPC GTP-U packet tag to the packet.
-  EpcGtpuTag teidTag (
-    teid, EpcGtpuTag::ENB, rInfo->GetQosType (), rInfo->IsAggregated ());
-  packet->AddPacketTag (teidTag);
+  GtpuTag gtpuTag (
+    teid, GtpuTag::ENB, rInfo->GetQosType (), rInfo->IsAggregated ());
+  packet->AddPacketTag (gtpuTag);
   m_txS1uTrace (packet);
 
   // Check for UE context information.

@@ -25,7 +25,7 @@
 #include <ns3/network-module.h>
 #include <ns3/ofswitch13-device-container.h>
 #include "flow-stats-calculator.h"
-#include "../logical/epc-gtpu-tag.h"
+#include "../logical/gtpu-tag.h"
 #include "../metadata/link-info.h"
 
 namespace ns3 {

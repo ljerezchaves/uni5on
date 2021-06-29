@@ -44,10 +44,10 @@ TrafficStatsCalculator::TrafficStatsCalculator ()
     "/NodeList/*/ApplicationList/*/$ns3::EnbApplication/S1uTx",
     MakeCallback (&TrafficStatsCalculator::EpcInputPacket, this));
   Config::Connect (
-    "/NodeList/*/ApplicationList/*/$ns3::PgwTunnelApp/S5Rx",
+    "/NodeList/*/ApplicationList/*/$ns3::PgwuTunnelApp/S5Rx",
     MakeCallback (&TrafficStatsCalculator::EpcOutputPacket, this));
   Config::Connect (
-    "/NodeList/*/ApplicationList/*/$ns3::PgwTunnelApp/S5Tx",
+    "/NodeList/*/ApplicationList/*/$ns3::PgwuTunnelApp/S5Tx",
     MakeCallback (&TrafficStatsCalculator::EpcInputPacket, this));
   Config::Connect (
     "/NodeList/*/$ns3::OFSwitch13Device/OverloadDrop",
@@ -215,7 +215,7 @@ TrafficStatsCalculator::OverloadDropPacket (std::string context,
 {
   NS_LOG_FUNCTION (this << context << packet);
 
-  EpcGtpuTag gtpuTag;
+  GtpuTag gtpuTag;
   Ptr<FlowStatsCalculator> stats;
   if (packet->PeekPacketTag (gtpuTag))
     {
@@ -226,7 +226,7 @@ TrafficStatsCalculator::OverloadDropPacket (std::string context,
     {
       // This only happens when a packet is dropped at the P-GW, before
       // entering the TFT logical port that is responsible for attaching the
-      // EpcGtpuTag and notifying that the packet is entering the EPC.
+      // GtpuTag and notifying that the packet is entering the EPC.
       // To keep consistent log results, we are doing this manually here.
       uint32_t teid = PgwTftClassify (packet);
       if (teid)
@@ -244,7 +244,7 @@ TrafficStatsCalculator::MeterDropPacket (
 {
   NS_LOG_FUNCTION (this << context << packet << meterId);
 
-  EpcGtpuTag gtpuTag;
+  GtpuTag gtpuTag;
   Ptr<FlowStatsCalculator> stats;
   if (packet->PeekPacketTag (gtpuTag))
     {
@@ -262,7 +262,7 @@ TrafficStatsCalculator::MeterDropPacket (
     {
       // This only happens when a packet is dropped at the P-GW, before
       // entering the TFT logical port that is responsible for attaching the
-      // EpcGtpuTag and notifying that the packet is entering the EPC.
+      // GtpuTag and notifying that the packet is entering the EPC.
       // To keep consistent log results, we are doing this manually here.
       // It must be a packed dropped by a traffic meter because this is the
       // only type of meters that we can have in the P-GW TFT switches.
@@ -282,7 +282,7 @@ TrafficStatsCalculator::QueueDropPacket (std::string context,
 {
   NS_LOG_FUNCTION (this << context << packet);
 
-  EpcGtpuTag gtpuTag;
+  GtpuTag gtpuTag;
   Ptr<FlowStatsCalculator> stats;
   if (packet->PeekPacketTag (gtpuTag))
     {
@@ -293,7 +293,7 @@ TrafficStatsCalculator::QueueDropPacket (std::string context,
     {
       // This only happens when a packet is dropped at the P-GW, before
       // entering the TFT logical port that is responsible for attaching the
-      // EpcGtpuTag and notifying that the packet is entering the EPC.
+      // GtpuTag and notifying that the packet is entering the EPC.
       // To keep consistent log results, we are doing this manually here.
       uint32_t teid = PgwTftClassify (packet);
       if (teid)
@@ -312,7 +312,7 @@ TrafficStatsCalculator::TableDropPacket (
   NS_LOG_FUNCTION (this << context << packet <<
                    static_cast<uint16_t> (tableId));
 
-  EpcGtpuTag gtpuTag;
+  GtpuTag gtpuTag;
   Ptr<FlowStatsCalculator> stats;
   if (packet->PeekPacketTag (gtpuTag))
     {
@@ -323,7 +323,7 @@ TrafficStatsCalculator::TableDropPacket (
     {
       // This only happens when a packet is dropped at the P-GW, before
       // entering the TFT logical port that is responsible for attaching the
-      // EpcGtpuTag and notifying that the packet is entering the EPC.
+      // GtpuTag and notifying that the packet is entering the EPC.
       // To keep consistent log results, we are doing this manually here.
       uint32_t teid = PgwTftClassify (packet);
       if (teid)
@@ -341,7 +341,7 @@ TrafficStatsCalculator::EpcInputPacket (std::string context,
 {
   NS_LOG_FUNCTION (this << context << packet);
 
-  EpcGtpuTag gtpuTag;
+  GtpuTag gtpuTag;
   Ptr<FlowStatsCalculator> stats;
   if (packet->PeekPacketTag (gtpuTag))
     {
@@ -356,7 +356,7 @@ TrafficStatsCalculator::EpcOutputPacket (std::string context,
 {
   NS_LOG_FUNCTION (this << context << packet);
 
-  EpcGtpuTag gtpuTag;
+  GtpuTag gtpuTag;
   Ptr<FlowStatsCalculator> stats;
   if (packet->PeekPacketTag (gtpuTag))
     {

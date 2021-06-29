@@ -33,11 +33,11 @@ class Tag;
 /**
  * Tag used for GTP packets withing LTE EPC.
  */
-class EpcGtpuTag : public Tag
+class GtpuTag : public Tag
 {
 public:
-  /** LTE EPC element where this tagged was inserted into the packet */
-  enum EpcInputNode
+  /** EPC element where this tagged was inserted into the packet */
+  enum InputNode
   {
     ENB = 0,  //!< At the eNB node
     PGW = 1   //!< At the P-GW node
@@ -47,8 +47,8 @@ public:
   virtual TypeId GetInstanceTypeId (void) const;
 
   /** Constructors */
-  EpcGtpuTag ();
-  EpcGtpuTag (uint32_t teid, EpcInputNode node, QosType type, bool aggr);
+  GtpuTag ();
+  GtpuTag (uint32_t teid, InputNode node, QosType type, bool aggr);
 
   // Inherited from Tag
   virtual void Serialize (TagBuffer i) const;
@@ -62,7 +62,7 @@ public:
    */
   //\{
   Direction     GetDirection  (void) const;
-  EpcInputNode  GetInputNode  (void) const;
+  InputNode     GetInputNode  (void) const;
   QosType       GetQosType    (void) const;
   SliceId       GetSliceId    (void) const;
   uint32_t      GetTeid       (void) const;
@@ -75,7 +75,7 @@ public:
    * \param node The EPC input node.
    * \return The string with the EPC input node name.
    */
-  static std::string EpcInputNodeStr (EpcInputNode node);
+  static std::string InputNodeStr (InputNode node);
 
 private:
   /**
@@ -84,7 +84,7 @@ private:
    * \param type The QoS traffic type.
    * \param aggr True for aggregated traffic.
    */
-  void SetMetadata (EpcInputNode node, QosType type, bool aggr);
+  void SetMetadata (InputNode node, QosType type, bool aggr);
 
   uint8_t   m_meta;       //!< Packet metadata.
   uint32_t  m_teid;       //!< GTP teid.

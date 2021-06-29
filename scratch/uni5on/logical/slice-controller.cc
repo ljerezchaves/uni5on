@@ -25,7 +25,7 @@
 #include "../metadata/pgw-info.h"
 #include "../metadata/routing-info.h"
 #include "../metadata/ue-info.h"
-#include "gtp-tunnel-app.h"
+#include "gtpu-tunnel-app.h"
 #include "slice-network.h"
 #include "stateless-mme.h"
 

@@ -371,8 +371,8 @@ UeInfo::Classify (Ptr<Packet> packet)
   NS_LOG_FUNCTION (this << packet);
 
   // We hardcoded DOWNLINK direction since this function will only be used by
-  // the PgwTunnelApp to classify downlink packets when attaching the
-  // EpcGtpuTag. The effective GTP encapsulation is performed by OpenFlow rules
+  // the PgwuTunnelApp to classify downlink packets when attaching the
+  // GtpuTag. The effective GTP encapsulation is performed by OpenFlow rules
   // installed into P-GW TFT switches and can use a different teid value.
   return m_tftClassifier.Classify (packet, EpcTft::DOWNLINK);
 }

@@ -18,20 +18,20 @@
  * Author: Luciano Jerez Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef PGW_APP_H
-#define PGW_APP_H
+#ifndef PGWU_TUNNEL_APP_H
+#define PGWU_TUNNEL_APP_H
 
-#include "gtp-tunnel-app.h"
+#include "gtpu-tunnel-app.h"
 
 namespace ns3 {
 
 /**
  * \ingroup uni5onLogical
- * This is the GTP tunneling application for the P-GW. It extends the GTP
- * tunnel application for attach and remove the EpcGtpuTag tag on packets
- * entering/leaving the OpenFlow EPC backhaul network over S5 interface.
+ * This is the GTP tunneling application for the P-GWu. It extends the GTPu
+ * tunneling application to attach and remove the GtpuTag tag on packets
+ * entering/leaving the transport network over S5 interface.
  */
-class PgwTunnelApp : public GtpTunnelApp
+class PgwuTunnelApp : public GtpuTunnelApp
 {
 public:
   /**
@@ -39,9 +39,9 @@ public:
    * \param logicalPort The OpenFlow logical port device.
    * \param physicalPort The physical network device on node.
    */
-  PgwTunnelApp (Ptr<VirtualNetDevice> logicalPort,
-                Ptr<CsmaNetDevice> physicalDev);
-  virtual ~PgwTunnelApp ();  //!< Dummy destructor, see DoDispose.
+  PgwuTunnelApp (Ptr<VirtualNetDevice> logicalPort,
+                 Ptr<CsmaNetDevice> physicalDev);
+  virtual ~PgwuTunnelApp ();  //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
@@ -55,14 +55,14 @@ protected:
 
 private:
   /**
-   * Attach the EpcGtpuTag tag into packet and fire the S5Tx trace source.
+   * Attach the GtpuTag tag into packet and fire the S5Tx trace source.
    * \param packet The packet.
    * \param teid The tunnel TEID for this packet.
    */
   void AttachEpcGtpuTag (Ptr<Packet> packet, uint32_t teid);
 
   /**
-   * Fire the S5Rx trace source and remove the EpcGtpuTag tag from packet.
+   * Fire the S5Rx trace source and remove the GtpuTag tag from packet.
    * \param packet The packet.
    * \param teid The tunnel TEID for this packet.
    */
@@ -82,4 +82,4 @@ private:
 };
 
 } // namespace ns3
-#endif /* PGW_APP_H */
+#endif /* PGWU_TUNNEL_APP_H */

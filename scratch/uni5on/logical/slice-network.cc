@@ -24,8 +24,8 @@
 #include "../metadata/pgw-info.h"
 #include "../metadata/sgw-info.h"
 #include "../metadata/ue-info.h"
-#include "gtp-tunnel-app.h"
-#include "pgw-tunnel-app.h"
+#include "gtpu-tunnel-app.h"
+#include "pgwu-tunnel-app.h"
 #include "slice-controller.h"
 #include "slice-network.h"
 
@@ -475,7 +475,7 @@ SliceNetwork::CreatePgw (void)
   pgwS5PortDev->SetAddress (Mac48Address::Allocate ());
   Ptr<OFSwitch13Port> pgwS5Port = pgwMainOfDev->AddSwitchPort (pgwS5PortDev);
   pgwMainNode->AddApplication (
-    CreateObject<PgwTunnelApp> (pgwS5PortDev, pgwS5Dev));
+    CreateObject<PgwuTunnelApp> (pgwS5PortDev, pgwS5Dev));
 
   // Saving P-GW metadata.
   m_pgwInfo = CreateObject<PgwInfo> (
@@ -539,7 +539,7 @@ SliceNetwork::CreatePgw (void)
       pgwS5PortDev->SetAddress (Mac48Address::Allocate ());
       pgwS5Port = pgwTftOfDev->AddSwitchPort (pgwS5PortDev);
       pgwTftNode->AddApplication (
-        CreateObject<PgwTunnelApp> (pgwS5PortDev, pgwS5Dev));
+        CreateObject<PgwuTunnelApp> (pgwS5PortDev, pgwS5Dev));
 
       // Saving P-GW TFT metadata.
       m_pgwInfo->SaveSwitchInfo (
@@ -605,13 +605,13 @@ SliceNetwork::CreateSgw (void)
   sgwS1PortDev->SetAddress (Mac48Address::Allocate ());
   Ptr<OFSwitch13Port> sgwS1Port = m_sgwDevice->AddSwitchPort (sgwS1PortDev);
   m_sgwNode->AddApplication (
-    CreateObject<GtpTunnelApp> (sgwS1PortDev, sgwS1Dev));
+    CreateObject<GtpuTunnelApp> (sgwS1PortDev, sgwS1Dev));
 
   Ptr<VirtualNetDevice> sgwS5PortDev = CreateObject<VirtualNetDevice> ();
   sgwS5PortDev->SetAddress (Mac48Address::Allocate ());
   Ptr<OFSwitch13Port> sgwS5Port = m_sgwDevice->AddSwitchPort (sgwS5PortDev);
   m_sgwNode->AddApplication (
-    CreateObject<GtpTunnelApp> (sgwS5PortDev, sgwS5Dev));
+    CreateObject<GtpuTunnelApp> (sgwS5PortDev, sgwS5Dev));
 
   // Saving S-GW metadata.
   m_sgwInfo = CreateObject<SgwInfo> (

@@ -18,7 +18,7 @@
  * Author: Luciano Jerez Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include "epc-gtpu-tag.h"
+#include "gtpu-tag.h"
 
 // Metadata bitmap.
 #define META_NODE 0
@@ -27,17 +27,16 @@
 
 namespace ns3 {
 
-NS_OBJECT_ENSURE_REGISTERED (EpcGtpuTag);
+NS_OBJECT_ENSURE_REGISTERED (GtpuTag);
 
-EpcGtpuTag::EpcGtpuTag ()
+GtpuTag::GtpuTag ()
   : m_meta (0),
   m_teid (0),
   m_time (Simulator::Now ().GetTimeStep ())
 {
 }
 
-EpcGtpuTag::EpcGtpuTag (uint32_t teid, EpcInputNode node,
-                        QosType type, bool aggr)
+GtpuTag::GtpuTag (uint32_t teid, InputNode node, QosType type, bool aggr)
   : m_meta (0),
   m_teid (teid),
   m_time (Simulator::Now ().GetTimeStep ())
@@ -46,29 +45,29 @@ EpcGtpuTag::EpcGtpuTag (uint32_t teid, EpcInputNode node,
 }
 
 TypeId
-EpcGtpuTag::GetTypeId (void)
+GtpuTag::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::EpcGtpuTag")
+  static TypeId tid = TypeId ("ns3::GtpuTag")
     .SetParent<Tag> ()
-    .AddConstructor<EpcGtpuTag> ()
+    .AddConstructor<GtpuTag> ()
   ;
   return tid;
 }
 
 TypeId
-EpcGtpuTag::GetInstanceTypeId (void) const
+GtpuTag::GetInstanceTypeId (void) const
 {
   return GetTypeId ();
 }
 
 uint32_t
-EpcGtpuTag::GetSerializedSize (void) const
+GtpuTag::GetSerializedSize (void) const
 {
   return 13;
 }
 
 void
-EpcGtpuTag::Serialize (TagBuffer i) const
+GtpuTag::Serialize (TagBuffer i) const
 {
   i.WriteU8  (m_meta);
   i.WriteU32 (m_teid);
@@ -76,7 +75,7 @@ EpcGtpuTag::Serialize (TagBuffer i) const
 }
 
 void
-EpcGtpuTag::Deserialize (TagBuffer i)
+GtpuTag::Deserialize (TagBuffer i)
 {
   m_meta = i.ReadU8 ();
   m_teid = i.ReadU32 ();
@@ -84,31 +83,31 @@ EpcGtpuTag::Deserialize (TagBuffer i)
 }
 
 void
-EpcGtpuTag::Print (std::ostream &os) const
+GtpuTag::Print (std::ostream &os) const
 {
   os << " teid=" << m_teid
-     << " node=" << EpcInputNodeStr (GetInputNode ())
+     << " node=" << InputNodeStr (GetInputNode ())
      << " type=" << QosTypeStr (GetQosType ())
      << " aggr=" << (IsAggregated () ? "true" : "false")
      << " time=" << m_time;
 }
 
 Direction
-EpcGtpuTag::GetDirection () const
+GtpuTag::GetDirection () const
 {
-  return GetInputNode () == EpcGtpuTag::PGW ?
+  return GetInputNode () == GtpuTag::PGW ?
          Direction::DLINK : Direction::ULINK;
 }
 
-EpcGtpuTag::EpcInputNode
-EpcGtpuTag::GetInputNode () const
+GtpuTag::InputNode
+GtpuTag::GetInputNode () const
 {
   uint8_t node = (m_meta & (1U << META_NODE));
-  return static_cast<EpcGtpuTag::EpcInputNode> (node >> META_NODE);
+  return static_cast<GtpuTag::InputNode> (node >> META_NODE);
 }
 
 QosType
-EpcGtpuTag::GetQosType () const
+GtpuTag::GetQosType () const
 {
   if (IsAggregated ())
     {
@@ -120,37 +119,37 @@ EpcGtpuTag::GetQosType () const
 }
 
 SliceId
-EpcGtpuTag::GetSliceId () const
+GtpuTag::GetSliceId () const
 {
   return TeidGetSliceId (m_teid);
 }
 
 uint32_t
-EpcGtpuTag::GetTeid () const
+GtpuTag::GetTeid () const
 {
   return m_teid;
 }
 
 Time
-EpcGtpuTag::GetTimestamp () const
+GtpuTag::GetTimestamp () const
 {
   return Time (m_time);
 }
 
 bool
-EpcGtpuTag::IsAggregated () const
+GtpuTag::IsAggregated () const
 {
   return (m_meta & (1U << META_AGGR));
 }
 
 std::string
-EpcGtpuTag::EpcInputNodeStr (EpcInputNode node)
+GtpuTag::InputNodeStr (InputNode node)
 {
   switch (node)
     {
-    case EpcInputNode::ENB:
+    case InputNode::ENB:
       return "enb";
-    case EpcInputNode::PGW:
+    case InputNode::PGW:
       return "pgw";
     default:
       return std::string ();
@@ -158,7 +157,7 @@ EpcGtpuTag::EpcInputNodeStr (EpcInputNode node)
 }
 
 void
-EpcGtpuTag::SetMetadata (EpcInputNode node, QosType type, bool aggr)
+GtpuTag::SetMetadata (InputNode node, QosType type, bool aggr)
 {
   NS_ASSERT_MSG (node <= 0x01, "Input node cannot exceed 1 bit.");
   NS_ASSERT_MSG (type <= 0x01, "QoS type cannot exceed 1 bit.");

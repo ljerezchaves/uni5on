@@ -46,7 +46,7 @@ namespace ns3 {
  * received from the GTP tunnel, this application attaches the TunnelId tag
  * only with the GTP TEID value.
  */
-class GtpTunnelApp : public Application
+class GtpuTunnelApp : public Application
 {
 public:
   /**
@@ -54,9 +54,9 @@ public:
    * \param logicalPort The OpenFlow logical port device.
    * \param physicalPort The physical network device on node.
    */
-  GtpTunnelApp (Ptr<VirtualNetDevice> logicalPort,
-                Ptr<CsmaNetDevice> physicalDev);
-  virtual ~GtpTunnelApp ();  //!< Dummy destructor, see DoDispose.
+  GtpuTunnelApp (Ptr<VirtualNetDevice> logicalPort,
+                 Ptr<CsmaNetDevice> physicalDev);
+  virtual ~GtpuTunnelApp ();  //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.

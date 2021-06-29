@@ -24,7 +24,7 @@
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
 #include "flow-stats-calculator.h"
-#include "../logical/epc-gtpu-tag.h"
+#include "../logical/gtpu-tag.h"
 
 namespace ns3 {
 

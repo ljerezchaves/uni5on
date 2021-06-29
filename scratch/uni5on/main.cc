@@ -402,15 +402,15 @@ EnableVerbose (bool enable)
       LogComponentEnable ("RadioNetwork",             logLevelWarnInfo);
       LogComponentEnable ("RingController",           logLevelWarnInfo);
       LogComponentEnable ("RingNetwork",              logLevelWarnInfo);
-      LogComponentEnable ("EnbApplication",     logLevelWarnInfo);
+      LogComponentEnable ("EnbApplication",           logLevelWarnInfo);
       LogComponentEnable ("Uni5onQosQueue",           logLevelWarnInfo);
 
       // Logical components.
-      LogComponentEnable ("GtpTunnelApp",             logLevelWarnInfo);
-      LogComponentEnable ("PgwTunnelApp",             logLevelWarnInfo);
+      LogComponentEnable ("GtpuTunnelApp",            logLevelWarnInfo);
+      LogComponentEnable ("PgwuTunnelApp",            logLevelWarnInfo);
       LogComponentEnable ("SliceController",          logLevelWarnInfo);
       LogComponentEnable ("SliceNetwork",             logLevelWarnInfo);
-      LogComponentEnable ("StatelessMme",                logLevelWarnInfo);
+      LogComponentEnable ("StatelessMme",             logLevelWarnInfo);
       LogComponentEnable ("TrafficManager",           logLevelWarnInfo);
 
       // Metadata components.

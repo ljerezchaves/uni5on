@@ -46,10 +46,10 @@ BackhaulStatsCalculator::BackhaulStatsCalculator ()
     "/NodeList/*/ApplicationList/*/$ns3::EnbApplication/S1uTx",
     MakeCallback (&BackhaulStatsCalculator::EpcInputPacket, this));
   Config::Connect (
-    "/NodeList/*/ApplicationList/*/$ns3::PgwTunnelApp/S5Rx",
+    "/NodeList/*/ApplicationList/*/$ns3::PgwuTunnelApp/S5Rx",
     MakeCallback (&BackhaulStatsCalculator::EpcOutputPacket, this));
   Config::Connect (
-    "/NodeList/*/ApplicationList/*/$ns3::PgwTunnelApp/S5Tx",
+    "/NodeList/*/ApplicationList/*/$ns3::PgwuTunnelApp/S5Tx",
     MakeCallback (&BackhaulStatsCalculator::EpcInputPacket, this));
   Config::Connect (
     "/NodeList/*/$ns3::OFSwitch13Device/OverloadDrop",
@@ -227,7 +227,7 @@ BackhaulStatsCalculator::OverloadDropPacket (std::string context,
 {
   NS_LOG_FUNCTION (this << context << packet);
 
-  EpcGtpuTag gtpuTag;
+  GtpuTag gtpuTag;
   Ptr<FlowStatsCalculator> sliStats;
   Ptr<FlowStatsCalculator> aggStats;
   if (packet->PeekPacketTag (gtpuTag))
@@ -246,7 +246,7 @@ BackhaulStatsCalculator::OverloadDropPacket (std::string context,
     {
       // This only happens when a packet is dropped at the P-GW, before
       // entering the TFT logical port that is responsible for attaching the
-      // EpcGtpuTag and notifying that the packet is entering the EPC.
+      // GtpuTag and notifying that the packet is entering the EPC.
       // To keep consistent log results, we are doing this manually here.
       uint32_t teid = PgwTftClassify (packet);
       if (teid)
@@ -273,7 +273,7 @@ BackhaulStatsCalculator::MeterDropPacket (
 {
   NS_LOG_FUNCTION (this << context << packet << meterId);
 
-  EpcGtpuTag gtpuTag;
+  GtpuTag gtpuTag;
   Ptr<FlowStatsCalculator> sliStats;
   Ptr<FlowStatsCalculator> aggStats;
   if (packet->PeekPacketTag (gtpuTag))
@@ -299,7 +299,7 @@ BackhaulStatsCalculator::MeterDropPacket (
     {
       // This only happens when a packet is dropped at the P-GW, before
       // entering the TFT logical port that is responsible for attaching the
-      // EpcGtpuTag and notifying that the packet is entering the EPC.
+      // GtpuTag and notifying that the packet is entering the EPC.
       // To keep consistent log results, we are doing this manually here.
       // It must be a packed dropped by a traffic meter because this is the
       // only type of meters that we can have in the P-GW TFT switches.
@@ -328,7 +328,7 @@ BackhaulStatsCalculator::QueueDropPacket (std::string context,
 {
   NS_LOG_FUNCTION (this << context << packet);
 
-  EpcGtpuTag gtpuTag;
+  GtpuTag gtpuTag;
   Ptr<FlowStatsCalculator> sliStats;
   Ptr<FlowStatsCalculator> aggStats;
   if (packet->PeekPacketTag (gtpuTag))
@@ -347,7 +347,7 @@ BackhaulStatsCalculator::QueueDropPacket (std::string context,
     {
       // This only happens when a packet is dropped at the P-GW, before
       // entering the TFT logical port that is responsible for attaching the
-      // EpcGtpuTag and notifying that the packet is entering the EPC.
+      // GtpuTag and notifying that the packet is entering the EPC.
       // To keep consistent log results, we are doing this manually here.
       uint32_t teid = PgwTftClassify (packet);
       if (teid)
@@ -375,7 +375,7 @@ BackhaulStatsCalculator::TableDropPacket (
   NS_LOG_FUNCTION (this << context << packet <<
                    static_cast<uint16_t> (tableId));
 
-  EpcGtpuTag gtpuTag;
+  GtpuTag gtpuTag;
   Ptr<FlowStatsCalculator> sliStats;
   Ptr<FlowStatsCalculator> aggStats;
   if (packet->PeekPacketTag (gtpuTag))
@@ -394,7 +394,7 @@ BackhaulStatsCalculator::TableDropPacket (
     {
       // This only happens when a packet is dropped at the P-GW, before
       // entering the TFT logical port that is responsible for attaching the
-      // EpcGtpuTag and notifying that the packet is entering the EPC.
+      // GtpuTag and notifying that the packet is entering the EPC.
       // To keep consistent log results, we are doing this manually here.
       uint32_t teid = PgwTftClassify (packet);
       if (teid)
@@ -421,7 +421,7 @@ BackhaulStatsCalculator::EpcInputPacket (std::string context,
 {
   NS_LOG_FUNCTION (this << context << packet);
 
-  EpcGtpuTag gtpuTag;
+  GtpuTag gtpuTag;
   Ptr<FlowStatsCalculator> sliStats;
   Ptr<FlowStatsCalculator> aggStats;
   if (packet->PeekPacketTag (gtpuTag))
@@ -444,7 +444,7 @@ BackhaulStatsCalculator::EpcOutputPacket (std::string context,
 {
   NS_LOG_FUNCTION (this << context << packet);
 
-  EpcGtpuTag gtpuTag;
+  GtpuTag gtpuTag;
   Ptr<FlowStatsCalculator> sliStats;
   Ptr<FlowStatsCalculator> aggStats;
   if (packet->PeekPacketTag (gtpuTag))

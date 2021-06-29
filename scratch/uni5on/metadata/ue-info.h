@@ -50,7 +50,7 @@ typedef std::map<uint8_t, Ptr<RoutingInfo>> BidRInfoMap_t;
  */
 class UeInfo : public Object
 {
-  friend class PgwTunnelApp;
+  friend class PgwuTunnelApp;
   friend class RoutingInfo;
   friend class SliceController;
   friend class ScenarioHelper;
