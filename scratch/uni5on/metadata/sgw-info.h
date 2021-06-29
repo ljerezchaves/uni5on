@@ -133,7 +133,7 @@ private:
   Ipv4Address            m_s5Addr;               //!< S-GW S5 IP address.
   uint32_t               m_s5PortNo;             //!< S-GW S5 port no.
   uint32_t               m_sgwId;                //!< S-GW ID.
-  Ptr<SliceController>   m_sliceCtrl;            //!< LTE logical slice ctrl.
+  Ptr<SliceController>   m_sliceCtrl;            //!< Slice controller.
 };
 
 /**

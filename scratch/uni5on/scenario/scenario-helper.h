@@ -103,8 +103,8 @@ public:
   bool HasPcapFlag (uint8_t config, PcapConfig flag) const;
 
   /**
-   * Print the LTE radio environment map.
-   * \param enable If true, print the LTE REM.
+   * Print the radio environment map.
+   * \param enable If true, print the REM.
    */
   void PrintLteRem (bool enable);
 
@@ -141,7 +141,7 @@ private:
                        ObjectFactory &traffic) const;
 
   Ptr<RingNetwork>          m_backhaul;         //!< The backhaul network.
-  Ptr<RadioNetwork>         m_radio;            //!< The LTE RAN network.
+  Ptr<RadioNetwork>         m_radio;            //!< The RAN network.
   Ptr<StatelessMme>         m_mme;              //!< The MME entity.
 
   // MBB network slice.

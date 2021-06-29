@@ -69,9 +69,9 @@ public:
                                        MobilityHelper mobilityHelper);
 
   /**
-   * Get the LTE RAN coverage area of a specific cell site or the entire RAN
+   * Get the RAN coverage area of a specific cell site or the entire RAN
    * network, considering the EnbMargin attribute.
-   * \param cellSiteId The ID of any LTE cell site (starting at 1). When left
+   * \param cellSiteId The ID of any cell site (starting at 1). When left
    *        to 0, the coverage area of the entire RAN network will be returned.
    * \return The coverage area.
    */
@@ -87,7 +87,7 @@ public:
    * Create a random box position allocator that randomly spreads UE nodes
    * within the coverage area of a specific cell site ID or the entire RAN
    * network.
-   * \param cellSiteId The ID of any LTE cell site (starting at 1). When left
+   * \param cellSiteId The ID of any cell site (starting at 1). When left
    *        to 0, the coverage area of the entire RAN network will be used.
    * \return The position allocator.
    */
@@ -95,7 +95,7 @@ public:
     uint16_t cellSiteId = 0) const;
 
   /**
-   * Print LTE radio environment map.
+   * Print the radio environment map.
    */
   void PrintRadioEnvironmentMap (void);
 
@@ -112,16 +112,16 @@ private:
   double              m_ueHeight;       //!< UE height.
   bool                m_handover;       //!< Enable UE handover.
   bool                m_lteTrace;       //!< Enable LTE ASCII traces.
-  std::string         m_remFilename;    //!< LTE REM filename.
+  std::string         m_remFilename;    //!< REM filename.
   NodeContainer       m_enbNodes;       //!< eNB nodes.
   NetDeviceContainer  m_enbDevices;     //!< eNB devices.
   NodeContainer       m_ueNodes;        //!< UE nodes.
   NetDeviceContainer  m_ueDevices;      //!< UE devices.
-  Rectangle           m_ranCoverArea;   //!< LTE radio coverage area.
+  Rectangle           m_ranCoverArea;   //!< Radio coverage area.
 
   Ptr<LteHexGridEnbTopologyHelper> m_topoHelper;    //!< Grid topology helper.
   Ptr<RadioEnvironmentMapHelper>   m_remHelper;     //!< Radio map helper.
-  Ptr<LteHelper>                   m_lteHelper;     //!< LTE radio helper.
+  Ptr<LteHelper>                   m_lteHelper;     //!< LTE helper.
   Ptr<EpcHelper>                   m_epcHelper;     //!< EPC helper.
 };
 

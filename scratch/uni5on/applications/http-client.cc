@@ -60,8 +60,8 @@ HttpClient::HttpClient ()
   m_readingTimeStream->SetAttribute ("Sigma", DoubleValue (2.7731));
 
   // The above model provides a lot of reading times < 1sec, which is not soo
-  // good for simulations in LTE EPC + SDN scenarios. So, we are incresing the
-  // reading time by a some uniform random value in [0,10] secs.
+  // good for simulations in our scenario. So, we are incresing the reading time
+  // by a some uniform random value in [0,10] secs.
   m_readingTimeAdjustStream = CreateObject<UniformRandomVariable> ();
   m_readingTimeAdjustStream->SetAttribute ("Min", DoubleValue (0.));
   m_readingTimeAdjustStream->SetAttribute ("Max", DoubleValue (10.));

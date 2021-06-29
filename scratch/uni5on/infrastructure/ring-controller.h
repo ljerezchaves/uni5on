@@ -90,14 +90,14 @@ protected:
 
 private:
   /**
-   * Check the available bit rate for this bearer for given LTE interface. This
+   * Check the available bit rate for this bearer for given interface. This
    * method checks for "doubled" resources on overlapping links.
    * \param ringInfo The ring routing information.
-   * \param iface The LTE logical interface.
+   * \param iface The logical interface.
    * \param overlap The optional overlapping links.
    * \return True if succeeded, false otherwise.
    */
-  bool BitRateRequest (Ptr<RingInfo> ringInfo, LteIface iface,
+  bool BitRateRequest (Ptr<RingInfo> ringInfo, EpsIface iface,
                        LinkInfoSet_t *overlap = 0) const;
 
   /**
@@ -121,12 +121,12 @@ private:
                        double blockThs, LinkInfoSet_t *overlap = 0) const;
 
   /**
-   * Reserve the bit rate for this bearer for the given LTE logical interface.
+   * Reserve the bit rate for this bearer for the given logical interface.
    * \param ringInfo The ring routing information.
-   * \param iface The LTE logical interface.
+   * \param iface The logical interface.
    * \return True if succeeded, false otherwise.
    */
-  bool BitRateReserve (Ptr<RingInfo> ringInfo, LteIface iface);
+  bool BitRateReserve (Ptr<RingInfo> ringInfo, EpsIface iface);
 
   /**
    * Reserve the forward and backward bit rate on links from the source to the
@@ -144,12 +144,12 @@ private:
                        RingInfo::RingPath path, SliceId slice);
 
   /**
-   * Release the bit rate for this bearer for the given LTE logical interface.
+   * Release the bit rate for this bearer for the given logical interface.
    * \param ringInfo The ring routing information.
-   * \param iface The LTE logical interface.
+   * \param iface The logical interface.
    * \return True if succeeded, false otherwise.
    */
-  bool BitRateRelease (Ptr<RingInfo> ringInfo, LteIface iface);
+  bool BitRateRelease (Ptr<RingInfo> ringInfo, EpsIface iface);
 
   /**
    * Release the forward and backward bit rate on links from the source to the
@@ -175,12 +175,12 @@ private:
   void CreateSpanningTree (void);
 
   /**
-   * Get the backhaul lInfo pointers for the given LTE interface.
+   * Get the backhaul lInfo pointers for the given logical interface.
    * \param ringInfo The ring routing information.
-   * \param iface The LTE logical interface.
+   * \param iface The logical interface.
    * \param links The set of links to populate.
    */
-  void GetLinkSet (Ptr<RingInfo> ringInfo, LteIface iface,
+  void GetLinkSet (Ptr<RingInfo> ringInfo, EpsIface iface,
                    LinkInfoSet_t *links) const;
 
   /**
@@ -213,23 +213,23 @@ private:
 
   /**
    * Check for the available resources on the backhaul infrastructure for the
-   * given LTE interface. When any of the requested resources is not available,
+   * given interface. When any of the requested resources is not available,
    * this method must set the routing information with the block reason.
    * \param ringInfo The ring routing information.
-   * \param iface The LTE logical interface.
+   * \param iface The logical interface.
    * \param overlap The optional overlapping links.
    * \return True if succeeded, false otherwise.
    */
-  bool HasAvailableResources (Ptr<RingInfo> ringInfo, LteIface iface,
+  bool HasAvailableResources (Ptr<RingInfo> ringInfo, EpsIface iface,
                               LinkInfoSet_t *overlap = 0) const;
 
   /**
-   * Install forwarding rules on switches for the given LTE interface.
+   * Install forwarding rules on switches for the given logical interface.
    * \param ringInfo The ring routing information.
-   * \param iface The LTE logical interface.
+   * \param iface The logical interface.
    * \return True if succeeded, false otherwise.
    */
-  bool RulesInstall (Ptr<RingInfo> ringInfo, LteIface iface);
+  bool RulesInstall (Ptr<RingInfo> ringInfo, EpsIface iface);
 
   /**
    * Install forwarding rules on switches from the source to the destination
@@ -249,30 +249,30 @@ private:
                      uint32_t meter, std::string cmdStr);
 
   /**
-   * Remove forwarding rules from switches for the given LTE interface.
+   * Remove forwarding rules from switches for the given logical interface.
    * \param ringInfo The ring routing information.
-   * \param iface The LTE logical interface.
+   * \param iface The logical interface.
    * \return True if succeeded, false otherwise.
    */
-  bool RulesRemove (Ptr<RingInfo> ringInfo, LteIface iface);
+  bool RulesRemove (Ptr<RingInfo> ringInfo, EpsIface iface);
 
   /**
-   * Update forwarding rules on switches for the given LTE interface after a
+   * Update forwarding rules on switches for the given logical interface after a
    * successful handover procedure.
    * \param ringInfo The ring routing information.
-   * \param iface The LTE logical interface.
+   * \param iface The logical interface.
    * \param dstEnbInfo The destination eNB after the handover procedure.
    * \return True if succeeded, false otherwise.
    */
-  bool RulesUpdate (Ptr<RingInfo> ringInfo, LteIface iface,
+  bool RulesUpdate (Ptr<RingInfo> ringInfo, EpsIface iface,
                     Ptr<EnbInfo> dstEnbInfo);
 
   /**
    * Set the default ring routing paths to the shortest ones.
    * \param ringInfo The ring routing information.
-   * \param iface The LTE logical interface.
+   * \param iface The logical interface.
    */
-  void SetShortestPath (Ptr<RingInfo> ringInfo, LteIface iface) const;
+  void SetShortestPath (Ptr<RingInfo> ringInfo, EpsIface iface) const;
 
   /**
    * Apply the infrastructure inter-slicing OpenFlow meters.
@@ -282,12 +282,12 @@ private:
   void SlicingMeterApply (Ptr<const RemoteSwitch> swtch, SliceId slice);
 
   /**
-   * Check for the CPU usage on switches for the given LTE interface.
+   * Check for the CPU usage on switches for the given logical interface.
    * \param ringInfo The ring routing information.
-   * \param iface The LTE logical interface.
+   * \param iface The logical interface.
    * \return True if succeeded, false otherwise.
    */
-  bool SwitchCpuRequest (Ptr<RingInfo> ringInfo, LteIface iface) const;
+  bool SwitchCpuRequest (Ptr<RingInfo> ringInfo, EpsIface iface) const;
 
   /**
    * Check for the CPU usage on switches from the source to the destination
@@ -303,12 +303,12 @@ private:
                          RingInfo::RingPath path, double blockThs) const;
 
   /**
-   * Check for the flow table usage on switches for the given LTE interface.
+   * Check for the flow table usage on switches for the given logical interface.
    * \param ringInfo The ring routing information.
-   * \param iface The LTE logical interface.
+   * \param iface The logical interface.
    * \return True if succeeded, false otherwise.
    */
-  bool SwitchTableRequest (Ptr<RingInfo> ringInfo, LteIface iface) const;
+  bool SwitchTableRequest (Ptr<RingInfo> ringInfo, EpsIface iface) const;
 
   /**
    * Check for the flow table usage on switches from the source to the

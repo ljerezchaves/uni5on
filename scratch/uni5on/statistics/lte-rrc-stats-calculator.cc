@@ -120,19 +120,19 @@ LteRrcStatsCalculator::GetTypeId (void)
     .SetParent<Object> ()
     .AddConstructor<LteRrcStatsCalculator> ()
     .AddAttribute ("HvoStatsFilename",
-                   "Filename for LTE UE handover statistics.",
+                   "Filename for RRC handover statistics.",
                    StringValue ("rrc-handover"),
                    MakeStringAccessor (
                      &LteRrcStatsCalculator::m_hvoFilename),
                    MakeStringChecker ())
     .AddAttribute ("MobStatsFilename",
-                   "Filename for LTE UE mobility statistics.",
+                   "Filename for UE mobility statistics.",
                    StringValue ("ue-mobility"),
                    MakeStringAccessor (
                      &LteRrcStatsCalculator::m_mobFilename),
                    MakeStringChecker ())
     .AddAttribute ("RrcStatsFilename",
-                   "Filename for LTE UE RRC procedures statistics.",
+                   "Filename for RRC procedures statistics.",
                    StringValue ("rrc-procedures"),
                    MakeStringAccessor (
                      &LteRrcStatsCalculator::m_rrcFilename),

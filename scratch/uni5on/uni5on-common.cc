@@ -48,20 +48,20 @@ DirectionStr (Direction dir)
 }
 
 std::string
-LteIfaceStr (LteIface iface)
+EpsIfaceStr (EpsIface iface)
 {
   switch (iface)
     {
-    case LteIface::S1:
+    case EpsIface::S1:
       return "s1u";
-    case LteIface::S5:
+    case EpsIface::S5:
       return "s5";
-    case LteIface::X2:
+    case EpsIface::X2:
       return "x2";
-    case LteIface::SGI:
+    case EpsIface::SGI:
       return "sgi";
     default:
-      NS_LOG_ERROR ("Invalid LTE logical interface.");
+      NS_LOG_ERROR ("Invalid logical interface.");
       return std::string ();
     }
 }
@@ -95,7 +95,7 @@ QosTypeStr (QosType type)
     case QosType::BOTH:
       return "Both";
     default:
-      NS_LOG_ERROR ("Invalid LTE QoS traffic type.");
+      NS_LOG_ERROR ("Invalid QoS traffic type.");
       return std::string ();
     }
 }
@@ -273,9 +273,9 @@ DscpTypeStr (Ipv4Header::DscpType dscp)
 }
 
 uint64_t
-CookieCreate (LteIface iface, uint16_t prio, uint32_t teid)
+CookieCreate (EpsIface iface, uint16_t prio, uint32_t teid)
 {
-  NS_ASSERT_MSG (iface <= 0xF, "LTE interface cannot exceed 4 bits.");
+  NS_ASSERT_MSG (iface <= 0xF, "Interface cannot exceed 4 bits.");
   NS_ASSERT_MSG (prio <= 0xFFFF, "Rule priority cannot exceed 16 bits.");
   NS_ASSERT_MSG (teid <= 0xFFFFFFFF, "TEID cannot exceed 32 bits.");
 
@@ -304,12 +304,12 @@ CookieGetPriority (uint64_t cookie)
   return static_cast<uint16_t> (cookie);
 }
 
-LteIface
+EpsIface
 CookieGetIface (uint64_t cookie)
 {
   cookie &= COOKIE_IFACE_MASK;
   cookie >>= 48;
-  return static_cast<LteIface> (cookie);
+  return static_cast<EpsIface> (cookie);
 }
 
 uint32_t
@@ -353,9 +353,9 @@ TeidGetUeImsi (uint32_t teid)
 }
 
 uint32_t
-MeterIdMbrCreate (LteIface iface, uint32_t teid)
+MeterIdMbrCreate (EpsIface iface, uint32_t teid)
 {
-  NS_ASSERT_MSG (iface <= 0x3, "LTE interface cannot exceed 2 bits.");
+  NS_ASSERT_MSG (iface <= 0x3, "Interface cannot exceed 2 bits.");
   NS_ASSERT_MSG (teid <= 0xFFFFFFF, "TEID cannot exceed 28 bits.");
 
   uint32_t meterId = 0x2;

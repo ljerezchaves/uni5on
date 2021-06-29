@@ -105,7 +105,7 @@ TrafficHelper::GetTypeId (void)
                    MakePointerChecker<SliceNetwork> ())
 
     // Infrastructure.
-    .AddAttribute ("RadioNet", "The LTE RAN network pointer.",
+    .AddAttribute ("RadioNet", "The RAN network pointer.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    PointerValue (),
                    MakePointerAccessor (&TrafficHelper::m_radio),

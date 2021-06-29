@@ -206,7 +206,7 @@ RadioNetwork::PrintRadioEnvironmentMap (void)
 {
   NS_LOG_FUNCTION (this);
 
-  NS_LOG_INFO ("Printing LTE radio environment map...");
+  NS_LOG_INFO ("Printing radio environment map...");
 
   // Force UE initialization so we don't have to wait for nodes to start before
   // positions are assigned (which is needed to output node positions to plot).
@@ -241,7 +241,7 @@ RadioNetwork::PrintRadioEnvironmentMap (void)
   enbDevice->GetAttribute ("DlBandwidth", dlBandwidthValue);
   m_remHelper->SetAttribute ("Bandwidth", dlBandwidthValue);
 
-  // Adjust the LTE RAN coverage area.
+  // Adjust the RAN coverage area.
   Rectangle area = GetCoverageArea ();
   m_remHelper->SetAttribute ("XMin", DoubleValue (area.xMin));
   m_remHelper->SetAttribute ("XMax", DoubleValue (area.xMax));
@@ -423,7 +423,7 @@ RadioNetwork::NotifyConstructionCompleted ()
   // Create an X2 interface between all the eNBs in a given set.
   m_lteHelper->AddX2Interface (m_enbNodes);
 
-  // Identify the LTE radio coverage area based on eNB nodes positions.
+  // Identify the radio coverage area based on eNB nodes positions.
   std::vector<double> xPos, yPos;
   for (NodeList::Iterator it = m_enbNodes.Begin ();
        it != m_enbNodes.End (); it++)

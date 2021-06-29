@@ -217,7 +217,7 @@ private:
   std::vector<Ipv4Address>  m_s5Addrs;            //!< S5 dev IP addresses.
   std::vector<uint32_t>     m_s5PortNos;          //!< S5 port numbers.
   uint32_t                  m_sgiPortNo;          //!< SGi port number.
-  Ptr<SliceController>      m_sliceCtrl;          //!< LTE logical slice ctrl.
+  Ptr<SliceController>      m_sliceCtrl;          //!< Slice controller.
   std::vector<uint32_t>     m_tftToMainPortNos;   //!< TFTs port nos to main.
 
   // TFT adaptive mechanism.

@@ -173,7 +173,7 @@ private:
   Time                      m_startTime;      //!< App start time.
   Time                      m_stopTime;       //!< App stop time.
 
-  // LTE EPS metadata.
+  // EPS bearer metadata.
   EpsBearer                 m_bearer;         //!< EPS bearer info.
   uint8_t                   m_bearerId;       //!< EPS bearer ID.
   uint32_t                  m_teid;           //!< GTP TEID.

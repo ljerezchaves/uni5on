@@ -74,14 +74,14 @@ public:
    * Attach the EPC node to the OpenFlow backhaul network.
    * \param epcNode The eNB node.
    * \param swIdx The switch index at which the EPC node should be connected.
-   * \param iface The LTE logical interface for this connection.
-   * \param ifaceStr Custom name for this LTE logical interface. When this
+   * \param iface The logical interface for this connection.
+   * \param ifaceStr Custom name for this logical interface. When this
    *        string is empty, the default name is used.
    * \return The pair with the network device created at the EPC node and the
    *         port device create at the backhaul switch.
    */
   virtual std::pair<Ptr<CsmaNetDevice>, Ptr<OFSwitch13Port>>
-  AttachEpcNode (Ptr<Node> enbNode, uint16_t swIdx, LteIface iface,
+  AttachEpcNode (Ptr<Node> enbNode, uint16_t swIdx, EpsIface iface,
                  std::string ifaceStr = std::string ());
 
   /**

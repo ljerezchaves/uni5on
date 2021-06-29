@@ -58,14 +58,14 @@ SliceNetwork::GetTypeId (void)
     .AddConstructor<SliceNetwork> ()
 
     // Slice.
-    .AddAttribute ("SliceId", "The LTE logical slice identification.",
+    .AddAttribute ("SliceId", "The logical slice identification.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    EnumValue (SliceId::UNKN),
                    MakeEnumAccessor (&SliceNetwork::m_sliceId),
                    MakeEnumChecker (SliceId::MBB, SliceIdStr (SliceId::MBB),
                                     SliceId::MTC, SliceIdStr (SliceId::MTC),
                                     SliceId::TMP, SliceIdStr (SliceId::TMP)))
-    .AddAttribute ("SliceCtrl", "The LTE logical slice controller pointer.",
+    .AddAttribute ("SliceCtrl", "The logical slice controller pointer.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    PointerValue (),
                    MakePointerAccessor (&SliceNetwork::m_controllerApp),
@@ -77,7 +77,7 @@ SliceNetwork::GetTypeId (void)
                    PointerValue (),
                    MakePointerAccessor (&SliceNetwork::m_backhaul),
                    MakePointerChecker<BackhaulNetwork> ())
-    .AddAttribute ("RadioNet", "The LTE RAN network pointer.",
+    .AddAttribute ("RadioNet", "The RAN network pointer.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    PointerValue (),
                    MakePointerAccessor (&SliceNetwork::m_radio),
@@ -311,12 +311,12 @@ SliceNetwork::NotifyConstructionCompleted (void)
   NS_ABORT_MSG_IF (m_sliceId == SliceId::UNKN, "Unknown slice ID.");
   NS_ABORT_MSG_IF (!m_controllerApp, "No slice controller application.");
   NS_ABORT_MSG_IF (!m_backhaul, "No backhaul network.");
-  NS_ABORT_MSG_IF (!m_radio, "No LTE RAN network.");
+  NS_ABORT_MSG_IF (!m_radio, "No RAN network.");
   NS_ABORT_MSG_IF (m_controllerApp->GetSliceId () != m_sliceId,
                    "Incompatible slice IDs for controller and network.");
 
   m_sliceIdStr = SliceIdStr (m_sliceId);
-  NS_LOG_INFO ("Creating LTE logical network " << m_sliceIdStr <<
+  NS_LOG_INFO ("Creating logical network " << m_sliceIdStr <<
                " slice with " << m_nUes << " UEs.");
 
   // Configure IP address helpers.
@@ -340,7 +340,7 @@ SliceNetwork::NotifyConstructionCompleted (void)
   InternetStackHelper internet;
   internet.Install (m_webNode);
 
-  // Create and configure the logical LTE network.
+  // Create and configure the logical network.
   CreatePgw ();
   CreateSgw ();
   CreateUes ();
@@ -440,7 +440,7 @@ SliceNetwork::CreatePgw (void)
   m_webDevices.Add (devices);
 
   // Set device names for pcap files.
-  std::string tempStr = "~" + LteIfaceStr (LteIface::SGI) + "~";
+  std::string tempStr = "~" + EpsIfaceStr (EpsIface::SGI) + "~";
   SetDeviceNames (pgwSgiDev, webSgiDev, tempStr);
 
   // Add the pgwSgiDev as physical port on the P-GW main OpenFlow switch.
@@ -453,7 +453,7 @@ SliceNetwork::CreatePgw (void)
   NS_LOG_INFO ("P-GW " << pgwMainNode << " attached to the sgi interface " <<
                "with IP " << Ipv4AddressHelper::GetAddress (pgwSgiDev));
 
-  // Define static routes at the web server to the LTE network.
+  // Define static routes at the web server to the logical network.
   Ipv4StaticRoutingHelper ipv4RoutingHelper;
   Ptr<Ipv4StaticRouting> webHostStaticRouting =
     ipv4RoutingHelper.GetStaticRouting (m_webNode->GetObject<Ipv4> ());
@@ -465,7 +465,7 @@ SliceNetwork::CreatePgw (void)
   Ptr<OFSwitch13Port> infraSwS5Port;
   Ipv4Address pgwS5Addr;
   std::tie (pgwS5Dev, infraSwS5Port) = m_backhaul->AttachEpcNode (
-      pgwMainNode, m_pgwInfraSwIdx, LteIface::S5);
+      pgwMainNode, m_pgwInfraSwIdx, EpsIface::S5);
   pgwS5Addr = Ipv4AddressHelper::GetAddress (pgwS5Dev);
   NS_LOG_INFO ("P-GW " << pgwId << " main switch dpId " << pgwDpId <<
                " attached to the s5 interface with IP " << pgwS5Addr);
@@ -529,7 +529,7 @@ SliceNetwork::CreatePgw (void)
 
       // Connect the P-GW TFT node to the OpenFlow backhaul node.
       std::tie (pgwS5Dev, infraSwS5Port) = m_backhaul->AttachEpcNode (
-          pgwTftNode, m_pgwInfraSwIdx, LteIface::S5);
+          pgwTftNode, m_pgwInfraSwIdx, EpsIface::S5);
       pgwS5Addr = Ipv4AddressHelper::GetAddress (pgwS5Dev);
       NS_LOG_INFO ("P-GW TFT " << tftIdx << " switch dpId " << pgwDpId <<
                    " attached to the s5 interface with IP " << pgwS5Addr);
@@ -587,7 +587,7 @@ SliceNetwork::CreateSgw (void)
   Ptr<CsmaNetDevice> sgwS1Dev;
   Ptr<OFSwitch13Port> infraSwS1Port;
   std::tie (sgwS1Dev, infraSwS1Port) = m_backhaul->AttachEpcNode (
-      m_sgwNode, m_sgwInfraSwIdx, LteIface::S1);
+      m_sgwNode, m_sgwInfraSwIdx, EpsIface::S1);
   NS_LOG_INFO ("S-GW " << sgwId << " switch dpId " << sgwDpId <<
                " attached to the s1u interface with IP " <<
                Ipv4AddressHelper::GetAddress (sgwS1Dev));
@@ -595,7 +595,7 @@ SliceNetwork::CreateSgw (void)
   Ptr<CsmaNetDevice> sgwS5Dev;
   Ptr<OFSwitch13Port> infraSwS5Port;
   std::tie (sgwS5Dev, infraSwS5Port) = m_backhaul->AttachEpcNode (
-      m_sgwNode, m_sgwInfraSwIdx, LteIface::S5);
+      m_sgwNode, m_sgwInfraSwIdx, EpsIface::S5);
   NS_LOG_INFO ("S-GW " << sgwId << " switch dpId " << sgwDpId <<
                " attached to the s5 interface with IP " <<
                Ipv4AddressHelper::GetAddress (sgwS5Dev));
@@ -642,7 +642,7 @@ SliceNetwork::CreateUes (void)
     }
 
   // Configure UE positioning and mobility, considering possible restrictions
-  // on the LTE RAN coverage area.
+  // on the RAN coverage area.
   Ptr<PositionAllocator> posAllocator =
     m_radio->GetRandomPositionAllocator (m_ueCellSiteCover);
   MobilityHelper mobilityHelper;

@@ -78,7 +78,7 @@ public:
 
   /**
    * \name Private member accessors for bearer routing information.
-   * \param iface The LTE logical interface.
+   * \param iface The logical interface.
    * \return The requested information.
    */
   //\{
@@ -96,7 +96,7 @@ public:
   bool        IsBlocked         (void) const;
   bool        IsDefault         (void) const;
   bool        IsGwInstalled     (void) const;
-  bool        IsIfInstalled     (LteIface iface) const;
+  bool        IsIfInstalled     (EpsIface iface) const;
   //\}
 
   /**
@@ -129,7 +129,7 @@ public:
   /**
    * \name Private member accessors for bearer guaranteed bit rate information.
    *       These methods are used for reserving resources at backhaul network.
-   * \param iface The LTE logical interface.
+   * \param iface The logical interface.
    * \return The requested information.
    */
   //\{
@@ -140,13 +140,13 @@ public:
   bool        HasGbrDlBitRate   (void) const;
   bool        IsGbr             (void) const;
   bool        IsNonGbr          (void) const;
-  bool        IsGbrReserved     (LteIface iface) const;
+  bool        IsGbrReserved     (EpsIface iface) const;
   //\}
 
   /**
    * \name Private member accessors for bearer maximum bit rate information.
    *       These methods are used for installing meter entries at S/P-GW.
-   * \param iface The LTE logical interface.
+   * \param iface The logical interface.
    * \return The requested information.
    */
   //\{
@@ -157,8 +157,8 @@ public:
   bool        HasMbr            (void) const;
   bool        IsMbrDlInstalled  (void) const;
   bool        IsMbrUlInstalled  (void) const;
-  bool        IsMbrDlInstalled  (LteIface iface) const;
-  bool        IsMbrUlInstalled  (LteIface iface) const;
+  bool        IsMbrDlInstalled  (EpsIface iface) const;
+  bool        IsMbrUlInstalled  (EpsIface iface) const;
   //\}
 
   /**
@@ -209,18 +209,18 @@ public:
 
   /**
    * \name Private member accessors for infrastructure routing.
-   * \param iface The LTE interface.
+   * \param iface The logical interface.
    * \return The requested information.
    */
   //\{
-  uint16_t    GetDstDlInfraSwIdx  (LteIface iface) const;
-  Ipv4Address GetDstDlAddr        (LteIface iface) const;
-  uint16_t    GetDstUlInfraSwIdx  (LteIface iface) const;
-  Ipv4Address GetDstUlAddr        (LteIface iface) const;
-  uint16_t    GetSrcDlInfraSwIdx  (LteIface iface) const;
-  Ipv4Address GetSrcDlAddr        (LteIface iface) const;
-  uint16_t    GetSrcUlInfraSwIdx  (LteIface iface) const;
-  Ipv4Address GetSrcUlAddr        (LteIface iface) const;
+  uint16_t    GetDstDlInfraSwIdx  (EpsIface iface) const;
+  Ipv4Address GetDstDlAddr        (EpsIface iface) const;
+  uint16_t    GetDstUlInfraSwIdx  (EpsIface iface) const;
+  Ipv4Address GetDstUlAddr        (EpsIface iface) const;
+  uint16_t    GetSrcDlInfraSwIdx  (EpsIface iface) const;
+  Ipv4Address GetSrcDlAddr        (EpsIface iface) const;
+  uint16_t    GetSrcUlInfraSwIdx  (EpsIface iface) const;
+  Ipv4Address GetSrcUlAddr        (EpsIface iface) const;
   //\}
 
   /**
@@ -264,20 +264,20 @@ protected:
 
   /**
    * \name Private member accessors for updating internal metadata.
-   * \param iface The LTE logical interface.
+   * \param iface The logical interface.
    * \param value The value to set.
    */
   //\{
   void SetActive          (bool value);
   void SetAggregated      (bool value);
-  void SetGbrReserved     (LteIface iface, bool value);
-  void SetMbrDlInstalled  (LteIface iface, bool value);
-  void SetMbrUlInstalled  (LteIface iface, bool value);
+  void SetGbrReserved     (EpsIface iface, bool value);
+  void SetMbrDlInstalled  (EpsIface iface, bool value);
+  void SetMbrUlInstalled  (EpsIface iface, bool value);
   void SetPgwTftIdx       (uint16_t value);
   void SetPriority        (uint16_t value);
   void SetTimeout         (uint16_t value);
   void SetGwInstalled     (bool value);
-  void SetIfInstalled     (LteIface iface, bool value);
+  void SetIfInstalled     (EpsIface iface, bool value);
   //\}
 
   /**
@@ -311,8 +311,8 @@ protected:
 
   /**
    * Get the list of bearer routing information, optionally filtered by the
-   * LTE logical slice.
-   * \param slice The LTE logical slice ID.
+   * logical slice.
+   * \param slice The logical slice ID.
    * \param [out] returnList The list of installed bearers.
    */
   static void GetList (RoutingInfoList_t &returnList,

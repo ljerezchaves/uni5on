@@ -63,15 +63,15 @@ public:
 
   /**
    * \name Private member accessors for bearer ring routing information.
-   * \param iface The LTE logical interface.
+   * \param iface The logical interface.
    * \return The requested information.
    */
   //\{
-  RingPath      GetDlPath     (LteIface iface) const;
-  RingPath      GetUlPath     (LteIface iface) const;
-  bool          IsLocalPath   (LteIface iface) const;
-  bool          IsShortPath   (LteIface iface) const;
-  bool          IsUndefPath   (LteIface iface) const;
+  RingPath      GetDlPath     (EpsIface iface) const;
+  RingPath      GetUlPath     (EpsIface iface) const;
+  bool          IsLocalPath   (EpsIface iface) const;
+  bool          IsShortPath   (EpsIface iface) const;
+  bool          IsUndefPath   (EpsIface iface) const;
   //\}
 
   /**
@@ -118,22 +118,22 @@ private:
   /**
    * Set the downlink shortest routing path for the given interface.
    * The uplink path will always be the same, but with inverted direction.
-   * \param iface The LTE logical interface for this path.
+   * \param iface The logical interface for this path.
    * \param path The downlink path.
    */
-  void SetShortDlPath (LteIface iface, RingPath path);
+  void SetShortDlPath (EpsIface iface, RingPath path);
 
   /**
    * Invert the interface routing path.
-   * \param iface The LTE logical interface.
+   * \param iface The logical interface.
    */
-  void InvertPath (LteIface iface);
+  void InvertPath (EpsIface iface);
 
   /**
    * Reset the interface routing path to the shortest one.
-   * \param iface The LTE logical interface.
+   * \param iface The logical interface.
    */
-  void ResetPath (LteIface iface);
+  void ResetPath (EpsIface iface);
 
   RingPath         m_downPath [2];  //!< Downlink routing path.
   bool             m_shortPath [2]; //!< True for short downlink routing path.

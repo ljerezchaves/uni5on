@@ -105,10 +105,10 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
 
   // Reset the shortest path for the S1-U interface (the handover procedure may
   // have changed the eNB switch index.)
-  SetShortestPath (ringInfo, LteIface::S1);
+  SetShortestPath (ringInfo, EpsIface::S1);
 
   // Part 1: Check for the available resources on the S5 interface.
-  bool s5Ok = HasAvailableResources (ringInfo, LteIface::S5);
+  bool s5Ok = HasAvailableResources (ringInfo, EpsIface::S5);
   if (!s5Ok)
     {
       NS_ASSERT_MSG (rInfo->IsBlocked (), "This bearer should be blocked.");
@@ -119,8 +119,8 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
   // Part 2: Check for the available resources on the S1-U interface.
   // To avoid errors when reserving bit rates, check for overlapping links.
   LinkInfoSet_t s5Links;
-  GetLinkSet (ringInfo, LteIface::S5, &s5Links);
-  bool s1Ok = HasAvailableResources (ringInfo, LteIface::S1, &s5Links);
+  GetLinkSet (ringInfo, EpsIface::S5, &s5Links);
+  bool s1Ok = HasAvailableResources (ringInfo, EpsIface::S1, &s5Links);
   if (!s1Ok)
     {
       NS_ASSERT_MSG (rInfo->IsBlocked (), "This bearer should be blocked.");
@@ -143,8 +143,8 @@ RingController::BearerReserve (Ptr<RoutingInfo> rInfo)
   NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
 
   bool success = true;
-  success &= BitRateReserve (ringInfo, LteIface::S5);
-  success &= BitRateReserve (ringInfo, LteIface::S1);
+  success &= BitRateReserve (ringInfo, EpsIface::S5);
+  success &= BitRateReserve (ringInfo, EpsIface::S1);
   return success;
 }
 
@@ -159,8 +159,8 @@ RingController::BearerRelease (Ptr<RoutingInfo> rInfo)
   NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
 
   bool success = true;
-  success &= BitRateRelease (ringInfo, LteIface::S5);
-  success &= BitRateRelease (ringInfo, LteIface::S1);
+  success &= BitRateRelease (ringInfo, EpsIface::S5);
+  success &= BitRateRelease (ringInfo, EpsIface::S1);
   return success;
 }
 
@@ -176,8 +176,8 @@ RingController::BearerInstall (Ptr<RoutingInfo> rInfo)
   NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
 
   bool success = true;
-  success &= RulesInstall (ringInfo, LteIface::S5);
-  success &= RulesInstall (ringInfo, LteIface::S1);
+  success &= RulesInstall (ringInfo, EpsIface::S5);
+  success &= RulesInstall (ringInfo, EpsIface::S1);
   return success;
 }
 
@@ -193,8 +193,8 @@ RingController::BearerRemove (Ptr<RoutingInfo> rInfo)
   NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
 
   bool success = true;
-  success &= RulesRemove (ringInfo, LteIface::S5);
-  success &= RulesRemove (ringInfo, LteIface::S1);
+  success &= RulesRemove (ringInfo, EpsIface::S5);
+  success &= RulesRemove (ringInfo, EpsIface::S1);
   return success;
 }
 
@@ -214,7 +214,7 @@ RingController::BearerUpdate (Ptr<RoutingInfo> rInfo, Ptr<EnbInfo> dstEnbInfo)
   // Each slice has a single P-GW and S-GW, so handover only changes the eNB.
   // Thus, we only need to modify the S1-U backhaul rules.
   bool success = true;
-  success &= RulesUpdate (ringInfo, LteIface::S1, dstEnbInfo);
+  success &= RulesUpdate (ringInfo, EpsIface::S1, dstEnbInfo);
   return success;
 }
 
@@ -227,8 +227,8 @@ RingController::NotifyBearerCreated (Ptr<RoutingInfo> rInfo)
   Ptr<RingInfo> ringInfo = CreateObject<RingInfo> (rInfo);
 
   // Set the downlink shortest path for both S1-U and S5 interfaces.
-  SetShortestPath (ringInfo, LteIface::S5);
-  SetShortestPath (ringInfo, LteIface::S1);
+  SetShortestPath (ringInfo, EpsIface::S5);
+  SetShortestPath (ringInfo, EpsIface::S1);
 
   BackhaulController::NotifyBearerCreated (rInfo);
 }
@@ -343,7 +343,7 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 
 bool
 RingController::BitRateRequest (
-  Ptr<RingInfo> ringInfo, LteIface iface, LinkInfoSet_t *overlap) const
+  Ptr<RingInfo> ringInfo, EpsIface iface, LinkInfoSet_t *overlap) const
 {
   NS_LOG_FUNCTION (this << ringInfo << iface << overlap);
 
@@ -404,7 +404,7 @@ RingController::BitRateRequest (
 
 bool
 RingController::BitRateReserve (
-  Ptr<RingInfo> ringInfo, LteIface iface)
+  Ptr<RingInfo> ringInfo, EpsIface iface)
 {
   NS_LOG_FUNCTION (this << ringInfo << iface);
 
@@ -414,7 +414,7 @@ RingController::BitRateReserve (
   NS_ASSERT_MSG (!rInfo->IsGbrReserved (iface), "Bit rate already reserved.");
 
   NS_LOG_INFO ("Reserving resources for teid " << rInfo->GetTeidHex () <<
-               " on interface " << LteIfaceStr (iface));
+               " on interface " << EpsIfaceStr (iface));
 
   // Ignoring bearers without guaranteed bit rate or local-routing bearers.
   if (!rInfo->HasGbrBitRate () || ringInfo->IsLocalPath (iface))
@@ -462,13 +462,13 @@ RingController::BitRateReserve (
 
 bool
 RingController::BitRateRelease (
-  Ptr<RingInfo> ringInfo, LteIface iface)
+  Ptr<RingInfo> ringInfo, EpsIface iface)
 {
   NS_LOG_FUNCTION (this << ringInfo << iface);
 
   Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
   NS_LOG_INFO ("Releasing resources for teid " << rInfo->GetTeidHex () <<
-               " on interface " << LteIfaceStr (iface));
+               " on interface " << EpsIfaceStr (iface));
 
   // Ignoring when there is no bit rate to release.
   if (!rInfo->IsGbrReserved (iface))
@@ -545,7 +545,7 @@ RingController::CreateSpanningTree (void)
 
 void
 RingController::GetLinkSet (
-  Ptr<RingInfo> ringInfo, LteIface iface, LinkInfoSet_t *links) const
+  Ptr<RingInfo> ringInfo, EpsIface iface, LinkInfoSet_t *links) const
 {
   NS_LOG_FUNCTION (this << ringInfo << iface);
 
@@ -642,7 +642,7 @@ RingController::GetShortPath (
 
 bool
 RingController::HasAvailableResources (
-  Ptr<RingInfo> ringInfo, LteIface iface, LinkInfoSet_t *overlap) const
+  Ptr<RingInfo> ringInfo, EpsIface iface, LinkInfoSet_t *overlap) const
 {
   NS_LOG_FUNCTION (this << ringInfo << iface);
 
@@ -687,7 +687,7 @@ RingController::HasAvailableResources (
 
 bool
 RingController::RulesInstall (
-  Ptr<RingInfo> ringInfo, LteIface iface)
+  Ptr<RingInfo> ringInfo, EpsIface iface)
 {
   NS_LOG_FUNCTION (this << ringInfo << iface);
 
@@ -831,7 +831,7 @@ RingController::RulesInstall (
 
 bool
 RingController::RulesRemove (
-  Ptr<RingInfo> ringInfo, LteIface iface)
+  Ptr<RingInfo> ringInfo, EpsIface iface)
 {
   NS_LOG_FUNCTION (this << ringInfo << iface);
 
@@ -889,21 +889,21 @@ RingController::RulesRemove (
 
 bool
 RingController::RulesUpdate (
-  Ptr<RingInfo> ringInfo, LteIface iface, Ptr<EnbInfo> dstEnbInfo)
+  Ptr<RingInfo> ringInfo, EpsIface iface, Ptr<EnbInfo> dstEnbInfo)
 {
   NS_LOG_FUNCTION (this << ringInfo << iface << dstEnbInfo);
 
-  NS_ASSERT_MSG (iface == LteIface::S1, "Only S1-U interface supported.");
+  NS_ASSERT_MSG (iface == EpsIface::S1, "Only S1-U interface supported.");
 
   // During this procedure, the eNB was not updated in the rInfo yet.
   // So, the following methods will return information for the old eNB.
   // rInfo->GetEnbCellId ()                   // eNB cell ID
   // rInfo->GetEnbInfraSwIdx ()               // eNB switch index
-  // rInfo->GetDstDlInfraSwIdx (LteIface::S1) // eNB switch index
-  // rInfo->GetSrcUlInfraSwIdx (LteIface::S1) // eNB switch index
+  // rInfo->GetDstDlInfraSwIdx (EpsIface::S1) // eNB switch index
+  // rInfo->GetSrcUlInfraSwIdx (EpsIface::S1) // eNB switch index
   // rInfo->GetEnbS1uAddr ()                  // eNB S1-U address
-  // rInfo->GetDstDlAddr (LteIface::S1)       // eNB S1-U address
-  // rInfo->GetSrcUlAddr (LteIface::S1)       // eNB S1-U address
+  // rInfo->GetDstDlAddr (EpsIface::S1)       // eNB S1-U address
+  // rInfo->GetSrcUlAddr (EpsIface::S1)       // eNB S1-U address
   //
   // We can't just modify the OpenFlow rules in the backhaul switches because
   // we need to change the match fields. So, we will schedule the removal of
@@ -1107,7 +1107,7 @@ RingController::RulesUpdate (
 
 void
 RingController::SetShortestPath (
-  Ptr<RingInfo> ringInfo, LteIface iface) const
+  Ptr<RingInfo> ringInfo, EpsIface iface) const
 {
   NS_LOG_FUNCTION (this << ringInfo);
 
@@ -1118,7 +1118,7 @@ RingController::SetShortestPath (
   ringInfo->SetShortDlPath (iface, dlPath);
 
   NS_LOG_DEBUG ("Bearer teid " << rInfo->GetTeidHex () <<
-                " interface "  << LteIfaceStr (iface) <<
+                " interface "  << EpsIfaceStr (iface) <<
                 " short path " << RingInfo::RingPathStr (dlPath));
 }
 
@@ -1180,7 +1180,7 @@ RingController::SlicingMeterApply (
 
 bool
 RingController::SwitchCpuRequest (
-  Ptr<RingInfo> ringInfo, LteIface iface) const
+  Ptr<RingInfo> ringInfo, EpsIface iface) const
 {
   NS_LOG_FUNCTION (this << ringInfo << iface);
 
@@ -1218,7 +1218,7 @@ RingController::SwitchCpuRequest (
 
 bool
 RingController::SwitchTableRequest (
-  Ptr<RingInfo> ringInfo, LteIface iface) const
+  Ptr<RingInfo> ringInfo, EpsIface iface) const
 {
   NS_LOG_FUNCTION (this << ringInfo << iface);
 

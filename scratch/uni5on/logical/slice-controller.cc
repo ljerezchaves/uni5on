@@ -58,7 +58,7 @@ SliceController::GetTypeId (void)
 
     // Slice.
     .AddAttribute ("SliceId",
-                   "The LTE logical slice identification.",
+                   "The logical slice identification.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    EnumValue (SliceId::UNKN),
                    MakeEnumAccessor (&SliceController::m_sliceId),
@@ -1098,7 +1098,7 @@ SliceController::PgwRulesInstall (Ptr<RoutingInfo> rInfo)
     {
       // Cookie for new downlink rules.
       uint64_t cookie = CookieCreate (
-          LteIface::S5, rInfo->GetPriority (), rInfo->GetTeid ());
+          EpsIface::S5, rInfo->GetPriority (), rInfo->GetTeid ());
 
       // Building the dpctl command.
       std::ostringstream cmd, act;
@@ -1153,7 +1153,7 @@ SliceController::PgwRulesMove (
       // Install rules into target switch now.
       // Cookie for new downlink rules.
       uint64_t cookie = CookieCreate (
-          LteIface::S5, rInfo->GetPriority (), rInfo->GetTeid ());
+          EpsIface::S5, rInfo->GetPriority (), rInfo->GetTeid ());
 
       // Building the dpctl command.
       std::ostringstream cmd, act;
@@ -1255,7 +1255,7 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
     {
       // Cookie for new downlink rules.
       uint64_t cookie = CookieCreate (
-          LteIface::S1, rInfo->GetPriority (), rInfo->GetTeid ());
+          EpsIface::S1, rInfo->GetPriority (), rInfo->GetTeid ());
 
       // Building the dpctl command.
       std::ostringstream cmd, act;
@@ -1281,7 +1281,7 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
     {
       // Cookie for new uplink rules.
       uint64_t cookie = CookieCreate (
-          LteIface::S5, rInfo->GetPriority (), rInfo->GetTeid ());
+          EpsIface::S5, rInfo->GetPriority (), rInfo->GetTeid ());
 
       // Building the dpctl command.
       std::ostringstream cmd, act;
@@ -1338,7 +1338,7 @@ SliceController::SgwRulesUpdate (Ptr<RoutingInfo> rInfo,
       // Schedule the removal of old low-priority OpenFlow rules.
       // Cookie for old rules.
       uint64_t oldCookie = CookieCreate (
-          LteIface::S1, rInfo->GetPriority (), rInfo->GetTeid ());
+          EpsIface::S1, rInfo->GetPriority (), rInfo->GetTeid ());
 
       // Building the dpctl command. Strict matching cookie.
       std::ostringstream del;
@@ -1352,7 +1352,7 @@ SliceController::SgwRulesUpdate (Ptr<RoutingInfo> rInfo,
       // Cookie for new downlink rules.
       uint16_t newPriority = rInfo->GetPriority () + 1;
       uint64_t newCookie = CookieCreate (
-          LteIface::S1, newPriority, rInfo->GetTeid ());
+          EpsIface::S1, newPriority, rInfo->GetTeid ());
 
       // Building the dpctl command.
       std::ostringstream cmd, act;

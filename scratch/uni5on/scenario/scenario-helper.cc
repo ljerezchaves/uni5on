@@ -164,7 +164,7 @@ ScenarioHelper::PrintLteRem (bool enable)
 {
   NS_LOG_FUNCTION (this);
 
-  NS_ASSERT_MSG (m_radio, "No LTE radio network available.");
+  NS_ASSERT_MSG (m_radio, "No radio network available.");
   if (enable)
     {
       m_radio->PrintRadioEnvironmentMap ();
@@ -231,7 +231,7 @@ ScenarioHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
   Ptr<CsmaNetDevice> enbS1uDev;
   Ptr<OFSwitch13Port> infraSwPort;
   std::tie (enbS1uDev, infraSwPort) = m_backhaul->AttachEpcNode (
-      enb, infraSwIdx, LteIface::S1);
+      enb, infraSwIdx, EpsIface::S1);
   Ipv4Address enbS1uAddr = Ipv4AddressHelper::GetAddress (enbS1uDev);
   NS_LOG_DEBUG ("eNB cell ID " << cellId << " at switch index " << infraSwIdx);
   NS_LOG_INFO ("eNB " << enb << " attached to s1u with IP " << enbS1uAddr);
@@ -305,8 +305,8 @@ ScenarioHelper::AddX2Interface (Ptr<Node> enb1Node, Ptr<Node> enb2Node)
           break;
         }
     }
-  NS_ASSERT_MSG (enb1Dev, "Lte eNB device not found for node " << enb1Node);
-  NS_ASSERT_MSG (enb2Dev, "Lte eNB device not found for node " << enb2Node);
+  NS_ASSERT_MSG (enb1Dev, "eNB device not found for node " << enb1Node);
+  NS_ASSERT_MSG (enb2Dev, "eNB device not found for node " << enb2Node);
 
   // Attach both eNB nodes to the OpenFlow backhaul network over X2 interface.
   uint16_t enb1CellId = enb1Dev->GetCellId ();
@@ -316,10 +316,10 @@ ScenarioHelper::AddX2Interface (Ptr<Node> enb1Node, Ptr<Node> enb2Node)
   Ptr<CsmaNetDevice> enb1X2Dev, enb2X2Dev;
   Ptr<OFSwitch13Port> enb1InfraSwPort, enb2InfraSwPort;
   std::tie (enb1X2Dev, enb1InfraSwPort) = m_backhaul->AttachEpcNode (
-      enb1Node, enb1InfraSwIdx, LteIface::X2, "x2_cell" +
+      enb1Node, enb1InfraSwIdx, EpsIface::X2, "x2_cell" +
       std::to_string (enb1CellId) + "to" + std::to_string (enb2CellId));
   std::tie (enb2X2Dev, enb2InfraSwPort) = m_backhaul->AttachEpcNode (
-      enb2Node, enb2InfraSwIdx, LteIface::X2, "x2_cell" +
+      enb2Node, enb2InfraSwIdx, EpsIface::X2, "x2_cell" +
       std::to_string (enb2CellId) + "to" + std::to_string (enb1CellId));
   Ipv4Address enb1X2Addr = Ipv4AddressHelper::GetAddress (enb1X2Dev);
   Ipv4Address enb2X2Addr = Ipv4AddressHelper::GetAddress (enb2X2Dev);

@@ -399,7 +399,7 @@ private:
     /** EWMA throughput for both short-term and long-term averages. */
     int64_t ewmaThp [N_QOS_TYPES_BOTH][N_EWMA_TERMS];
 
-    /** TX byte counters for each LTE QoS type. */
+    /** TX byte counters for each QoS type. */
     int64_t txBytes [N_QOS_TYPES_BOTH];
   };
 

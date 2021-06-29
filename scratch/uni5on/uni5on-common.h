@@ -103,7 +103,7 @@ typedef enum
 
 /**
  * \ingroup uni5on
- * Enumeration of LTE logical interfaces.
+ * Enumeration of logical interfaces.
  */
 typedef enum
 {
@@ -112,11 +112,11 @@ typedef enum
   S5  = 1,   //!< S5 interface connecting S-GW to P-GW.
   X2  = 2,   //!< X2 interface connecting eNB to eNB.
   SGI = 3    //!< SGi interface connecting P-GW to Internet.
-} LteIface;
+} EpsIface;
 
-// Total number of valid LteIface items.
-#define N_IFACES (static_cast<int> (LteIface::SGI) + 1)
-#define N_IFACES_EPC (static_cast<int> (LteIface::S5) + 1)
+// Total number of valid EpsIface items.
+#define N_IFACES (static_cast<int> (EpsIface::SGI) + 1)
+#define N_IFACES_EPC (static_cast<int> (EpsIface::S5) + 1)
 
 /**
  * \ingroup uni5on
@@ -134,7 +134,7 @@ typedef enum
 
 /**
  * \ingroup uni5on
- * Enumeration of available LTE QoS traffic types.
+ * Enumeration of available QoS traffic types.
  */
 typedef enum
 {
@@ -194,11 +194,11 @@ std::string DirectionStr (Direction dir);
 
 /**
  * \ingroup uni5on
- * Get the LTE interface name.
- * \param iface The LTE interface.
- * \return The string with the LTE interface name.
+ * Get the logical interface name.
+ * \param iface The logical interface.
+ * \return The string with the logical interface name.
  */
-std::string LteIfaceStr (LteIface iface);
+std::string EpsIfaceStr (EpsIface iface);
 
 /**
  * \ingroup uni5on
@@ -210,9 +210,9 @@ std::string OpModeStr (OpMode mode);
 
 /**
  * \ingroup uni5on
- * Get the LTE QoS traffic type name.
- * \param type The LTE QoS traffic type.
- * \return The string with the LTE QoS traffic type name.
+ * Get the QoS traffic type name.
+ * \param type The QoS traffic type.
+ * \return The string with the QoS traffic type name.
  */
 std::string QosTypeStr (QosType type);
 
@@ -302,11 +302,11 @@ std::string DscpTypeStr (Ipv4Header::DscpType dscp);
 /**
  * \ingroup uni5on
  * Compute the cookie value globally used in the UNI5ON architecture for
- * OpenFlow rules considering the bearer TEID, the rule priority, and the LTE
+ * OpenFlow rules considering the bearer TEID, the rule priority, and the
  * logical interface.
  * \param teid The TEID value.
  * \param prio The OpenFlow rule priority.
- * \param iface The LTE logical interface.
+ * \param iface The logical interface.
  * \return The cookie value.
  *
  * \internal
@@ -317,12 +317,12 @@ std::string DscpTypeStr (Ipv4Header::DscpType dscp);
  *                               A   B C    D
  *
  * 12 (A) bits are currently unused, here fixed at 0x000.
- *  4 (B) bits are used to identify the LTE logical interface.
+ *  4 (B) bits are used to identify the logical interface.
  * 16 (C) bits are used to identify the rule priority.
  * 32 (D) bits are used to identify the bearer TEID.
  * \endverbatim
  */
-uint64_t CookieCreate (LteIface iface, uint16_t prio, uint32_t teid);
+uint64_t CookieCreate (EpsIface iface, uint16_t prio, uint32_t teid);
 
 /**
  * Decompose the cookie to get the bearer TEID.
@@ -339,11 +339,11 @@ uint32_t CookieGetTeid (uint64_t cookie);
 uint16_t CookieGetPriority (uint64_t cookie);
 
 /**
- * Decompose the cookie to get the LTE logical interface.
+ * Decompose the cookie to get the logical interface.
  * \param cookie The OpenFlow cookie.
- * \return The LTE logical interface.
+ * \return The logical interface.
  */
-LteIface CookieGetIface (uint64_t cookie);
+EpsIface CookieGetIface (uint64_t cookie);
 
 /**
  * \ingroup uni5on
@@ -394,7 +394,7 @@ uint64_t TeidGetUeImsi (uint32_t teid);
  * \ingroup uni5on
  * Compute the meter ID value globally used in the UNI5ON architecture for
  * infrastructure MBR meters.
- * \param iface The LTE logical interface.
+ * \param iface The logical interface.
  * \param teid The GTP tunnel ID.
  * \return The meter ID value.
  *
@@ -406,12 +406,12 @@ uint64_t TeidGetUeImsi (uint32_t teid);
  *                                 A B
  *
  *  4 (A) bits are used to identify a MBR meter: the first 2 bits are fixed
- *        here at 10 and the next 2 bits are used to identify the LTE logical
+ *        here at 10 and the next 2 bits are used to identify the logical
  *        interface.
  * 28 (B) bits are used to identify the GTP tunnel ID (TEID).
  * \endverbatim
  */
-uint32_t MeterIdMbrCreate (LteIface iface, uint32_t teid);
+uint32_t MeterIdMbrCreate (EpsIface iface, uint32_t teid);
 
 /**
  * \ingroup uni5on

@@ -31,7 +31,7 @@ namespace ns3 {
 class Tag;
 
 /**
- * Tag used for GTP packets withing LTE EPC.
+ * Tag used for GTP packets withing the EPC.
  */
 class GtpuTag : public Tag
 {

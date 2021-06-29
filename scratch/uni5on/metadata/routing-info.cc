@@ -55,18 +55,18 @@ RoutingInfo::RoutingInfo (uint32_t teid, BearerCreated_t bearer,
   NS_LOG_FUNCTION (this);
 
   NS_ASSERT_MSG (m_ueInfo, "Invalid UeInfo pointer.");
-  NS_ASSERT_MSG ((LteIface::S1 == 0 && LteIface::S5 == 1)
-                 || (LteIface::S5 == 0 && LteIface::S1 == 1),
-                 "Incompatible LteIface enum values.");
+  NS_ASSERT_MSG ((EpsIface::S1 == 0 && EpsIface::S5 == 1)
+                 || (EpsIface::S5 == 0 && EpsIface::S1 == 1),
+                 "Incompatible EpsIface enum values.");
 
-  m_isGbrRes [LteIface::S1] = false;
-  m_isGbrRes [LteIface::S5] = false;
-  m_isInstIf [LteIface::S1] = false;
-  m_isInstIf [LteIface::S5] = false;
-  m_isMbrDlInst [LteIface::S1] = false;
-  m_isMbrDlInst [LteIface::S5] = false;
-  m_isMbrUlInst [LteIface::S1] = false;
-  m_isMbrUlInst [LteIface::S5] = false;
+  m_isGbrRes [EpsIface::S1] = false;
+  m_isGbrRes [EpsIface::S5] = false;
+  m_isInstIf [EpsIface::S1] = false;
+  m_isInstIf [EpsIface::S5] = false;
+  m_isMbrDlInst [EpsIface::S1] = false;
+  m_isMbrDlInst [EpsIface::S5] = false;
+  m_isMbrUlInst [EpsIface::S1] = false;
+  m_isMbrUlInst [EpsIface::S5] = false;
 
   // Validate the default bearer.
   if (IsDefault ())
@@ -212,12 +212,12 @@ RoutingInfo::IsGwInstalled (void) const
 }
 
 bool
-RoutingInfo::IsIfInstalled (LteIface iface) const
+RoutingInfo::IsIfInstalled (EpsIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
-  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
-                 "Invalid LTE interface. Expected S1-U or S5 interface.");
+  NS_ASSERT_MSG (iface == EpsIface::S1 || iface == EpsIface::S5,
+                 "Invalid interface. Expected S1-U or S5 interface.");
 
   return m_isInstIf [iface];
 }
@@ -375,12 +375,12 @@ RoutingInfo::IsGbr (void) const
 }
 
 bool
-RoutingInfo::IsGbrReserved (LteIface iface) const
+RoutingInfo::IsGbrReserved (EpsIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
-  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
-                 "Invalid LTE interface. Expected S1-U or S5 interface.");
+  NS_ASSERT_MSG (iface == EpsIface::S1 || iface == EpsIface::S5,
+                 "Invalid interface. Expected S1-U or S5 interface.");
 
   return m_isGbrRes [iface];
 }
@@ -438,7 +438,7 @@ RoutingInfo::IsMbrDlInstalled (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_isMbrDlInst [LteIface::S1] || m_isMbrDlInst [LteIface::S5];
+  return m_isMbrDlInst [EpsIface::S1] || m_isMbrDlInst [EpsIface::S5];
 }
 
 bool
@@ -446,11 +446,11 @@ RoutingInfo::IsMbrUlInstalled (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_isMbrUlInst [LteIface::S1] || m_isMbrUlInst [LteIface::S5];
+  return m_isMbrUlInst [EpsIface::S1] || m_isMbrUlInst [EpsIface::S5];
 }
 
 bool
-RoutingInfo::IsMbrDlInstalled (LteIface iface) const
+RoutingInfo::IsMbrDlInstalled (EpsIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
@@ -458,7 +458,7 @@ RoutingInfo::IsMbrDlInstalled (LteIface iface) const
 }
 
 bool
-RoutingInfo::IsMbrUlInstalled (LteIface iface) const
+RoutingInfo::IsMbrUlInstalled (EpsIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
@@ -610,83 +610,83 @@ RoutingInfo::GetSgwS5PortNo (void) const
 }
 
 uint16_t
-RoutingInfo::GetDstDlInfraSwIdx (LteIface iface) const
+RoutingInfo::GetDstDlInfraSwIdx (EpsIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
-  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
-                 "Invalid LTE interface. Expected S1-U or S5 interface.");
-  return (iface == LteIface::S5) ? GetSgwInfraSwIdx () : GetEnbInfraSwIdx ();
+  NS_ASSERT_MSG (iface == EpsIface::S1 || iface == EpsIface::S5,
+                 "Invalid interface. Expected S1-U or S5 interface.");
+  return (iface == EpsIface::S5) ? GetSgwInfraSwIdx () : GetEnbInfraSwIdx ();
 }
 
 Ipv4Address
-RoutingInfo::GetDstDlAddr (LteIface iface) const
+RoutingInfo::GetDstDlAddr (EpsIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
-  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
-                 "Invalid LTE interface. Expected S1-U or S5 interface.");
-  return (iface == LteIface::S5) ? GetSgwS5Addr () : GetEnbS1uAddr ();
+  NS_ASSERT_MSG (iface == EpsIface::S1 || iface == EpsIface::S5,
+                 "Invalid interface. Expected S1-U or S5 interface.");
+  return (iface == EpsIface::S5) ? GetSgwS5Addr () : GetEnbS1uAddr ();
 }
 
 uint16_t
-RoutingInfo::GetDstUlInfraSwIdx (LteIface iface) const
+RoutingInfo::GetDstUlInfraSwIdx (EpsIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
-  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
-                 "Invalid LTE interface. Expected S1-U or S5 interface.");
-  return (iface == LteIface::S1) ? GetSgwInfraSwIdx () : GetPgwInfraSwIdx ();
+  NS_ASSERT_MSG (iface == EpsIface::S1 || iface == EpsIface::S5,
+                 "Invalid interface. Expected S1-U or S5 interface.");
+  return (iface == EpsIface::S1) ? GetSgwInfraSwIdx () : GetPgwInfraSwIdx ();
 }
 
 Ipv4Address
-RoutingInfo::GetDstUlAddr (LteIface iface) const
+RoutingInfo::GetDstUlAddr (EpsIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
-  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
-                 "Invalid LTE interface. Expected S1-U or S5 interface.");
-  return (iface == LteIface::S1) ? GetSgwS1uAddr () : GetPgwS5Addr ();
+  NS_ASSERT_MSG (iface == EpsIface::S1 || iface == EpsIface::S5,
+                 "Invalid interface. Expected S1-U or S5 interface.");
+  return (iface == EpsIface::S1) ? GetSgwS1uAddr () : GetPgwS5Addr ();
 }
 
 uint16_t
-RoutingInfo::GetSrcDlInfraSwIdx (LteIface iface) const
+RoutingInfo::GetSrcDlInfraSwIdx (EpsIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
-  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
-                 "Invalid LTE interface. Expected S1-U or S5 interface.");
-  return (iface == LteIface::S5) ? GetPgwInfraSwIdx () : GetSgwInfraSwIdx ();
+  NS_ASSERT_MSG (iface == EpsIface::S1 || iface == EpsIface::S5,
+                 "Invalid interface. Expected S1-U or S5 interface.");
+  return (iface == EpsIface::S5) ? GetPgwInfraSwIdx () : GetSgwInfraSwIdx ();
 }
 
 Ipv4Address
-RoutingInfo::GetSrcDlAddr (LteIface iface) const
+RoutingInfo::GetSrcDlAddr (EpsIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
-  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
-                 "Invalid LTE interface. Expected S1-U or S5 interface.");
-  return (iface == LteIface::S5) ? GetPgwS5Addr () : GetSgwS1uAddr ();
+  NS_ASSERT_MSG (iface == EpsIface::S1 || iface == EpsIface::S5,
+                 "Invalid interface. Expected S1-U or S5 interface.");
+  return (iface == EpsIface::S5) ? GetPgwS5Addr () : GetSgwS1uAddr ();
 }
 
 uint16_t
-RoutingInfo::GetSrcUlInfraSwIdx (LteIface iface) const
+RoutingInfo::GetSrcUlInfraSwIdx (EpsIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
-  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
-                 "Invalid LTE interface. Expected S1-U or S5 interface.");
-  return (iface == LteIface::S1) ? GetEnbInfraSwIdx () : GetSgwInfraSwIdx ();
+  NS_ASSERT_MSG (iface == EpsIface::S1 || iface == EpsIface::S5,
+                 "Invalid interface. Expected S1-U or S5 interface.");
+  return (iface == EpsIface::S1) ? GetEnbInfraSwIdx () : GetSgwInfraSwIdx ();
 }
 
 Ipv4Address
-RoutingInfo::GetSrcUlAddr (LteIface iface) const
+RoutingInfo::GetSrcUlAddr (EpsIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
-  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
-                 "Invalid LTE interface. Expected S1-U or S5 interface.");
-  return (iface == LteIface::S1) ? GetEnbS1uAddr () : GetSgwS5Addr ();
+  NS_ASSERT_MSG (iface == EpsIface::S1 || iface == EpsIface::S5,
+                 "Invalid interface. Expected S1-U or S5 interface.");
+  return (iface == EpsIface::S1) ? GetEnbS1uAddr () : GetSgwS5Addr ();
 }
 
 std::string
@@ -793,18 +793,18 @@ RoutingInfo::SetAggregated (bool value)
 }
 
 void
-RoutingInfo::SetGbrReserved (LteIface iface, bool value)
+RoutingInfo::SetGbrReserved (EpsIface iface, bool value)
 {
   NS_LOG_FUNCTION (this << iface << value);
 
-  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
-                 "Invalid LTE interface. Expected S1-U or S5 interface.");
+  NS_ASSERT_MSG (iface == EpsIface::S1 || iface == EpsIface::S5,
+                 "Invalid interface. Expected S1-U or S5 interface.");
 
   m_isGbrRes [iface] = value;
 }
 
 void
-RoutingInfo::SetMbrDlInstalled (LteIface iface, bool value)
+RoutingInfo::SetMbrDlInstalled (EpsIface iface, bool value)
 {
   NS_LOG_FUNCTION (this << iface << value);
 
@@ -812,7 +812,7 @@ RoutingInfo::SetMbrDlInstalled (LteIface iface, bool value)
 }
 
 void
-RoutingInfo::SetMbrUlInstalled (LteIface iface, bool value)
+RoutingInfo::SetMbrUlInstalled (EpsIface iface, bool value)
 {
   NS_LOG_FUNCTION (this << iface << value);
 
@@ -854,12 +854,12 @@ RoutingInfo::SetGwInstalled (bool value)
 }
 
 void
-RoutingInfo::SetIfInstalled (LteIface iface, bool value)
+RoutingInfo::SetIfInstalled (EpsIface iface, bool value)
 {
   NS_LOG_FUNCTION (this << iface << value);
 
-  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
-                 "Invalid LTE interface. Expected S1-U or S5 interface.");
+  NS_ASSERT_MSG (iface == EpsIface::S1 || iface == EpsIface::S5,
+                 "Invalid interface. Expected S1-U or S5 interface.");
 
   m_isInstIf [iface] = value;
 }
@@ -957,10 +957,10 @@ std::ostream & operator << (std::ostream &os, const RoutingInfo &rInfo)
      << " " << setw (10) << Bps2Kbps (rInfo.GetGbrUlBitRate ())
      << " " << setw (10) << Bps2Kbps (rInfo.GetMbrUlBitRate ())
      << " " << setw (6)  << rInfo.IsMbrUlInstalled ()
-     << " " << setw (6)  << rInfo.IsGbrReserved (LteIface::S1)
-     << " " << setw (6)  << rInfo.IsGbrReserved (LteIface::S5)
-     << " " << setw (6)  << rInfo.IsIfInstalled (LteIface::S1)
-     << " " << setw (6)  << rInfo.IsIfInstalled (LteIface::S5)
+     << " " << setw (6)  << rInfo.IsGbrReserved (EpsIface::S1)
+     << " " << setw (6)  << rInfo.IsGbrReserved (EpsIface::S5)
+     << " " << setw (6)  << rInfo.IsIfInstalled (EpsIface::S1)
+     << " " << setw (6)  << rInfo.IsIfInstalled (EpsIface::S5)
      << " " << setw (6)  << rInfo.IsGwInstalled ()
      << " " << setw (3)  << rInfo.GetPgwTftIdx ()
      << " " << setw (7)  << prioStr

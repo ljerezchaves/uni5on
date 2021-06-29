@@ -40,7 +40,7 @@ class BaseClient;
 /**
  * \ingroup uni5onStats
  * This class monitors the network traffic at application L7 level and also at
- * L2 OpenFlow link level for traffic within the LTE backhaul.
+ * L2 OpenFlow link level for traffic within the backhaul.
  */
 class TrafficStatsCalculator : public Object
 {
@@ -134,7 +134,7 @@ private:
   uint32_t PgwTftClassify (Ptr<const Packet> packet);
 
   /**
-   * Retrieve the LTE EPC QoS statistics information for the GTP tunnel id.
+   * Retrieve the QoS statistics information for the GTP tunnel id.
    * \param teid The GTP tunnel id.
    * \param dir The traffic direction.
    * \return The QoS information.

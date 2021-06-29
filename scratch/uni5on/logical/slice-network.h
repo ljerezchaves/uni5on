@@ -41,7 +41,7 @@ class SliceController;
 
 /**
  * \ingroup uni5onLogical
- * This is the class for a logical LTE network slice, sharing the common
+ * This is the class for a logical network slice, sharing the common
  * OpenFlow backhaul and radio networks.
  */
 class SliceNetwork : public Object
@@ -118,7 +118,7 @@ private:
   void CreateSgw (void);
 
   /**
-   * Create the UEs, connecting them to the LTE RAN network.
+   * Create the UEs, connecting them to the RAN network.
    */
   void CreateUes (void);
 
@@ -128,7 +128,7 @@ private:
 
   // Infrastructure interface.
   Ptr<BackhaulNetwork>          m_backhaul;         //!< OpenFlow backhaul.
-  Ptr<RadioNetwork>             m_radio;            //!< LTE radio network.
+  Ptr<RadioNetwork>             m_radio;            //!< Radio network.
 
   // OpenFlow network configuration.
   Ptr<OFSwitch13InternalHelper> m_switchHelper;     //!< Switch helper.

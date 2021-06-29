@@ -130,11 +130,11 @@ BackhaulNetwork::EnablePcap (std::string prefix, bool promiscuous,
 
 std::pair<Ptr<CsmaNetDevice>, Ptr<OFSwitch13Port>>
 BackhaulNetwork::AttachEpcNode (Ptr<Node> epcNode, uint16_t swIdx,
-                                LteIface iface, std::string ifaceStr)
+                                EpsIface iface, std::string ifaceStr)
 {
   NS_LOG_FUNCTION (this << epcNode << swIdx << iface);
   NS_LOG_INFO ("Attach EPC node " << epcNode << " to backhaul switch index " <<
-               swIdx << " over " << LteIfaceStr (iface) << " interface.");
+               swIdx << " over " << EpsIfaceStr (iface) << " interface.");
 
   NS_ASSERT_MSG (swIdx < GetNSwitches (), "Invalid switch index.");
 
@@ -152,7 +152,7 @@ BackhaulNetwork::AttachEpcNode (Ptr<Node> epcNode, uint16_t swIdx,
   // Set device names for pcap files.
   if (ifaceStr.empty ())
     {
-      ifaceStr = LteIfaceStr (iface);
+      ifaceStr = EpsIfaceStr (iface);
     }
   SetDeviceNames (swDev, epcDev, "~" + ifaceStr + "~");
 
@@ -160,20 +160,20 @@ BackhaulNetwork::AttachEpcNode (Ptr<Node> epcNode, uint16_t swIdx,
   Ptr<OFSwitch13Port> swPort = swOfDev->AddSwitchPort (swDev);
   uint32_t swPortNo = swPort->GetPortNo ();
 
-  // Configure the epcDev IP address according to the LTE logical interface.
+  // Configure the epcDev IP address according to the logical interface.
   switch (iface)
     {
-    case LteIface::S1:
+    case EpsIface::S1:
       m_s1AddrHelper.Assign (NetDeviceContainer (epcDev));
       break;
-    case LteIface::S5:
+    case EpsIface::S5:
       m_s5AddrHelper.Assign (NetDeviceContainer (epcDev));
       break;
-    case LteIface::X2:
+    case EpsIface::X2:
       m_x2AddrHelper.Assign (NetDeviceContainer (epcDev));
       break;
     default:
-      NS_ABORT_MSG ("Invalid LTE interface.");
+      NS_ABORT_MSG ("Invalid interface.");
     }
 
   // Notify the controller of the new EPC device attached to the backhaul.

@@ -35,15 +35,15 @@ RingInfo::RingInfo (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this);
 
-  NS_ASSERT_MSG ((LteIface::S1 == 0 && LteIface::S5 == 1)
-                 || (LteIface::S5 == 0 && LteIface::S1 == 1),
-                 "Incompatible LteIface enum values.");
+  NS_ASSERT_MSG ((EpsIface::S1 == 0 && EpsIface::S5 == 1)
+                 || (EpsIface::S5 == 0 && EpsIface::S1 == 1),
+                 "Incompatible EpsIface enum values.");
 
   AggregateObject (rInfo);
-  m_downPath [LteIface::S1] = RingInfo::UNDEF;
-  m_downPath [LteIface::S5] = RingInfo::UNDEF;
-  m_shortPath [LteIface::S1] = true;
-  m_shortPath [LteIface::S5] = true;
+  m_downPath [EpsIface::S1] = RingInfo::UNDEF;
+  m_downPath [EpsIface::S5] = RingInfo::UNDEF;
+  m_shortPath [EpsIface::S1] = true;
+  m_shortPath [EpsIface::S5] = true;
 }
 
 RingInfo::~RingInfo ()
@@ -61,18 +61,18 @@ RingInfo::GetTypeId (void)
 }
 
 RingInfo::RingPath
-RingInfo::GetDlPath (LteIface iface) const
+RingInfo::GetDlPath (EpsIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
-  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
-                 "Invalid LTE interface. Expected S1-U or S5 interface.");
+  NS_ASSERT_MSG (iface == EpsIface::S1 || iface == EpsIface::S5,
+                 "Invalid interface. Expected S1-U or S5 interface.");
 
   return m_downPath [iface];
 }
 
 RingInfo::RingPath
-RingInfo::GetUlPath (LteIface iface) const
+RingInfo::GetUlPath (EpsIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
@@ -80,7 +80,7 @@ RingInfo::GetUlPath (LteIface iface) const
 }
 
 bool
-RingInfo::IsLocalPath (LteIface iface) const
+RingInfo::IsLocalPath (EpsIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
@@ -88,18 +88,18 @@ RingInfo::IsLocalPath (LteIface iface) const
 }
 
 bool
-RingInfo::IsShortPath (LteIface iface) const
+RingInfo::IsShortPath (EpsIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
-  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
-                 "Invalid LTE interface. Expected S1-U or S5 interface.");
+  NS_ASSERT_MSG (iface == EpsIface::S1 || iface == EpsIface::S5,
+                 "Invalid interface. Expected S1-U or S5 interface.");
 
   return m_shortPath [iface];
 }
 
 bool
-RingInfo::IsUndefPath (LteIface iface) const
+RingInfo::IsUndefPath (EpsIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
@@ -182,20 +182,20 @@ RingInfo::DoDispose ()
 }
 
 void
-RingInfo::SetShortDlPath (LteIface iface, RingPath path)
+RingInfo::SetShortDlPath (EpsIface iface, RingPath path)
 {
   NS_LOG_FUNCTION (this << iface << path);
 
   NS_ASSERT_MSG (path != RingInfo::UNDEF, "Invalid ring routing path.");
-  NS_ASSERT_MSG (iface == LteIface::S1 || iface == LteIface::S5,
-                 "Invalid LTE interface. Expected S1-U or S5 interface.");
+  NS_ASSERT_MSG (iface == EpsIface::S1 || iface == EpsIface::S5,
+                 "Invalid interface. Expected S1-U or S5 interface.");
 
   m_downPath [iface] = path;
   m_shortPath [iface] = true;
 }
 
 void
-RingInfo::InvertPath (LteIface iface)
+RingInfo::InvertPath (EpsIface iface)
 {
   NS_LOG_FUNCTION (this << iface);
 
@@ -207,7 +207,7 @@ RingInfo::InvertPath (LteIface iface)
 }
 
 void
-RingInfo::ResetPath (LteIface iface)
+RingInfo::ResetPath (EpsIface iface)
 {
   NS_LOG_FUNCTION (this << iface);
 
@@ -228,11 +228,11 @@ std::ostream & operator << (std::ostream &os, const RingInfo &ringInfo)
     }
   else
     {
-      RingInfo::RingPath s1Path = ringInfo.GetDlPath (LteIface::S1);
-      RingInfo::RingPath s5Path = ringInfo.GetDlPath (LteIface::S5);
-      os << " " << setw (7) << ringInfo.IsShortPath (LteIface::S1)
+      RingInfo::RingPath s1Path = ringInfo.GetDlPath (EpsIface::S1);
+      RingInfo::RingPath s5Path = ringInfo.GetDlPath (EpsIface::S5);
+      os << " " << setw (7) << ringInfo.IsShortPath (EpsIface::S1)
          << " " << setw (7) << RingInfo::RingPathStr (s1Path)
-         << " " << setw (7) << ringInfo.IsShortPath (LteIface::S5)
+         << " " << setw (7) << ringInfo.IsShortPath (EpsIface::S5)
          << " " << setw (7) << RingInfo::RingPathStr (s5Path);
     }
   return os;

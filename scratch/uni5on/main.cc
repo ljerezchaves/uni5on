@@ -87,7 +87,7 @@ main (int argc, char *argv[])
 
   // Parse command line arguments.
   CommandLine cmd;
-  cmd.AddValue ("LteRem",   "Print LTE radio environment map.", lteRem);
+  cmd.AddValue ("LteRem",   "Print the radio environment map.", lteRem);
   cmd.AddValue ("OfsLog",   "Enable ofsoftswitch13 logs.", ofsLog);
   cmd.AddValue ("PcapCfg",  "Configure pcap output.", pcapCfg);
   cmd.AddValue ("Prefix",   "Common prefix for filenames.", prefix);

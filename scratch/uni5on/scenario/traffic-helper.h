@@ -129,9 +129,9 @@ private:
 
   // Traffic helper.
   SliceId                     m_sliceId;          //!< Logical slice ID.
-  Ptr<RadioNetwork>           m_radio;            //!< LTE radio network.
-  Ptr<SliceNetwork>           m_slice;            //!< LTE slice network.
-  Ptr<SliceController>        m_controller;       //!< LTE slice controller.
+  Ptr<RadioNetwork>           m_radio;            //!< Radio network.
+  Ptr<SliceNetwork>           m_slice;            //!< Slice network.
+  Ptr<SliceController>        m_controller;       //!< Slice controller.
   static uint16_t             m_port;             //!< Port numbers for apps.
   bool                        m_useOnlyDefault;   //!< Use only default bearer.
 
