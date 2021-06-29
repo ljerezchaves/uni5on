@@ -18,18 +18,19 @@
  * Author: Luciano Jerez Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef UNI5ON_ENB_APPLICATION_H
-#define UNI5ON_ENB_APPLICATION_H
+#ifndef ENB_APPLICATION_H
+#define ENB_APPLICATION_H
 
 #include <ns3/lte-module.h>
 
 namespace ns3 {
 
 /**
- * \ingroup uni5onInfra
- * This eNB specialized application can handle connection with multiple S-GWs.
+ * \ingroup uni5onLogical
+ * This custom eNB application can handle connection with multiple S-GWs,
+ * bearer aggregation, and GTP-U tag handling for traffic monitoring.
  */
-class Uni5onEnbApplication : public EpcEnbApplication
+class EnbApplication : public EpcEnbApplication
 {
 public:
   /**
@@ -43,10 +44,10 @@ public:
    * \param enbS1uAddress The IPv4 address of the S1-U interface of this eNB.
    * \param cellId The identifier of the eNB.
    */
-  Uni5onEnbApplication (Ptr<Socket> lteSocket, Ptr<Socket> lteSocket6,
-                        Ptr<Socket> s1uSocket, Ipv4Address enbS1uAddress,
-                        uint16_t cellId);
-  virtual ~Uni5onEnbApplication (void); //!< Dummy destructor, see DoDispose.
+  EnbApplication (Ptr<Socket> lteSocket, Ptr<Socket> lteSocket6,
+                  Ptr<Socket> s1uSocket, Ipv4Address enbS1uAddress,
+                  uint16_t cellId);
+  virtual ~EnbApplication (void); //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
@@ -99,4 +100,4 @@ private:
 };
 
 } //namespace ns3
-#endif /* UNI5ON_ENB_APPLICATION_H */
+#endif /* ENB_APPLICATION_H */

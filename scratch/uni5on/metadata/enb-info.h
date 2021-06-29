@@ -28,7 +28,7 @@
 
 namespace ns3 {
 
-class Uni5onEnbApplication;
+class EnbApplication;
 
 /**
  * \ingroup uni5onMeta
@@ -46,7 +46,7 @@ public:
    * \param enbApp The eNB application.
    */
   EnbInfo (uint16_t cellId, Ipv4Address s1uAddr, uint16_t infraSwIdx,
-           uint32_t infraSwS1uPortNo, Ptr<Uni5onEnbApplication> enbApp);
+           uint32_t infraSwS1uPortNo, Ptr<EnbApplication> enbApp);
   virtual ~EnbInfo (); //!< Dummy destructor, see DoDispose.
 
   /**
@@ -60,7 +60,7 @@ public:
    * \return The requested information.
    */
   //\{
-  Ptr<Uni5onEnbApplication> GetApplication      (void) const;
+  Ptr<EnbApplication> GetApplication      (void) const;
   uint16_t                  GetCellId           (void) const;
   uint16_t                  GetInfraSwIdx       (void) const;
   uint32_t                  GetInfraSwS1uPortNo (void) const;
@@ -103,7 +103,7 @@ private:
   static void RegisterEnbInfo (Ptr<EnbInfo> enbInfo);
 
   // eNB metadata.
-  Ptr<Uni5onEnbApplication> m_application;        //!< eNB application.
+  Ptr<EnbApplication> m_application;        //!< eNB application.
   uint16_t                  m_cellId;             //!< eNB cell ID.
   uint16_t                  m_infraSwIdx;         //!< Backhaul switch index.
   uint32_t                  m_infraSwS1uPortNo;   //!< Backhaul switch port no.

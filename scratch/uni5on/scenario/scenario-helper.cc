@@ -24,7 +24,7 @@
 #include "../infrastructure/backhaul-controller.h"
 #include "../infrastructure/radio-network.h"
 #include "../infrastructure/ring-network.h"
-#include "../infrastructure/uni5on-enb-application.h"
+#include "../logical/enb-application.h"
 #include "../logical/slice-controller.h"
 #include "../logical/slice-network.h"
 #include "../logical/uni5on-mme.h"
@@ -268,7 +268,7 @@ ScenarioHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
   enbLteSocket6->Connect (enbLteSocketAddress6);
 
   // Create the custom eNB application for the UNI5ON architecture.
-  Ptr<Uni5onEnbApplication> enbApp = CreateObject<Uni5onEnbApplication> (
+  Ptr<EnbApplication> enbApp = CreateObject<EnbApplication> (
       enbLteSocket, enbLteSocket6, enbS1uSocket, enbS1uAddr, cellId);
   enbApp->SetS1apSapMme (m_mme->GetS1apSapMme ());
   enb->AddApplication (enbApp);

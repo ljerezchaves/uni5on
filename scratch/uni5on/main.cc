@@ -402,7 +402,7 @@ EnableVerbose (bool enable)
       LogComponentEnable ("RadioNetwork",             logLevelWarnInfo);
       LogComponentEnable ("RingController",           logLevelWarnInfo);
       LogComponentEnable ("RingNetwork",              logLevelWarnInfo);
-      LogComponentEnable ("Uni5onEnbApplication",     logLevelWarnInfo);
+      LogComponentEnable ("EnbApplication",     logLevelWarnInfo);
       LogComponentEnable ("Uni5onQosQueue",           logLevelWarnInfo);
 
       // Logical components.

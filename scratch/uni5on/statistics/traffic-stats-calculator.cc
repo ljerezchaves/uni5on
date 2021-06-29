@@ -38,10 +38,10 @@ TrafficStatsCalculator::TrafficStatsCalculator ()
 
   // Connect this stats calculator to required trace sources.
   Config::Connect (
-    "/NodeList/*/ApplicationList/*/$ns3::Uni5onEnbApplication/S1uRx",
+    "/NodeList/*/ApplicationList/*/$ns3::EnbApplication/S1uRx",
     MakeCallback (&TrafficStatsCalculator::EpcOutputPacket, this));
   Config::Connect (
-    "/NodeList/*/ApplicationList/*/$ns3::Uni5onEnbApplication/S1uTx",
+    "/NodeList/*/ApplicationList/*/$ns3::EnbApplication/S1uTx",
     MakeCallback (&TrafficStatsCalculator::EpcInputPacket, this));
   Config::Connect (
     "/NodeList/*/ApplicationList/*/$ns3::PgwTunnelApp/S5Rx",

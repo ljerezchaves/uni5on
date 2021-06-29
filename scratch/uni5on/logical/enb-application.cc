@@ -18,17 +18,17 @@
  * Author: Luciano Jerez Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include "uni5on-enb-application.h"
+#include "enb-application.h"
+#include "epc-gtpu-tag.h"
 #include "../uni5on-common.h"
-#include "../logical/epc-gtpu-tag.h"
 #include "../metadata/ue-info.h"
 #include "../metadata/routing-info.h"
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("Uni5onEnbApplication");
+NS_LOG_COMPONENT_DEFINE ("EnbApplication");
 
-Uni5onEnbApplication::Uni5onEnbApplication (
+EnbApplication::EnbApplication (
   Ptr<Socket> lteSocket, Ptr<Socket> lteSocket6, Ptr<Socket> s1uSocket,
   Ipv4Address enbS1uAddress, uint16_t cellId)
   : EpcEnbApplication (lteSocket, lteSocket6, s1uSocket, enbS1uAddress,
@@ -38,32 +38,30 @@ Uni5onEnbApplication::Uni5onEnbApplication (
                    enbS1uAddress << cellId);
 }
 
-Uni5onEnbApplication::~Uni5onEnbApplication (void)
+EnbApplication::~EnbApplication (void)
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-Uni5onEnbApplication::GetTypeId (void)
+EnbApplication::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::Uni5onEnbApplication")
+  static TypeId tid = TypeId ("ns3::EnbApplication")
     .SetParent<EpcEnbApplication> ()
     .AddTraceSource ("S1uRx",
                      "Trace source for a packet RX from the S1-U interface.",
-                     MakeTraceSourceAccessor (
-                       &Uni5onEnbApplication::m_rxS1uTrace),
+                     MakeTraceSourceAccessor (&EnbApplication::m_rxS1uTrace),
                      "ns3::Packet::TracedCallback")
     .AddTraceSource ("S1uTx",
                      "Trace source for a packet TX to the S1-U interface.",
-                     MakeTraceSourceAccessor (
-                       &Uni5onEnbApplication::m_txS1uTrace),
+                     MakeTraceSourceAccessor (&EnbApplication::m_txS1uTrace),
                      "ns3::Packet::TracedCallback")
   ;
   return tid;
 }
 
 void
-Uni5onEnbApplication::RecvFromS1uSocket (Ptr<Socket> socket)
+EnbApplication::RecvFromS1uSocket (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
   NS_ASSERT (socket == m_s1uSocket);
@@ -93,14 +91,14 @@ Uni5onEnbApplication::RecvFromS1uSocket (Ptr<Socket> socket)
 }
 
 void
-Uni5onEnbApplication::DoDispose (void)
+EnbApplication::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
   EpcEnbApplication::DoDispose ();
 }
 
 void
-Uni5onEnbApplication::DoInitialContextSetupRequest (
+EnbApplication::DoInitialContextSetupRequest (
   uint64_t mmeUeS1Id, uint16_t enbUeS1Id,
   std::list<EpcS1apSapEnb::ErabToBeSetupItem> erabToBeSetupList)
 {
@@ -121,7 +119,7 @@ Uni5onEnbApplication::DoInitialContextSetupRequest (
 }
 
 void
-Uni5onEnbApplication::DoPathSwitchRequestAcknowledge (
+EnbApplication::DoPathSwitchRequestAcknowledge (
   uint64_t enbUeS1Id, uint64_t mmeUeS1Id, uint16_t cgi,
   std::list<EpcS1apSapEnb::ErabSwitchedInUplinkItem>
   erabToBeSwitchedInUplinkList)
@@ -143,7 +141,7 @@ Uni5onEnbApplication::DoPathSwitchRequestAcknowledge (
 }
 
 void
-Uni5onEnbApplication::DoUeContextRelease (uint16_t rnti)
+EnbApplication::DoUeContextRelease (uint16_t rnti)
 {
   NS_LOG_FUNCTION (this << rnti);
 
@@ -165,7 +163,7 @@ Uni5onEnbApplication::DoUeContextRelease (uint16_t rnti)
 }
 
 void
-Uni5onEnbApplication::SendToS1uSocket (Ptr<Packet> packet, uint32_t teid)
+EnbApplication::SendToS1uSocket (Ptr<Packet> packet, uint32_t teid)
 {
   NS_LOG_FUNCTION (this << packet << teid <<  packet->GetSize ());
 
