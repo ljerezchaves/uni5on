@@ -61,11 +61,11 @@ public:
    * \param prefix Filename prefix to use for PCAP files.
    * \param promiscuous If true, enable PCAP promiscuous traces.
    * \param ofchannel If true, enable PCAP on backhaul OpenFlow channels.
-   * \param sgiDevices If true, enable PCAP on SGi interfaces (Internet).
    * \param pgwDevices If true, enable PCAP on P-GW switches.
+   * \param sgiDevices If true, enable PCAP on SGi interfaces (Internet).
    */
   void EnablePcap (std::string prefix, bool promiscuous, bool ofchannel,
-                   bool sgiDevices, bool pgwDevices);
+                   bool pgwDevices, bool sgiDevices);
 
   /**
    * Get the UE nodes.

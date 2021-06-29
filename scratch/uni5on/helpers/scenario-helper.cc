@@ -139,15 +139,15 @@ ScenarioHelper::ConfigurePcap (std::string prefix, uint8_t config)
   // Enable PCAP on the logical network slices.
   if (m_mbbNetwork)
     {
-      m_mbbNetwork->EnablePcap (prefix, promisc, slcofp, slcsgi, slcpgw);
+      m_mbbNetwork->EnablePcap (prefix, promisc, slcofp, slcpgw, slcsgi);
     }
   if (m_mtcNetwork)
     {
-      m_mtcNetwork->EnablePcap (prefix, promisc, slcofp, slcsgi, slcpgw);
+      m_mtcNetwork->EnablePcap (prefix, promisc, slcofp, slcpgw, slcsgi);
     }
   if (m_tmpNetwork)
     {
-      m_tmpNetwork->EnablePcap (prefix, promisc, slcofp, slcsgi, slcpgw);
+      m_tmpNetwork->EnablePcap (prefix, promisc, slcofp, slcpgw, slcsgi);
     }
 }
 

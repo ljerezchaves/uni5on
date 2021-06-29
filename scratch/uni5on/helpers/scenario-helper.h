@@ -53,8 +53,8 @@ public:
   enum PcapConfig
   {
     PCSLCOFP  = (1U << 0),  //!< Slice OpenFlow control channels.
-    PCSLCPGW  = (1U << 1),  //!< Slice P-GW internal interfaces.
-    PCSLCSGI  = (1U << 2),  //!< Slice SGi interface (Internet).
+    PCSLCPGW  = (1U << 1),  //!< Slice P-GW interfaces.
+    PCSLCSGI  = (1U << 2),  //!< Slice SGi interfaces.
     PCBACKOFP = (1U << 3),  //!< Backhaul OpenFlow control channels.
     PCBACKEPC = (1U << 4),  //!< Backhaul EPC interfaces.
     PCBACKSWT = (1U << 5),  //!< Backhaul switches interfaces.

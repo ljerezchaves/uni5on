@@ -240,10 +240,10 @@ SliceNetwork::GetTypeId (void)
 
 void
 SliceNetwork::EnablePcap (std::string prefix, bool promiscuous, bool ofchannel,
-                          bool sgiDevices, bool pgwDevices)
+                          bool pgwDevices, bool sgiDevices)
 {
   NS_LOG_FUNCTION (this << prefix << promiscuous << ofchannel <<
-                   sgiDevices << pgwDevices);
+                   pgwDevices << sgiDevices);
 
   if (ofchannel)
     {
