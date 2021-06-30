@@ -18,8 +18,8 @@
  * Author: Luciano Jerez Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef BACKHAUL_NETWORK_H
-#define BACKHAUL_NETWORK_H
+#ifndef TRANSPORT_NETWORK_H
+#define TRANSPORT_NETWORK_H
 
 #include <ns3/core-module.h>
 #include <ns3/lte-module.h>
@@ -29,7 +29,7 @@
 
 namespace ns3 {
 
-class BackhaulController;
+class TransportController;
 
 /**
  * \ingroup uni5on
@@ -39,19 +39,19 @@ class BackhaulController;
 
 /**
  * \ingroup uni5onInfra
- * This is the abstract base class for the OpenFlow backhaul network, which
- * should be extended in accordance to the desired backhaul network topology.
- * The eEPC entities (eNB, S-GW, and P-GW) are connected to the OpenFlow
+ * This is the abstract base class for the OpenFlow transport network, which
+ * should be extended to configure the desired network topology. The eEPC
+ * entities (eNB nodes and S/P-GWu switches) are connected to the OpenFlow
  * switches through CSMA devices.
  */
-class BackhaulNetwork : public Object
+class TransportNetwork : public Object
 {
-  friend class BackhaulController;
+  friend class TransportController;
   friend class RingController;
 
 public:
-  BackhaulNetwork ();          //!< Default constructor.
-  virtual ~BackhaulNetwork (); //!< Dummy destructor, see DoDispose.
+  TransportNetwork ();          //!< Default constructor.
+  virtual ~TransportNetwork (); //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
@@ -60,25 +60,25 @@ public:
   static TypeId GetTypeId (void);
 
   /**
-   * Enable PCAP traces files on the OpenFlow backhaul network.
+   * Enable PCAP traces files on the OpenFlow transport network.
    * \param prefix Filename prefix to use for PCAP files.
    * \param promiscuous If true, enable PCAP promiscuous traces.
-   * \param ofchannel If true, enable PCAP on backhaul OpenFlow channels.
-   * \param epcDevices If true, enable PCAP on EPC S1, S5, and X2 interfaces.
-   * \param swtDevices If true, enable PCAP on backhaul switches.
+   * \param ofchannel If true, enable PCAP on OpenFlow transport channels.
+   * \param epcDevices If true, enable PCAP on eEPC S1, S5, and X2 interfaces.
+   * \param swtDevices If true, enable PCAP on transport switches.
    */
   void EnablePcap (std::string prefix, bool promiscuous, bool ofchannel,
                    bool epcDevices, bool swtDevices);
 
   /**
-   * Attach the EPC node to the OpenFlow backhaul network.
+   * Attach the EPC node to the OpenFlow transport network.
    * \param epcNode The eNB node.
    * \param swIdx The switch index at which the EPC node should be connected.
    * \param iface The logical interface for this connection.
    * \param ifaceStr Custom name for this logical interface. When this
    *        string is empty, the default name is used.
    * \return The pair with the network device created at the EPC node and the
-   *         port device create at the backhaul switch.
+   *         port device create at the transport switch.
    */
   virtual std::pair<Ptr<CsmaNetDevice>, Ptr<OFSwitch13Port>>
   AttachEpcNode (Ptr<Node> enbNode, uint16_t swIdx, EpsIface iface,
@@ -87,21 +87,21 @@ public:
   /**
    * Get the backahul switch index at which the given eNB should be connected.
    * \param cellId The eNB cell ID.
-   * \return The backhaul switch index.
+   * \return The transport switch index.
    */
   virtual uint16_t GetEnbSwIdx (uint16_t cellId) const = 0;
 
   /**
-   * Get the total number of OpenFlow switches in the backhaul network.
+   * Get the total number of OpenFlow switches in the transport network.
    * \return The number of OpenFlow switches.
    */
   uint32_t GetNSwitches (void) const;
 
   /**
-   * Get the OpenFlow backhaul network controller.
+   * Get the OpenFlow transport network controller.
    * \return The OpenFlow controller.
    */
-  Ptr<BackhaulController> GetControllerApp (void) const;
+  Ptr<TransportController> GetControllerApp (void) const;
 
 protected:
   /** Destructor implementation. */
@@ -112,18 +112,23 @@ protected:
 
   /**
    * Create the controller application and switch devices for the OpenFlow
-   * backhaul network, connecting them accordingly to the desired topology.
+   * transport network, connecting them accordingly to the desired topology.
    */
   virtual void CreateTopology (void) = 0;
 
-  // Backhaul controller.
-  Ptr<BackhaulController>       m_controllerApp;  //!< Controller app.
+  // Transport network controller.
+  Ptr<TransportController>       m_controllerApp;  //!< Controller app.
   Ptr<Node>                     m_controllerNode; //!< Controller node.
 
-  // OpenFlow switches, helper and connection attribute.
+  // OpenFlow switches and helper.
   Ptr<OFSwitch13InternalHelper> m_switchHelper;   //!< Switch helper.
   NodeContainer                 m_switchNodes;    //!< Switch nodes.
   OFSwitch13DeviceContainer     m_switchDevices;  //!< Switch devices.
+
+  // CSMA helper and attributes for transport links.
+  CsmaHelper                    m_csmaHelper;     //!< Connection helper.
+  DataRate                      m_linkRate;       //!< Link data rate.
+  Time                          m_linkDelay;      //!< Link delay.
   uint16_t                      m_linkMtu;        //!< Link MTU.
 
   // Network addresses.
@@ -135,11 +140,6 @@ protected:
   static const Ipv4Mask         m_x2Mask;         //!< X2 network mask.
 
 private:
-  // CSMA helper and attributes for EPC interfaces.
-  CsmaHelper                    m_csmaHelper;     //!< EPC connection helper.
-  DataRate                      m_linkRate;       //!< EPC link data rate.
-  Time                          m_linkDelay;      //!< EPC link delay.
-
   // Switch datapath configuration.
   DataRate                      m_cpuCapacity;    //!< CPU capacity.
   uint32_t                      m_flowTableSize;  //!< Flow table size.
@@ -150,8 +150,9 @@ private:
   Ipv4AddressHelper             m_s1AddrHelper;   //!< S1-U address helper.
   Ipv4AddressHelper             m_s5AddrHelper;   //!< S5 address helper.
   Ipv4AddressHelper             m_x2AddrHelper;   //!< X2 address helper.
+
   NetDeviceContainer            m_epcDevices;     //!< EPC devices.
 };
 
 } // namespace ns3
-#endif  // BACKHAUL_NETWORK_H
+#endif  // TRANSPORT_NETWORK_H

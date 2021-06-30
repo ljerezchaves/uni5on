@@ -19,23 +19,23 @@
  */
 
 #include <ns3/csma-module.h>
-#include "backhaul-network.h"
-#include "backhaul-controller.h"
+#include "transport-network.h"
+#include "transport-controller.h"
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("BackhaulNetwork");
-NS_OBJECT_ENSURE_REGISTERED (BackhaulNetwork);
+NS_LOG_COMPONENT_DEFINE ("TransportNetwork");
+NS_OBJECT_ENSURE_REGISTERED (TransportNetwork);
 
-// Initializing BackhaulNetwork static members.
-const Ipv4Address BackhaulNetwork::m_s1Addr = Ipv4Address ("10.1.0.0");
-const Ipv4Address BackhaulNetwork::m_s5Addr = Ipv4Address ("10.2.0.0");
-const Ipv4Address BackhaulNetwork::m_x2Addr = Ipv4Address ("10.3.0.0");
-const Ipv4Mask    BackhaulNetwork::m_s1Mask = Ipv4Mask ("255.255.255.0");
-const Ipv4Mask    BackhaulNetwork::m_s5Mask = Ipv4Mask ("255.255.255.0");
-const Ipv4Mask    BackhaulNetwork::m_x2Mask = Ipv4Mask ("255.255.255.0");
+// Initializing the static members.
+const Ipv4Address TransportNetwork::m_s1Addr = Ipv4Address ("10.1.0.0");
+const Ipv4Address TransportNetwork::m_s5Addr = Ipv4Address ("10.2.0.0");
+const Ipv4Address TransportNetwork::m_x2Addr = Ipv4Address ("10.3.0.0");
+const Ipv4Mask    TransportNetwork::m_s1Mask = Ipv4Mask ("255.255.255.0");
+const Ipv4Mask    TransportNetwork::m_s5Mask = Ipv4Mask ("255.255.255.0");
+const Ipv4Mask    TransportNetwork::m_x2Mask = Ipv4Mask ("255.255.255.0");
 
-BackhaulNetwork::BackhaulNetwork ()
+TransportNetwork::TransportNetwork ()
   : m_controllerApp (0),
   m_controllerNode (0),
   m_switchHelper (0)
@@ -43,71 +43,71 @@ BackhaulNetwork::BackhaulNetwork ()
   NS_LOG_FUNCTION (this);
 }
 
-BackhaulNetwork::~BackhaulNetwork ()
+TransportNetwork::~TransportNetwork ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-BackhaulNetwork::GetTypeId (void)
+TransportNetwork::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::BackhaulNetwork")
+  static TypeId tid = TypeId ("ns3::TransportNetwork")
     .SetParent<Object> ()
-    .AddAttribute ("EpcLinkDataRate",
-                   "The data rate for the link connecting any EPC entity to "
-                   "the OpenFlow backhaul network.",
+
+    // Transport links.
+    .AddAttribute ("LinkDataRate",
+                   "The data rate for the transport CSMA links.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   DataRateValue (DataRate ("1Gbps")),
-                   MakeDataRateAccessor (&BackhaulNetwork::m_linkRate),
+                   DataRateValue (DataRate ("100Mbps")),
+                   MakeDataRateAccessor (&TransportNetwork::m_linkRate),
                    MakeDataRateChecker ())
-    .AddAttribute ("EpcLinkDelay",
-                   "The delay for the link connecting any EPC entity to "
-                   "the OpenFlow backhaul network.",
+    .AddAttribute ("LinkDelay",
+                   "The delay for the transport CSMA links.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   // The default value is for 10km fiber cable latency.
-                   TimeValue (MicroSeconds (50)),
-                   MakeTimeAccessor (&BackhaulNetwork::m_linkDelay),
+                   // The default value is for 40km fiber cable latency.
+                   TimeValue (MicroSeconds (200)),
+                   MakeTimeAccessor (&TransportNetwork::m_linkDelay),
                    MakeTimeChecker ())
     .AddAttribute ("LinkMtu",
-                   "The MTU for CSMA links. "
+                   "The MTU for the transport CSMA links. "
                    "Consider + 40 byter of GTP/UDP/IP tunnel overhead.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    UintegerValue (1492), // Ethernet II - PPoE
-                   MakeUintegerAccessor (&BackhaulNetwork::m_linkMtu),
+                   MakeUintegerAccessor (&TransportNetwork::m_linkMtu),
                    MakeUintegerChecker<uint16_t> ())
 
-    // Backhaul switches.
+    // Transport switches.
     .AddAttribute ("CpuCapacity",
-                   "Processing capacity for the backhaul switches.",
+                   "Processing capacity for the transport switches.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    DataRateValue (DataRate ("2Gbps")),
-                   MakeDataRateAccessor (&BackhaulNetwork::m_cpuCapacity),
+                   MakeDataRateAccessor (&TransportNetwork::m_cpuCapacity),
                    MakeDataRateChecker ())
     .AddAttribute ("FlowTableSize",
-                   "Flow table size for the backhaul switches.",
+                   "Flow table size for the transport switches.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    UintegerValue (8192),
-                   MakeUintegerAccessor (&BackhaulNetwork::m_flowTableSize),
+                   MakeUintegerAccessor (&TransportNetwork::m_flowTableSize),
                    MakeUintegerChecker<uint16_t> (0, 65535))
     .AddAttribute ("GroupTableSize",
-                   "Group table size for the backhaul switches.",
+                   "Group table size for the transport switches.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    UintegerValue (4096),
-                   MakeUintegerAccessor (&BackhaulNetwork::m_groupTableSize),
+                   MakeUintegerAccessor (&TransportNetwork::m_groupTableSize),
                    MakeUintegerChecker<uint16_t> (0, 65535))
     .AddAttribute ("MeterTableSize",
-                   "Meter table size for the backhaul switches.",
+                   "Meter table size for the transport switches.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    UintegerValue (4096),
-                   MakeUintegerAccessor (&BackhaulNetwork::m_meterTableSize),
+                   MakeUintegerAccessor (&TransportNetwork::m_meterTableSize),
                    MakeUintegerChecker<uint16_t> (0, 65535))
   ;
   return tid;
 }
 
 void
-BackhaulNetwork::EnablePcap (std::string prefix, bool promiscuous,
-                             bool ofchannel, bool epcDevices, bool swtDevices)
+TransportNetwork::EnablePcap (std::string prefix, bool promiscuous,
+                              bool ofchannel, bool epcDevices, bool swtDevices)
 {
   NS_LOG_FUNCTION (this << prefix << promiscuous << ofchannel <<
                    epcDevices << swtDevices);
@@ -129,16 +129,16 @@ BackhaulNetwork::EnablePcap (std::string prefix, bool promiscuous,
 }
 
 std::pair<Ptr<CsmaNetDevice>, Ptr<OFSwitch13Port>>
-BackhaulNetwork::AttachEpcNode (Ptr<Node> epcNode, uint16_t swIdx,
-                                EpsIface iface, std::string ifaceStr)
+TransportNetwork::AttachEpcNode (Ptr<Node> epcNode, uint16_t swIdx,
+                                 EpsIface iface, std::string ifaceStr)
 {
   NS_LOG_FUNCTION (this << epcNode << swIdx << iface);
-  NS_LOG_INFO ("Attach EPC node " << epcNode << " to backhaul switch index " <<
+  NS_LOG_INFO ("Attach EPC node " << epcNode << " to switch index " <<
                swIdx << " over " << EpsIfaceStr (iface) << " interface.");
 
   NS_ASSERT_MSG (swIdx < GetNSwitches (), "Invalid switch index.");
 
-  // Get the switch on the backhaul network.
+  // Get the switch on the transport network.
   uint64_t swDpId = m_switchDevices.Get (swIdx)->GetDatapathId ();
   Ptr<OFSwitch13Device> swOfDev = OFSwitch13Device::GetDevice (swDpId);
   Ptr<Node> swNode = swOfDev->GetObject<Node> ();
@@ -149,7 +149,7 @@ BackhaulNetwork::AttachEpcNode (Ptr<Node> epcNode, uint16_t swIdx,
   Ptr<CsmaNetDevice> epcDev = DynamicCast<CsmaNetDevice> (devices.Get (1));
   m_epcDevices.Add (epcDev);
 
-  // Set device names for pcap files.
+  // Set device names for PCAP files.
   if (ifaceStr.empty ())
     {
       ifaceStr = EpsIfaceStr (iface);
@@ -176,22 +176,22 @@ BackhaulNetwork::AttachEpcNode (Ptr<Node> epcNode, uint16_t swIdx,
       NS_ABORT_MSG ("Invalid interface.");
     }
 
-  // Notify the controller of the new EPC device attached to the backhaul.
+  // Notify the controller of the new EPC device attached to the network.
   m_controllerApp->NotifyEpcAttach (swOfDev, swPortNo, epcDev);
 
   return std::make_pair (epcDev, swPort);
 }
 
 uint32_t
-BackhaulNetwork::GetNSwitches (void) const
+TransportNetwork::GetNSwitches (void) const
 {
   NS_LOG_FUNCTION (this);
 
   return m_switchDevices.GetN ();
 }
 
-Ptr<BackhaulController>
-BackhaulNetwork::GetControllerApp (void) const
+Ptr<TransportController>
+TransportNetwork::GetControllerApp (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -199,7 +199,7 @@ BackhaulNetwork::GetControllerApp (void) const
 }
 
 void
-BackhaulNetwork::DoDispose (void)
+TransportNetwork::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -210,7 +210,7 @@ BackhaulNetwork::DoDispose (void)
 }
 
 void
-BackhaulNetwork::NotifyConstructionCompleted (void)
+TransportNetwork::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -219,11 +219,16 @@ BackhaulNetwork::NotifyConstructionCompleted (void)
   m_s5AddrHelper.SetBase (m_s5Addr, m_s5Mask);
   m_x2AddrHelper.SetBase (m_x2Addr, m_x2Mask);
 
-  // Create the OFSwitch13 helper using P2P connections for OpenFlow channel.
+  // Configuring the CSMA helper for the transport links.
+  m_csmaHelper.SetDeviceAttribute ("Mtu", UintegerValue (m_linkMtu));
+  m_csmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_linkRate));
+  m_csmaHelper.SetChannelAttribute ("Delay", TimeValue (m_linkDelay));
+
+  // Create the OFSwitch13 helper for the OpenFlow channel.
   m_switchHelper = CreateObjectWithAttributes<OFSwitch13InternalHelper> (
       "ChannelType", EnumValue (OFSwitch13Helper::DEDICATEDP2P));
 
-  // Configuring OpenFlow helper for backhaul switches.
+  // Configuring the OFSwitch13 helper for the transport switches.
   // 4 fixed pipeline tables (input, classification, bandwidth, and output),
   // and one extra table for each logical network slice).
   m_switchHelper->SetDeviceAttribute (
@@ -237,7 +242,7 @@ BackhaulNetwork::NotifyConstructionCompleted (void)
   m_switchHelper->SetDeviceAttribute (
     "PipelineTables", UintegerValue (4 + static_cast<int> (SliceId::ALL)));
 
-  // Create the OpenFlow backhaul network.
+  // Create the OpenFlow transport network.
   CreateTopology ();
 
   // Let's connect the OpenFlow switches to the controller. From this point
@@ -250,6 +255,7 @@ BackhaulNetwork::NotifyConstructionCompleted (void)
   std::string prefix = stringValue.Get ();
   m_switchHelper->EnableDatapathStats (prefix + "ofswitch-stats", true);
 
+  // Chain up.
   Object::NotifyConstructionCompleted ();
 }
 

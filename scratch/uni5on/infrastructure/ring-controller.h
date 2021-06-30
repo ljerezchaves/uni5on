@@ -21,7 +21,7 @@
 #ifndef RING_CONTROLLER_H
 #define RING_CONTROLLER_H
 
-#include "backhaul-controller.h"
+#include "transport-controller.h"
 #include "../metadata/ring-info.h"
 #include "../uni5on-common.h"
 
@@ -31,9 +31,9 @@ class EnbInfo;
 
 /**
  * \ingroup uni5onInfra
- * OpenFlow backhaul controller for ring topology.
+ * OpenFlow transport controller for the ring network.
  */
-class RingController : public BackhaulController
+class RingController : public TransportController
 {
   friend class RingNetwork;
 
@@ -74,7 +74,7 @@ protected:
   // Inherited from ObjectBase.
   virtual void NotifyConstructionCompleted (void);
 
-  // Inherited from BackhaulController.
+  // Inherited from TransportController.
   bool BearerRequest (Ptr<RoutingInfo> rInfo);
   bool BearerReserve (Ptr<RoutingInfo> rInfo);
   bool BearerRelease (Ptr<RoutingInfo> rInfo);
@@ -83,7 +83,7 @@ protected:
   bool BearerUpdate  (Ptr<RoutingInfo> rInfo, Ptr<EnbInfo> dstEnbInfo);
   void NotifyBearerCreated (Ptr<RoutingInfo> rInfo);
   void NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices);
-  // Inherited from BackhaulController.
+  // Inherited from TransportController.
 
   // Inherited from OFSwitch13Controller.
   void HandshakeSuccessful (Ptr<const RemoteSwitch> swtch);
@@ -175,7 +175,7 @@ private:
   void CreateSpanningTree (void);
 
   /**
-   * Get the backhaul lInfo pointers for the given logical interface.
+   * Get the lInfo pointers for the given logical interface.
    * \param ringInfo The ring routing information.
    * \param iface The logical interface.
    * \param links The set of links to populate.
@@ -212,7 +212,7 @@ private:
   RingInfo::RingPath GetShortPath (uint16_t srcIdx, uint16_t dstIdx) const;
 
   /**
-   * Check for the available resources on the backhaul infrastructure for the
+   * Check for the available resources on the transport infrastructure for the
    * given interface. When any of the requested resources is not available,
    * this method must set the routing information with the block reason.
    * \param ringInfo The ring routing information.

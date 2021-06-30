@@ -416,7 +416,7 @@ RadioNetwork::NotifyConstructionCompleted ()
   // Set eNB nodes positions on the hex grid and install the corresponding eNB
   // devices with antenna bore sight properly configured. This topology helper
   // will call the EpcHelper::AddEnb () method, which will configure and
-  // connect the eNB to the OpenFlow backhaul network.
+  // connect the eNB to the OpenFlow transport network.
   m_enbDevices = m_topoHelper->SetPositionAndInstallEnbDevice (m_enbNodes);
   BuildingsHelper::Install (m_enbNodes);
 

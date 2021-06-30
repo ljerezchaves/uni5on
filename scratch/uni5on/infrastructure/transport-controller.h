@@ -18,10 +18,10 @@
  * Author: Luciano Jerez Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef BACKHAUL_CONTROLLER_H
-#define BACKHAUL_CONTROLLER_H
+#ifndef TRANSPORT_CONTROLLER_H
+#define TRANSPORT_CONTROLLER_H
 
-// Pipeline tables at OpenFlow backhaul switches.
+// Pipeline tables at OpenFlow transport switches.
 #define INPUT_TAB 0
 #define CLASS_TAB 1
 #define BANDW_TAB (static_cast<int> (SliceId::ALL) + 2)
@@ -44,20 +44,18 @@ class LinkInfo;
 
 /**
  * \ingroup uni5onInfra
- * This is the abstract base class for the OpenFlow backhaul controller, which
- * should be extended in accordance to the desired backhaul network topology.
- * This controller implements the logic for traffic routing and engineering
- * within the OpenFlow backhaul network.
+ * This is the abstract base class for the OpenFlow transport controller, which
+ * should be extended to configure the desired transport network topology.
  */
-class BackhaulController : public OFSwitch13Controller
+class TransportController : public OFSwitch13Controller
 {
-  friend class BackhaulNetwork;
+  friend class TransportNetwork;
   friend class SliceController;
   friend class ScenarioHelper;
 
 public:
-  BackhaulController ();           //!< Default constructor.
-  virtual ~BackhaulController ();  //!< Dummy destructor, see DoDispose.
+  TransportController ();           //!< Default constructor.
+  virtual ~TransportController ();  //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
@@ -67,13 +65,13 @@ public:
 
   /**
    * Get the OpenFlow datapath ID for a specific switch index.
-   * \param idx The backhaul switch index.
+   * \param idx The transport switch index.
    * \return The OpenFlow datapath ID.
    */
   uint64_t GetDpId (uint16_t idx) const;
 
   /**
-   * Get the total number of OpenFlow switches in the backhaul network.
+   * Get the total number of OpenFlow switches in the transport network.
    * \return The number of OpenFlow switches.
    */
   uint16_t GetNSwitches (void) const;
@@ -99,8 +97,7 @@ protected:
   virtual void NotifyConstructionCompleted (void);
 
   /**
-   * Process the bearer request, deciding for the best routing path and
-   * checking for the available resources in the backhaul network.
+   * Process the bearer request in the transport network.
    * \param rInfo The routing information to process.
    * \return True if succeeded, false otherwise.
    */
@@ -121,25 +118,24 @@ protected:
   virtual bool BearerRelease (Ptr<RoutingInfo> rInfo) = 0;
 
   /**
-   * Install TEID routing OpenFlow match rules into backhaul switches.
+   * Install TEID routing rules into transport switches.
    * \attention To avoid conflicts with old entries, increase the routing
-   *            priority before installing OpenFlow rules.
+   *            priority before invoking this method.
    * \param rInfo The routing information to process.
    * \return True if succeeded, false otherwise.
    */
   virtual bool BearerInstall (Ptr<RoutingInfo> rInfo) = 0;
 
   /**
-   * Remove TEID routing OpenFlow match rules from backhaul switches.
+   * Remove TEID routing rules from transport switches.
    * \param rInfo The routing information to process.
    * \return True if succeeded, false otherwise.
    */
   virtual bool BearerRemove (Ptr<RoutingInfo> rInfo) = 0;
 
   /**
-   * Update TEID routing OpenFlow match rules from backhaul switches after a
-   * successful handover procedure.
-   * \attention Don't increase the rInfo priority and don't update the ueInfo
+   * Update TEID routing rules at transport switches.
+   * \attention Don't increase the routing priority and don't update the ueInfo
    *            with the destination eNB metadata before invoking this method.
    * \param rInfo The routing information to process.
    * \param dstEnbInfo The destination eNB after the handover procedure.
@@ -157,7 +153,7 @@ protected:
   void DpctlSchedule (Time delay, uint64_t dpId, const std::string textCmd);
 
   /**
-   * Get the pipeline flow table usage for the given backhaul switch index
+   * Get the pipeline flow table usage for the given transport switch
    * and pipeline flow table ID.
    * \param idx The switch index.
    * \param tableId The pipeline slice table ID.
@@ -178,7 +174,7 @@ protected:
     uint16_t idx1, uint16_t idx2) const;
 
   /**
-   * Get the EWMA processing capacity usage for the given backhaul switch.
+   * Get the EWMA processing capacity usage for the given transport switch.
    * \param idx The switch index.
    * \return The pipeline capacity usage.
    */
@@ -193,7 +189,7 @@ protected:
 
   /**
    * Get the list of slice controller applications.
-   * \param sharing Filter controller applications with enabled backhaul
+   * \param sharing Filter controller applications with enabled
    *        bandwdith sharing flag.
    * \return The list of controller applications.
    */
@@ -216,8 +212,8 @@ protected:
 
   /**
    * Notify this controller of a new EPC entity connected to the OpenFlow
-   * backhaul network.
-   * \param swDev The OpenFlow switch device on the backhaul network.
+   * transport network.
+   * \param swDev The OpenFlow switch device on the transport network.
    * \param portNo The port number created at the OpenFlow switch.
    * \param epcDev The device created at the EPC node.
    */
@@ -232,7 +228,7 @@ protected:
   virtual void NotifySlicesBuilt (ApplicationContainer &controllers);
 
   /**
-   * Notify this controller that all backhaul switches have already been
+   * Notify this controller that all transport switches have already been
    * configured and the connections between them are finished.
    * \param devices The OpenFlow switch devices.
    */
@@ -252,7 +248,7 @@ protected:
   // Inherited from OFSwitch13Controller.
 
   /**
-   * Periodically check for infrastructure bandwidth utilization over backhaul
+   * Periodically check for infrastructure bandwidth utilization over transport
    * links to adjust extra bit rate when in dynamic inter-slice operation mode.
    */
   void SlicingDynamicTimeout (void);
@@ -307,4 +303,4 @@ private:
 };
 
 } // namespace ns3
-#endif // BACKHAUL_CONTROLLER_H
+#endif // TRANSPORT_CONTROLLER_H

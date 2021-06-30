@@ -23,7 +23,7 @@
 #include "../logical/slice-controller.h"
 #include "../metadata/enb-info.h"
 #include "../metadata/routing-info.h"
-#include "backhaul-network.h"
+#include "transport-network.h"
 
 namespace ns3 {
 
@@ -44,7 +44,7 @@ TypeId
 RingController::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::RingController")
-    .SetParent<BackhaulController> ()
+    .SetParent<TransportController> ()
     .AddConstructor<RingController> ()
     .AddAttribute ("Routing", "The ring routing strategy.",
                    EnumValue (RingController::SPO),
@@ -84,7 +84,7 @@ RingController::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
-  BackhaulController::DoDispose ();
+  TransportController::DoDispose ();
 }
 
 void
@@ -92,7 +92,7 @@ RingController::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
-  BackhaulController::NotifyConstructionCompleted ();
+  TransportController::NotifyConstructionCompleted ();
 }
 
 bool
@@ -212,7 +212,7 @@ RingController::BearerUpdate (Ptr<RoutingInfo> rInfo, Ptr<EnbInfo> dstEnbInfo)
   NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
 
   // Each slice has a single P-GW and S-GW, so handover only changes the eNB.
-  // Thus, we only need to modify the S1-U backhaul rules.
+  // Thus, we only need to modify the S1-U routing rules.
   bool success = true;
   success &= RulesUpdate (ringInfo, EpsIface::S1, dstEnbInfo);
   return success;
@@ -230,7 +230,7 @@ RingController::NotifyBearerCreated (Ptr<RoutingInfo> rInfo)
   SetShortestPath (ringInfo, EpsIface::S5);
   SetShortestPath (ringInfo, EpsIface::S1);
 
-  BackhaulController::NotifyBearerCreated (rInfo);
+  TransportController::NotifyBearerCreated (rInfo);
 }
 
 void
@@ -239,7 +239,7 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices)
   NS_LOG_FUNCTION (this);
 
   // Chain up first, as we need to save the switch devices.
-  BackhaulController::NotifyTopologyBuilt (devices);
+  TransportController::NotifyTopologyBuilt (devices);
 
   // Create the spanning tree for this topology.
   CreateSpanningTree ();
@@ -292,8 +292,8 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
         << ",flags="          << FLAGS_REMOVED_OVERLAP_RESET
         << " eth_type="       << IPV4_PROT_NUM
         << ",ip_proto="       << UDP_PROT_NUM
-        << ",ip_dst="         << BackhaulNetwork::m_x2Addr
-        << "/"                << BackhaulNetwork::m_x2Mask.GetPrefixLength ()
+        << ",ip_dst="         << TransportNetwork::m_x2Addr
+        << "/"                << TransportNetwork::m_x2Mask.GetPrefixLength ()
         << " write:group="    << RingInfo::CLOCK
         << " goto:"           << OUTPT_TAB;
     DpctlExecute (swDpId, cmd.str ());
@@ -338,7 +338,7 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
       break;
     }
 
-  BackhaulController::HandshakeSuccessful (swtch);
+  TransportController::HandshakeSuccessful (swtch);
 }
 
 bool
@@ -667,19 +667,19 @@ RingController::HasAvailableResources (
     {
       rInfo->SetBlocked (RoutingInfo::BACKBAND);
       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
-                   " because at least one backhaul link is overloaded.");
+                   " because at least one transport link is overloaded.");
     }
   if (!cpuOk)
     {
       rInfo->SetBlocked (RoutingInfo::BACKLOAD);
       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
-                   " because at least one backhaul switch is overloaded.");
+                   " because at least one transport switch is overloaded.");
     }
   if (!tabOk)
     {
       rInfo->SetBlocked (RoutingInfo::BACKTABLE);
       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
-                   " because at least one backhaul switch table is full.");
+                   " because at least one transport switch table is full.");
     }
 
   return (bwdOk && cpuOk && tabOk);
@@ -905,7 +905,7 @@ RingController::RulesUpdate (
   // rInfo->GetDstDlAddr (EpsIface::S1)       // eNB S1-U address
   // rInfo->GetSrcUlAddr (EpsIface::S1)       // eNB S1-U address
   //
-  // We can't just modify the OpenFlow rules in the backhaul switches because
+  // We can't just modify the OpenFlow rules in the transport switches because
   // we need to change the match fields. So, we will schedule the removal of
   // old low-priority rules from the old routing path and install new rules in
   // the new routing path (may be the same), using a higher priority and the

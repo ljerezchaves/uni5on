@@ -71,7 +71,7 @@ typedef std::set<Ptr<LinkInfo>> LinkInfoSet_t;
  */
 class LinkInfo : public Object
 {
-  friend class BackhaulController;
+  friend class TransportController;
   friend class RingController;
 
 public:

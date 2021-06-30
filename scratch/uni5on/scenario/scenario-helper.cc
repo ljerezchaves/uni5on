@@ -21,7 +21,7 @@
 #include <ns3/csma-module.h>
 #include "scenario-helper.h"
 #include "traffic-helper.h"
-#include "../infrastructure/backhaul-controller.h"
+#include "../infrastructure/transport-controller.h"
 #include "../infrastructure/radio-network.h"
 #include "../infrastructure/ring-network.h"
 #include "../logical/enb-application.h"
@@ -426,7 +426,7 @@ ScenarioHelper::NotifyConstructionCompleted (void)
   m_backhaul = CreateObject<RingNetwork> ();
   m_radio = CreateObject<RadioNetwork> (Ptr<ScenarioHelper> (this));
 
-  Ptr<BackhaulController> backahulCtrl = m_backhaul->GetControllerApp ();
+  Ptr<TransportController> backahulCtrl = m_backhaul->GetControllerApp ();
   ApplicationContainer sliceControllers;
   int sumQuota = 0;
 

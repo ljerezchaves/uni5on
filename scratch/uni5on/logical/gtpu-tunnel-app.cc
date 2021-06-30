@@ -20,7 +20,7 @@
 
 #include <ns3/tunnel-id-tag.h>
 #include "gtpu-tunnel-app.h"
-#include "../infrastructure/backhaul-network.h"
+#include "../infrastructure/transport-network.h"
 
 namespace ns3 {
 

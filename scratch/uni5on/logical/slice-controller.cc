@@ -19,8 +19,8 @@
  */
 
 #include "slice-controller.h"
-#include "../infrastructure/backhaul-controller.h"
-#include "../infrastructure/backhaul-network.h"
+#include "../infrastructure/transport-controller.h"
+#include "../infrastructure/transport-network.h"
 #include "../metadata/enb-info.h"
 #include "../metadata/pgw-info.h"
 #include "../metadata/routing-info.h"
@@ -80,7 +80,7 @@ SliceController::GetTypeId (void)
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    PointerValue (),
                    MakePointerAccessor (&SliceController::m_backhaulCtrl),
-                   MakePointerChecker<BackhaulController> ())
+                   MakePointerChecker<TransportController> ())
     .AddAttribute ("GbrBlockThs",
                    "The backhaul GBR bandwidth block threshold.",
                    DoubleValue (0.25),

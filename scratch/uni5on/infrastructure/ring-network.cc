@@ -19,8 +19,8 @@
  */
 
 #include "ring-network.h"
-#include "../metadata/link-info.h"
 #include "ring-controller.h"
+#include "../metadata/link-info.h"
 
 namespace ns3 {
 
@@ -41,27 +41,16 @@ TypeId
 RingNetwork::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::RingNetwork")
-    .SetParent<BackhaulNetwork> ()
+    .SetParent<TransportNetwork> ()
     .AddConstructor<RingNetwork> ()
+
+    // Ring topology configuration.
     .AddAttribute ("NumRingSwitches",
                    "The number of OpenFlow switches in the ring (at least 3).",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    UintegerValue (3),
                    MakeUintegerAccessor (&RingNetwork::m_numNodes),
                    MakeUintegerChecker<uint16_t> (3))
-    .AddAttribute ("RingLinkDataRate",
-                   "The data rate for the links between OpenFlow switches.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   DataRateValue (DataRate ("100Mbps")),
-                   MakeDataRateAccessor (&RingNetwork::m_linkRate),
-                   MakeDataRateChecker ())
-    .AddAttribute ("RingLinkDelay",
-                   "The delay for the links between OpenFlow switches.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   // The default value is for 40km fiber cable latency.
-                   TimeValue (MicroSeconds (200)),
-                   MakeTimeAccessor (&RingNetwork::m_linkDelay),
-                   MakeTimeChecker ())
     .AddAttribute ("SkipFirstSwitch",
                    "Skip the first ring switch when attaching eNBs.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -98,29 +87,15 @@ RingNetwork::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
-  BackhaulNetwork::DoDispose ();
-}
-
-void
-RingNetwork::NotifyConstructionCompleted ()
-{
-  NS_LOG_FUNCTION (this);
-
-  // Configuring CSMA helper for connection between switches.
-  m_csmaHelper.SetDeviceAttribute ("Mtu", UintegerValue (m_linkMtu));
-  m_csmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_linkRate));
-  m_csmaHelper.SetChannelAttribute ("Delay", TimeValue (m_linkDelay));
-
-  // The topology creation will be triggered by base class.
-  BackhaulNetwork::NotifyConstructionCompleted ();
+  // Chain up.
+  TransportNetwork::DoDispose ();
 }
 
 void
 RingNetwork::CreateTopology (void)
 {
   NS_LOG_FUNCTION (this);
-  NS_LOG_INFO ("Creating ring backhaul network with " << m_numNodes <<
-               " switches.");
+  NS_LOG_INFO ("New ring network with " << m_numNodes << " switches.");
 
   NS_ASSERT_MSG (m_numNodes >= 3, "Invalid number of nodes for the ring.");
 
@@ -177,7 +152,7 @@ RingNetwork::CreateTopology (void)
       CreateObject<LinkInfo> (currPort, nextPort, channel);
     }
 
-  // Fire trace source notifying that the topology was successfully built.
+  // Notify the controller that the topology was successfully built.
   ringController->NotifyTopologyBuilt (m_switchDevices);
 }
 

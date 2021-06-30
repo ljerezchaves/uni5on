@@ -41,7 +41,7 @@ typedef std::vector<Ptr<RoutingInfo>> RoutingInfoList_t;
  */
 class RoutingInfo : public Object
 {
-  friend class BackhaulController;
+  friend class TransportController;
   friend class RingController;
   friend class SliceController;
   friend class TrafficManager;

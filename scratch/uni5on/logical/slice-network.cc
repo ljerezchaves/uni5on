@@ -19,7 +19,7 @@
  */
 
 #include <ns3/csma-module.h>
-#include "../infrastructure/backhaul-network.h"
+#include "../infrastructure/transport-network.h"
 #include "../infrastructure/radio-network.h"
 #include "../metadata/pgw-info.h"
 #include "../metadata/sgw-info.h"
@@ -76,7 +76,7 @@ SliceNetwork::GetTypeId (void)
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    PointerValue (),
                    MakePointerAccessor (&SliceNetwork::m_backhaul),
-                   MakePointerChecker<BackhaulNetwork> ())
+                   MakePointerChecker<TransportNetwork> ())
     .AddAttribute ("RadioNet", "The RAN network pointer.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    PointerValue (),

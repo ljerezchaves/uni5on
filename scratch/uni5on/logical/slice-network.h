@@ -29,7 +29,7 @@
 
 namespace ns3 {
 
-class BackhaulNetwork;
+class TransportNetwork;
 class RadioNetwork;
 class SliceController;
 
@@ -127,7 +127,7 @@ private:
   std::string                   m_sliceIdStr;       //!< Slice ID string.
 
   // Infrastructure interface.
-  Ptr<BackhaulNetwork>          m_backhaul;         //!< OpenFlow backhaul.
+  Ptr<TransportNetwork>          m_backhaul;         //!< OpenFlow backhaul.
   Ptr<RadioNetwork>             m_radio;            //!< Radio network.
 
   // OpenFlow network configuration.

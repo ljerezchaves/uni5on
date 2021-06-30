@@ -25,7 +25,7 @@
 #include "pgw-info.h"
 #include "sgw-info.h"
 #include "ue-info.h"
-#include "../infrastructure/backhaul-controller.h"
+#include "../infrastructure/transport-controller.h"
 
 using namespace std;
 

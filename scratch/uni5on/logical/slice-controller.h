@@ -38,7 +38,7 @@
 
 namespace ns3 {
 
-class BackhaulController;
+class TransportController;
 class EnbInfo;
 class RoutingInfo;
 class StatelessMme;
@@ -385,7 +385,7 @@ private:
   std::string             m_sliceIdStr;     //!< Slice ID string.
 
   // Infrastructure interface.
-  Ptr<BackhaulController> m_backhaulCtrl;   //!< OpenFlow backhaul controller.
+  Ptr<TransportController> m_backhaulCtrl;   //!< OpenFlow backhaul controller.
   double                  m_gbrBlockThs;    //!< Backhaul GBR block threshold.
   int                     m_slicePrio;      //!< slice priority.
   int                     m_linkQuota;      //!< Initial bandwitdh quota.

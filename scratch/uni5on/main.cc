@@ -397,8 +397,8 @@ EnableVerbose (bool enable)
       LogComponentEnable ("TrafficHelper",            logLevelWarnInfo);
 
       // Infrastructure components.
-      LogComponentEnable ("BackhaulController",       logLevelWarnInfo);
-      LogComponentEnable ("BackhaulNetwork",          logLevelWarnInfo);
+      LogComponentEnable ("TransportController",      logLevelWarnInfo);
+      LogComponentEnable ("TransportNetwork",         logLevelWarnInfo);
       LogComponentEnable ("RadioNetwork",             logLevelWarnInfo);
       LogComponentEnable ("RingController",           logLevelWarnInfo);
       LogComponentEnable ("RingNetwork",              logLevelWarnInfo);

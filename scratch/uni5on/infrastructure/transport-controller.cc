@@ -19,65 +19,65 @@
  */
 
 #include <algorithm>
-#include "backhaul-controller.h"
+#include "transport-controller.h"
 #include "../metadata/link-info.h"
-#include "backhaul-network.h"
+#include "transport-network.h"
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("BackhaulController");
-NS_OBJECT_ENSURE_REGISTERED (BackhaulController);
+NS_LOG_COMPONENT_DEFINE ("TransportController");
+NS_OBJECT_ENSURE_REGISTERED (TransportController);
 
-BackhaulController::BackhaulController ()
+TransportController::TransportController ()
 {
   NS_LOG_FUNCTION (this);
 }
 
-BackhaulController::~BackhaulController ()
+TransportController::~TransportController ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-BackhaulController::GetTypeId (void)
+TransportController::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::BackhaulController")
+  static TypeId tid = TypeId ("ns3::TransportController")
     .SetParent<OFSwitch13Controller> ()
 
     .AddAttribute ("AggBitRateCheck",
                    "Check for the available bit rate for aggregated bearers.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    EnumValue (OpMode::OFF),
-                   MakeEnumAccessor (&BackhaulController::m_aggCheck),
+                   MakeEnumAccessor (&TransportController::m_aggCheck),
                    MakeEnumChecker (OpMode::OFF, OpModeStr (OpMode::OFF),
                                     OpMode::ON,  OpModeStr (OpMode::ON)))
     .AddAttribute ("ExtraStep",
                    "Extra bit rate adjustment step.",
                    DataRateValue (DataRate ("12Mbps")),
-                   MakeDataRateAccessor (&BackhaulController::m_extraStep),
+                   MakeDataRateAccessor (&TransportController::m_extraStep),
                    MakeDataRateChecker ())
     .AddAttribute ("GuardStep",
                    "Link guard bit rate.",
                    DataRateValue (DataRate ("10Mbps")),
-                   MakeDataRateAccessor (&BackhaulController::m_guardStep),
+                   MakeDataRateAccessor (&TransportController::m_guardStep),
                    MakeDataRateChecker ())
     .AddAttribute ("MeterStep",
                    "Meter bit rate adjustment step.",
                    DataRateValue (DataRate ("2Mbps")),
-                   MakeDataRateAccessor (&BackhaulController::m_meterStep),
+                   MakeDataRateAccessor (&TransportController::m_meterStep),
                    MakeDataRateChecker ())
     .AddAttribute ("QosQueues",
                    "QoS output queues operation mode.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    EnumValue (OpMode::ON),
-                   MakeEnumAccessor (&BackhaulController::m_qosQueues),
+                   MakeEnumAccessor (&TransportController::m_qosQueues),
                    MakeEnumChecker (OpMode::OFF, OpModeStr (OpMode::OFF),
                                     OpMode::ON,  OpModeStr (OpMode::ON)))
     .AddAttribute ("SliceMode",
                    "Inter-slice operation mode.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    EnumValue (SliceMode::NONE),
-                   MakeEnumAccessor (&BackhaulController::m_sliceMode),
+                   MakeEnumAccessor (&TransportController::m_sliceMode),
                    MakeEnumChecker (SliceMode::NONE,
                                     SliceModeStr (SliceMode::NONE),
                                     SliceMode::SHAR,
@@ -89,32 +89,32 @@ BackhaulController::GetTypeId (void)
     .AddAttribute ("SliceTimeout",
                    "Inter-slice adjustment timeout.",
                    TimeValue (Seconds (20)),
-                   MakeTimeAccessor (&BackhaulController::m_sliceTimeout),
+                   MakeTimeAccessor (&TransportController::m_sliceTimeout),
                    MakeTimeChecker ())
     .AddAttribute ("SpareUse",
                    "Use spare link bit rate for sharing purposes.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    EnumValue (OpMode::ON),
-                   MakeEnumAccessor (&BackhaulController::m_spareUse),
+                   MakeEnumAccessor (&TransportController::m_spareUse),
                    MakeEnumChecker (OpMode::OFF, OpModeStr (OpMode::OFF),
                                     OpMode::ON,  OpModeStr (OpMode::ON)))
     .AddAttribute ("SwBlockPolicy",
                    "Switch overloaded block policy.",
                    EnumValue (OpMode::ON),
-                   MakeEnumAccessor (&BackhaulController::m_swBlockPolicy),
+                   MakeEnumAccessor (&TransportController::m_swBlockPolicy),
                    MakeEnumChecker (OpMode::OFF, OpModeStr (OpMode::OFF),
                                     OpMode::ON,  OpModeStr (OpMode::ON)))
     .AddAttribute ("SwBlockThs",
                    "Switch overloaded block threshold.",
                    DoubleValue (0.9),
-                   MakeDoubleAccessor (&BackhaulController::m_swBlockThs),
+                   MakeDoubleAccessor (&TransportController::m_swBlockThs),
                    MakeDoubleChecker<double> (0.8, 1.0))
   ;
   return tid;
 }
 
 uint64_t
-BackhaulController::GetDpId (uint16_t idx) const
+TransportController::GetDpId (uint16_t idx) const
 {
   NS_LOG_FUNCTION (this << idx);
 
@@ -123,7 +123,7 @@ BackhaulController::GetDpId (uint16_t idx) const
 }
 
 uint16_t
-BackhaulController::GetNSwitches (void) const
+TransportController::GetNSwitches (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -131,7 +131,7 @@ BackhaulController::GetNSwitches (void) const
 }
 
 OpMode
-BackhaulController::GetAggBitRateCheck (void) const
+TransportController::GetAggBitRateCheck (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -139,7 +139,7 @@ BackhaulController::GetAggBitRateCheck (void) const
 }
 
 OpMode
-BackhaulController::GetSwBlockPolicy (void) const
+TransportController::GetSwBlockPolicy (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -147,7 +147,7 @@ BackhaulController::GetSwBlockPolicy (void) const
 }
 
 double
-BackhaulController::GetSwBlockThreshold (void) const
+TransportController::GetSwBlockThreshold (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -155,7 +155,7 @@ BackhaulController::GetSwBlockThreshold (void) const
 }
 
 SliceMode
-BackhaulController::GetInterSliceMode (void) const
+TransportController::GetInterSliceMode (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -163,7 +163,7 @@ BackhaulController::GetInterSliceMode (void) const
 }
 
 OpMode
-BackhaulController::GetQosQueuesMode (void) const
+TransportController::GetQosQueuesMode (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -171,7 +171,7 @@ BackhaulController::GetQosQueuesMode (void) const
 }
 
 OpMode
-BackhaulController::GetSpareUseMode (void) const
+TransportController::GetSpareUseMode (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -179,7 +179,7 @@ BackhaulController::GetSpareUseMode (void) const
 }
 
 void
-BackhaulController::DoDispose ()
+TransportController::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -188,7 +188,7 @@ BackhaulController::DoDispose ()
 }
 
 void
-BackhaulController::NotifyConstructionCompleted (void)
+TransportController::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -197,24 +197,24 @@ BackhaulController::NotifyConstructionCompleted (void)
   if (GetInterSliceMode () == SliceMode::DYNA)
     {
       Simulator::Schedule (
-        m_sliceTimeout, &BackhaulController::SlicingDynamicTimeout, this);
+        m_sliceTimeout, &TransportController::SlicingDynamicTimeout, this);
     }
 
   OFSwitch13Controller::NotifyConstructionCompleted ();
 }
 
 void
-BackhaulController::DpctlSchedule (Time delay, uint64_t dpId,
-                                   const std::string textCmd)
+TransportController::DpctlSchedule (Time delay, uint64_t dpId,
+                                    const std::string textCmd)
 {
   NS_LOG_FUNCTION (this << delay << dpId << textCmd);
 
-  Simulator::Schedule (delay, &BackhaulController::DpctlExecute,
+  Simulator::Schedule (delay, &TransportController::DpctlExecute,
                        this, dpId, textCmd);
 }
 
 double
-BackhaulController::GetFlowTableUse (uint16_t idx, uint8_t tableId) const
+TransportController::GetFlowTableUse (uint16_t idx, uint8_t tableId) const
 {
   NS_LOG_FUNCTION (this << idx);
 
@@ -223,7 +223,7 @@ BackhaulController::GetFlowTableUse (uint16_t idx, uint8_t tableId) const
 }
 
 std::tuple<Ptr<LinkInfo>, LinkInfo::LinkDir, LinkInfo::LinkDir>
-BackhaulController::GetLinkInfo (uint16_t idx1, uint16_t idx2) const
+TransportController::GetLinkInfo (uint16_t idx1, uint16_t idx2) const
 {
   NS_LOG_FUNCTION (this << idx1 << idx2);
 
@@ -235,7 +235,7 @@ BackhaulController::GetLinkInfo (uint16_t idx1, uint16_t idx2) const
 }
 
 double
-BackhaulController::GetEwmaCpuUse (uint16_t idx) const
+TransportController::GetEwmaCpuUse (uint16_t idx) const
 {
   NS_LOG_FUNCTION (this << idx);
 
@@ -251,7 +251,7 @@ BackhaulController::GetEwmaCpuUse (uint16_t idx) const
 }
 
 Ptr<SliceController>
-BackhaulController::GetSliceController (SliceId slice) const
+TransportController::GetSliceController (SliceId slice) const
 {
   NS_LOG_FUNCTION (this << slice);
 
@@ -261,7 +261,7 @@ BackhaulController::GetSliceController (SliceId slice) const
 }
 
 const SliceControllerList_t&
-BackhaulController::GetSliceControllerList (bool sharing) const
+TransportController::GetSliceControllerList (bool sharing) const
 {
   NS_LOG_FUNCTION (this << sharing);
 
@@ -269,7 +269,7 @@ BackhaulController::GetSliceControllerList (bool sharing) const
 }
 
 uint16_t
-BackhaulController::GetSliceTable (SliceId slice) const
+TransportController::GetSliceTable (SliceId slice) const
 {
   NS_LOG_FUNCTION (this << slice);
 
@@ -277,13 +277,13 @@ BackhaulController::GetSliceTable (SliceId slice) const
 }
 
 void
-BackhaulController::NotifyBearerCreated (Ptr<RoutingInfo> rInfo)
+TransportController::NotifyBearerCreated (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 }
 
 void
-BackhaulController::NotifyEpcAttach (
+TransportController::NotifyEpcAttach (
   Ptr<OFSwitch13Device> swDev, uint32_t portNo, Ptr<NetDevice> epcDev)
 {
   NS_LOG_FUNCTION (this << swDev << portNo << epcDev);
@@ -306,7 +306,7 @@ BackhaulController::NotifyEpcAttach (
     DpctlExecute (swDev->GetDatapathId (), cmd.str ());
   }
   //
-  // X2-C packets entering the backhaul network from this EPC port.
+  // X2-C packets entering the transport network from this EPC port.
   // Set the DSCP field for Expedited Forwarding.
   // Send the packet to the classification table.
   {
@@ -316,8 +316,8 @@ BackhaulController::NotifyEpcAttach (
         << ",flags="        << FLAGS_REMOVED_OVERLAP_RESET
         << " eth_type="     << IPV4_PROT_NUM
         << ",ip_proto="     << UDP_PROT_NUM
-        << ",ip_dst="       << BackhaulNetwork::m_x2Addr
-        << "/"              << BackhaulNetwork::m_x2Mask.GetPrefixLength ()
+        << ",ip_dst="       << TransportNetwork::m_x2Addr
+        << "/"              << TransportNetwork::m_x2Mask.GetPrefixLength ()
         << ",in_port="      << portNo
         << " apply:set_field=ip_dscp:" << Ipv4Header::DSCP_EF
         << " goto:"         << CLASS_TAB;
@@ -333,7 +333,7 @@ PriComp (Ptr<SliceController> ctrl1, Ptr<SliceController> ctrl2)
 }
 
 void
-BackhaulController::NotifySlicesBuilt (ApplicationContainer &controllers)
+TransportController::NotifySlicesBuilt (ApplicationContainer &controllers)
 {
   NS_LOG_FUNCTION (this);
 
@@ -415,7 +415,7 @@ BackhaulController::NotifySlicesBuilt (ApplicationContainer &controllers)
 }
 
 void
-BackhaulController::NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices)
+TransportController::NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices)
 {
   NS_LOG_FUNCTION (this);
 
@@ -424,7 +424,7 @@ BackhaulController::NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices)
 }
 
 ofl_err
-BackhaulController::HandleError (
+TransportController::HandleError (
   struct ofl_msg_error *msg, Ptr<const RemoteSwitch> swtch,
   uint32_t xid)
 {
@@ -441,7 +441,7 @@ BackhaulController::HandleError (
   // Logging this error message on the standard error stream and continue.
   Config::SetGlobal ("SeeCerr", BooleanValue (true));
   std::cerr << Simulator::Now ().GetSeconds ()
-            << " Backhaul controller received message xid " << xid
+            << " Transport controller received message xid " << xid
             << " from switch id " << swtch->GetDpId ()
             << " with error message: " << msgStr
             << std::endl;
@@ -449,7 +449,7 @@ BackhaulController::HandleError (
 }
 
 ofl_err
-BackhaulController::HandleFlowRemoved (
+TransportController::HandleFlowRemoved (
   struct ofl_msg_flow_removed *msg, Ptr<const RemoteSwitch> swtch,
   uint32_t xid)
 {
@@ -502,7 +502,7 @@ BackhaulController::HandleFlowRemoved (
 }
 
 ofl_err
-BackhaulController::HandlePacketIn (
+TransportController::HandlePacketIn (
   struct ofl_msg_packet_in *msg, Ptr<const RemoteSwitch> swtch,
   uint32_t xid)
 {
@@ -519,7 +519,7 @@ BackhaulController::HandlePacketIn (
   // Logging this packet-in message on the standard error stream and continue.
   Config::SetGlobal ("SeeCerr", BooleanValue (true));
   std::cerr << Simulator::Now ().GetSeconds ()
-            << " Backhaul controller received message xid " << xid
+            << " Transport controller received message xid " << xid
             << " from switch id " << swtch->GetDpId ()
             << " with packet-in message: " << msgStr
             << std::endl;
@@ -527,14 +527,14 @@ BackhaulController::HandlePacketIn (
 }
 
 void
-BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
+TransportController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 {
   NS_LOG_FUNCTION (this << swtch);
 
   // Get the OpenFlow switch datapath ID.
   uint64_t swDpId = swtch->GetDpId ();
 
-  // For the switches on the backhaul network, install following rules:
+  // For each switch on the transport network, install the following rules:
   // -------------------------------------------------------------------------
   // Input table -- [from higher to lower priority]
   //
@@ -633,11 +633,11 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 }
 
 void
-BackhaulController::SlicingDynamicTimeout (void)
+TransportController::SlicingDynamicTimeout (void)
 {
   NS_LOG_FUNCTION (this);
 
-  // Adjust the extra bit rates in both directions for each backhaul link.
+  // Adjust the extra bit rates in both directions for each transport link.
   for (auto &lInfo : LinkInfo::GetList ())
     {
       for (int d = 0; d < N_LINK_DIRS; d++)
@@ -648,11 +648,11 @@ BackhaulController::SlicingDynamicTimeout (void)
 
   // Schedule the next slicing extra timeout operation.
   Simulator::Schedule (
-    m_sliceTimeout, &BackhaulController::SlicingDynamicTimeout, this);
+    m_sliceTimeout, &TransportController::SlicingDynamicTimeout, this);
 }
 
 void
-BackhaulController::SlicingExtraAdjust (
+TransportController::SlicingExtraAdjust (
   Ptr<LinkInfo> lInfo, LinkInfo::LinkDir dir)
 {
   NS_LOG_FUNCTION (this << lInfo << dir);
@@ -817,7 +817,7 @@ BackhaulController::SlicingExtraAdjust (
 }
 
 void
-BackhaulController::SlicingMeterAdjust (
+TransportController::SlicingMeterAdjust (
   Ptr<LinkInfo> lInfo, SliceId slice)
 {
   NS_LOG_FUNCTION (this << lInfo << slice);
@@ -903,7 +903,7 @@ BackhaulController::SlicingMeterAdjust (
 }
 
 void
-BackhaulController::SlicingMeterInstall (Ptr<LinkInfo> lInfo, SliceId slice)
+TransportController::SlicingMeterInstall (Ptr<LinkInfo> lInfo, SliceId slice)
 {
   NS_LOG_FUNCTION (this << lInfo << slice);
 

@@ -22,15 +22,15 @@
 #define RING_NETWORK_H
 
 #include <ns3/csma-module.h>
-#include "backhaul-network.h"
+#include "transport-network.h"
 
 namespace ns3 {
 
 /**
  * \ingroup uni5onInfra
- * OpenFlow backhaul network for ring topology.
+ * OpenFlow transport network with ring topology.
  */
-class RingNetwork : public BackhaulNetwork
+class RingNetwork : public TransportNetwork
 {
 public:
   RingNetwork ();           //!< Default constructor.
@@ -42,24 +42,18 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  // Inherited from BackhaulNetwork.
+  // Inherited from TransportNetwork.
   uint16_t GetEnbSwIdx (uint16_t cellId) const;
 
 protected:
   /** Destructor implementation. */
   void DoDispose ();
 
-  // Inherited from ObjectBase.
-  void NotifyConstructionCompleted (void);
-
-  // Inherited from BackhaulNetwork.
+  // Inherited from TransportNetwork.
   void CreateTopology (void);
 
 private:
   uint16_t                      m_numNodes;       //!< Number of switches.
-  CsmaHelper                    m_csmaHelper;     //!< Connection helper.
-  DataRate                      m_linkRate;       //!< Backhaul link data rate.
-  Time                          m_linkDelay;      //!< Backhaul link delay.
   bool                          m_skipFirst;      //!< Skip the first switch.
 
 }; // class RingNetwork
