@@ -423,6 +423,8 @@ EnableVerbose (bool enable)
       LogComponentEnable ("UeInfo",                   logLevelWarnInfo);
 
       // Applications.
+      LogComponentEnable ("BaseClient",               logLevelWarnInfo);
+      LogComponentEnable ("BaseServer",               logLevelWarnInfo);
       LogComponentEnable ("HttpClient",               logLevelWarnInfo);
       LogComponentEnable ("HttpServer",               logLevelWarnInfo);
       LogComponentEnable ("LiveVideoClient",          logLevelWarnInfo);
@@ -431,8 +433,6 @@ EnableVerbose (bool enable)
       LogComponentEnable ("RecordedVideoServer",      logLevelWarnInfo);
       LogComponentEnable ("UdpGenericClient",         logLevelWarnInfo);
       LogComponentEnable ("UdpGenericServer",         logLevelWarnInfo);
-      LogComponentEnable ("Uni5onClient",             logLevelWarnInfo);
-      LogComponentEnable ("Uni5onServer",             logLevelWarnInfo);
 
       // Statistic components.
       LogComponentEnable ("AdmissionStatsCalculator", logLevelWarnInfo);

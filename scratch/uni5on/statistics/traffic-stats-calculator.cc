@@ -62,13 +62,13 @@ TrafficStatsCalculator::TrafficStatsCalculator ()
     "/NodeList/*/$ns3::OFSwitch13Device/PortList/*/PortQueue/Drop",
     MakeCallback (&TrafficStatsCalculator::QueueDropPacket, this));
   Config::Connect (
-    "/NodeList/*/ApplicationList/*/$ns3::Uni5onClient/AppStart",
+    "/NodeList/*/ApplicationList/*/$ns3::BaseClient/AppStart",
     MakeCallback (&TrafficStatsCalculator::ResetCounters, this));
   Config::Connect (
-    "/NodeList/*/ApplicationList/*/$ns3::Uni5onClient/AppStop",
+    "/NodeList/*/ApplicationList/*/$ns3::BaseClient/AppStop",
     MakeCallback (&TrafficStatsCalculator::DumpStatistics, this));
   Config::Connect (
-    "/NodeList/*/ApplicationList/*/$ns3::Uni5onClient/AppError",
+    "/NodeList/*/ApplicationList/*/$ns3::BaseClient/AppError",
     MakeCallback (&TrafficStatsCalculator::DumpStatistics, this));
 }
 

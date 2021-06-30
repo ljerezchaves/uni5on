@@ -50,7 +50,7 @@ private:
   virtual void StartApplication (void);
   virtual void StopApplication (void);
 
-  // Inherited from Uni5onServer.
+  // Inherited from BaseServer.
   void NotifyStart ();
   void NotifyForceStop ();
 

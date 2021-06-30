@@ -28,7 +28,7 @@
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("Uni5onServer");
+NS_LOG_COMPONENT_DEFINE ("BaseServer");
 NS_OBJECT_ENSURE_REGISTERED (BaseServer);
 
 BaseServer::BaseServer ()
@@ -49,7 +49,7 @@ BaseServer::~BaseServer ()
 TypeId
 BaseServer::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::Uni5onServer")
+  static TypeId tid = TypeId ("ns3::BaseServer")
     .SetParent<Application> ()
     .AddConstructor<BaseServer> ()
     .AddAttribute ("ClientAddress", "The client socket address.",

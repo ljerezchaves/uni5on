@@ -43,7 +43,7 @@ public:
   RecordedVideoClient ();           //!< Default constructor.
   virtual ~RecordedVideoClient ();  //!< Dummy destructor, see DoDispose.
 
-  // Inherited from Uni5onClient.
+  // Inherited from BaseClient.
   void Start ();
 
 protected:

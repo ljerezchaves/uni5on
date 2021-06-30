@@ -816,7 +816,7 @@ TrafficHelper::InstallAppDedicated (
   uint16_t port = GetNextPortNo ();
   Ptr<BaseClient> clientApp = helper.Install (
       t_ueNode, m_webNode, t_ueAddr, m_webAddr, port, Qci2Dscp (bearer.qci));
-  t_ueManager->AddUni5onClient (clientApp);
+  t_ueManager->AddBaseClient (clientApp);
 
   // Setup common packet filter parameters.
   filter.remoteAddress   = m_webAddr;
@@ -852,7 +852,7 @@ TrafficHelper::InstallAppDefault (ApplicationHelper& helper)
   uint16_t port = GetNextPortNo ();
   Ptr<BaseClient> clientApp = helper.Install (
       t_ueNode, m_webNode, t_ueAddr, m_webAddr, port, Qci2Dscp (bearer.qci));
-  t_ueManager->AddUni5onClient (clientApp);
+  t_ueManager->AddBaseClient (clientApp);
   clientApp->SetEpsBearer (bearer);
   clientApp->SetEpsBearerId (bid);
 }

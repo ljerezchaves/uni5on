@@ -109,7 +109,7 @@ public:
   DataRate GetUlGoodput (void) const;
 
   /**
-   * TracedCallback signature for Ptr<Uni5onClient>.
+   * TracedCallback signature for Ptr<BaseClient>.
    * \param app The client application.
    */
   typedef void (*AppTracedCallback)(Ptr<BaseClient> app);

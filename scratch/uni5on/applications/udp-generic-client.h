@@ -41,14 +41,14 @@ public:
   UdpGenericClient ();             //!< Default constructor.
   virtual ~UdpGenericClient ();    //!< Dummy destructor, see DoDispose.
 
-  // Inherited from Uni5onClient.
+  // Inherited from BaseClient.
   void Start ();
 
 protected:
   // Inherited from Object.
   virtual void DoDispose (void);
 
-  // Inherited from Uni5onClient.
+  // Inherited from BaseClient.
   void ForceStop ();
 
 private:

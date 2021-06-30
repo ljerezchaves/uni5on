@@ -87,7 +87,7 @@ TrafficManager::GetTypeId (void)
 }
 
 void
-TrafficManager::AddUni5onClient (Ptr<BaseClient> app)
+TrafficManager::AddBaseClient (Ptr<BaseClient> app)
 {
   NS_LOG_FUNCTION (this << app);
 

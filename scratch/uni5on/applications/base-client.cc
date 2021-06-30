@@ -29,7 +29,7 @@
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("Uni5onClient");
+NS_LOG_COMPONENT_DEFINE ("BaseClient");
 NS_OBJECT_ENSURE_REGISTERED (BaseClient);
 
 BaseClient::BaseClient ()
@@ -55,7 +55,7 @@ BaseClient::~BaseClient ()
 TypeId
 BaseClient::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::Uni5onClient")
+  static TypeId tid = TypeId ("ns3::BaseClient")
     .SetParent<Application> ()
     .AddConstructor<BaseClient> ()
     .AddAttribute ("AppName", "The application name.",
@@ -81,15 +81,15 @@ BaseClient::GetTypeId (void)
                    MakeUintegerAccessor (&BaseClient::m_localPort),
                    MakeUintegerChecker<uint16_t> ())
 
-    .AddTraceSource ("AppStart", "Uni5onClient start trace source.",
+    .AddTraceSource ("AppStart", "BaseClient start trace source.",
                      MakeTraceSourceAccessor (&BaseClient::m_appStartTrace),
-                     "ns3::Uni5onClient::AppTracedCallback")
-    .AddTraceSource ("AppStop", "Uni5onClient stop trace source.",
+                     "ns3::BaseClient::AppTracedCallback")
+    .AddTraceSource ("AppStop", "BaseClient stop trace source.",
                      MakeTraceSourceAccessor (&BaseClient::m_appStopTrace),
-                     "ns3::Uni5onClient::AppTracedCallback")
-    .AddTraceSource ("AppError", "Uni5onClient error trace source.",
+                     "ns3::BaseClient::AppTracedCallback")
+    .AddTraceSource ("AppError", "BaseClient error trace source.",
                      MakeTraceSourceAccessor (&BaseClient::m_appErrorTrace),
-                     "ns3::Uni5onClient::AppTracedCallback")
+                     "ns3::BaseClient::AppTracedCallback")
   ;
   return tid;
 }
