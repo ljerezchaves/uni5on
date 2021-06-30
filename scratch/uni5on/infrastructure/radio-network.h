@@ -119,8 +119,8 @@ private:
   NetDeviceContainer  m_ueDevices;      //!< UE devices.
   Rectangle           m_ranCoverArea;   //!< Radio coverage area.
 
-  Ptr<LteHexGridEnbTopologyHelper> m_topoHelper;    //!< Grid topology helper.
-  Ptr<RadioEnvironmentMapHelper>   m_remHelper;     //!< Radio map helper.
+  Ptr<LteHexGridEnbTopologyHelper> m_topoHelper;    //!< Topology helper.
+  Ptr<RadioEnvironmentMapHelper>   m_remHelper;     //!< REM helper.
   Ptr<LteHelper>                   m_lteHelper;     //!< LTE helper.
   Ptr<EpcHelper>                   m_epcHelper;     //!< EPC helper.
 };
