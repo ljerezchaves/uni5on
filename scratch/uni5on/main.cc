@@ -336,7 +336,7 @@ void ForceDefaults ()
   // Customizing the OpenFlow queue type on switch ports.
   //
   Config::SetDefault (
-    "ns3::OFSwitch13Port::QueueFactory", StringValue ("ns3::Uni5onQosQueue"));
+    "ns3::OFSwitch13Port::QueueFactory", StringValue ("ns3::QosQueue"));
 
   //
   // Reducing the OpenFlow datapath timeout interval from 100ms to 50ms to
@@ -403,7 +403,7 @@ EnableVerbose (bool enable)
       LogComponentEnable ("RingController",           logLevelWarnInfo);
       LogComponentEnable ("RingNetwork",              logLevelWarnInfo);
       LogComponentEnable ("EnbApplication",           logLevelWarnInfo);
-      LogComponentEnable ("Uni5onQosQueue",           logLevelWarnInfo);
+      LogComponentEnable ("QosQueue",                 logLevelWarnInfo);
 
       // Logical components.
       LogComponentEnable ("GtpuTunnelApp",            logLevelWarnInfo);

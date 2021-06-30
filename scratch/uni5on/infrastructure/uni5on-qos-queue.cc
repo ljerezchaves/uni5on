@@ -26,33 +26,33 @@
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("Uni5onQosQueue");
-NS_OBJECT_ENSURE_REGISTERED (Uni5onQosQueue);
+NS_LOG_COMPONENT_DEFINE ("QosQueue");
+NS_OBJECT_ENSURE_REGISTERED (QosQueue);
 
 TypeId
-Uni5onQosQueue::GetTypeId (void)
+QosQueue::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::Uni5onQosQueue")
+  static TypeId tid = TypeId ("ns3::QosQueue")
     .SetParent<OFSwitch13Queue> ()
-    .AddConstructor<Uni5onQosQueue> ()
+    .AddConstructor<QosQueue> ()
   ;
   return tid;
 }
 
-Uni5onQosQueue::Uni5onQosQueue ()
+QosQueue::QosQueue ()
   : OFSwitch13Queue (),
-  NS_LOG_TEMPLATE_DEFINE ("Uni5onQosQueue")
+  NS_LOG_TEMPLATE_DEFINE ("QosQueue")
 {
   NS_LOG_FUNCTION (this);
 }
 
-Uni5onQosQueue::~Uni5onQosQueue ()
+QosQueue::~QosQueue ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 Ptr<Packet>
-Uni5onQosQueue::Dequeue (void)
+QosQueue::Dequeue (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -70,7 +70,7 @@ Uni5onQosQueue::Dequeue (void)
 }
 
 Ptr<Packet>
-Uni5onQosQueue::Remove (void)
+QosQueue::Remove (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -88,7 +88,7 @@ Uni5onQosQueue::Remove (void)
 }
 
 Ptr<const Packet>
-Uni5onQosQueue::Peek (void) const
+QosQueue::Peek (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -96,7 +96,7 @@ Uni5onQosQueue::Peek (void) const
 }
 
 void
-Uni5onQosQueue::DoInitialize ()
+QosQueue::DoInitialize ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -119,7 +119,7 @@ Uni5onQosQueue::DoInitialize ()
 }
 
 int
-Uni5onQosQueue::GetNextQueueToServe (void)
+QosQueue::GetNextQueueToServe (void)
 {
   NS_LOG_FUNCTION (this);
 

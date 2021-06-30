@@ -27,13 +27,12 @@ namespace ns3 {
 
 /**
  * \ingroup uni5onInfra
- * This class implements the specialized QoS queue for the UNI5ON architecture.
+ * This class implements a specialized QoS queue for the transport network switches.
  * It holds a priority queue (ID 0) that is always served first, while other
  * queues (IDs 1 to N-1) are served in weighted rounding robin (WRR) order.
  * The drop tail queues are operating in packet mode with size of 100 packets.
- * The total number of queues and the WRR weights can be customized.
  */
-class Uni5onQosQueue : public OFSwitch13Queue
+class QosQueue : public OFSwitch13Queue
 {
 public:
   /**
@@ -42,8 +41,8 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  Uni5onQosQueue ();           //!< Default constructor.
-  virtual ~Uni5onQosQueue ();  //!< Dummy destructor, see DoDispose.
+  QosQueue ();           //!< Default constructor.
+  virtual ~QosQueue ();  //!< Dummy destructor, see DoDispose.
 
   // Inherited from Queue.
   Ptr<Packet> Dequeue (void);
