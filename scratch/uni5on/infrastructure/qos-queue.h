@@ -18,8 +18,8 @@
  * Author: Luciano Jerez Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef UNI5ON_QOS_QUEUE_H
-#define UNI5ON_QOS_QUEUE_H
+#ifndef QOS_QUEUE_H
+#define QOS_QUEUE_H
 
 #include <ns3/ofswitch13-module.h>
 
@@ -74,4 +74,4 @@ private:
 };
 
 } // namespace ns3
-#endif /* UNI5ON_QOS_QUEUE_H */
+#endif /* QOS_QUEUE_H */
