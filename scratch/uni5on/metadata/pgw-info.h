@@ -47,7 +47,7 @@ public:
    * \param pgwId The P-GW ID.
    * \param nTfts The number of TFT switches.
    * \param sgiPortNo The port number for SGi iface at the P-GW main switch.
-   * \param infraSwIdx The OpenFlow backhaul switch index.
+   * \param infraSwIdx The OpenFlow transport switch index.
    * \param sliceCtrl The slice controller application.
    */
   PgwInfo (uint32_t pgwId, uint16_t nTfts, uint32_t sgiPortNo,
@@ -177,7 +177,7 @@ private:
 
   /**
    * Save the metadata associated to a single P-GW OpenFlow switch attached to
-   * the OpenFlow backhaul network.
+   * the OpenFlow transport network.
    * \attention Invoke this method first for the P-GW MAIN switch, then for the
    *            P-GW TFT switches.
    * \param device The OpenFlow switch device.
@@ -186,7 +186,7 @@ private:
    * \param s5PortNo The port number assigned to the S5 logical port on the
    *        P-GW switch that is connected to the S5 network device.
    * \param infraSwS5PortNo The port number assigned to the S5 physical port on
-   *        the OpenFlow backhaul switch that is connected to the S5 network
+   *        the OpenFlow transport switch that is connected to the S5 network
    *        device on the P-GW switch.
    * \param mainToTftPortNo The port number assigned to the physical port on
    *        the main switch that is connected to this P-GW switch (when
@@ -210,7 +210,7 @@ private:
 
   // P-GW metadata.
   OFSwitch13DeviceContainer m_devices;            //!< OpenFlow switch devices.
-  uint16_t                  m_infraSwIdx;         //!< Backhaul switch index.
+  uint16_t                  m_infraSwIdx;         //!< Transport switch index.
   std::vector<uint32_t>     m_infraSwS5PortNos;   //!< Back switch S5 port nos.
   std::vector<uint32_t>     m_mainToTftPortNos;   //!< Main port nos to TFTs.
   uint32_t                  m_pgwId;              //!< P-GW ID.

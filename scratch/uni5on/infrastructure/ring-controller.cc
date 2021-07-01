@@ -665,19 +665,19 @@ RingController::HasAvailableResources (
   // Set the blocked flagged when necessary.
   if (!bwdOk)
     {
-      rInfo->SetBlocked (RoutingInfo::BACKBAND);
+      rInfo->SetBlocked (RoutingInfo::BRTPNBWD);
       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
                    " because at least one transport link is overloaded.");
     }
   if (!cpuOk)
     {
-      rInfo->SetBlocked (RoutingInfo::BACKLOAD);
+      rInfo->SetBlocked (RoutingInfo::BRTPNCPU);
       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
                    " because at least one transport switch is overloaded.");
     }
   if (!tabOk)
     {
-      rInfo->SetBlocked (RoutingInfo::BACKTABLE);
+      rInfo->SetBlocked (RoutingInfo::BRTPNTAB);
       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
                    " because at least one transport switch table is full.");
     }

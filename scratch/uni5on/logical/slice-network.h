@@ -42,7 +42,7 @@ class SliceController;
 /**
  * \ingroup uni5onLogical
  * This is the class for a logical network slice, sharing the common
- * OpenFlow backhaul and radio networks.
+ * OpenFlow transport and radio networks.
  */
 class SliceNetwork : public Object
 {
@@ -60,7 +60,7 @@ public:
    * Enable PCAP traces on the logical slice network.
    * \param prefix Filename prefix to use for PCAP files.
    * \param promiscuous If true, enable PCAP promiscuous traces.
-   * \param ofchannel If true, enable PCAP on backhaul OpenFlow channels.
+   * \param ofchannel If true, enable PCAP on the OpenFlow channel.
    * \param pgwDevices If true, enable PCAP on P-GW switches.
    * \param sgiDevices If true, enable PCAP on SGi interfaces (Internet).
    */
@@ -107,13 +107,13 @@ protected:
 private:
   /**
    * Create the P-GW using OpenFlow switches, connecting it to the
-   * Internet web server and to the OpenFlow backhaul network.
+   * Internet web server and to the OpenFlow transport network.
    */
   void CreatePgw (void);
 
   /**
    * Create the S-GW using an OpenFlow switch, connecting it
-   * to the OpenFlow backhaul network.
+   * to the OpenFlow transport network.
    */
   void CreateSgw (void);
 
@@ -127,7 +127,7 @@ private:
   std::string                   m_sliceIdStr;       //!< Slice ID string.
 
   // Infrastructure interface.
-  Ptr<TransportNetwork>          m_backhaul;         //!< OpenFlow backhaul.
+  Ptr<TransportNetwork>         m_transport;        //!< Transport network.
   Ptr<RadioNetwork>             m_radio;            //!< Radio network.
 
   // OpenFlow network configuration.
@@ -164,7 +164,7 @@ private:
   NetDeviceContainer            m_pgwIntDevices;    //!< P-GW int port devices.
   DataRate                      m_pgwLinkRate;      //!< P-GW link data rate.
   Time                          m_pgwLinkDelay;     //!< P-GW link delay.
-  uint16_t                      m_pgwInfraSwIdx;    //!< Backhaul switch index.
+  uint16_t                      m_pgwInfraSwIdx;    //!< Transport switch index.
   DataRate                      m_mainCpuCapacity;  //!< Main CPU capacity.
   uint32_t                      m_mainFlowSize;     //!< Main flow table size.
   uint16_t                      m_nTfts;            //!< Number of TFT nodes.
@@ -177,7 +177,7 @@ private:
   Ptr<SgwInfo>                  m_sgwInfo;          //!< S-GW metadata.
   Ptr<Node>                     m_sgwNode;          //!< S-GW switch node.
   Ptr<OFSwitch13Device>         m_sgwDevice;        //!< S-GW switch device.
-  uint16_t                      m_sgwInfraSwIdx;    //!< Backhaul switch idx.
+  uint16_t                      m_sgwInfraSwIdx;    //!< Transport switch idx.
   DataRate                      m_sgwCpuCapacity;   //!< S-GW CPU capacity.
   uint32_t                      m_sgwFlowSize;      //!< S-GW flow table size.
   uint32_t                      m_sgwMeterSize;     //!< S-GW meter table size.

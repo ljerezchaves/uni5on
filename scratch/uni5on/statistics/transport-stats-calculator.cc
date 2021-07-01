@@ -20,7 +20,7 @@
 
 #include <iomanip>
 #include <iostream>
-#include "backhaul-stats-calculator.h"
+#include "transport-stats-calculator.h"
 #include "../metadata/ue-info.h"
 #include "../metadata/routing-info.h"
 
@@ -28,10 +28,10 @@ using namespace std;
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("BackhaulStatsCalculator");
-NS_OBJECT_ENSURE_REGISTERED (BackhaulStatsCalculator);
+NS_LOG_COMPONENT_DEFINE ("TransportStatsCalculator");
+NS_OBJECT_ENSURE_REGISTERED (TransportStatsCalculator);
 
-BackhaulStatsCalculator::BackhaulStatsCalculator ()
+TransportStatsCalculator::TransportStatsCalculator ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -41,59 +41,59 @@ BackhaulStatsCalculator::BackhaulStatsCalculator ()
   // Connect this stats calculator to required trace sources.
   Config::Connect (
     "/NodeList/*/ApplicationList/*/$ns3::EnbApplication/S1uRx",
-    MakeCallback (&BackhaulStatsCalculator::EpcOutputPacket, this));
+    MakeCallback (&TransportStatsCalculator::EpcOutputPacket, this));
   Config::Connect (
     "/NodeList/*/ApplicationList/*/$ns3::EnbApplication/S1uTx",
-    MakeCallback (&BackhaulStatsCalculator::EpcInputPacket, this));
+    MakeCallback (&TransportStatsCalculator::EpcInputPacket, this));
   Config::Connect (
     "/NodeList/*/ApplicationList/*/$ns3::PgwuTunnelApp/S5Rx",
-    MakeCallback (&BackhaulStatsCalculator::EpcOutputPacket, this));
+    MakeCallback (&TransportStatsCalculator::EpcOutputPacket, this));
   Config::Connect (
     "/NodeList/*/ApplicationList/*/$ns3::PgwuTunnelApp/S5Tx",
-    MakeCallback (&BackhaulStatsCalculator::EpcInputPacket, this));
+    MakeCallback (&TransportStatsCalculator::EpcInputPacket, this));
   Config::Connect (
     "/NodeList/*/$ns3::OFSwitch13Device/OverloadDrop",
-    MakeCallback (&BackhaulStatsCalculator::OverloadDropPacket, this));
+    MakeCallback (&TransportStatsCalculator::OverloadDropPacket, this));
   Config::Connect (
     "/NodeList/*/$ns3::OFSwitch13Device/MeterDrop",
-    MakeCallback (&BackhaulStatsCalculator::MeterDropPacket, this));
+    MakeCallback (&TransportStatsCalculator::MeterDropPacket, this));
   Config::Connect (
     "/NodeList/*/$ns3::OFSwitch13Device/TableDrop",
-    MakeCallback (&BackhaulStatsCalculator::TableDropPacket, this));
+    MakeCallback (&TransportStatsCalculator::TableDropPacket, this));
   Config::Connect (
     "/NodeList/*/$ns3::OFSwitch13Device/PortList/*/PortQueue/Drop",
-    MakeCallback (&BackhaulStatsCalculator::QueueDropPacket, this));
+    MakeCallback (&TransportStatsCalculator::QueueDropPacket, this));
 }
 
-BackhaulStatsCalculator::~BackhaulStatsCalculator ()
+TransportStatsCalculator::~TransportStatsCalculator ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-BackhaulStatsCalculator::GetTypeId (void)
+TransportStatsCalculator::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::BackhaulStatsCalculator")
+  static TypeId tid = TypeId ("ns3::TransportStatsCalculator")
     .SetParent<Object> ()
-    .AddConstructor<BackhaulStatsCalculator> ()
+    .AddConstructor<TransportStatsCalculator> ()
     .AddAttribute ("BwdStatsFilename",
-                   "Filename for backhaul bandwidth statistics.",
-                   StringValue ("backhaul-bandwidth"),
+                   "Filename for transport bandwidth statistics.",
+                   StringValue ("transport-bandwidth"),
                    MakeStringAccessor (
-                     &BackhaulStatsCalculator::m_bwdFilename),
+                     &TransportStatsCalculator::m_bwdFilename),
                    MakeStringChecker ())
     .AddAttribute ("TffStatsFilename",
-                   "Filename for backhaul traffic statistics.",
-                   StringValue ("backhaul-traffic"),
+                   "Filename for transport traffic statistics.",
+                   StringValue ("transport-traffic"),
                    MakeStringAccessor (
-                     &BackhaulStatsCalculator::m_tffFilename),
+                     &TransportStatsCalculator::m_tffFilename),
                    MakeStringChecker ())
   ;
   return tid;
 }
 
 void
-BackhaulStatsCalculator::DoDispose ()
+TransportStatsCalculator::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -114,7 +114,7 @@ BackhaulStatsCalculator::DoDispose ()
 }
 
 void
-BackhaulStatsCalculator::NotifyConstructionCompleted (void)
+TransportStatsCalculator::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -164,13 +164,13 @@ BackhaulStatsCalculator::NotifyConstructionCompleted (void)
   TimeValue timeValue;
   GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
   Time firstDump = timeValue.Get ();
-  Simulator::Schedule (firstDump, &BackhaulStatsCalculator::DumpStatistics,
+  Simulator::Schedule (firstDump, &TransportStatsCalculator::DumpStatistics,
                        this, firstDump);
 
   Object::NotifyConstructionCompleted ();
 }
 void
-BackhaulStatsCalculator::DumpStatistics (Time nextDump)
+TransportStatsCalculator::DumpStatistics (Time nextDump)
 {
   NS_LOG_FUNCTION (this);
 
@@ -217,13 +217,13 @@ BackhaulStatsCalculator::DumpStatistics (Time nextDump)
       *slData.tffWrapper->GetStream () << std::endl;
     }
 
-  Simulator::Schedule (nextDump, &BackhaulStatsCalculator::DumpStatistics,
+  Simulator::Schedule (nextDump, &TransportStatsCalculator::DumpStatistics,
                        this, nextDump);
 }
 
 void
-BackhaulStatsCalculator::OverloadDropPacket (std::string context,
-                                             Ptr<const Packet> packet)
+TransportStatsCalculator::OverloadDropPacket (
+  std::string context, Ptr<const Packet> packet)
 {
   NS_LOG_FUNCTION (this << context << packet);
 
@@ -237,10 +237,10 @@ BackhaulStatsCalculator::OverloadDropPacket (std::string context,
       QosType type = gtpuTag.GetQosType ();
 
       sliStats = m_slices [slice].flowStats [dir][type];
-      sliStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::PLOAD);
+      sliStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::DRCPU);
 
       aggStats = m_slices [SliceId::ALL].flowStats [dir][type];
-      aggStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::PLOAD);
+      aggStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::DRCPU);
     }
   else
     {
@@ -258,17 +258,17 @@ BackhaulStatsCalculator::OverloadDropPacket (std::string context,
 
           sliStats = m_slices [slice].flowStats [dir][type];
           sliStats->NotifyTx (packet->GetSize ());
-          sliStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::PLOAD);
+          sliStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::DRCPU);
 
           aggStats = m_slices [SliceId::ALL].flowStats [dir][type];
           aggStats->NotifyTx (packet->GetSize ());
-          aggStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::PLOAD);
+          aggStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::DRCPU);
         }
     }
 }
 
 void
-BackhaulStatsCalculator::MeterDropPacket (
+TransportStatsCalculator::MeterDropPacket (
   std::string context, Ptr<const Packet> packet, uint32_t meterId)
 {
   NS_LOG_FUNCTION (this << context << packet << meterId);
@@ -283,10 +283,10 @@ BackhaulStatsCalculator::MeterDropPacket (
       QosType type = gtpuTag.GetQosType ();
 
       // Identify the meter type (MBR or slicing).
-      FlowStatsCalculator::DropReason dropReason = FlowStatsCalculator::METER;
+      FlowStatsCalculator::DropReason dropReason = FlowStatsCalculator::DRMET;
       if ((meterId & METER_SLC_TYPE) == METER_SLC_TYPE)
         {
-          dropReason = FlowStatsCalculator::SLICE;
+          dropReason = FlowStatsCalculator::DRSLC;
         }
 
       sliStats = m_slices [slice].flowStats [dir][type];
@@ -313,18 +313,18 @@ BackhaulStatsCalculator::MeterDropPacket (
 
           sliStats = m_slices [slice].flowStats [dir][type];
           sliStats->NotifyTx (packet->GetSize ());
-          sliStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::METER);
+          sliStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::DRMET);
 
           aggStats = m_slices [SliceId::ALL].flowStats [dir][type];
           aggStats->NotifyTx (packet->GetSize ());
-          aggStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::METER);
+          aggStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::DRMET);
         }
     }
 }
 
 void
-BackhaulStatsCalculator::QueueDropPacket (std::string context,
-                                          Ptr<const Packet> packet)
+TransportStatsCalculator::QueueDropPacket (
+  std::string context, Ptr<const Packet> packet)
 {
   NS_LOG_FUNCTION (this << context << packet);
 
@@ -338,10 +338,10 @@ BackhaulStatsCalculator::QueueDropPacket (std::string context,
       QosType type = gtpuTag.GetQosType ();
 
       sliStats = m_slices [slice].flowStats [dir][type];
-      sliStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::QUEUE);
+      sliStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::DRQUE);
 
       aggStats = m_slices [SliceId::ALL].flowStats [dir][type];
-      aggStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::QUEUE);
+      aggStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::DRQUE);
     }
   else
     {
@@ -359,17 +359,17 @@ BackhaulStatsCalculator::QueueDropPacket (std::string context,
 
           sliStats = m_slices [slice].flowStats [dir][type];
           sliStats->NotifyTx (packet->GetSize ());
-          sliStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::QUEUE);
+          sliStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::DRQUE);
 
           aggStats = m_slices [SliceId::ALL].flowStats [dir][type];
           aggStats->NotifyTx (packet->GetSize ());
-          aggStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::QUEUE);
+          aggStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::DRQUE);
         }
     }
 }
 
 void
-BackhaulStatsCalculator::TableDropPacket (
+TransportStatsCalculator::TableDropPacket (
   std::string context, Ptr<const Packet> packet, uint8_t tableId)
 {
   NS_LOG_FUNCTION (this << context << packet <<
@@ -385,10 +385,10 @@ BackhaulStatsCalculator::TableDropPacket (
       QosType type = gtpuTag.GetQosType ();
 
       sliStats = m_slices [slice].flowStats [dir][type];
-      sliStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::TABLE);
+      sliStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::DRTAB);
 
       aggStats = m_slices [SliceId::ALL].flowStats [dir][type];
-      aggStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::TABLE);
+      aggStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::DRTAB);
     }
   else
     {
@@ -406,18 +406,18 @@ BackhaulStatsCalculator::TableDropPacket (
 
           sliStats = m_slices [slice].flowStats [dir][type];
           sliStats->NotifyTx (packet->GetSize ());
-          sliStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::TABLE);
+          sliStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::DRTAB);
 
           aggStats = m_slices [SliceId::ALL].flowStats [dir][type];
           aggStats->NotifyTx (packet->GetSize ());
-          aggStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::TABLE);
+          aggStats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::DRTAB);
         }
     }
 }
 
 void
-BackhaulStatsCalculator::EpcInputPacket (std::string context,
-                                         Ptr<const Packet> packet)
+TransportStatsCalculator::EpcInputPacket (
+  std::string context, Ptr<const Packet> packet)
 {
   NS_LOG_FUNCTION (this << context << packet);
 
@@ -439,8 +439,8 @@ BackhaulStatsCalculator::EpcInputPacket (std::string context,
 }
 
 void
-BackhaulStatsCalculator::EpcOutputPacket (std::string context,
-                                          Ptr<const Packet> packet)
+TransportStatsCalculator::EpcOutputPacket (
+  std::string context, Ptr<const Packet> packet)
 {
   NS_LOG_FUNCTION (this << context << packet);
 
@@ -462,7 +462,7 @@ BackhaulStatsCalculator::EpcOutputPacket (std::string context,
 }
 
 uint32_t
-BackhaulStatsCalculator::PgwTftClassify (Ptr<const Packet> packet)
+TransportStatsCalculator::PgwTftClassify (Ptr<const Packet> packet)
 {
   NS_LOG_FUNCTION (this << packet);
 

@@ -37,7 +37,7 @@ NS_LOG_COMPONENT_DEFINE ("ScenarioHelper");
 NS_OBJECT_ENSURE_REGISTERED (ScenarioHelper);
 
 ScenarioHelper::ScenarioHelper ()
-  : m_backhaul (0),
+  : m_transport (0),
   m_radio (0),
   m_mme (0),
   m_mbbController (0),
@@ -50,7 +50,7 @@ ScenarioHelper::ScenarioHelper ()
   m_tmpNetwork (0),
   m_tmpTraffic (0),
   m_admissionStats (0),
-  m_backhaulStats (0),
+  m_transportStats (0),
   m_lteRrcStats (0),
   m_pgwTftStats (0),
   m_trafficStats (0)
@@ -125,34 +125,34 @@ ScenarioHelper::ConfigurePcap (std::string prefix, uint8_t config)
 {
   NS_LOG_FUNCTION (this << prefix);
 
-  bool slcofp  = HasPcapFlag (config, ScenarioHelper::PCSLCOFP);
-  bool slcpgw  = HasPcapFlag (config, ScenarioHelper::PCSLCPGW);
-  bool slcsgi  = HasPcapFlag (config, ScenarioHelper::PCSLCSGI);
-  bool backofp = HasPcapFlag (config, ScenarioHelper::PCBACKOFP);
-  bool backepc = HasPcapFlag (config, ScenarioHelper::PCBACKEPC);
-  bool backswt = HasPcapFlag (config, ScenarioHelper::PCBACKSWT);
-  bool promisc = HasPcapFlag (config, ScenarioHelper::PCPROMISC);
+  bool slcofp = HasPcapFlag (ScenarioHelper::PCSLCOFP, config);
+  bool slcpgw = HasPcapFlag (ScenarioHelper::PCSLCPGW, config);
+  bool slcsgi = HasPcapFlag (ScenarioHelper::PCSLCSGI, config);
+  bool tpnofp = HasPcapFlag (ScenarioHelper::PCTPNOFP, config);
+  bool tpnepc = HasPcapFlag (ScenarioHelper::PCTPNEPC, config);
+  bool tpnswt = HasPcapFlag (ScenarioHelper::PCTPNSWT, config);
+  bool promsc = HasPcapFlag (ScenarioHelper::PCPROMSC, config);
 
-  // Enable PCAP on the backhaul network.
-  m_backhaul->EnablePcap (prefix, promisc, backofp, backepc, backswt);
+  // Enable PCAP on the transport network.
+  m_transport->EnablePcap (prefix, promsc, tpnofp, tpnepc, tpnswt);
 
   // Enable PCAP on the logical network slices.
   if (m_mbbNetwork)
     {
-      m_mbbNetwork->EnablePcap (prefix, promisc, slcofp, slcpgw, slcsgi);
+      m_mbbNetwork->EnablePcap (prefix, promsc, slcofp, slcpgw, slcsgi);
     }
   if (m_mtcNetwork)
     {
-      m_mtcNetwork->EnablePcap (prefix, promisc, slcofp, slcpgw, slcsgi);
+      m_mtcNetwork->EnablePcap (prefix, promsc, slcofp, slcpgw, slcsgi);
     }
   if (m_tmpNetwork)
     {
-      m_tmpNetwork->EnablePcap (prefix, promisc, slcofp, slcpgw, slcsgi);
+      m_tmpNetwork->EnablePcap (prefix, promsc, slcofp, slcpgw, slcsgi);
     }
 }
 
 bool
-ScenarioHelper::HasPcapFlag (uint8_t config, PcapConfig flag) const
+ScenarioHelper::HasPcapFlag (PcapConfig flag, uint8_t config) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -226,11 +226,11 @@ ScenarioHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
   InternetStackHelper internet;
   internet.Install (enb);
 
-  // Attach the eNB node to the OpenFlow backhaul network over S1-U interface.
-  uint16_t infraSwIdx = m_backhaul->GetEnbSwIdx (cellId);
+  // Attach the eNB node to the OpenFlow transport network over S1-U interface.
+  uint16_t infraSwIdx = m_transport->GetEnbSwIdx (cellId);
   Ptr<CsmaNetDevice> enbS1uDev;
   Ptr<OFSwitch13Port> infraSwPort;
-  std::tie (enbS1uDev, infraSwPort) = m_backhaul->AttachEpcNode (
+  std::tie (enbS1uDev, infraSwPort) = m_transport->AttachEpcNode (
       enb, infraSwIdx, EpsIface::S1);
   Ipv4Address enbS1uAddr = Ipv4AddressHelper::GetAddress (enbS1uDev);
   NS_LOG_DEBUG ("eNB cell ID " << cellId << " at switch index " << infraSwIdx);
@@ -308,17 +308,17 @@ ScenarioHelper::AddX2Interface (Ptr<Node> enb1Node, Ptr<Node> enb2Node)
   NS_ASSERT_MSG (enb1Dev, "eNB device not found for node " << enb1Node);
   NS_ASSERT_MSG (enb2Dev, "eNB device not found for node " << enb2Node);
 
-  // Attach both eNB nodes to the OpenFlow backhaul network over X2 interface.
+  // Attach both eNB nodes to the OpenFlow transport network over X2 interface.
   uint16_t enb1CellId = enb1Dev->GetCellId ();
   uint16_t enb2CellId = enb2Dev->GetCellId ();
-  uint16_t enb1InfraSwIdx = m_backhaul->GetEnbSwIdx (enb1CellId);
-  uint16_t enb2InfraSwIdx = m_backhaul->GetEnbSwIdx (enb2CellId);
+  uint16_t enb1InfraSwIdx = m_transport->GetEnbSwIdx (enb1CellId);
+  uint16_t enb2InfraSwIdx = m_transport->GetEnbSwIdx (enb2CellId);
   Ptr<CsmaNetDevice> enb1X2Dev, enb2X2Dev;
   Ptr<OFSwitch13Port> enb1InfraSwPort, enb2InfraSwPort;
-  std::tie (enb1X2Dev, enb1InfraSwPort) = m_backhaul->AttachEpcNode (
+  std::tie (enb1X2Dev, enb1InfraSwPort) = m_transport->AttachEpcNode (
       enb1Node, enb1InfraSwIdx, EpsIface::X2, "x2_cell" +
       std::to_string (enb1CellId) + "to" + std::to_string (enb2CellId));
-  std::tie (enb2X2Dev, enb2InfraSwPort) = m_backhaul->AttachEpcNode (
+  std::tie (enb2X2Dev, enb2InfraSwPort) = m_transport->AttachEpcNode (
       enb2Node, enb2InfraSwIdx, EpsIface::X2, "x2_cell" +
       std::to_string (enb2CellId) + "to" + std::to_string (enb1CellId));
   Ipv4Address enb1X2Addr = Ipv4AddressHelper::GetAddress (enb1X2Dev);
@@ -388,14 +388,14 @@ ScenarioHelper::DoDispose (void)
 
   // This will force output files to get closed.
   m_admissionStats->Dispose ();
-  m_backhaulStats->Dispose ();
+  m_transportStats->Dispose ();
   m_pgwTftStats->Dispose ();
   m_trafficStats->Dispose ();
   m_lteRrcStats->Dispose ();
 
   m_mme = 0;
-  m_backhaul = 0;
   m_radio = 0;
+  m_transport = 0;
 
   m_mbbController = 0;
   m_mbbNetwork = 0;
@@ -408,7 +408,7 @@ ScenarioHelper::DoDispose (void)
   m_tmpTraffic = 0;
 
   m_admissionStats = 0;
-  m_backhaulStats = 0;
+  m_transportStats = 0;
   m_pgwTftStats = 0;
   m_trafficStats = 0;
   m_lteRrcStats = 0;
@@ -421,12 +421,12 @@ ScenarioHelper::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
-  // Create the UNI5ON infrastructure.
+  // Create the UNI5ON infrastructure (don't change the order).
   m_mme = CreateObject<StatelessMme> ();
-  m_backhaul = CreateObject<RingNetwork> ();
+  m_transport = CreateObject<RingNetwork> ();
   m_radio = CreateObject<RadioNetwork> (Ptr<ScenarioHelper> (this));
 
-  Ptr<TransportController> backahulCtrl = m_backhaul->GetControllerApp ();
+  Ptr<TransportController> transportCtrl = m_transport->GetControllerApp ();
   ApplicationContainer sliceControllers;
   int sumQuota = 0;
 
@@ -435,7 +435,7 @@ ScenarioHelper::NotifyConstructionCompleted (void)
     {
       m_mbbControllerFac.Set ("SliceId", EnumValue (SliceId::MBB));
       m_mbbControllerFac.Set ("Mme", PointerValue (m_mme));
-      m_mbbControllerFac.Set ("BackhaulCtrl", PointerValue (backahulCtrl));
+      m_mbbControllerFac.Set ("TransportCtrl", PointerValue (transportCtrl));
       m_mbbController = m_mbbControllerFac.Create<SliceController> ();
 
       sliceControllers.Add (m_mbbController);
@@ -443,11 +443,11 @@ ScenarioHelper::NotifyConstructionCompleted (void)
 
       m_mbbNetworkFac.Set ("SliceId", EnumValue (SliceId::MBB));
       m_mbbNetworkFac.Set ("SliceCtrl", PointerValue (m_mbbController));
-      m_mbbNetworkFac.Set ("BackhaulNet", PointerValue (m_backhaul));
+      m_mbbNetworkFac.Set ("TransportNet", PointerValue (m_transport));
       m_mbbNetworkFac.Set ("RadioNet", PointerValue (m_radio));
-      m_mbbNetworkFac.Set ("UeAddress", Ipv4AddressValue ("7.2.0.0"));
+      m_mbbNetworkFac.Set ("UeAddress", Ipv4AddressValue ("7.1.0.0"));
       m_mbbNetworkFac.Set ("UeMask", Ipv4MaskValue ("255.255.0.0"));
-      m_mbbNetworkFac.Set ("WebAddress", Ipv4AddressValue ("8.2.0.0"));
+      m_mbbNetworkFac.Set ("WebAddress", Ipv4AddressValue ("8.1.0.0"));
       m_mbbNetworkFac.Set ("WebMask", Ipv4MaskValue ("255.255.0.0"));
       m_mbbNetwork = m_mbbNetworkFac.Create<SliceNetwork> ();
 
@@ -467,7 +467,7 @@ ScenarioHelper::NotifyConstructionCompleted (void)
     {
       m_mtcControllerFac.Set ("SliceId", EnumValue (SliceId::MTC));
       m_mtcControllerFac.Set ("Mme", PointerValue (m_mme));
-      m_mtcControllerFac.Set ("BackhaulCtrl", PointerValue (backahulCtrl));
+      m_mtcControllerFac.Set ("TransportCtrl", PointerValue (transportCtrl));
       m_mtcController = m_mtcControllerFac.Create<SliceController> ();
 
       sliceControllers.Add (m_mtcController);
@@ -475,11 +475,11 @@ ScenarioHelper::NotifyConstructionCompleted (void)
 
       m_mtcNetworkFac.Set ("SliceId", EnumValue (SliceId::MTC));
       m_mtcNetworkFac.Set ("SliceCtrl", PointerValue (m_mtcController));
-      m_mtcNetworkFac.Set ("BackhaulNet", PointerValue (m_backhaul));
+      m_mtcNetworkFac.Set ("TransportNet", PointerValue (m_transport));
       m_mtcNetworkFac.Set ("RadioNet", PointerValue (m_radio));
-      m_mtcNetworkFac.Set ("UeAddress", Ipv4AddressValue ("7.1.0.0"));
+      m_mtcNetworkFac.Set ("UeAddress", Ipv4AddressValue ("7.2.0.0"));
       m_mtcNetworkFac.Set ("UeMask", Ipv4MaskValue ("255.255.0.0"));
-      m_mtcNetworkFac.Set ("WebAddress", Ipv4AddressValue ("8.1.0.0"));
+      m_mtcNetworkFac.Set ("WebAddress", Ipv4AddressValue ("8.2.0.0"));
       m_mtcNetworkFac.Set ("WebMask", Ipv4MaskValue ("255.255.0.0"));
       m_mtcNetwork = m_mtcNetworkFac.Create<SliceNetwork> ();
 
@@ -499,7 +499,7 @@ ScenarioHelper::NotifyConstructionCompleted (void)
     {
       m_tmpControllerFac.Set ("SliceId", EnumValue (SliceId::TMP));
       m_tmpControllerFac.Set ("Mme", PointerValue (m_mme));
-      m_tmpControllerFac.Set ("BackhaulCtrl", PointerValue (backahulCtrl));
+      m_tmpControllerFac.Set ("TransportCtrl", PointerValue (transportCtrl));
       m_tmpController = m_tmpControllerFac.Create<SliceController> ();
 
       sliceControllers.Add (m_tmpController);
@@ -507,7 +507,7 @@ ScenarioHelper::NotifyConstructionCompleted (void)
 
       m_tmpNetworkFac.Set ("SliceId", EnumValue (SliceId::TMP));
       m_tmpNetworkFac.Set ("SliceCtrl", PointerValue (m_tmpController));
-      m_tmpNetworkFac.Set ("BackhaulNet", PointerValue (m_backhaul));
+      m_tmpNetworkFac.Set ("TransportNet", PointerValue (m_transport));
       m_tmpNetworkFac.Set ("RadioNet", PointerValue (m_radio));
       m_tmpNetworkFac.Set ("UeAddress", Ipv4AddressValue ("7.3.0.0"));
       m_tmpNetworkFac.Set ("UeMask", Ipv4MaskValue ("255.255.0.0"));
@@ -529,12 +529,12 @@ ScenarioHelper::NotifyConstructionCompleted (void)
   // Validate slice quotas.
   NS_ABORT_MSG_IF (sumQuota > 100, "Inconsistent initial quotas.");
 
-  // Notify the backhaul controller of the slice controllers.
-  backahulCtrl->NotifySlicesBuilt (sliceControllers);
+  // Notify the transport controller of the slice controllers.
+  transportCtrl->NotifySlicesBuilt (sliceControllers);
 
   // Creating the statistic calculators.
   m_admissionStats  = CreateObject<AdmissionStatsCalculator> ();
-  m_backhaulStats   = CreateObject<BackhaulStatsCalculator> ();
+  m_transportStats   = CreateObject<TransportStatsCalculator> ();
   m_lteRrcStats     = CreateObject<LteRrcStatsCalculator> ();
   m_pgwTftStats     = CreateObject<PgwTftStatsCalculator> ();
   m_trafficStats    = CreateObject<TrafficStatsCalculator> ();

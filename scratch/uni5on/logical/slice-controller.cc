@@ -75,14 +75,14 @@ SliceController::GetTypeId (void)
                    MakeEnumChecker (OpMode::OFF,  OpModeStr (OpMode::OFF),
                                     OpMode::ON,   OpModeStr (OpMode::ON),
                                     OpMode::AUTO, OpModeStr (OpMode::AUTO)))
-    .AddAttribute ("BackhaulCtrl",
-                   "The OpenFlow backhaul controller pointer.",
+    .AddAttribute ("TransportCtrl",
+                   "The OpenFlow transport controller.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    PointerValue (),
-                   MakePointerAccessor (&SliceController::m_backhaulCtrl),
+                   MakePointerAccessor (&SliceController::m_transportCtrl),
                    MakePointerChecker<TransportController> ())
     .AddAttribute ("GbrBlockThs",
-                   "The backhaul GBR bandwidth block threshold.",
+                   "The GBR bandwidth block threshold.",
                    DoubleValue (0.25),
                    MakeDoubleAccessor (&SliceController::m_gbrBlockThs),
                    MakeDoubleChecker<double> (0.0, 1.0))
@@ -93,13 +93,13 @@ SliceController::GetTypeId (void)
                    MakeIntegerAccessor (&SliceController::m_slicePrio),
                    MakeIntegerChecker<int> ())
     .AddAttribute ("Quota",
-                   "The backhaul bandwidth quota for this slice.",
+                   "The transport bandwidth quota for this slice.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    IntegerValue (0),
                    MakeIntegerAccessor (&SliceController::m_linkQuota),
                    MakeIntegerChecker<int> (0, 100))
     .AddAttribute ("Sharing",
-                   "Enable backhaul bandwidth sharing.",
+                   "Enable transport bandwidth sharing.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    EnumValue (OpMode::ON),
                    MakeEnumAccessor (&SliceController::m_linkSharing),
@@ -210,7 +210,7 @@ SliceController::DedicatedBearerRequest (
   bool success = true;
   success &= PgwBearerRequest (rInfo);
   success &= SgwBearerRequest (rInfo);
-  success &= m_backhaulCtrl->BearerRequest (rInfo);
+  success &= m_transportCtrl->BearerRequest (rInfo);
   if (success)
     {
       NS_ASSERT_MSG (!rInfo->IsBlocked (), "Bearer can't be blocked.");
@@ -218,7 +218,7 @@ SliceController::DedicatedBearerRequest (
       if (!rInfo->IsAggregated ())
         {
           // Reserve infrastructure resources and install the bearer.
-          success &= m_backhaulCtrl->BearerReserve (rInfo);
+          success &= m_transportCtrl->BearerReserve (rInfo);
           success &= BearerInstall (rInfo);
           NS_ASSERT_MSG (success, "Error when installing the bearer.");
         }
@@ -238,7 +238,7 @@ SliceController::DedicatedBearerRequest (
       success = true;
       success &= PgwBearerRequest (rInfo);
       success &= SgwBearerRequest (rInfo);
-      success &= m_backhaulCtrl->BearerRequest (rInfo);
+      success &= m_transportCtrl->BearerRequest (rInfo);
       if (success)
         {
           NS_ASSERT_MSG (!rInfo->IsBlocked (), "Bearer can't be blocked.");
@@ -270,7 +270,7 @@ SliceController::DedicatedBearerRelease (
   bool success = true;
   if (!rInfo->IsAggregated ())
     {
-      success &= m_backhaulCtrl->BearerRelease (rInfo);
+      success &= m_transportCtrl->BearerRelease (rInfo);
       success &= BearerRemove (rInfo);
     }
 
@@ -563,7 +563,7 @@ SliceController::DoDispose ()
   NS_LOG_FUNCTION (this);
 
   m_mme = 0;
-  m_backhaulCtrl = 0;
+  m_transportCtrl = 0;
   m_pgwInfo = 0;
   m_sgwInfo = 0;
   delete (m_s11SapSgw);
@@ -576,7 +576,7 @@ SliceController::NotifyConstructionCompleted (void)
   NS_LOG_FUNCTION (this);
 
   NS_ABORT_MSG_IF (m_sliceId == SliceId::UNKN, "Unknown slice ID.");
-  NS_ABORT_MSG_IF (!m_backhaulCtrl, "No backhaul controller application.");
+  NS_ABORT_MSG_IF (!m_transportCtrl, "No transport controller application.");
   NS_ABORT_MSG_IF (!m_mme, "No MME object.");
 
   m_sliceIdStr = SliceIdStr (m_sliceId);
@@ -730,7 +730,7 @@ SliceController::BearerInstall (Ptr<RoutingInfo> rInfo)
   success &= PgwRulesInstall (rInfo);
   success &= SgwRulesInstall (rInfo);
   rInfo->SetGwInstalled (success);
-  success &= m_backhaulCtrl->BearerInstall (rInfo);
+  success &= m_transportCtrl->BearerInstall (rInfo);
   return success;
 }
 
@@ -747,7 +747,7 @@ SliceController::BearerRemove (Ptr<RoutingInfo> rInfo)
   success &= PgwRulesRemove (rInfo);
   success &= SgwRulesRemove (rInfo);
   rInfo->SetGwInstalled (!success);
-  success &= m_backhaulCtrl->BearerRemove (rInfo);
+  success &= m_transportCtrl->BearerRemove (rInfo);
   return success;
 }
 
@@ -759,10 +759,10 @@ SliceController::BearerUpdate (Ptr<RoutingInfo> rInfo, Ptr<EnbInfo> dstEnbInfo)
   NS_ASSERT_MSG (!rInfo->IsAggregated (), "Bearer should not be aggregated.");
 
   // Each slice has a single P-GW and S-GW, so handover only changes the eNB.
-  // Thus, we only need to modify the S-GW downlink rules and backhaul rules.
+  // Thus, we only need to modify the S-GW downlink rules and transport rules.
   bool success = true;
   success &= SgwRulesUpdate (rInfo, dstEnbInfo);
-  success &= m_backhaulCtrl->BearerUpdate (rInfo, dstEnbInfo);
+  success &= m_transportCtrl->BearerUpdate (rInfo, dstEnbInfo);
 
   // Increase the routing priority (only after updating OpenFlow rules).
   rInfo->IncreasePriority ();
@@ -816,7 +816,7 @@ SliceController::DoCreateSessionRequest (
                     " teid " << rInfo->GetTeidHex ());
 
       rInfo->SetPgwTftIdx (GetTftIdx (rInfo));
-      m_backhaulCtrl->NotifyBearerCreated (rInfo);
+      m_transportCtrl->NotifyBearerCreated (rInfo);
 
       if (rInfo->IsDefault ())
         {
@@ -828,7 +828,7 @@ SliceController::DoCreateSessionRequest (
           bool success = true;
           success &= PgwBearerRequest (rInfo);
           success &= SgwBearerRequest (rInfo);
-          success &= m_backhaulCtrl->BearerRequest (rInfo);
+          success &= m_transportCtrl->BearerRequest (rInfo);
           NS_ASSERT_MSG (success, "Default bearer must be accepted.");
 
           // Activate and install the default bearer.
@@ -1057,7 +1057,7 @@ SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo) const
       if (tabUse >= GetPgwBlockThs ())
         {
           success = false;
-          rInfo->SetBlocked (RoutingInfo::PGWTABLE);
+          rInfo->SetBlocked (RoutingInfo::BRPGWTAB);
           NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
                        " because the P-GW table is full.");
         }
@@ -1072,7 +1072,7 @@ SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo) const
       if (cpuUse >= GetPgwBlockThs ())
         {
           success = false;
-          rInfo->SetBlocked (RoutingInfo::PGWLOAD);
+          rInfo->SetBlocked (RoutingInfo::BRPGWCPU);
           NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
                        " because the P-GW is overloaded.");
         }
@@ -1217,7 +1217,7 @@ SliceController::SgwBearerRequest (Ptr<RoutingInfo> rInfo) const
       if (dlTabUse >= GetSgwBlockThs () || ulTabUse >= GetSgwBlockThs ())
         {
           success = false;
-          rInfo->SetBlocked (RoutingInfo::SGWTABLE);
+          rInfo->SetBlocked (RoutingInfo::BRSGWTAB);
           NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
                        " because the S-GW table is full.");
         }
@@ -1232,7 +1232,7 @@ SliceController::SgwBearerRequest (Ptr<RoutingInfo> rInfo) const
       if (cpuUse >= GetSgwBlockThs ())
         {
           success = false;
-          rInfo->SetBlocked (RoutingInfo::SGWLOAD);
+          rInfo->SetBlocked (RoutingInfo::BRSGWCPU);
           NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
                        " because the S-GW is overloaded.");
         }

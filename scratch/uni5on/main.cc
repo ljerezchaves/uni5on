@@ -392,20 +392,20 @@ EnableVerbose (bool enable)
       LogComponentEnable ("Main",                     logLevelWarnInfo);
       LogComponentEnable ("Uni5onCommon",             logLevelWarnInfo);
 
-      // Helper components.
+      // Scenario components.
       LogComponentEnable ("ScenarioHelper",           logLevelWarnInfo);
       LogComponentEnable ("TrafficHelper",            logLevelWarnInfo);
 
       // Infrastructure components.
-      LogComponentEnable ("TransportController",      logLevelWarnInfo);
-      LogComponentEnable ("TransportNetwork",         logLevelWarnInfo);
+      LogComponentEnable ("QosQueue",                 logLevelWarnInfo);
       LogComponentEnable ("RadioNetwork",             logLevelWarnInfo);
       LogComponentEnable ("RingController",           logLevelWarnInfo);
       LogComponentEnable ("RingNetwork",              logLevelWarnInfo);
-      LogComponentEnable ("EnbApplication",           logLevelWarnInfo);
-      LogComponentEnable ("QosQueue",                 logLevelWarnInfo);
+      LogComponentEnable ("TransportController",      logLevelWarnInfo);
+      LogComponentEnable ("TransportNetwork",         logLevelWarnInfo);
 
       // Logical components.
+      LogComponentEnable ("EnbApplication",           logLevelWarnInfo);
       LogComponentEnable ("GtpuTunnelApp",            logLevelWarnInfo);
       LogComponentEnable ("PgwuTunnelApp",            logLevelWarnInfo);
       LogComponentEnable ("SliceController",          logLevelWarnInfo);
@@ -422,7 +422,7 @@ EnableVerbose (bool enable)
       LogComponentEnable ("SgwInfo",                  logLevelWarnInfo);
       LogComponentEnable ("UeInfo",                   logLevelWarnInfo);
 
-      // Applications.
+      // Applications components.
       LogComponentEnable ("BaseClient",               logLevelWarnInfo);
       LogComponentEnable ("BaseServer",               logLevelWarnInfo);
       LogComponentEnable ("HttpClient",               logLevelWarnInfo);
@@ -436,11 +436,11 @@ EnableVerbose (bool enable)
 
       // Statistic components.
       LogComponentEnable ("AdmissionStatsCalculator", logLevelWarnInfo);
-      LogComponentEnable ("BackhaulStatsCalculator",  logLevelWarnInfo);
       LogComponentEnable ("FlowStatsCalculator",      logLevelWarnInfo);
       LogComponentEnable ("LteRrcStatsCalculator",    logLevelWarnInfo);
       LogComponentEnable ("PgwTftStatsCalculator",    logLevelWarnInfo);
       LogComponentEnable ("TrafficStatsCalculator",   logLevelWarnInfo);
+      LogComponentEnable ("TransportStatsCalculator", logLevelWarnInfo);
 
       // OFSwitch13 module components.
       LogComponentEnable ("OFSwitch13Controller",     logLevelWarn);

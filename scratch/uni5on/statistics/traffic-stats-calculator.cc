@@ -85,12 +85,12 @@ TrafficStatsCalculator::GetTypeId (void)
     .AddConstructor<TrafficStatsCalculator> ()
     .AddAttribute ("AppStatsFilename",
                    "Filename for application L7 traffic statistics.",
-                   StringValue ("traffic-application-l7"),
+                   StringValue ("traffic-flows-app-l7"),
                    MakeStringAccessor (&TrafficStatsCalculator::m_appFilename),
                    MakeStringChecker ())
     .AddAttribute ("EpcStatsFilename",
                    "Filename for EPC L2 traffic statistics.",
-                   StringValue ("traffic-backhaul-l2"),
+                   StringValue ("traffic-flows-epc-l2"),
                    MakeStringAccessor (&TrafficStatsCalculator::m_epcFilename),
                    MakeStringChecker ())
   ;
@@ -174,7 +174,7 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
     << " " << setw (11) << Bps2Kbps (app->GetUlGoodput ())
     << std::endl;
 
-  // Dump backhaul statistics.
+  // Dump transport statistics.
   if (rInfo->HasUlTraffic ())
     {
       stats = GetFlowStats (teid, Direction::ULINK);
@@ -220,7 +220,7 @@ TrafficStatsCalculator::OverloadDropPacket (std::string context,
   if (packet->PeekPacketTag (gtpuTag))
     {
       stats = GetFlowStats (gtpuTag.GetTeid (), gtpuTag.GetDirection ());
-      stats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::PLOAD);
+      stats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::DRCPU);
     }
   else
     {
@@ -233,7 +233,7 @@ TrafficStatsCalculator::OverloadDropPacket (std::string context,
         {
           stats = GetFlowStats (teid, Direction::DLINK);
           stats->NotifyTx (packet->GetSize ());
-          stats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::PLOAD);
+          stats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::DRCPU);
         }
     }
 }
@@ -249,10 +249,10 @@ TrafficStatsCalculator::MeterDropPacket (
   if (packet->PeekPacketTag (gtpuTag))
     {
       // Identify the meter type (MBR or slicing).
-      FlowStatsCalculator::DropReason dropReason = FlowStatsCalculator::METER;
+      FlowStatsCalculator::DropReason dropReason = FlowStatsCalculator::DRMET;
       if ((meterId & METER_SLC_TYPE) == METER_SLC_TYPE)
         {
-          dropReason = FlowStatsCalculator::SLICE;
+          dropReason = FlowStatsCalculator::DRSLC;
         }
 
       stats = GetFlowStats (gtpuTag.GetTeid (), gtpuTag.GetDirection ());
@@ -271,7 +271,7 @@ TrafficStatsCalculator::MeterDropPacket (
         {
           stats = GetFlowStats (teid, Direction::DLINK);
           stats->NotifyTx (packet->GetSize ());
-          stats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::METER);
+          stats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::DRMET);
         }
     }
 }
@@ -287,7 +287,7 @@ TrafficStatsCalculator::QueueDropPacket (std::string context,
   if (packet->PeekPacketTag (gtpuTag))
     {
       stats = GetFlowStats (gtpuTag.GetTeid (), gtpuTag.GetDirection ());
-      stats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::QUEUE);
+      stats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::DRQUE);
     }
   else
     {
@@ -300,7 +300,7 @@ TrafficStatsCalculator::QueueDropPacket (std::string context,
         {
           stats = GetFlowStats (teid, Direction::DLINK);
           stats->NotifyTx (packet->GetSize ());
-          stats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::QUEUE);
+          stats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::DRQUE);
         }
     }
 }
@@ -317,7 +317,7 @@ TrafficStatsCalculator::TableDropPacket (
   if (packet->PeekPacketTag (gtpuTag))
     {
       stats = GetFlowStats (gtpuTag.GetTeid (), gtpuTag.GetDirection ());
-      stats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::TABLE);
+      stats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::DRTAB);
     }
   else
     {
@@ -330,7 +330,7 @@ TrafficStatsCalculator::TableDropPacket (
         {
           stats = GetFlowStats (teid, Direction::DLINK);
           stats->NotifyTx (packet->GetSize ());
-          stats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::TABLE);
+          stats->NotifyDrop (packet->GetSize (), FlowStatsCalculator::DRTAB);
         }
     }
 }

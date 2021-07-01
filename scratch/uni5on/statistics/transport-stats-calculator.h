@@ -18,8 +18,8 @@
  * Author: Luciano Jerez Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef BACKHAUL_STATS_CALCULATOR_H
-#define BACKHAUL_STATS_CALCULATOR_H
+#ifndef TRANSPORT_STATS_CALCULATOR_H
+#define TRANSPORT_STATS_CALCULATOR_H
 
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
@@ -32,14 +32,14 @@ namespace ns3 {
 
 /**
  * \ingroup uni5onStats
- * This class monitors the OpenFlow backhaul network and dump bandwidth usage
+ * This class monitors the OpenFlow transport network and dump bandwidth usage
  * and resource reservation statistics on links between OpenFlow switches.
  */
-class BackhaulStatsCalculator : public Object
+class TransportStatsCalculator : public Object
 {
 public:
-  BackhaulStatsCalculator ();          //!< Default constructor.
-  virtual ~BackhaulStatsCalculator (); //!< Dummy destructor, see DoDispose.
+  TransportStatsCalculator ();          //!< Default constructor.
+  virtual ~TransportStatsCalculator (); //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
@@ -132,4 +132,4 @@ private:
 };
 
 } // namespace ns3
-#endif /* BACKHAUL_STATS_CALCULATOR_H */
+#endif /* TRANSPORT_STATS_CALCULATOR_H */

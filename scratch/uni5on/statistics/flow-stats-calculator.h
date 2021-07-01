@@ -28,27 +28,27 @@ namespace ns3 {
 
 /**
  * \ingroup uni5onStats
- * This class monitors basic QoS statistics at link level in the OpenFlow
- * backhaul network. This class monitors some basic QoS statistics of a traffic
- * flow. It counts the number of transmitted, received and dropped bytes and
- * packets. It computes the loss ratio, the average delay, and the jitter.
+ * This class monitors basic traffic QoS statistics at link level in the
+ * OpenFlow transport network. It counts the number of transmitted, received and
+ * dropped bytes and packets to computes the loss ratio, the average delay, and
+ * the jitter.
  */
 class FlowStatsCalculator : public Object
 {
 public:
-  /** Reason for packet drops at OpenFlow backhaul network. */
+  /** Reason for packet drops at the OpenFlow transport network. */
   enum DropReason
   {
-    TABLE = 0,    //!< Unmatched packets at flow tables.
-    PLOAD = 1,    //!< Switch pipeline capacity overloaded.
-    METER = 2,    //!< EPC bearer MBR meter.
-    SLICE = 3,    //!< OpenFlow EPC infrastructure slicing.
-    QUEUE = 4,    //!< Network device queues.
-    ALL   = 5     //!< ALL previous reasons.
+    DRTAB = 0,    //!< Unmatched packets at flow tables.
+    DRCPU = 1,    //!< Switch pipeline capacity overloaded.
+    DRMET = 2,    //!< OpenFlow MBR meter.
+    DRSLC = 3,    //!< OpenFlow slicing meter.
+    DRQUE = 4,    //!< Network device queues.
+    DRALL = 5     //!< ALL previous reasons.
   };
 
   // Total number of DropReason items + 1.
-  #define N_DROP_REASONS (static_cast<int> (DropReason::ALL) + 1)
+  #define N_DROP_REASONS (static_cast<int> (DropReason::DRALL) + 1)
 
   FlowStatsCalculator ();          //!< Default constructor.
   virtual ~FlowStatsCalculator (); //!< Dummy destructor, see DoDispose.

@@ -39,14 +39,14 @@ typedef std::set<Ptr<LinkInfo>> LinkInfoSet_t;
 
 /**
  * \ingroup uni5onInfra
- * Metadata associated to a link between two OpenFlow backhaul switches.
+ * Metadata associated to a link between two OpenFlow transport switches.
  *
  * The link is prepared to handle inter-slicing, and each slice has the
  * following metadata information associated to it:
- * - The slice quota, updated by the backhaul controller;
- * - The extra (over quota) bit rate, updated by the backhaul controller;
- * - The meter bit rate, updated by the backhaul controller;
- * - The reserved bit rate, updated by the backhaul controller;
+ * - The slice quota, updated by the transport controller;
+ * - The extra (over quota) bit rate, updated by the transport controller;
+ * - The meter bit rate, updated by the transport controller;
+ * - The reserved bit rate, updated by the transport controller;
  * - The transmitted bytes, updated by NotifyTxPacket method;
  * - The average throughput, for both short-term and long-term periods of
  *   evaluation, periodically updated by EwmaUpdate method;

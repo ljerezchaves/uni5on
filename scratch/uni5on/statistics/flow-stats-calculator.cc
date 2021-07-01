@@ -145,8 +145,8 @@ FlowStatsCalculator::NotifyDrop (uint32_t dpBytes, DropReason reason)
   m_dpPackets [reason]++;
   m_dpBytes [reason] += dpBytes;
 
-  m_dpPackets [DropReason::ALL]++;
-  m_dpBytes [DropReason::ALL] += dpBytes;
+  m_dpPackets [DropReason::DRALL]++;
+  m_dpBytes [DropReason::DRALL] += dpBytes;
 }
 
 int64_t
@@ -339,9 +339,9 @@ std::ostream & operator << (std::ostream &os, const FlowStatsCalculator &stats)
      << " " << setw (8)  << stats.GetRxDelay ().GetSeconds () * 1000
      << " " << setw (8)  << stats.GetRxJitter ().GetSeconds () * 1000
      << " " << setw (11) << Bps2Kbps (stats.GetRxThroughput ())
-     << " " << setw (8)  << stats.GetDpBytes (FlowStatsCalculator::ALL);
+     << " " << setw (8)  << stats.GetDpBytes (FlowStatsCalculator::DRALL);
 
-  for (int r = FlowStatsCalculator::ALL; r >= 0; r--)
+  for (int r = FlowStatsCalculator::DRALL; r >= 0; r--)
     {
       os << " " << setw (6) << stats.GetDpPackets (
         static_cast<FlowStatsCalculator::DropReason> (r));

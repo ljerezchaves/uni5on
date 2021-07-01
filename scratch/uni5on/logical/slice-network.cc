@@ -72,10 +72,10 @@ SliceNetwork::GetTypeId (void)
                    MakePointerChecker<SliceController> ())
 
     // Infrastructure.
-    .AddAttribute ("BackhaulNet", "The OpenFlow backhaul network pointer.",
+    .AddAttribute ("TransportNet", "The OpenFlow transport network.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    PointerValue (),
-                   MakePointerAccessor (&SliceNetwork::m_backhaul),
+                   MakePointerAccessor (&SliceNetwork::m_transport),
                    MakePointerChecker<TransportNetwork> ())
     .AddAttribute ("RadioNet", "The RAN network pointer.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -159,8 +159,8 @@ SliceNetwork::GetTypeId (void)
                    MakeUintegerAccessor (&SliceNetwork::GetPgwTftNumNodes,
                                          &SliceNetwork::SetPgwTftNumNodes),
                    MakeUintegerChecker<uint16_t> (1, 32))
-    .AddAttribute ("PgwBackhaulSwitch",
-                   "The backhaul switch index to connect the P-GW.",
+    .AddAttribute ("PgwInfraSwitch",
+                   "The transport switch index to connect the P-GW.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    UintegerValue (0),
                    MakeUintegerAccessor (&SliceNetwork::m_pgwInfraSwIdx),
@@ -208,8 +208,8 @@ SliceNetwork::GetTypeId (void)
                    MakeTimeChecker ())
 
     // S-GW.
-    .AddAttribute ("SgwBackhaulSwitch",
-                   "The backhaul switch index to connect the S-GW.",
+    .AddAttribute ("SgwInfraSwitch",
+                   "The transport switch index to connect the S-GW.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    UintegerValue (0),
                    MakeUintegerAccessor (&SliceNetwork::m_sgwInfraSwIdx),
@@ -290,7 +290,7 @@ SliceNetwork::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
 
-  m_backhaul = 0;
+  m_transport = 0;
   m_radio = 0;
   m_switchHelper = 0;
   m_controllerApp = 0;
@@ -310,7 +310,7 @@ SliceNetwork::NotifyConstructionCompleted (void)
 
   NS_ABORT_MSG_IF (m_sliceId == SliceId::UNKN, "Unknown slice ID.");
   NS_ABORT_MSG_IF (!m_controllerApp, "No slice controller application.");
-  NS_ABORT_MSG_IF (!m_backhaul, "No backhaul network.");
+  NS_ABORT_MSG_IF (!m_transport, "No transport network.");
   NS_ABORT_MSG_IF (!m_radio, "No RAN network.");
   NS_ABORT_MSG_IF (m_controllerApp->GetSliceId () != m_sliceId,
                    "Incompatible slice IDs for controller and network.");
@@ -460,11 +460,11 @@ SliceNetwork::CreatePgw (void)
   webHostStaticRouting->AddNetworkRouteTo (
     m_ueAddr, m_ueMask, Ipv4AddressHelper::GetAddress (pgwSgiDev), 1);
 
-  // Connect the P-GW node to the OpenFlow backhaul network.
+  // Connect the P-GW node to the OpenFlow transport network.
   Ptr<CsmaNetDevice> pgwS5Dev;
   Ptr<OFSwitch13Port> infraSwS5Port;
   Ipv4Address pgwS5Addr;
-  std::tie (pgwS5Dev, infraSwS5Port) = m_backhaul->AttachEpcNode (
+  std::tie (pgwS5Dev, infraSwS5Port) = m_transport->AttachEpcNode (
       pgwMainNode, m_pgwInfraSwIdx, EpsIface::S5);
   pgwS5Addr = Ipv4AddressHelper::GetAddress (pgwS5Dev);
   NS_LOG_INFO ("P-GW " << pgwId << " main switch dpId " << pgwDpId <<
@@ -527,8 +527,8 @@ SliceNetwork::CreatePgw (void)
       // Add the tftDev as physical port on the P-GW TFT OpenFlow switch.
       Ptr<OFSwitch13Port> tftPort = pgwTftOfDev->AddSwitchPort (tftDev);
 
-      // Connect the P-GW TFT node to the OpenFlow backhaul node.
-      std::tie (pgwS5Dev, infraSwS5Port) = m_backhaul->AttachEpcNode (
+      // Connect the P-GW TFT node to the OpenFlow transport network.
+      std::tie (pgwS5Dev, infraSwS5Port) = m_transport->AttachEpcNode (
           pgwTftNode, m_pgwInfraSwIdx, EpsIface::S5);
       pgwS5Addr = Ipv4AddressHelper::GetAddress (pgwS5Dev);
       NS_LOG_INFO ("P-GW TFT " << tftIdx << " switch dpId " << pgwDpId <<
@@ -583,10 +583,10 @@ SliceNetwork::CreateSgw (void)
   m_sgwDevice = m_switchHelper->InstallSwitch (m_sgwNode);
   uint64_t sgwDpId = m_sgwDevice->GetDatapathId ();
 
-  // Connect the S-GW node to the OpenFlow backhaul node.
+  // Connect the S-GW node to the OpenFlow transport network.
   Ptr<CsmaNetDevice> sgwS1Dev;
   Ptr<OFSwitch13Port> infraSwS1Port;
-  std::tie (sgwS1Dev, infraSwS1Port) = m_backhaul->AttachEpcNode (
+  std::tie (sgwS1Dev, infraSwS1Port) = m_transport->AttachEpcNode (
       m_sgwNode, m_sgwInfraSwIdx, EpsIface::S1);
   NS_LOG_INFO ("S-GW " << sgwId << " switch dpId " << sgwDpId <<
                " attached to the s1u interface with IP " <<
@@ -594,7 +594,7 @@ SliceNetwork::CreateSgw (void)
 
   Ptr<CsmaNetDevice> sgwS5Dev;
   Ptr<OFSwitch13Port> infraSwS5Port;
-  std::tie (sgwS5Dev, infraSwS5Port) = m_backhaul->AttachEpcNode (
+  std::tie (sgwS5Dev, infraSwS5Port) = m_transport->AttachEpcNode (
       m_sgwNode, m_sgwInfraSwIdx, EpsIface::S5);
   NS_LOG_INFO ("S-GW " << sgwId << " switch dpId " << sgwDpId <<
                " attached to the s5 interface with IP " <<

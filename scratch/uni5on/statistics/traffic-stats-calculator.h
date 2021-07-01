@@ -40,7 +40,7 @@ class BaseClient;
 /**
  * \ingroup uni5onStats
  * This class monitors the network traffic at application L7 level and also at
- * L2 OpenFlow link level for traffic within the backhaul.
+ * L2 OpenFlow link level for traffic within the transport network.
  */
 class TrafficStatsCalculator : public Object
 {
@@ -141,10 +141,10 @@ private:
    */
   Ptr<FlowStatsCalculator> GetFlowStats (uint32_t teid, Direction dir);
 
-  std::string               m_appFilename;  //!< AppStats filename.
-  Ptr<OutputStreamWrapper>  m_appWrapper;   //!< AppStats file wrapper.
-  std::string               m_epcFilename;  //!< EpcStats filename.
-  Ptr<OutputStreamWrapper>  m_epcWrapper;   //!< EpcStats file wrapper.
+  std::string                 m_appFilename;  //!< AppStats filename.
+  Ptr<OutputStreamWrapper>    m_appWrapper;   //!< AppStats file wrapper.
+  std::string                 m_epcFilename;  //!< EpcStats filename.
+  Ptr<OutputStreamWrapper>    m_epcWrapper;   //!< EpcStats file wrapper.
 
   /** A pair of FlowStatsCalculator, one for each traffic direction. */
   struct FlowStatsPair
@@ -154,7 +154,7 @@ private:
 
   /** A Map saving GTP TEID / EPC stats pair. */
   typedef std::map<uint32_t, FlowStatsPair> TeidFlowStatsMap_t;
-  TeidFlowStatsMap_t        m_qosByTeid;    //!< TEID EPC statistics.
+  TeidFlowStatsMap_t          m_qosByTeid;    //!< TEID EPC statistics.
 };
 
 } // namespace ns3

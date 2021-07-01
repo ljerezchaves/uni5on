@@ -18,15 +18,15 @@
  * Author: Luciano Jerez Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef SCENARIO_EPC_HELPER_H
-#define SCENARIO_EPC_HELPER_H
+#ifndef SCENARIO_HELPER_H
+#define SCENARIO_HELPER_H
 
 #include <ns3/core-module.h>
 #include <ns3/lte-module.h>
 #include <ns3/network-module.h>
 #include <ns3/ofswitch13-module.h>
 #include "../statistics/admission-stats-calculator.h"
-#include "../statistics/backhaul-stats-calculator.h"
+#include "../statistics/transport-stats-calculator.h"
 #include "../statistics/lte-rrc-stats-calculator.h"
 #include "../statistics/pgw-tft-stats-calculator.h"
 #include "../statistics/traffic-stats-calculator.h"
@@ -52,14 +52,14 @@ public:
   /** The bitmap for PCAP configuration. */
   enum PcapConfig
   {
-    PCSLCOFP  = (1U << 0),  //!< Slice OpenFlow control channels.
-    PCSLCPGW  = (1U << 1),  //!< Slice P-GW interfaces.
-    PCSLCSGI  = (1U << 2),  //!< Slice SGi interfaces.
-    PCBACKOFP = (1U << 3),  //!< Backhaul OpenFlow control channels.
-    PCBACKEPC = (1U << 4),  //!< Backhaul EPC interfaces.
-    PCBACKSWT = (1U << 5),  //!< Backhaul switches interfaces.
-    PCNOTUSED = (1U << 6),  //!< Flag not being used yet.
-    PCPROMISC = (1U << 7),  //!< Enable promiscuous mode.
+    PCSLCOFP = (1U << 0),  //!< Slice OpenFlow control channels.
+    PCSLCPGW = (1U << 1),  //!< Slice P-GW interfaces.
+    PCSLCSGI = (1U << 2),  //!< Slice SGi interfaces.
+    PCTPNOFP = (1U << 3),  //!< Transport OpenFlow control channels.
+    PCTPNEPC = (1U << 4),  //!< Transport EPC interfaces.
+    PCTPNSWT = (1U << 5),  //!< Transport switches interfaces.
+    PCUNUSED = (1U << 6),  //!< Flag not being used yet.
+    PCPROMSC = (1U << 7),  //!< Enable promiscuous mode.
   };
 
   ScenarioHelper ();          //!< Default constructor.
@@ -84,9 +84,9 @@ public:
    *
    * A: Enable promiscuous mode
    * B: Unused bit
-   * C: Enable PCAP on OpenFlow switch ports at backhaul
-   * D: Enable PCAP on EPC interfaces connected to the backhaul
-   * E: Enable PCAP on OpenFlow control channel at backhaul
+   * C: Enable PCAP on OpenFlow switch ports at the transport network
+   * D: Enable PCAP on EPC interfaces connected to the transport network
+   * E: Enable PCAP on OpenFlow control channel at the transport network
    * F: Enable PCAP on SGi intefaces connected to the Internet
    * G: Enable PCAP on P-GW internal interfaces at logical slices
    * H: Enable PCAP on OpenFlow control channels at logical slices
@@ -96,11 +96,11 @@ public:
 
   /**
    * Check the PCAP configuration bitmap for the following flag.
-   * \param config The PCAP configuration bitmap.
    * \param flag PCAP configuration flag.
+   * \param config The PCAP configuration bitmap.
    * \return True if the flag is set in PCAP config bitmap, false otherwise.
    */
-  bool HasPcapFlag (uint8_t config, PcapConfig flag) const;
+  bool HasPcapFlag (PcapConfig flag, uint8_t config) const;
 
   /**
    * Print the radio environment map.
@@ -140,8 +140,8 @@ private:
   bool AreFactoriesOk (ObjectFactory &controller, ObjectFactory &network,
                        ObjectFactory &traffic) const;
 
-  Ptr<RingNetwork>          m_backhaul;         //!< The backhaul network.
-  Ptr<RadioNetwork>         m_radio;            //!< The RAN network.
+  Ptr<RingNetwork>          m_transport;        //!< The transport network.
+  Ptr<RadioNetwork>         m_radio;            //!< The radio network.
   Ptr<StatelessMme>         m_mme;              //!< The MME entity.
 
   // MBB network slice.
@@ -169,12 +169,12 @@ private:
   Ptr<TrafficHelper>        m_tmpTraffic;       //!< TMP slice traffic.
 
   // Statistic calculators.
-  Ptr<AdmissionStatsCalculator>   m_admissionStats; //!< Admission stats.
-  Ptr<BackhaulStatsCalculator>    m_backhaulStats;  //!< Backhaul stats.
-  Ptr<LteRrcStatsCalculator>      m_lteRrcStats;    //!< LTE RRC stats.
-  Ptr<PgwTftStatsCalculator>      m_pgwTftStats;    //!< P-GW TFT stats.
-  Ptr<TrafficStatsCalculator>     m_trafficStats;   //!< Traffic stats.
+  Ptr<AdmissionStatsCalculator> m_admissionStats; //!< Admission stats.
+  Ptr<TransportStatsCalculator> m_transportStats; //!< Transport stats.
+  Ptr<LteRrcStatsCalculator>    m_lteRrcStats;    //!< LTE RRC stats.
+  Ptr<PgwTftStatsCalculator>    m_pgwTftStats;    //!< P-GW TFT stats.
+  Ptr<TrafficStatsCalculator>   m_trafficStats;   //!< Traffic stats.
 };
 
 } // namespace ns3
-#endif  // SCENARIO_EPC_HELPER_H
+#endif  // SCENARIO_HELPER_H

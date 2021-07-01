@@ -58,13 +58,13 @@ default ns3::TrafficHelper::StopAppsAt "900s"
 default ns3::TrafficHelper::UseOnlyDefaultBearer "false"
 
 default ns3::ScenarioHelper::MbbController "ns3::SliceController[Priority=1|Quota=40|GbrBlockThs=0.25]"
-default ns3::ScenarioHelper::MbbSlice "ns3::SliceNetwork[NumUes=270|UeCellSiteCoverage=0|PgwBackhaulSwitch=0|SgwBackhaulSwitch=0|PgwTftCpuCapacity=256Mbps|PgwTftFlowTableSize=512|PgwTftTcamDelay=20us|UeMobilitySpeed=ns3::ConstantRandomVariable[Constant=0.834]]"
+default ns3::ScenarioHelper::MbbSlice "ns3::SliceNetwork[NumUes=270|UeCellSiteCoverage=0|PgwInfraSwitch=0|SgwInfraSwitch=0|PgwTftCpuCapacity=256Mbps|PgwTftFlowTableSize=512|PgwTftTcamDelay=20us|UeMobilitySpeed=ns3::ConstantRandomVariable[Constant=0.834]]"
 default ns3::ScenarioHelper::MbbTraffic "ns3::TrafficHelper[PoissonInterArrival=ns3::ExponentialRandomVariable[Mean=120.0]|InitialProb=0.5|FullAppsAt=450s]"
 
 default ns3::ScenarioHelper::MtcController "ns3::SliceController[Priority=1|Quota=15|GbrBlockThs=0.5]"
-default ns3::ScenarioHelper::MtcSlice "ns3::SliceNetwork[NumUes=450|UeCellSiteCoverage=0|PgwBackhaulSwitch=0|SgwBackhaulSwitch=3|PgwTftCpuCapacity=64Mbps|PgwTftFlowTableSize=2048|PgwTftTcamDelay=80us|UeMobilitySpeed=ns3::ConstantRandomVariable[Constant=8.340]]"
+default ns3::ScenarioHelper::MtcSlice "ns3::SliceNetwork[NumUes=450|UeCellSiteCoverage=0|PgwInfraSwitch=0|SgwInfraSwitch=3|PgwTftCpuCapacity=64Mbps|PgwTftFlowTableSize=2048|PgwTftTcamDelay=80us|UeMobilitySpeed=ns3::ConstantRandomVariable[Constant=8.340]]"
 default ns3::ScenarioHelper::MtcTraffic "ns3::TrafficHelper[PoissonInterArrival=ns3::ExponentialRandomVariable[Mean=100.0]]"
 
 default ns3::ScenarioHelper::TmpController "ns3::SliceController[Priority=1|Quota=25|GbrBlockThs=0.25]"
-default ns3::ScenarioHelper::TmpSlice "ns3::SliceNetwork[NumUes=180|UeCellSiteCoverage=2|PgwBackhaulSwitch=0|SgwBackhaulSwitch=2|PgwTftCpuCapacity=64Mbps|PgwTftFlowTableSize=2048|PgwTftTcamDelay=80us|UeMobilitySpeed=ns3::ConstantRandomVariable[Constant=0.834]]"
+default ns3::ScenarioHelper::TmpSlice "ns3::SliceNetwork[NumUes=180|UeCellSiteCoverage=2|PgwInfraSwitch=0|SgwInfraSwitch=2|PgwTftCpuCapacity=64Mbps|PgwTftFlowTableSize=2048|PgwTftTcamDelay=80us|UeMobilitySpeed=ns3::ConstantRandomVariable[Constant=0.834]]"
 default ns3::ScenarioHelper::TmpTraffic "ns3::TrafficHelper[PoissonInterArrival=ns3::ExponentialRandomVariable[Mean=80.0]|StartAppsAt=250s|StopAppsAt=650s]"

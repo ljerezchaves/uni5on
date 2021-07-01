@@ -50,13 +50,13 @@ public:
   /** The reason for any blocked request. */
   enum BlockReason
   {
-    PGWTABLE  = (1U << 0),  //!< P-GW TFT flow table is full.
-    PGWLOAD   = (1U << 1),  //!< P-GW TFT pipeline load is full.
-    SGWTABLE  = (1U << 4),  //!< S-GW flow table is full.
-    SGWLOAD   = (1U << 5),  //!< S-GW pipeline load is full.
-    BACKTABLE = (1U << 8),  //!< At least one backhaul flow table is full.
-    BACKLOAD  = (1U << 9),  //!< At least one backhaul pipeline load is full.
-    BACKBAND  = (1U << 12)  //!< At least one backhaul link has no bandwidth.
+    BRPGWTAB = (1U << 0),  //!< P-GW flow table.
+    BRPGWCPU = (1U << 1),  //!< P-GW pipeline load.
+    BRSGWTAB = (1U << 4),  //!< S-GW flow table.
+    BRSGWCPU = (1U << 5),  //!< S-GW pipeline load.
+    BRTPNTAB = (1U << 8),  //!< Transport switch flow table.
+    BRTPNCPU = (1U << 9),  //!< Transport switch pipeline.
+    BRTPNBWD = (1U << 12)  //!< Transport link bandwidth.
   };
 
   /**
@@ -128,7 +128,7 @@ public:
 
   /**
    * \name Private member accessors for bearer guaranteed bit rate information.
-   *       These methods are used for reserving resources at backhaul network.
+   *       These methods are used for reserving resources at transport network.
    * \param iface The logical interface.
    * \return The requested information.
    */
@@ -325,22 +325,22 @@ private:
    */
   static void RegisterRoutingInfo (Ptr<RoutingInfo> rInfo);
 
-  BearerCreated_t  m_bearer;         //!< EPS bearer context created.
-  uint16_t         m_blockReason;    //!< Bitmap for blocked reasons.
-  bool             m_isActive;       //!< True for active bearer.
-  bool             m_isAggregated;   //!< True for aggregated bearer.
-  bool             m_isDefault;      //!< True for default bearer.
-  bool             m_isGbrRes [2];   //!< True for GBR resources reserved.
-  bool             m_isInstGw;       //!< True for installed gateway rules.
-  bool             m_isInstIf [2];   //!< True for installed interface rules.
+  BearerCreated_t  m_bearer;          //!< EPS bearer context created.
+  uint16_t         m_blockReason;     //!< Bitmap for blocked reasons.
+  bool             m_isActive;        //!< True for active bearer.
+  bool             m_isAggregated;    //!< True for aggregated bearer.
+  bool             m_isDefault;       //!< True for default bearer.
+  bool             m_isGbrRes [2];    //!< True for GBR resources reserved.
+  bool             m_isInstGw;        //!< True for installed gateway rules.
+  bool             m_isInstIf [2];    //!< True for installed interface rules.
   bool             m_isMbrDlInst [2]; //!< True for downlink meter installed.
   bool             m_isMbrUlInst [2]; //!< True for uplink meter installed.
-  uint16_t         m_pgwTftIdx;      //!< P-GW TFT switch index.
-  uint16_t         m_priority;       //!< Flow table rule priority.
-  SliceId          m_sliceId;        //!< Slice ID for this bearer.
-  uint32_t         m_teid;           //!< GTP TEID.
-  uint16_t         m_timeout;        //!< Flow table idle timeout.
-  Ptr<UeInfo>      m_ueInfo;         //!< UE metadata pointer.
+  uint16_t         m_pgwTftIdx;       //!< P-GW TFT switch index.
+  uint16_t         m_priority;        //!< Flow table rule priority.
+  SliceId          m_sliceId;         //!< Slice ID for this bearer.
+  uint32_t         m_teid;            //!< GTP TEID.
+  uint16_t         m_timeout;         //!< Flow table idle timeout.
+  Ptr<UeInfo>      m_ueInfo;          //!< UE metadata pointer.
 
   /** Map saving TEID / routing information. */
   typedef std::map<uint32_t, Ptr<RoutingInfo>> TeidRoutingMap_t;

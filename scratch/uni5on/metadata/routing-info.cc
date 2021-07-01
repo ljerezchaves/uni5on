@@ -694,19 +694,19 @@ RoutingInfo::BlockReasonStr (BlockReason reason)
 {
   switch (reason)
     {
-    case RoutingInfo::PGWTABLE:
+    case RoutingInfo::BRPGWTAB:
       return "PgwTable";
-    case RoutingInfo::PGWLOAD:
+    case RoutingInfo::BRPGWCPU:
       return "PgwLoad";
-    case RoutingInfo::SGWTABLE:
+    case RoutingInfo::BRSGWTAB:
       return "SgwTable";
-    case RoutingInfo::SGWLOAD:
+    case RoutingInfo::BRSGWCPU:
       return "SgwLoad";
-    case RoutingInfo::BACKTABLE:
+    case RoutingInfo::BRTPNTAB:
       return "BackTable";
-    case RoutingInfo::BACKLOAD:
+    case RoutingInfo::BRTPNCPU:
       return "BackLoad";
-    case RoutingInfo::BACKBAND:
+    case RoutingInfo::BRTPNBWD:
       return "BackBand";
     default:
       return "-";

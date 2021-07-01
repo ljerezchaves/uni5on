@@ -41,7 +41,7 @@ public:
    * Complete constructor.
    * \param cellId The cell identifier for this eNB.
    * \param s1uAddr The eNB S1-U IP address.
-   * \param infraSwIdx The OpenFlow backhaul switch index.
+   * \param infraSwIdx The OpenFlow transport switch index.
    * \param infraSwS1uPortNo The port number for S1-U interface at the switch.
    * \param enbApp The eNB application.
    */
@@ -103,10 +103,10 @@ private:
   static void RegisterEnbInfo (Ptr<EnbInfo> enbInfo);
 
   // eNB metadata.
-  Ptr<EnbApplication> m_application;        //!< eNB application.
+  Ptr<EnbApplication>       m_application;        //!< eNB application.
   uint16_t                  m_cellId;             //!< eNB cell ID.
-  uint16_t                  m_infraSwIdx;         //!< Backhaul switch index.
-  uint32_t                  m_infraSwS1uPortNo;   //!< Backhaul switch port no.
+  uint16_t                  m_infraSwIdx;         //!< Transport switch index.
+  uint32_t                  m_infraSwS1uPortNo;   //!< Transport switch port no.
   Ipv4Address               m_s1uAddr;            //!< eNB S1-U IP address.
 
   /** Map saving cell ID / eNB information. */

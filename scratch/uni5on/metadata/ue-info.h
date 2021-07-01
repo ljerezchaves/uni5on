@@ -55,7 +55,7 @@ class UeInfo : public Object
   friend class SliceController;
   friend class ScenarioHelper;
   friend class StatelessMme;
-  friend class BackhaulStatsCalculator;
+  friend class TransportStatsCalculator;
   friend class TrafficStatsCalculator;
 
 public:

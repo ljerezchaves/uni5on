@@ -109,7 +109,7 @@ public:
   SliceId GetSliceId (void) const;
 
   /**
-   * \name Private member accessors for backhaul interface metadata.
+   * \name Private member accessors for transport interface metadata.
    * \return The requested information.
    */
   //\{
@@ -148,7 +148,7 @@ public:
   EpcS11SapSgw* GetS11SapSgw (void) const;
 
   /**
-   * Notify this controller of the P-GW connected to the OpenFlow backhaul
+   * Notify this controller of the P-GW connected to the OpenFlow transport
    * network over the S5 interface, and to the web server over the SGi
    * interface.
    * \param pgwInfo The P-GW metadata.
@@ -158,7 +158,7 @@ public:
                                 Ptr<NetDevice> webSgiDev);
 
   /**
-   * Notify this controller of the S-GW connected to the OpenFlow backhaul
+   * Notify this controller of the S-GW connected to the OpenFlow transport
    * network over the S1-U and S5 interfaces.
    * \param sgwInfo The S-GW metadata.
    */
@@ -381,42 +381,42 @@ private:
   TracedCallback<Ptr<const PgwInfo>, uint32_t, uint32_t> m_pgwTftLoadBalTrace;
 
   // Slice identification.
-  SliceId                 m_sliceId;        //!< Logical slice ID.
-  std::string             m_sliceIdStr;     //!< Slice ID string.
+  SliceId                   m_sliceId;        //!< Logical slice ID.
+  std::string               m_sliceIdStr;     //!< Slice ID string.
 
   // Infrastructure interface.
-  Ptr<TransportController> m_backhaulCtrl;   //!< OpenFlow backhaul controller.
-  double                  m_gbrBlockThs;    //!< Backhaul GBR block threshold.
-  int                     m_slicePrio;      //!< slice priority.
-  int                     m_linkQuota;      //!< Initial bandwitdh quota.
-  OpMode                  m_linkSharing;    //!< Bandwitdh sharing mode.
-  OpMode                  m_aggregation;    //!< Bearer traffic aggregation.
+  Ptr<TransportController>  m_transportCtrl; //!< Transport controller.
+  double                    m_gbrBlockThs;    //!< GBR block threshold.
+  int                       m_slicePrio;      //!< Slice priority.
+  int                       m_linkQuota;      //!< Initial bandwitdh quota.
+  OpMode                    m_linkSharing;    //!< Bandwitdh sharing mode.
+  OpMode                    m_aggregation;    //!< Bearer traffic aggregation.
 
   // MME interface.
-  Ptr<StatelessMme>       m_mme;            //!< MME element.
-  EpcS11SapMme*           m_s11SapMme;      //!< MME side of the S11 SAP.
-  EpcS11SapSgw*           m_s11SapSgw;      //!< S-GW side of the S11 SAP.
+  Ptr<StatelessMme>         m_mme;            //!< MME element.
+  EpcS11SapMme*             m_s11SapMme;      //!< MME side of the S11 SAP.
+  EpcS11SapSgw*             m_s11SapSgw;      //!< S-GW side of the S11 SAP.
 
   // Network configuration.
-  Ipv4Address             m_ueAddr;         //!< UE network address.
-  Ipv4Mask                m_ueMask;         //!< UE network mask.
-  Ipv4Address             m_webAddr;        //!< Web network address.
-  Ipv4Mask                m_webMask;        //!< Web network mask.
+  Ipv4Address               m_ueAddr;         //!< UE network address.
+  Ipv4Mask                  m_ueMask;         //!< UE network mask.
+  Ipv4Address               m_webAddr;        //!< Web network address.
+  Ipv4Mask                  m_webMask;        //!< Web network mask.
 
   // P-GW metadata and TFT load balancing mechanism.
-  Ptr<PgwInfo>            m_pgwInfo;        //!< P-GW metadata for this slice.
-  OpMode                  m_pgwBlockPolicy; //!< P-GW overload block policy.
-  double                  m_pgwBlockThs;    //!< P-GW block threshold.
-  OpMode                  m_tftLoadBal;     //!< P-GW TFT load balancing.
-  double                  m_tftJoinThs;     //!< P-GW TFT join threshold.
-  double                  m_tftSplitThs;    //!< P-GW TFT split threshold.
-  bool                    m_tftStartMax;    //!< P-GW TFT start with maximum.
-  Time                    m_tftTimeout;     //!< P-GW TFT load bal timeout.
+  Ptr<PgwInfo>              m_pgwInfo;        //!< P-GW metadata for slice.
+  OpMode                    m_pgwBlockPolicy; //!< P-GW overload block policy.
+  double                    m_pgwBlockThs;    //!< P-GW block threshold.
+  OpMode                    m_tftLoadBal;     //!< P-GW TFT load balancing.
+  double                    m_tftJoinThs;     //!< P-GW TFT join threshold.
+  double                    m_tftSplitThs;    //!< P-GW TFT split threshold.
+  bool                      m_tftStartMax;    //!< P-GW TFT start with maximum.
+  Time                      m_tftTimeout;     //!< P-GW TFT load bal timeout.
 
   // S-GW metadata.
-  Ptr<SgwInfo>            m_sgwInfo;        //!< S-GW metadata for this slice.
-  OpMode                  m_sgwBlockPolicy; //!< S-GW overload block policy.
-  double                  m_sgwBlockThs;    //!< S-GW block threshold.
+  Ptr<SgwInfo>              m_sgwInfo;        //!< S-GW metadata for slice.
+  OpMode                    m_sgwBlockPolicy; //!< S-GW overload block policy.
+  double                    m_sgwBlockThs;    //!< S-GW block threshold.
 };
 
 } // namespace ns3

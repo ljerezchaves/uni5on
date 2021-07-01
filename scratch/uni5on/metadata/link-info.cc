@@ -76,7 +76,7 @@ LinkInfo::LinkInfo (Ptr<OFSwitch13Port> port1, Ptr<OFSwitch13Port> port2,
 
   // The unknown slice quota represents the bandwidth that was not assigned to
   // any other slice. This bandwidth can be available for use or not, depending
-  // on the backhaul controller configuration. The initial quota is set to 100,
+  // on the transport controller configuration. The initial quota is set to 100,
   // and the UpdateQuota method will adjust this value.
   m_slices [LinkDir::FWD][SliceId::UNKN].quota = 100;
   m_slices [LinkDir::BWD][SliceId::UNKN].quota = 100;

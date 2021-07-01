@@ -48,7 +48,7 @@ public:
    * \param s5Addr The S5 interface IP address.
    * \param s1uPortNo The port number for S1-U interface at the S-GW.
    * \param s5PortNo The port number for S5 interface at the S-GW.
-   * \param infraSwIdx The OpenFlow backhaul switch index.
+   * \param infraSwIdx The OpenFlow transport switch index.
    * \param infraSwS1uPortNo The port number for S1-U interface at the switch.
    * \param infraSwS5PortNo The port number for S5 interface at the switch.
    * \param sliceCtrl The slice controller application.
@@ -125,9 +125,9 @@ private:
 
   // S-GW metadata.
   Ptr<OFSwitch13Device>  m_device;               //!< S-GW OpenFlow device.
-  uint16_t               m_infraSwIdx;           //!< Backhaul switch index.
-  uint32_t               m_infraSwS1uPortNo;     //!< Back switch S1-U port no.
-  uint32_t               m_infraSwS5PortNo;      //!< Back switch S5 port no.
+  uint16_t               m_infraSwIdx;           //!< Transport switch index.
+  uint32_t               m_infraSwS1uPortNo;     //!< Transport S1-U port no.
+  uint32_t               m_infraSwS5PortNo;      //!< Transport S5 port no.
   Ipv4Address            m_s1uAddr;              //!< S-GW S1-U IP address.
   uint32_t               m_s1uPortNo;            //!< S-GW S1-U port no.
   Ipv4Address            m_s5Addr;               //!< S-GW S5 IP address.
