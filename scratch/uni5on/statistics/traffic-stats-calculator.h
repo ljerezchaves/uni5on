@@ -32,15 +32,8 @@ class RoutingInfo;
 class BaseClient;
 
 /**
- * \ingroup uni5on
- * \defgroup uni5onStats Statistics
- * Statistics calculators for monitoring the UNI5ON architecture.
- */
-
-/**
  * \ingroup uni5onStats
- * This class monitors the network traffic at application L7 level and also at
- * L2 OpenFlow link level for traffic within the transport network.
+ * This class monitors the application traffic.
  */
 class TrafficStatsCalculator : public Object
 {

@@ -50,10 +50,7 @@ typedef std::vector<Ptr<SliceController>> SliceControllerList_t;
 
 /**
  * \ingroup uni5onLogical
- * This is the abstract base class for a logical slice controller, which
- * should be extended in accordance to the desired network configuration. This
- * slice controller is responsible for implementing S/P-GW control planes and
- * configuring the S/P-GW OpenFlow switches at user plane.
+ * The logical eEPC network controller.
  */
 class SliceController : public OFSwitch13Controller
 {

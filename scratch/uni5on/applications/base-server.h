@@ -33,7 +33,7 @@ class BaseClient;
 
 /**
  * \ingroup uni5onApps
- * This base class extends the Application class to proper work with the UNI5ON
+ * Base class that extends the Application class to proper work with the UNI5ON
  * architecture. Server applications that will be installed into web nodes
  * should extend this class.
  */

@@ -29,19 +29,19 @@ namespace ns3 {
 
 /**
  * \ingroup uni5onApps
- * This is the client side of a HTTP Traffic Generator. The client establishes
- * a TCP connection with the server and sends a request for the main object of
- * a given web page. When client gets the main object, it process the message
- * and start to request the inline objects of the given web page. After
- * receiving all inline objects, the client waits an interval (reading time)
- * before it requests a new main object of a new web page. The implementation
- * of this application is simplistic and it does not support pipelining in this
- * current version. The model used is based on the distributions indicated in
- * the paper "An HTTP Web Traffic Model Based on the Top One Million Visited
- * Web Pages" by Rastin Pries et.  al. This simplistic approach was taken since
- * this traffic generator was developed primarily to help users evaluate their
- * proposed algorithm in other modules of ns-3. To allow deeper studies about
- * the HTTP Protocol it needs some improvements.
+ * The client side of a HTTP traffic generator. The client establishes a TCP
+ * connection with the server and sends a request for the main object of a given
+ * web page. When client gets the main object, it process the message and start
+ * to request the inline objects of the given web page. After receiving all
+ * inline objects, the client waits an interval (reading time) before it
+ * requests a new main object of a new web page. The implementation of this
+ * application is simplistic and it does not support pipelining in this current
+ * version. The model used is based on the distributions indicated in the paper
+ * "An HTTP Web Traffic Model Based on the Top One Million Visited Web Pages" by
+ * Rastin Pries et. al. This simplistic approach was taken since this traffic
+ * generator was developed primarily to help users evaluate their proposed
+ * algorithm in other modules of ns-3. To allow deeper studies about the HTTP
+ * Protocol it needs some improvements.
  */
 class HttpClient : public BaseClient
 {

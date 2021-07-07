@@ -27,8 +27,8 @@ namespace ns3 {
 
 /**
  * \ingroup uni5onLogical
- * This is the GTP tunneling application for the P-GWu. It extends the GTPu
- * tunneling application to attach and remove the GtpuTag tag on packets
+ * The GTP-U tunneling application for the P-GWu switches. It extends the GTP-U
+ * tunneling application to attach/remove the GtpuTag tag on packets
  * entering/leaving the transport network over S5 interface.
  */
 class PgwuTunnelApp : public GtpuTunnelApp

@@ -32,8 +32,7 @@ namespace ns3 {
 
 /**
  * \ingroup uni5onStats
- * This class monitors the OpenFlow transport network and dump bandwidth usage
- * and resource reservation statistics on links between OpenFlow switches.
+ * This class monitors the OpenFlow transport network.
  */
 class TransportStatsCalculator : public Object
 {

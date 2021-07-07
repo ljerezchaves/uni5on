@@ -28,7 +28,7 @@ namespace ns3 {
 
 /**
  * \ingroup uni5onInfra
- * OpenFlow transport network with ring topology.
+ * OpenFlow transport network with a ring topology.
  */
 class RingNetwork : public TransportNetwork
 {

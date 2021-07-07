@@ -26,9 +26,9 @@ namespace ns3 {
 
 /**
  * \ingroup uni5onApps
- * This is the server side of a pre-recorded video traffic generator. The server
- * listen for a client requesting video chunks and send the chunks back as fast
- * as possible.
+ * The server side of a pre-recorded video traffic generator. The server listen
+ * for a client requesting video chunks and send the chunks back as fast as
+ * possible.
  */
 class RecordedVideoServer : public BaseServer
 {

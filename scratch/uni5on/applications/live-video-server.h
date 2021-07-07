@@ -26,9 +26,8 @@ namespace ns3 {
 
 /**
  * \ingroup uni5onApps
- * This is the server side of a live video traffic generator, sending and
- * receiving UDP datagrams following a MPEG video pattern with random
- * video length.
+ * The server side of a live video traffic generator, sending and receiving UDP
+ * datagrams following a MPEG video pattern with random video length.
  */
 class LiveVideoServer : public BaseServer
 {

@@ -37,9 +37,9 @@ class TrafficManager;
 
 /**
  * \ingroup uni5on
- * Traffic helper which installs client and server applications into UEs and web
- * server nodes. This helper also creates and aggregates a traffic manager
- * object to each UE.
+ * The helper to create and configure client and server applications into UEs
+ * and web server nodes. This helper also creates and aggregates a traffic
+ * manager object to each UE.
  */
 class TrafficHelper : public Object
 {

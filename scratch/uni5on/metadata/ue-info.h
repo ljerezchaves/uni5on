@@ -39,14 +39,8 @@ class SliceController;
 typedef std::map<uint8_t, Ptr<RoutingInfo>> BidRInfoMap_t;
 
 /**
- * \ingroup uni5on
- * \defgroup uni5onMeta Metadata
- * UNI5ON architecture metadata.
- */
-
-/**
  * \ingroup uni5onMeta
- * Metadata associated to a UE.
+ * Metadata associated to an UE.
  */
 class UeInfo : public Object
 {

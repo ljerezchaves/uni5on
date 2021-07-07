@@ -31,8 +31,8 @@ class RoutingInfo;
 
 /**
  * \ingroup uni5onMeta
- * Metadata associated to the routing path for a single EPS bearer among the
- * switches in the OpenFlow transport ring network.
+ * Metadata associated to the routing path for an eEPC bearer in the OpenFlow
+ * transport ring network.
  */
 class RingInfo : public Object
 {

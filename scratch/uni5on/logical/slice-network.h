@@ -34,15 +34,8 @@ class RadioNetwork;
 class SliceController;
 
 /**
- * \ingroup uni5on
- * \defgroup uni5onLogical Logical
- * eEPC architecture logical network.
- */
-
-/**
  * \ingroup uni5onLogical
- * This is the class for a logical network slice, sharing the common
- * OpenFlow transport and radio networks.
+ * The logical eEPC network slice.
  */
 class SliceNetwork : public Object
 {

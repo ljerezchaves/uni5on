@@ -34,12 +34,10 @@ class NetDevice;
 
 /**
  * \ingroup uni5onLogical
- * The stateless MME entity. The UNI5ON architecture expects one MME entity for
- * each slice controller. However, in this implementation we are using a single
- * stateless MME entity for all slices, as the the current ns-3 LTE
+ * The stateless MME entity for all slices, as the the current ns-3 LTE
  * implementation limits eNB connection to a single MME. As our eNBs are shared
  * among all slices, we are using this single stateless MME entity and
- * internally forwarding the control messages to the proper slice controller.
+ * internally forwarding the control messages to the slice controllers.
  */
 class StatelessMme : public Object
 {

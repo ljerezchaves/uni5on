@@ -28,10 +28,7 @@ namespace ns3 {
 
 /**
  * \ingroup uni5onStats
- * This class monitors basic traffic QoS statistics at link level in the
- * OpenFlow transport network. It counts the number of transmitted, received and
- * dropped bytes and packets to computes the loss ratio, the average delay, and
- * the jitter.
+ * This class monitors basic traffic flow QoS statistics.
  */
 class FlowStatsCalculator : public Object
 {

@@ -31,8 +31,7 @@ namespace ns3 {
 
 /**
  * \ingroup uni5onApps
- * This helper will make life easier for people trying to set up client/server
- * applications on the UNI5ON architecture.
+ * The helper to set up client and server applications.
  */
 class ApplicationHelper
 {

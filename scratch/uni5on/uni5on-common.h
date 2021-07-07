@@ -29,6 +29,31 @@
 
 namespace ns3 {
 
+/**
+ * \defgroup uni5on UNI5ON architecture
+ * Network simulation scenario for the UNI5ON architecture.
+ *
+ * \ingroup uni5on
+ * \defgroup uni5onApps Applications
+ * Applications prepared to work with the UNI5ON architecture.
+ *
+ * \ingroup uni5on
+ * \defgroup uni5onInfra Infrastructure
+ * The UNI5ON architecture infrastructure.
+ *
+ * \ingroup uni5on
+ * \defgroup uni5onLogical Logical
+ * The logical eEPC network slices.
+ *
+ * \ingroup uni5on
+ * \defgroup uni5onMeta Metadata
+ * The metadata for the UNI5ON architecture.
+ *
+ * \ingroup uni5on
+ * \defgroup uni5onStats Statistics
+ * Statistics calculators for monitoring the UNI5ON architecture.
+ */
+
 // TEID masks for OpenFlow matching.
 #define TEID_STRICT_MASK    0xFFFFFFFF
 #define TEID_SLICE_MASK     0x0F000000

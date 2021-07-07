@@ -32,17 +32,9 @@ namespace ns3 {
 class TransportController;
 
 /**
- * \ingroup uni5on
- * \defgroup uni5onInfra Infrastructure
- * UNI5ON architecture infrastructure.
- */
-
-/**
  * \ingroup uni5onInfra
- * This is the abstract base class for the OpenFlow transport network, which
- * should be extended to configure the desired network topology. The eEPC
- * entities (eNB nodes and S/P-GWu switches) are connected to the OpenFlow
- * switches through CSMA devices.
+ * Abstract base class for the OpenFlow transport network, which should be
+ * extended to configure the desired network topology.
  */
 class TransportNetwork : public Object
 {

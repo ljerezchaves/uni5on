@@ -31,7 +31,7 @@ class PgwInfo;
 
 /**
  * \ingroup uni5onStats
- * This class monitors the P-GW TFT adaptive mechanism.
+ * This class monitors the P-GW TFT scaling mechanism.
  */
 class PgwTftStatsCalculator : public Object
 {

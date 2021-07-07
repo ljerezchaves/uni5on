@@ -32,9 +32,9 @@ namespace ns3 {
 
 /**
  * \ingroup uni5onInfra
- * LTE radio access network with eNBs grouped in three-sector sites layed out
- * on an hexagonal grid. UEs are randomly distributed around the sites and
- * attach to the network automatically using idle mode cell selection.
+ * LTE radio access network with eNBs grouped in three-sector sites layed out on
+ * an hexagonal grid. UEs of all slices are randomly distributed around the
+ * sites and attach to the network automatically using idle mode cell selection.
  */
 class RadioNetwork : public Object
 {

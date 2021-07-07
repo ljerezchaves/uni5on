@@ -29,15 +29,15 @@ namespace ns3 {
 
 /**
  * \ingroup uni5onApps
- * This is the server side of a HTTP Traffic Generator. The server listen for
- * client object requests. The implementation of this application is simplistic
- * and it does not support pipelining in this current version. The model used
- * is based on the distributions indicated in the paper "An HTTP Web Traffic
- * Model Based on the Top One Million Visited Web Pages" by Rastin Pries et.
- * al. This simplistic approach was taken since this traffic generator was
- * developed primarily to help users evaluate their proposed algorithm in other
- * modules of ns-3. To allow deeper studies about the HTTP Protocol it needs
- * some improvements.
+ * The server side of a HTTP traffic generator. The server listen for client
+ * object requests. The implementation of this application is simplistic and it
+ * does not support pipelining in this current version. The model used is based
+ * on the distributions indicated in the paper "An HTTP Web Traffic Model Based
+ * on the Top One Million Visited Web Pages" by Rastin Pries et. al. This
+ * simplistic approach was taken since this traffic generator was developed
+ * primarily to help users evaluate their proposed algorithm in other modules of
+ * ns-3. To allow deeper studies about the HTTP Protocol it needs some
+ * improvements.
  */
 class HttpServer : public BaseServer
 {

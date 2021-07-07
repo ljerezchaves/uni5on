@@ -43,8 +43,8 @@ class TrafficHelper;
 
 /**
  * \ingroup uni5on
- * This helper creates and configures the infrastructure and logical networks
- * for UNI5ON architecture simulations.
+ * The helper to create and configure the infrastructure and slices for the
+ * UNI5ON architecture.
  */
 class ScenarioHelper : public EpcHelper
 {

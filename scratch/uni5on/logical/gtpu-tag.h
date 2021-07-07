@@ -31,7 +31,8 @@ namespace ns3 {
 class Tag;
 
 /**
- * Tag used for GTP packets withing the EPC.
+ * \ingroup uni5onLogical
+ * GTP-U tag for eEPC traffic monitoring.
  */
 class GtpuTag : public Tag
 {

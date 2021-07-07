@@ -32,7 +32,7 @@ namespace ns3 {
 
 /**
  * \ingroup uni5onLogical
- * This GTP tunnel application is responsible for implementing the logical port
+ * GTP-U tunnel application responsible for implementing the logical port
  * operations to encapsulate and de-encapsulated packets withing GTP tunnel. It
  * provides the callback implementations that are used by the logical switch
  * port and UDP socket. This application is stateless: it only adds/removes
@@ -41,10 +41,9 @@ namespace ns3 {
  *
  * When sending a packet to the GTP tunnel, this application expects that the
  * packet carries the TunnelId tag set with the destination address in the 32
- * MSB and the TEID in the 32 LSB of packet tag (you can use the method
- * GetTunnelIdStr () to construct your tunnelId string). When a packet is
- * received from the GTP tunnel, this application attaches the TunnelId tag
- * only with the GTP TEID value.
+ * MSB and the TEID in the 32 LSB of packet tag. When a packet is received from
+ * the GTP tunnel, this application attaches the TunnelId tag only with the GTP
+ * TEID value.
  */
 class GtpuTunnelApp : public Application
 {

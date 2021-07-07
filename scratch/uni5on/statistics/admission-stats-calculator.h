@@ -31,8 +31,7 @@ class RoutingInfo;
 
 /**
  * \ingroup uni5onStats
- * This class monitors the SDN EPC bearer admission control and dump bearer
- * requests and blocking statistics.
+ * This class monitors the admission procedure for statistics.
  */
 class AdmissionStatsCalculator : public Object
 {

@@ -26,10 +26,9 @@ namespace ns3 {
 
 /**
  * \ingroup uni5onApps
- * This is the client side of a pre-recorded video traffic generator. The client
+ * The client side of a pre-recorded video traffic generator. The client
  * establishes a TCP connection with the server and sends a HTTP request for the
- * main video object. After receiving all video chunks, the client closes the
- * connection.
+ * main video object.
  */
 class RecordedVideoClient : public BaseClient
 {

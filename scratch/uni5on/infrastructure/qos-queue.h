@@ -27,10 +27,10 @@ namespace ns3 {
 
 /**
  * \ingroup uni5onInfra
- * This class implements a specialized QoS queue for the transport network switches.
- * It holds a priority queue (ID 0) that is always served first, while other
- * queues (IDs 1 to N-1) are served in weighted rounding robin (WRR) order.
- * The drop tail queues are operating in packet mode with size of 100 packets.
+ * Specialized QoS queue for the transport network switches. It holds a priority
+ * queue (ID 0) that is always served first, while other queues (IDs 1 to N-1)
+ * are served in weighted rounding robin (WRR) order. The internal drop tail
+ * queues are operating in packet mode with size of 100 packets.
  */
 class QosQueue : public OFSwitch13Queue
 {

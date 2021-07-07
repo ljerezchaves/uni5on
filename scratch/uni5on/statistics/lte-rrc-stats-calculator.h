@@ -28,8 +28,7 @@ namespace ns3 {
 
 /**
  * \ingroup uni5onStats
- * This class monitors the LTE RRC protocol and mobility model to dump RRC
- * procedures, including handover statistics and mobility course changes.
+ * This class monitors the LTE RRC protocol and the mobility model.
  */
 class LteRrcStatsCalculator : public Object
 {

@@ -44,8 +44,8 @@ class LinkInfo;
 
 /**
  * \ingroup uni5onInfra
- * This is the abstract base class for the OpenFlow transport controller, which
- * should be extended to configure the desired transport network topology.
+ * Abstract base class for the OpenFlow transport controller, which should be
+ * extended to configure the desired transport network topology.
  */
 class TransportController : public OFSwitch13Controller
 {

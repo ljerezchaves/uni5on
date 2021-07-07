@@ -28,12 +28,7 @@
 
 using namespace ns3;
 
-/**
- * \defgroup uni5on UNI5ON architecture
- * Network simulation scenario for UNI5ON architecture.
- */
 NS_LOG_COMPONENT_DEFINE ("Main");
-
 
 void ConfigureDefaults ();
 void ForceDefaults ();

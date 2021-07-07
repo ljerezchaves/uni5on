@@ -32,13 +32,8 @@ namespace ns3 {
 class BaseServer;
 
 /**
- * \ingroup uni5on
- * \defgroup uni5onApps Applications
- * Applications prepared to work with the UNI5ON architecture.
- */
-/**
  * \ingroup uni5onApps
- * This base class extends the Application class to proper work with the UNI5ON
+ * Base class that extends the Application class to proper work with the UNI5ON
  * architecture. Clients applications that will be installed into UEs should
  * extend this class.
  */
