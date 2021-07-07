@@ -69,12 +69,15 @@ public:
   static TypeId GetTypeId (void);
 
   /** Hold info on an EPS bearer to be activated. */
-  struct BearerInfo
+  struct EpsBearerMeta
   {
     Ptr<EpcTft> tft;
     EpsBearer   bearer;
     uint8_t     bearerId;
   };
+
+  /** List of EPS bearer metadata. */
+  typedef std::vector<EpsBearerMeta> EpsBearerMetaList_t;
 
   /**
    * \name Private member accessors for UE information.
@@ -104,17 +107,17 @@ public:
    * \return The requested information.
    */
   //\{
-  BearerInfo            GetBearerInfo   (uint8_t bearerId) const;
-  EpsBearer             GetEpsBearer    (uint8_t bearerId) const;
-  Ptr<RoutingInfo>      GetRoutingInfo  (uint8_t bearerId) const;
-  uint32_t              GetTeid         (uint8_t bearerId) const;
+  EpsBearerMeta       GetEpsBearerMeta  (uint8_t bearerId) const;
+  EpsBearer           GetEpsBearer      (uint8_t bearerId) const;
+  Ptr<RoutingInfo>    GetRoutingInfo    (uint8_t bearerId) const;
+  uint32_t            GetTeid           (uint8_t bearerId) const;
   //\}
 
   /**
    * Get the list of bearers for this UE.
    * \return The const reference to the list of bearers.
    */
-  const std::vector<BearerInfo>& GetBearerInfoList (void) const;
+  const EpsBearerMetaList_t& GetEpsBearerMetaList (void) const;
 
   /**
    * Get the map of routing information for this UE.
@@ -171,10 +174,11 @@ private:
   /**
    * Add an EPS bearer to the list of bearers for this UE. The bearer will be
    * activated when the UE enters the ECM connected state.
-   * \param bearer The bearer info.
+   * \param tft The traffic flow template for this bearer.
+   * \param bearer The EPS bearer.
    * \return The bearer ID.
    */
-  uint8_t AddBearerInfo (BearerInfo bearer);
+  uint8_t AddEpsBearer (Ptr<EpcTft> tft, EpsBearer bearer);
 
   /**
    * Add an EPS routing metadata to the list of routing contexts for this UE.
@@ -209,7 +213,7 @@ private:
   uint16_t                m_enbUeS1Id;            //!< ID for S1-AP at eNB.
 
   // Bearers and TFTs.
-  std::vector<BearerInfo> m_bearersList;          //!< Bearer contexts.
+  EpsBearerMetaList_t     m_bearersList;          //!< Bearer contexts.
   EpcTftClassifier        m_tftClassifier;        //!< P-GW TFT classifier.
   BidRInfoMap_t           m_rInfoByBid;           //!< Routing info map by BID.
 

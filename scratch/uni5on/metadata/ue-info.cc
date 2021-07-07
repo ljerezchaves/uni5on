@@ -81,9 +81,9 @@ UeInfo::GetDefaultBid (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  BearerInfo bInfo = GetBearerInfo (1);
-  NS_ASSERT_MSG (bInfo.tft->IsDefaultTft (), "Invalid default BID.");
-  return bInfo.bearerId;
+  EpsBearerMeta bMeta = GetEpsBearerMeta (1);
+  NS_ASSERT_MSG (bMeta.tft->IsDefaultTft (), "Invalid default BID.");
+  return bMeta.bearerId;
 }
 
 uint32_t
@@ -192,8 +192,8 @@ UeInfo::GetSliceCtrl (void) const
   return m_sliceCtrl;
 }
 
-UeInfo::BearerInfo
-UeInfo::GetBearerInfo (uint8_t bearerId) const
+UeInfo::EpsBearerMeta
+UeInfo::GetEpsBearerMeta (uint8_t bearerId) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -206,7 +206,7 @@ UeInfo::GetEpsBearer (uint8_t bearerId) const
 {
   NS_LOG_FUNCTION (this);
 
-  return GetBearerInfo (bearerId).bearer;
+  return GetEpsBearerMeta (bearerId).bearer;
 }
 
 Ptr<RoutingInfo>
@@ -228,8 +228,8 @@ UeInfo::GetTeid (uint8_t bearerId) const
   return GetRoutingInfo (bearerId)->GetTeid ();
 }
 
-const std::vector<UeInfo::BearerInfo>&
-UeInfo::GetBearerInfoList (void) const
+const UeInfo::EpsBearerMetaList_t&
+UeInfo::GetEpsBearerMetaList (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -337,14 +337,17 @@ UeInfo::SetSgwInfo (Ptr<SgwInfo> value)
 }
 
 uint8_t
-UeInfo::AddBearerInfo (BearerInfo bearer)
+UeInfo::AddEpsBearer (Ptr<EpcTft> tft, EpsBearer bearer)
 {
-  NS_LOG_FUNCTION (this << bearer.bearerId);
+  NS_LOG_FUNCTION (this);
 
   NS_ABORT_MSG_IF (GetNBearers () >= 11, "No more bearers allowed.");
-  bearer.bearerId = GetNBearers () + 1;
-  m_bearersList.push_back (bearer);
-  return bearer.bearerId;
+  EpsBearerMeta epsBearerInfo;
+  epsBearerInfo.tft = tft;
+  epsBearerInfo.bearer = bearer;
+  epsBearerInfo.bearerId = GetNBearers () + 1;
+  m_bearersList.push_back (epsBearerInfo);
+  return epsBearerInfo.bearerId;
 }
 
 void
@@ -352,7 +355,7 @@ UeInfo::AddRoutingInfo (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo);
 
-  NS_ASSERT_MSG (GetBearerInfo (rInfo->GetBearerId ()).tft == rInfo->GetTft (),
+  NS_ASSERT_MSG (GetEpsBearerMeta (rInfo->GetBearerId ()).tft == rInfo->GetTft (),
                  "Inconsistent bearer TFTs for this bearer ID.");
 
   // Save routing info.

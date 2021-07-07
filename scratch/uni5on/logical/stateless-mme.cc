@@ -99,7 +99,7 @@ StatelessMme::DoInitialUeMessage (
   msg.uli.gci = ecgi;
   msg.teid = 0;
 
-  for (auto const &bit : ueInfo->GetBearerInfoList ())
+  for (auto const &bit : ueInfo->GetEpsBearerMetaList ())
     {
       EpcS11SapSgw::BearerContextToBeCreated bearerContext;
       bearerContext.epsBearerId = bit.bearerId;
