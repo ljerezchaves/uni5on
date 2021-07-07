@@ -21,7 +21,7 @@
 #include <iomanip>
 #include <iostream>
 #include <ns3/mobility-model.h>
-#include "lte-rrc-stats-calculator.h"
+#include "mobility-stats-calculator.h"
 #include "../uni5on-common.h"
 #include "../metadata/enb-info.h"
 #include "../metadata/ue-info.h"
@@ -32,10 +32,10 @@ using namespace std;
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("LteRrcStatsCalculator");
-NS_OBJECT_ENSURE_REGISTERED (LteRrcStatsCalculator);
+NS_LOG_COMPONENT_DEFINE ("MobilityStatsCalculator");
+NS_OBJECT_ENSURE_REGISTERED (MobilityStatsCalculator);
 
-LteRrcStatsCalculator::LteRrcStatsCalculator ()
+MobilityStatsCalculator::MobilityStatsCalculator ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -43,106 +43,106 @@ LteRrcStatsCalculator::LteRrcStatsCalculator ()
   Config::Connect (
     "/NodeList/*/$ns3::MobilityModel/CourseChange",
     MakeCallback (
-      &LteRrcStatsCalculator::NotifyUeMobilityCourseChange, this));
+      &MobilityStatsCalculator::NotifyUeMobilityCourseChange, this));
 
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteEnbRrc/HandoverStart",
     MakeCallback (
-      &LteRrcStatsCalculator::NotifyHandoverStart, this));
+      &MobilityStatsCalculator::NotifyHandoverStart, this));
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteEnbRrc/HandoverEndOk",
     MakeCallback (
-      &LteRrcStatsCalculator::NotifyHandoverEndOk, this));
+      &MobilityStatsCalculator::NotifyHandoverEndOk, this));
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/HandoverStart",
     MakeCallback (
-      &LteRrcStatsCalculator::NotifyHandoverStart, this));
+      &MobilityStatsCalculator::NotifyHandoverStart, this));
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/HandoverEndOk",
     MakeCallback (
-      &LteRrcStatsCalculator::NotifyHandoverEndOk, this));
+      &MobilityStatsCalculator::NotifyHandoverEndOk, this));
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/HandoverEndError",
     MakeCallback (
-      &LteRrcStatsCalculator::NotifyHandoverEndError, this));
+      &MobilityStatsCalculator::NotifyHandoverEndError, this));
 
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteEnbRrc/NewUeContext",
     MakeCallback (
-      &LteRrcStatsCalculator::NotifyEnbNewUeContext, this));
+      &MobilityStatsCalculator::NotifyEnbNewUeContext, this));
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteEnbRrc/ConnectionEstablished",
     MakeCallback (
-      &LteRrcStatsCalculator::NotifyConnectionEstablished, this));
+      &MobilityStatsCalculator::NotifyConnectionEstablished, this));
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteEnbRrc/ConnectionReconfiguration",
     MakeCallback (
-      &LteRrcStatsCalculator::NotifyConnectionReconfiguration, this));
+      &MobilityStatsCalculator::NotifyConnectionReconfiguration, this));
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/ConnectionEstablished",
     MakeCallback (
-      &LteRrcStatsCalculator::NotifyConnectionEstablished, this));
+      &MobilityStatsCalculator::NotifyConnectionEstablished, this));
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/ConnectionReconfiguration",
     MakeCallback (
-      &LteRrcStatsCalculator::NotifyConnectionReconfiguration, this));
+      &MobilityStatsCalculator::NotifyConnectionReconfiguration, this));
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/ConnectionTimeout",
     MakeCallback (
-      &LteRrcStatsCalculator::NotifyUeConnectionTimeout, this));
+      &MobilityStatsCalculator::NotifyUeConnectionTimeout, this));
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/InitialCellSelectionEndOk",
     MakeCallback (
-      &LteRrcStatsCalculator::NotifyUeInitialCellSelectionEndOk, this));
+      &MobilityStatsCalculator::NotifyUeInitialCellSelectionEndOk, this));
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/InitialCellSelectionEndError",
     MakeCallback (
-      &LteRrcStatsCalculator::NotifyUeInitialCellSelectionEndError, this));
+      &MobilityStatsCalculator::NotifyUeInitialCellSelectionEndError, this));
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/RandomAccessSuccessful",
     MakeCallback (
-      &LteRrcStatsCalculator::NotifyUeRandomAccessSuccessful, this));
+      &MobilityStatsCalculator::NotifyUeRandomAccessSuccessful, this));
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/RandomAccessError",
     MakeCallback (
-      &LteRrcStatsCalculator::NotifyUeRandomAccessError, this));
+      &MobilityStatsCalculator::NotifyUeRandomAccessError, this));
 }
 
-LteRrcStatsCalculator::~LteRrcStatsCalculator ()
+MobilityStatsCalculator::~MobilityStatsCalculator ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-LteRrcStatsCalculator::GetTypeId (void)
+MobilityStatsCalculator::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::LteRrcStatsCalculator")
+  static TypeId tid = TypeId ("ns3::MobilityStatsCalculator")
     .SetParent<Object> ()
-    .AddConstructor<LteRrcStatsCalculator> ()
+    .AddConstructor<MobilityStatsCalculator> ()
     .AddAttribute ("HvoStatsFilename",
                    "Filename for RRC handover statistics.",
                    StringValue ("rrc-handover"),
                    MakeStringAccessor (
-                     &LteRrcStatsCalculator::m_hvoFilename),
+                     &MobilityStatsCalculator::m_hvoFilename),
                    MakeStringChecker ())
     .AddAttribute ("MobStatsFilename",
                    "Filename for UE mobility statistics.",
                    StringValue ("ue-mobility"),
                    MakeStringAccessor (
-                     &LteRrcStatsCalculator::m_mobFilename),
+                     &MobilityStatsCalculator::m_mobFilename),
                    MakeStringChecker ())
     .AddAttribute ("RrcStatsFilename",
                    "Filename for RRC procedures statistics.",
                    StringValue ("rrc-procedures"),
                    MakeStringAccessor (
-                     &LteRrcStatsCalculator::m_rrcFilename),
+                     &MobilityStatsCalculator::m_rrcFilename),
                    MakeStringChecker ())
   ;
   return tid;
 }
 
 void
-LteRrcStatsCalculator::DoDispose ()
+MobilityStatsCalculator::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -153,7 +153,7 @@ LteRrcStatsCalculator::DoDispose ()
 }
 
 void
-LteRrcStatsCalculator::NotifyConstructionCompleted (void)
+MobilityStatsCalculator::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -215,7 +215,7 @@ LteRrcStatsCalculator::NotifyConstructionCompleted (void)
 }
 
 void
-LteRrcStatsCalculator::NotifyUeMobilityCourseChange (
+MobilityStatsCalculator::NotifyUeMobilityCourseChange (
   std::string context, Ptr<const MobilityModel> mobility)
 {
   NS_LOG_FUNCTION (this << context << mobility);
@@ -238,7 +238,7 @@ LteRrcStatsCalculator::NotifyUeMobilityCourseChange (
 }
 
 void
-LteRrcStatsCalculator::NotifyHandoverEndError (
+MobilityStatsCalculator::NotifyHandoverEndError (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
   NS_LOG_FUNCTION (this << context << imsi << cellId << rnti);
@@ -273,7 +273,7 @@ LteRrcStatsCalculator::NotifyHandoverEndError (
 }
 
 void
-LteRrcStatsCalculator::NotifyHandoverEndOk (
+MobilityStatsCalculator::NotifyHandoverEndOk (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
   NS_LOG_FUNCTION (this << context << imsi << cellId << rnti);
@@ -310,7 +310,7 @@ LteRrcStatsCalculator::NotifyHandoverEndOk (
 }
 
 void
-LteRrcStatsCalculator::NotifyHandoverStart (
+MobilityStatsCalculator::NotifyHandoverStart (
   std::string context, uint64_t imsi, uint16_t srcCellId, uint16_t rnti,
   uint16_t dstCellId)
 {
@@ -349,7 +349,7 @@ LteRrcStatsCalculator::NotifyHandoverStart (
 }
 
 void
-LteRrcStatsCalculator::NotifyEnbNewUeContext (
+MobilityStatsCalculator::NotifyEnbNewUeContext (
   std::string context, uint16_t cellId, uint16_t rnti)
 {
   NS_LOG_FUNCTION (this << context << cellId << rnti);
@@ -369,7 +369,7 @@ LteRrcStatsCalculator::NotifyEnbNewUeContext (
 }
 
 void
-LteRrcStatsCalculator::NotifyConnectionEstablished (
+MobilityStatsCalculator::NotifyConnectionEstablished (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
   NS_LOG_FUNCTION (this << context << imsi << cellId << rnti);
@@ -401,7 +401,7 @@ LteRrcStatsCalculator::NotifyConnectionEstablished (
 }
 
 void
-LteRrcStatsCalculator::NotifyConnectionReconfiguration (
+MobilityStatsCalculator::NotifyConnectionReconfiguration (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
   NS_LOG_FUNCTION (this << context << imsi << cellId << rnti);
@@ -433,7 +433,7 @@ LteRrcStatsCalculator::NotifyConnectionReconfiguration (
 }
 
 void
-LteRrcStatsCalculator::NotifyUeConnectionTimeout (
+MobilityStatsCalculator::NotifyUeConnectionTimeout (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
   NS_LOG_FUNCTION (this << context << imsi << cellId << rnti);
@@ -452,7 +452,7 @@ LteRrcStatsCalculator::NotifyUeConnectionTimeout (
 }
 
 void
-LteRrcStatsCalculator::NotifyUeInitialCellSelectionEndError (
+MobilityStatsCalculator::NotifyUeInitialCellSelectionEndError (
   std::string context, uint64_t imsi, uint16_t cellId)
 {
   NS_LOG_FUNCTION (this << context << imsi << cellId);
@@ -471,7 +471,7 @@ LteRrcStatsCalculator::NotifyUeInitialCellSelectionEndError (
 }
 
 void
-LteRrcStatsCalculator::NotifyUeInitialCellSelectionEndOk (
+MobilityStatsCalculator::NotifyUeInitialCellSelectionEndOk (
   std::string context, uint64_t imsi, uint16_t cellId)
 {
   NS_LOG_FUNCTION (this << context << imsi << cellId);
@@ -490,7 +490,7 @@ LteRrcStatsCalculator::NotifyUeInitialCellSelectionEndOk (
 }
 
 void
-LteRrcStatsCalculator::NotifyUeRandomAccessError (
+MobilityStatsCalculator::NotifyUeRandomAccessError (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
   NS_LOG_FUNCTION (this << context << imsi << cellId << rnti);
@@ -509,7 +509,7 @@ LteRrcStatsCalculator::NotifyUeRandomAccessError (
 }
 
 void
-LteRrcStatsCalculator::NotifyUeRandomAccessSuccessful (
+MobilityStatsCalculator::NotifyUeRandomAccessSuccessful (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
   NS_LOG_FUNCTION (this << context << imsi << cellId << rnti);

@@ -27,7 +27,7 @@
 #include <ns3/ofswitch13-module.h>
 #include "../statistics/admission-stats-calculator.h"
 #include "../statistics/transport-stats-calculator.h"
-#include "../statistics/lte-rrc-stats-calculator.h"
+#include "../statistics/mobility-stats-calculator.h"
 #include "../statistics/pgw-tft-stats-calculator.h"
 #include "../statistics/traffic-stats-calculator.h"
 #include "../uni5on-common.h"
@@ -171,7 +171,7 @@ private:
   // Statistic calculators.
   Ptr<AdmissionStatsCalculator> m_admissionStats; //!< Admission stats.
   Ptr<TransportStatsCalculator> m_transportStats; //!< Transport stats.
-  Ptr<LteRrcStatsCalculator>    m_lteRrcStats;    //!< LTE RRC stats.
+  Ptr<MobilityStatsCalculator>  m_mobilityStats;  //!< LTE RRC stats.
   Ptr<PgwTftStatsCalculator>    m_pgwTftStats;    //!< P-GW TFT stats.
   Ptr<TrafficStatsCalculator>   m_trafficStats;   //!< Traffic stats.
 };

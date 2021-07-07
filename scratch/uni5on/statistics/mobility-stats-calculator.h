@@ -18,8 +18,8 @@
  * Author: Luciano Jerez Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef LTE_RRC_STATS_CALCULATOR_H
-#define LTE_RRC_STATS_CALCULATOR_H
+#ifndef MOBILITY_STATS_CALCULATOR_H
+#define MOBILITY_STATS_CALCULATOR_H
 
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
@@ -30,11 +30,11 @@ namespace ns3 {
  * \ingroup uni5onStats
  * This class monitors the LTE RRC protocol and the mobility model.
  */
-class LteRrcStatsCalculator : public Object
+class MobilityStatsCalculator : public Object
 {
 public:
-  LteRrcStatsCalculator ();          //!< Default constructor.
-  virtual ~LteRrcStatsCalculator (); //!< Dummy destructor, see DoDispose.
+  MobilityStatsCalculator ();          //!< Default constructor.
+  virtual ~MobilityStatsCalculator (); //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
@@ -175,4 +175,4 @@ private:
 };
 
 } // namespace ns3
-#endif /* LTE_RRC_STATS_CALCULATOR_H */
+#endif /* MOBILITY_STATS_CALCULATOR_H */

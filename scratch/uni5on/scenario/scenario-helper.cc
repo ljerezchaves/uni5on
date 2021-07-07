@@ -51,7 +51,7 @@ ScenarioHelper::ScenarioHelper ()
   m_tmpTraffic (0),
   m_admissionStats (0),
   m_transportStats (0),
-  m_lteRrcStats (0),
+  m_mobilityStats (0),
   m_pgwTftStats (0),
   m_trafficStats (0)
 {
@@ -391,7 +391,7 @@ ScenarioHelper::DoDispose (void)
   m_transportStats->Dispose ();
   m_pgwTftStats->Dispose ();
   m_trafficStats->Dispose ();
-  m_lteRrcStats->Dispose ();
+  m_mobilityStats->Dispose ();
 
   m_mme = 0;
   m_radio = 0;
@@ -411,7 +411,7 @@ ScenarioHelper::DoDispose (void)
   m_transportStats = 0;
   m_pgwTftStats = 0;
   m_trafficStats = 0;
-  m_lteRrcStats = 0;
+  m_mobilityStats = 0;
 
   Object::DoDispose ();
 }
@@ -534,8 +534,8 @@ ScenarioHelper::NotifyConstructionCompleted (void)
 
   // Creating the statistic calculators.
   m_admissionStats  = CreateObject<AdmissionStatsCalculator> ();
-  m_transportStats   = CreateObject<TransportStatsCalculator> ();
-  m_lteRrcStats     = CreateObject<LteRrcStatsCalculator> ();
+  m_transportStats  = CreateObject<TransportStatsCalculator> ();
+  m_mobilityStats   = CreateObject<MobilityStatsCalculator> ();
   m_pgwTftStats     = CreateObject<PgwTftStatsCalculator> ();
   m_trafficStats    = CreateObject<TrafficStatsCalculator> ();
 

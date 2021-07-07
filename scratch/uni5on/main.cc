@@ -432,7 +432,7 @@ EnableVerbose (bool enable)
       // Statistic components.
       LogComponentEnable ("AdmissionStatsCalculator", logLevelWarnInfo);
       LogComponentEnable ("FlowStatsCalculator",      logLevelWarnInfo);
-      LogComponentEnable ("LteRrcStatsCalculator",    logLevelWarnInfo);
+      LogComponentEnable ("MobilityStatsCalculator",  logLevelWarnInfo);
       LogComponentEnable ("PgwTftStatsCalculator",    logLevelWarnInfo);
       LogComponentEnable ("TrafficStatsCalculator",   logLevelWarnInfo);
       LogComponentEnable ("TransportStatsCalculator", logLevelWarnInfo);
