@@ -61,7 +61,7 @@ public:
   uint8_t           GetEpsBearerId    (void) const;
   Time              GetMaxOnTime      (void) const;
   std::string       GetNameTeid       (void) const;
-  Ptr<BaseServer> GetServerApp      (void) const;
+  Ptr<BaseServer>   GetServerApp      (void) const;
   uint32_t          GetTeid           (void) const;
   std::string       GetTeidHex        (void) const;
   bool              IsActive          (void) const;
@@ -144,7 +144,7 @@ protected:
   Ptr<Socket>               m_socket;           //!< Local socket.
   uint16_t                  m_localPort;        //!< Local port.
   Address                   m_serverAddress;    //!< Server address.
-  Ptr<BaseServer>         m_serverApp;        //!< Server application.
+  Ptr<BaseServer>           m_serverApp;        //!< Server application.
 
   /** Trace source fired when application start. */
   TracedCallback<Ptr<BaseClient>> m_appStartTrace;

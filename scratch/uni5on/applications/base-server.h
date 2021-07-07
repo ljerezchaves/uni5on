@@ -57,7 +57,7 @@ public:
    */
   //\{
   std::string       GetAppName    (void) const;
-  Ptr<BaseClient> GetClientApp  (void) const;
+  Ptr<BaseClient>   GetClientApp  (void) const;
   std::string       GetTeidHex    (void) const;
   bool              IsActive      (void) const;
   bool              IsForceStop   (void) const;
@@ -104,10 +104,10 @@ protected:
    */
   void NotifyRx (uint32_t bytes);
 
-  Ptr<Socket>               m_socket;           //!< Local socket.
-  uint16_t                  m_localPort;        //!< Local port.
-  Address                   m_clientAddress;    //!< Client address.
-  Ptr<BaseClient>         m_clientApp;        //!< Client application.
+  Ptr<Socket>               m_socket;         //!< Local socket.
+  uint16_t                  m_localPort;      //!< Local port.
+  Address                   m_clientAddress;  //!< Client address.
+  Ptr<BaseClient>           m_clientApp;      //!< Client application.
 
   // Traffic statistics.
   uint64_t                  m_rxBytes;        //!< Number of RX bytes.

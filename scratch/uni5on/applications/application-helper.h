@@ -70,9 +70,9 @@ public:
    * \return The client application created.
    */
   Ptr<BaseClient> Install (
-    Ptr<Node> clientNode, Ptr<Node> serverNode, Ipv4Address clientAddr,
-    Ipv4Address serverAddr, uint16_t port,
-    Ipv4Header::DscpType dscp = Ipv4Header::DscpDefault);
+    Ptr<Node> clientNode, Ptr<Node> serverNode,
+    Ipv4Address clientAddr, Ipv4Address serverAddr,
+    uint16_t port, Ipv4Header::DscpType dscp = Ipv4Header::DscpDefault);
 
   /**
    * Get the mapped IP ToS value for a specific DSCP.
