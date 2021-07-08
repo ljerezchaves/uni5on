@@ -200,7 +200,7 @@ TrafficHelper::NotifyConstructionCompleted ()
   m_webNode = m_slice->GetWebNode ();
 
   // Saving server metadata.
-  NS_ASSERT_MSG (m_webNode->GetNDevices () == 2, "Single device expected.");
+  NS_ASSERT_MSG (m_webNode->GetNDevices () >= 2, "Single device expected.");
   Ptr<NetDevice> webDev = m_webNode->GetDevice (1);
   m_webAddr = Ipv4AddressHelper::GetAddress (webDev);
   m_webMask = Ipv4AddressHelper::GetMask (webDev);
