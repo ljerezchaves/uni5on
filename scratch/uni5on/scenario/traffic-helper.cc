@@ -815,7 +815,8 @@ TrafficHelper::InstallAppDedicated (
   // Create the client and server applications.
   uint16_t port = GetNextPortNo ();
   Ptr<BaseClient> clientApp = helper.Install (
-      t_ueNode, m_webNode, t_ueAddr, m_webAddr, port, Qci2Dscp (bearer.qci));
+      t_ueNode, m_webNode, t_ueAddr, m_webAddr, port,
+      Dscp2Tos (Qci2Dscp (bearer.qci)));
   t_ueManager->AddBaseClient (clientApp);
 
   // Setup common packet filter parameters.
@@ -851,10 +852,33 @@ TrafficHelper::InstallAppDefault (ApplicationHelper& helper)
   // Create the client and server applications.
   uint16_t port = GetNextPortNo ();
   Ptr<BaseClient> clientApp = helper.Install (
-      t_ueNode, m_webNode, t_ueAddr, m_webAddr, port, Qci2Dscp (bearer.qci));
+      t_ueNode, m_webNode, t_ueAddr, m_webAddr, port,
+      Dscp2Tos (Qci2Dscp (bearer.qci)));
   t_ueManager->AddBaseClient (clientApp);
   clientApp->SetEpsBearer (bearer);
   clientApp->SetEpsBearerId (bid);
+}
+
+uint8_t
+TrafficHelper::Dscp2Tos (Ipv4Header::DscpType dscp) const
+{
+  switch (dscp)
+    {
+    case Ipv4Header::DSCP_EF:
+      return 0x10;
+    case Ipv4Header::DSCP_AF41:
+      return 0x18;
+    case Ipv4Header::DSCP_AF32:
+    case Ipv4Header::DSCP_AF31:
+    case Ipv4Header::DSCP_AF21:
+    case Ipv4Header::DSCP_AF11:
+      return 0x00;
+    case Ipv4Header::DscpDefault:
+      return 0x08;
+    default:
+      NS_ABORT_MSG ("No ToS mapped value for DSCP " << dscp);
+      return 0x00;
+    }
 }
 
 } // namespace ns3

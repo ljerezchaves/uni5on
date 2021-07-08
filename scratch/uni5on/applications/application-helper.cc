@@ -51,7 +51,7 @@ ApplicationHelper::SetServerAttribute (std::string name,
 Ptr<BaseClient>
 ApplicationHelper::Install (Ptr<Node> clientNode, Ptr<Node> serverNode,
                             Ipv4Address clientAddr, Ipv4Address serverAddr,
-                            uint16_t port, Ipv4Header::DscpType dscp)
+                            uint16_t port, uint8_t tos)
 {
   Ptr<BaseClient> clientApp;
   clientApp = m_clientFactory.Create ()->GetObject<BaseClient> ();
@@ -62,40 +62,18 @@ ApplicationHelper::Install (Ptr<Node> clientNode, Ptr<Node> serverNode,
   NS_ASSERT_MSG (serverApp, "Invalid server type id.");
 
   InetSocketAddress serverInetAddr (serverAddr, port);
-  serverInetAddr.SetTos (Dscp2Tos (dscp));
+  serverInetAddr.SetTos (tos);
   clientApp->SetAttribute ("LocalPort", UintegerValue (port));
   clientApp->SetServer (serverApp, serverInetAddr);
   clientNode->AddApplication (clientApp);
 
   InetSocketAddress clientInetAddr (clientAddr, port);
-  clientInetAddr.SetTos (Dscp2Tos (dscp));
+  clientInetAddr.SetTos (tos);
   serverApp->SetAttribute ("LocalPort", UintegerValue (port));
   serverApp->SetClient (clientApp, clientInetAddr);
   serverNode->AddApplication (serverApp);
 
   return clientApp;
-}
-
-uint8_t
-ApplicationHelper::Dscp2Tos (Ipv4Header::DscpType dscp) const
-{
-  switch (dscp)
-    {
-    case Ipv4Header::DSCP_EF:
-      return 0x10;
-    case Ipv4Header::DSCP_AF41:
-      return 0x18;
-    case Ipv4Header::DSCP_AF32:
-    case Ipv4Header::DSCP_AF31:
-    case Ipv4Header::DSCP_AF21:
-    case Ipv4Header::DSCP_AF11:
-      return 0x00;
-    case Ipv4Header::DscpDefault:
-      return 0x08;
-    default:
-      NS_ABORT_MSG ("No ToS mapped value for DSCP " << dscp);
-      return 0x00;
-    }
 }
 
 } // namespace ns3

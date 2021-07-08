@@ -66,37 +66,13 @@ public:
    * \param clientAddr The IPv4 address of the client.
    * \param serverAddr The IPv4 address of the server.
    * \param port The port number on both client and server.
-   * \param dscp The DSCP value used to set the socket type of service field.
+   * \param tos The IP Type of Service (ToS) value.
    * \return The client application created.
    */
   Ptr<BaseClient> Install (
     Ptr<Node> clientNode, Ptr<Node> serverNode,
     Ipv4Address clientAddr, Ipv4Address serverAddr,
-    uint16_t port, Ipv4Header::DscpType dscp = Ipv4Header::DscpDefault);
-
-  /**
-   * Get the mapped IP ToS value for a specific DSCP.
-   * \param dscp The IP DSCP value.
-   * \return The IP ToS mapped for this DSCP.
-   *
-   * \internal
-   * We are mapping the DSCP value (RFC 2474) to the IP Type of Service (ToS)
-   * (RFC 1349) field because the pfifo_fast queue discipline from the traffic
-   * control module still uses the old IP ToS definition. Thus, we are
-   * 'translating' the DSCP values so we can keep the queuing consistency
-   * both on traffic control module and OpenFlow port queues.
-   * \verbatim
-   * DSCP_EF   --> ToS 0x10 --> prio 6 --> pfifo band 0
-   * DSCP_AF41 --> ToS 0x18 --> prio 4 --> pfifo band 1
-   * DSCP_AF31 --> ToS 0x00 --> prio 0 --> pfifo band 1
-   * DSCP_AF32 --> ToS 0x00 --> prio 0 --> pfifo band 1
-   * DSCP_AF21 --> ToS 0x00 --> prio 0 --> pfifo band 1
-   * DSCP_AF11 --> ToS 0x00 --> prio 0 --> pfifo band 1
-   * DSCP_BE   --> ToS 0x08 --> prio 2 --> pfifo band 2
-   * \endverbatim
-   * \see See the ns3::Socket::IpTos2Priority for details.
-   */
-  uint8_t Dscp2Tos (Ipv4Header::DscpType dscp) const;
+    uint16_t port, uint8_t tos);
 
 private:
   ObjectFactory m_clientFactory; //!< Object client factory.
