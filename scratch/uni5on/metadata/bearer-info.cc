@@ -20,7 +20,7 @@
 
 #include <iomanip>
 #include <iostream>
-#include "routing-info.h"
+#include "bearer-info.h"
 #include "enb-info.h"
 #include "pgw-info.h"
 #include "sgw-info.h"
@@ -31,14 +31,14 @@ using namespace std;
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("RoutingInfo");
-NS_OBJECT_ENSURE_REGISTERED (RoutingInfo);
+NS_LOG_COMPONENT_DEFINE ("BearerInfo");
+NS_OBJECT_ENSURE_REGISTERED (BearerInfo);
 
-// Initializing RoutingInfo static members.
-RoutingInfo::TeidRoutingMap_t RoutingInfo::m_routingInfoByTeid;
+// Initializing BearerInfo static members.
+BearerInfo::TeidBearerMap_t BearerInfo::m_BearerInfoByTeid;
 
-RoutingInfo::RoutingInfo (uint32_t teid, BearerCreated_t bearer,
-                          Ptr<UeInfo> ueInfo, bool isDefault)
+BearerInfo::BearerInfo (uint32_t teid, BearerCreated_t bearer,
+                        Ptr<UeInfo> ueInfo, bool isDefault)
   : m_bearer (bearer),
   m_blockReason (0),
   m_isActive (false),
@@ -76,29 +76,29 @@ RoutingInfo::RoutingInfo (uint32_t teid, BearerCreated_t bearer,
                        "Invalid default QCI");
     }
 
-  // Register this routing information object.
-  RegisterRoutingInfo (Ptr<RoutingInfo> (this));
+  // Register this bearer information object.
+  RegisterBearerInfo (Ptr<BearerInfo> (this));
 
-  // Save this routing information object into UeInfo.
-  ueInfo->AddRoutingInfo (Ptr<RoutingInfo> (this));
+  // Save this bearer information object into UeInfo.
+  ueInfo->AddBearerInfo (Ptr<BearerInfo> (this));
 }
 
-RoutingInfo::~RoutingInfo ()
+BearerInfo::~BearerInfo ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-RoutingInfo::GetTypeId (void)
+BearerInfo::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::RoutingInfo")
+  static TypeId tid = TypeId ("ns3::BearerInfo")
     .SetParent<Object> ()
   ;
   return tid;
 }
 
 uint16_t
-RoutingInfo::GetBlockReason (void) const
+BearerInfo::GetBlockReason (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -106,7 +106,7 @@ RoutingInfo::GetBlockReason (void) const
 }
 
 std::string
-RoutingInfo::GetBlockReasonHex (void) const
+BearerInfo::GetBlockReasonHex (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -116,7 +116,7 @@ RoutingInfo::GetBlockReasonHex (void) const
 }
 
 uint16_t
-RoutingInfo::GetPgwTftIdx (void) const
+BearerInfo::GetPgwTftIdx (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -124,7 +124,7 @@ RoutingInfo::GetPgwTftIdx (void) const
 }
 
 uint16_t
-RoutingInfo::GetPriority (void) const
+BearerInfo::GetPriority (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -132,7 +132,7 @@ RoutingInfo::GetPriority (void) const
 }
 
 SliceId
-RoutingInfo::GetSliceId (void) const
+BearerInfo::GetSliceId (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -140,7 +140,7 @@ RoutingInfo::GetSliceId (void) const
 }
 
 std::string
-RoutingInfo::GetSliceIdStr (void) const
+BearerInfo::GetSliceIdStr (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -148,7 +148,7 @@ RoutingInfo::GetSliceIdStr (void) const
 }
 
 uint32_t
-RoutingInfo::GetTeid (void) const
+BearerInfo::GetTeid (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -156,7 +156,7 @@ RoutingInfo::GetTeid (void) const
 }
 
 std::string
-RoutingInfo::GetTeidHex (void) const
+BearerInfo::GetTeidHex (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -164,7 +164,7 @@ RoutingInfo::GetTeidHex (void) const
 }
 
 uint16_t
-RoutingInfo::GetTimeout (void) const
+BearerInfo::GetTimeout (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -172,7 +172,7 @@ RoutingInfo::GetTimeout (void) const
 }
 
 bool
-RoutingInfo::IsActive (void) const
+BearerInfo::IsActive (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -180,7 +180,7 @@ RoutingInfo::IsActive (void) const
 }
 
 bool
-RoutingInfo::IsAggregated (void) const
+BearerInfo::IsAggregated (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -188,7 +188,7 @@ RoutingInfo::IsAggregated (void) const
 }
 
 bool
-RoutingInfo::IsBlocked (void) const
+BearerInfo::IsBlocked (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -196,7 +196,7 @@ RoutingInfo::IsBlocked (void) const
 }
 
 bool
-RoutingInfo::IsDefault (void) const
+BearerInfo::IsDefault (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -204,7 +204,7 @@ RoutingInfo::IsDefault (void) const
 }
 
 bool
-RoutingInfo::IsGwInstalled (void) const
+BearerInfo::IsGwInstalled (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -212,7 +212,7 @@ RoutingInfo::IsGwInstalled (void) const
 }
 
 bool
-RoutingInfo::IsIfInstalled (EpsIface iface) const
+BearerInfo::IsIfInstalled (EpsIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
@@ -223,7 +223,7 @@ RoutingInfo::IsIfInstalled (EpsIface iface) const
 }
 
 Ipv4Header::DscpType
-RoutingInfo::GetDscp (void) const
+BearerInfo::GetDscp (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -231,7 +231,7 @@ RoutingInfo::GetDscp (void) const
 }
 
 std::string
-RoutingInfo::GetDscpStr (void) const
+BearerInfo::GetDscpStr (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -239,7 +239,7 @@ RoutingInfo::GetDscpStr (void) const
 }
 
 uint16_t
-RoutingInfo::GetDscpValue (void) const
+BearerInfo::GetDscpValue (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -247,7 +247,7 @@ RoutingInfo::GetDscpValue (void) const
 }
 
 bool
-RoutingInfo::HasDlTraffic (void) const
+BearerInfo::HasDlTraffic (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -255,7 +255,7 @@ RoutingInfo::HasDlTraffic (void) const
 }
 
 bool
-RoutingInfo::HasUlTraffic (void) const
+BearerInfo::HasUlTraffic (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -263,7 +263,7 @@ RoutingInfo::HasUlTraffic (void) const
 }
 
 bool
-RoutingInfo::HasTraffic (void) const
+BearerInfo::HasTraffic (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -271,7 +271,7 @@ RoutingInfo::HasTraffic (void) const
 }
 
 uint8_t
-RoutingInfo::GetBearerId (void) const
+BearerInfo::GetBearerId (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -279,7 +279,7 @@ RoutingInfo::GetBearerId (void) const
 }
 
 EpsBearer
-RoutingInfo::GetEpsBearer (void) const
+BearerInfo::GetEpsBearer (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -287,7 +287,7 @@ RoutingInfo::GetEpsBearer (void) const
 }
 
 EpsBearer::Qci
-RoutingInfo::GetQciInfo (void) const
+BearerInfo::GetQciInfo (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -295,7 +295,7 @@ RoutingInfo::GetQciInfo (void) const
 }
 
 GbrQosInformation
-RoutingInfo::GetQosInfo (void) const
+BearerInfo::GetQosInfo (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -303,7 +303,7 @@ RoutingInfo::GetQosInfo (void) const
 }
 
 QosType
-RoutingInfo::GetQosType (void) const
+BearerInfo::GetQosType (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -311,7 +311,7 @@ RoutingInfo::GetQosType (void) const
 }
 
 std::string
-RoutingInfo::GetQosTypeStr (void) const
+BearerInfo::GetQosTypeStr (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -319,7 +319,7 @@ RoutingInfo::GetQosTypeStr (void) const
 }
 
 Ptr<EpcTft>
-RoutingInfo::GetTft (void) const
+BearerInfo::GetTft (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -327,7 +327,7 @@ RoutingInfo::GetTft (void) const
 }
 
 int64_t
-RoutingInfo::GetGbrDlBitRate (void) const
+BearerInfo::GetGbrDlBitRate (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -335,7 +335,7 @@ RoutingInfo::GetGbrDlBitRate (void) const
 }
 
 int64_t
-RoutingInfo::GetGbrUlBitRate (void) const
+BearerInfo::GetGbrUlBitRate (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -343,7 +343,7 @@ RoutingInfo::GetGbrUlBitRate (void) const
 }
 
 bool
-RoutingInfo::HasGbrBitRate (void) const
+BearerInfo::HasGbrBitRate (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -351,7 +351,7 @@ RoutingInfo::HasGbrBitRate (void) const
 }
 
 bool
-RoutingInfo::HasGbrDlBitRate (void) const
+BearerInfo::HasGbrDlBitRate (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -359,7 +359,7 @@ RoutingInfo::HasGbrDlBitRate (void) const
 }
 
 bool
-RoutingInfo::HasGbrUlBitRate (void) const
+BearerInfo::HasGbrUlBitRate (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -367,7 +367,7 @@ RoutingInfo::HasGbrUlBitRate (void) const
 }
 
 bool
-RoutingInfo::IsGbr (void) const
+BearerInfo::IsGbr (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -375,7 +375,7 @@ RoutingInfo::IsGbr (void) const
 }
 
 bool
-RoutingInfo::IsGbrReserved (EpsIface iface) const
+BearerInfo::IsGbrReserved (EpsIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
@@ -386,7 +386,7 @@ RoutingInfo::IsGbrReserved (EpsIface iface) const
 }
 
 bool
-RoutingInfo::IsNonGbr (void) const
+BearerInfo::IsNonGbr (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -394,7 +394,7 @@ RoutingInfo::IsNonGbr (void) const
 }
 
 int64_t
-RoutingInfo::GetMbrDlBitRate (void) const
+BearerInfo::GetMbrDlBitRate (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -402,7 +402,7 @@ RoutingInfo::GetMbrDlBitRate (void) const
 }
 
 int64_t
-RoutingInfo::GetMbrUlBitRate (void) const
+BearerInfo::GetMbrUlBitRate (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -410,7 +410,7 @@ RoutingInfo::GetMbrUlBitRate (void) const
 }
 
 bool
-RoutingInfo::HasMbrDl (void) const
+BearerInfo::HasMbrDl (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -418,7 +418,7 @@ RoutingInfo::HasMbrDl (void) const
 }
 
 bool
-RoutingInfo::HasMbrUl (void) const
+BearerInfo::HasMbrUl (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -426,7 +426,7 @@ RoutingInfo::HasMbrUl (void) const
 }
 
 bool
-RoutingInfo::HasMbr (void) const
+BearerInfo::HasMbr (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -434,7 +434,7 @@ RoutingInfo::HasMbr (void) const
 }
 
 bool
-RoutingInfo::IsMbrDlInstalled (void) const
+BearerInfo::IsMbrDlInstalled (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -442,7 +442,7 @@ RoutingInfo::IsMbrDlInstalled (void) const
 }
 
 bool
-RoutingInfo::IsMbrUlInstalled (void) const
+BearerInfo::IsMbrUlInstalled (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -450,7 +450,7 @@ RoutingInfo::IsMbrUlInstalled (void) const
 }
 
 bool
-RoutingInfo::IsMbrDlInstalled (EpsIface iface) const
+BearerInfo::IsMbrDlInstalled (EpsIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
@@ -458,7 +458,7 @@ RoutingInfo::IsMbrDlInstalled (EpsIface iface) const
 }
 
 bool
-RoutingInfo::IsMbrUlInstalled (EpsIface iface) const
+BearerInfo::IsMbrUlInstalled (EpsIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
@@ -466,7 +466,7 @@ RoutingInfo::IsMbrUlInstalled (EpsIface iface) const
 }
 
 Ipv4Address
-RoutingInfo::GetUeAddr (void) const
+BearerInfo::GetUeAddr (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -474,7 +474,7 @@ RoutingInfo::GetUeAddr (void) const
 }
 
 uint64_t
-RoutingInfo::GetUeImsi (void) const
+BearerInfo::GetUeImsi (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -482,7 +482,7 @@ RoutingInfo::GetUeImsi (void) const
 }
 
 Ptr<UeInfo>
-RoutingInfo::GetUeInfo (void) const
+BearerInfo::GetUeInfo (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -490,7 +490,7 @@ RoutingInfo::GetUeInfo (void) const
 }
 
 uint16_t
-RoutingInfo::GetEnbCellId (void) const
+BearerInfo::GetEnbCellId (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -498,7 +498,7 @@ RoutingInfo::GetEnbCellId (void) const
 }
 
 uint16_t
-RoutingInfo::GetEnbInfraSwIdx (void) const
+BearerInfo::GetEnbInfraSwIdx (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -506,7 +506,7 @@ RoutingInfo::GetEnbInfraSwIdx (void) const
 }
 
 Ipv4Address
-RoutingInfo::GetEnbS1uAddr (void) const
+BearerInfo::GetEnbS1uAddr (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -514,7 +514,7 @@ RoutingInfo::GetEnbS1uAddr (void) const
 }
 
 uint32_t
-RoutingInfo::GetPgwId (void) const
+BearerInfo::GetPgwId (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -522,7 +522,7 @@ RoutingInfo::GetPgwId (void) const
 }
 
 uint16_t
-RoutingInfo::GetPgwInfraSwIdx (void) const
+BearerInfo::GetPgwInfraSwIdx (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -530,7 +530,7 @@ RoutingInfo::GetPgwInfraSwIdx (void) const
 }
 
 Ipv4Address
-RoutingInfo::GetPgwS5Addr (void) const
+BearerInfo::GetPgwS5Addr (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -538,7 +538,7 @@ RoutingInfo::GetPgwS5Addr (void) const
 }
 
 uint64_t
-RoutingInfo::GetPgwTftDpId (void) const
+BearerInfo::GetPgwTftDpId (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -546,7 +546,7 @@ RoutingInfo::GetPgwTftDpId (void) const
 }
 
 uint32_t
-RoutingInfo::GetPgwTftS5PortNo (void) const
+BearerInfo::GetPgwTftS5PortNo (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -554,7 +554,7 @@ RoutingInfo::GetPgwTftS5PortNo (void) const
 }
 
 uint64_t
-RoutingInfo::GetSgwDpId (void) const
+BearerInfo::GetSgwDpId (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -562,7 +562,7 @@ RoutingInfo::GetSgwDpId (void) const
 }
 
 uint32_t
-RoutingInfo::GetSgwId (void) const
+BearerInfo::GetSgwId (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -570,7 +570,7 @@ RoutingInfo::GetSgwId (void) const
 }
 
 uint16_t
-RoutingInfo::GetSgwInfraSwIdx (void) const
+BearerInfo::GetSgwInfraSwIdx (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -578,7 +578,7 @@ RoutingInfo::GetSgwInfraSwIdx (void) const
 }
 
 Ipv4Address
-RoutingInfo::GetSgwS1uAddr (void) const
+BearerInfo::GetSgwS1uAddr (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -586,7 +586,7 @@ RoutingInfo::GetSgwS1uAddr (void) const
 }
 
 uint32_t
-RoutingInfo::GetSgwS1uPortNo (void) const
+BearerInfo::GetSgwS1uPortNo (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -594,7 +594,7 @@ RoutingInfo::GetSgwS1uPortNo (void) const
 }
 
 Ipv4Address
-RoutingInfo::GetSgwS5Addr (void) const
+BearerInfo::GetSgwS5Addr (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -602,7 +602,7 @@ RoutingInfo::GetSgwS5Addr (void) const
 }
 
 uint32_t
-RoutingInfo::GetSgwS5PortNo (void) const
+BearerInfo::GetSgwS5PortNo (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -610,7 +610,7 @@ RoutingInfo::GetSgwS5PortNo (void) const
 }
 
 uint16_t
-RoutingInfo::GetDstDlInfraSwIdx (EpsIface iface) const
+BearerInfo::GetDstDlInfraSwIdx (EpsIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
@@ -620,7 +620,7 @@ RoutingInfo::GetDstDlInfraSwIdx (EpsIface iface) const
 }
 
 Ipv4Address
-RoutingInfo::GetDstDlAddr (EpsIface iface) const
+BearerInfo::GetDstDlAddr (EpsIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
@@ -630,7 +630,7 @@ RoutingInfo::GetDstDlAddr (EpsIface iface) const
 }
 
 uint16_t
-RoutingInfo::GetDstUlInfraSwIdx (EpsIface iface) const
+BearerInfo::GetDstUlInfraSwIdx (EpsIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
@@ -640,7 +640,7 @@ RoutingInfo::GetDstUlInfraSwIdx (EpsIface iface) const
 }
 
 Ipv4Address
-RoutingInfo::GetDstUlAddr (EpsIface iface) const
+BearerInfo::GetDstUlAddr (EpsIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
@@ -650,7 +650,7 @@ RoutingInfo::GetDstUlAddr (EpsIface iface) const
 }
 
 uint16_t
-RoutingInfo::GetSrcDlInfraSwIdx (EpsIface iface) const
+BearerInfo::GetSrcDlInfraSwIdx (EpsIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
@@ -660,7 +660,7 @@ RoutingInfo::GetSrcDlInfraSwIdx (EpsIface iface) const
 }
 
 Ipv4Address
-RoutingInfo::GetSrcDlAddr (EpsIface iface) const
+BearerInfo::GetSrcDlAddr (EpsIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
@@ -670,7 +670,7 @@ RoutingInfo::GetSrcDlAddr (EpsIface iface) const
 }
 
 uint16_t
-RoutingInfo::GetSrcUlInfraSwIdx (EpsIface iface) const
+BearerInfo::GetSrcUlInfraSwIdx (EpsIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
@@ -680,7 +680,7 @@ RoutingInfo::GetSrcUlInfraSwIdx (EpsIface iface) const
 }
 
 Ipv4Address
-RoutingInfo::GetSrcUlAddr (EpsIface iface) const
+BearerInfo::GetSrcUlAddr (EpsIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
@@ -690,23 +690,23 @@ RoutingInfo::GetSrcUlAddr (EpsIface iface) const
 }
 
 std::string
-RoutingInfo::BlockReasonStr (BlockReason reason)
+BearerInfo::BlockReasonStr (BlockReason reason)
 {
   switch (reason)
     {
-    case RoutingInfo::BRPGWTAB:
+    case BearerInfo::BRPGWTAB:
       return "PgwTable";
-    case RoutingInfo::BRPGWCPU:
+    case BearerInfo::BRPGWCPU:
       return "PgwLoad";
-    case RoutingInfo::BRSGWTAB:
+    case BearerInfo::BRSGWTAB:
       return "SgwTable";
-    case RoutingInfo::BRSGWCPU:
+    case BearerInfo::BRSGWCPU:
       return "SgwLoad";
-    case RoutingInfo::BRTPNTAB:
+    case BearerInfo::BRTPNTAB:
       return "BackTable";
-    case RoutingInfo::BRTPNCPU:
+    case BearerInfo::BRTPNCPU:
       return "BackLoad";
-    case RoutingInfo::BRTPNBWD:
+    case BearerInfo::BRTPNBWD:
       return "BackBand";
     default:
       return "-";
@@ -714,29 +714,29 @@ RoutingInfo::BlockReasonStr (BlockReason reason)
 }
 
 EpsBearer
-RoutingInfo::GetEpsBearer (uint32_t teid)
+BearerInfo::GetEpsBearer (uint32_t teid)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
-  return RoutingInfo::GetPointer (teid)->GetEpsBearer ();
+  return BearerInfo::GetPointer (teid)->GetEpsBearer ();
 }
 
-Ptr<RoutingInfo>
-RoutingInfo::GetPointer (uint32_t teid)
+Ptr<BearerInfo>
+BearerInfo::GetPointer (uint32_t teid)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
-  Ptr<RoutingInfo> rInfo = 0;
-  auto ret = RoutingInfo::m_routingInfoByTeid.find (teid);
-  if (ret != RoutingInfo::m_routingInfoByTeid.end ())
+  Ptr<BearerInfo> bInfo = 0;
+  auto ret = BearerInfo::m_BearerInfoByTeid.find (teid);
+  if (ret != BearerInfo::m_BearerInfoByTeid.end ())
     {
-      rInfo = ret->second;
+      bInfo = ret->second;
     }
-  return rInfo;
+  return bInfo;
 }
 
 std::ostream &
-RoutingInfo::PrintHeader (std::ostream &os)
+BearerInfo::PrintHeader (std::ostream &os)
 {
   os << " " << setw (11) << "Teid"
      << " " << setw (6)  << "Slice"
@@ -768,7 +768,7 @@ RoutingInfo::PrintHeader (std::ostream &os)
 }
 
 void
-RoutingInfo::DoDispose ()
+BearerInfo::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -777,7 +777,7 @@ RoutingInfo::DoDispose ()
 }
 
 void
-RoutingInfo::SetActive (bool value)
+BearerInfo::SetActive (bool value)
 {
   NS_LOG_FUNCTION (this << value);
 
@@ -785,7 +785,7 @@ RoutingInfo::SetActive (bool value)
 }
 
 void
-RoutingInfo::SetAggregated (bool value)
+BearerInfo::SetAggregated (bool value)
 {
   NS_LOG_FUNCTION (this << value);
 
@@ -793,7 +793,7 @@ RoutingInfo::SetAggregated (bool value)
 }
 
 void
-RoutingInfo::SetGbrReserved (EpsIface iface, bool value)
+BearerInfo::SetGbrReserved (EpsIface iface, bool value)
 {
   NS_LOG_FUNCTION (this << iface << value);
 
@@ -804,7 +804,7 @@ RoutingInfo::SetGbrReserved (EpsIface iface, bool value)
 }
 
 void
-RoutingInfo::SetMbrDlInstalled (EpsIface iface, bool value)
+BearerInfo::SetMbrDlInstalled (EpsIface iface, bool value)
 {
   NS_LOG_FUNCTION (this << iface << value);
 
@@ -812,7 +812,7 @@ RoutingInfo::SetMbrDlInstalled (EpsIface iface, bool value)
 }
 
 void
-RoutingInfo::SetMbrUlInstalled (EpsIface iface, bool value)
+BearerInfo::SetMbrUlInstalled (EpsIface iface, bool value)
 {
   NS_LOG_FUNCTION (this << iface << value);
 
@@ -820,7 +820,7 @@ RoutingInfo::SetMbrUlInstalled (EpsIface iface, bool value)
 }
 
 void
-RoutingInfo::SetPgwTftIdx (uint16_t value)
+BearerInfo::SetPgwTftIdx (uint16_t value)
 {
   NS_LOG_FUNCTION (this << value);
 
@@ -829,7 +829,7 @@ RoutingInfo::SetPgwTftIdx (uint16_t value)
 }
 
 void
-RoutingInfo::SetPriority (uint16_t value)
+BearerInfo::SetPriority (uint16_t value)
 {
   NS_LOG_FUNCTION (this << value);
 
@@ -838,7 +838,7 @@ RoutingInfo::SetPriority (uint16_t value)
 }
 
 void
-RoutingInfo::SetTimeout (uint16_t value)
+BearerInfo::SetTimeout (uint16_t value)
 {
   NS_LOG_FUNCTION (this << value);
 
@@ -846,7 +846,7 @@ RoutingInfo::SetTimeout (uint16_t value)
 }
 
 void
-RoutingInfo::SetGwInstalled (bool value)
+BearerInfo::SetGwInstalled (bool value)
 {
   NS_LOG_FUNCTION (this << value);
 
@@ -854,7 +854,7 @@ RoutingInfo::SetGwInstalled (bool value)
 }
 
 void
-RoutingInfo::SetIfInstalled (EpsIface iface, bool value)
+BearerInfo::SetIfInstalled (EpsIface iface, bool value)
 {
   NS_LOG_FUNCTION (this << iface << value);
 
@@ -865,7 +865,7 @@ RoutingInfo::SetIfInstalled (EpsIface iface, bool value)
 }
 
 void
-RoutingInfo::IncreasePriority (void)
+BearerInfo::IncreasePriority (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -874,7 +874,7 @@ RoutingInfo::IncreasePriority (void)
 }
 
 bool
-RoutingInfo::IsBlocked (BlockReason reason) const
+BearerInfo::IsBlocked (BlockReason reason) const
 {
   NS_LOG_FUNCTION (this << reason);
 
@@ -882,7 +882,7 @@ RoutingInfo::IsBlocked (BlockReason reason) const
 }
 
 void
-RoutingInfo::ResetBlocked (void)
+BearerInfo::ResetBlocked (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -890,7 +890,7 @@ RoutingInfo::ResetBlocked (void)
 }
 
 void
-RoutingInfo::SetBlocked (BlockReason reason)
+BearerInfo::SetBlocked (BlockReason reason)
 {
   NS_LOG_FUNCTION (this << reason);
 
@@ -900,7 +900,7 @@ RoutingInfo::SetBlocked (BlockReason reason)
 }
 
 void
-RoutingInfo::UnsetBlocked (BlockReason reason)
+BearerInfo::UnsetBlocked (BlockReason reason)
 {
   NS_LOG_FUNCTION (this << reason);
 
@@ -908,63 +908,63 @@ RoutingInfo::UnsetBlocked (BlockReason reason)
 }
 
 void
-RoutingInfo::GetList (RoutingInfoList_t &returnList, SliceId slice)
+BearerInfo::GetList (BearerInfoList_t &returnList, SliceId slice)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
   NS_ASSERT_MSG (!returnList.size (), "The return list should be empty.");
-  for (auto const &it : m_routingInfoByTeid)
+  for (auto const &it : m_BearerInfoByTeid)
     {
-      Ptr<RoutingInfo> rInfo = it.second;
-      if (slice == SliceId::ALL || rInfo->GetSliceId () == slice)
+      Ptr<BearerInfo> bInfo = it.second;
+      if (slice == SliceId::ALL || bInfo->GetSliceId () == slice)
         {
-          returnList.push_back (rInfo);
+          returnList.push_back (bInfo);
         }
     }
 }
 
 void
-RoutingInfo::RegisterRoutingInfo (Ptr<RoutingInfo> rInfo)
+BearerInfo::RegisterBearerInfo (Ptr<BearerInfo> bInfo)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
-  uint32_t teid = rInfo->GetTeid ();
-  std::pair<uint32_t, Ptr<RoutingInfo>> entry (teid, rInfo);
-  auto ret = RoutingInfo::m_routingInfoByTeid.insert (entry);
-  NS_ABORT_MSG_IF (ret.second == false, "Existing routing info for this TEID");
+  uint32_t teid = bInfo->GetTeid ();
+  std::pair<uint32_t, Ptr<BearerInfo>> entry (teid, bInfo);
+  auto ret = BearerInfo::m_BearerInfoByTeid.insert (entry);
+  NS_ABORT_MSG_IF (ret.second == false, "Existing bearer info for this TEID");
 }
 
-std::ostream & operator << (std::ostream &os, const RoutingInfo &rInfo)
+std::ostream & operator << (std::ostream &os, const BearerInfo &bInfo)
 {
   char prioStr [10];
-  sprintf (prioStr, "0x%x", rInfo.GetPriority ());
+  sprintf (prioStr, "0x%x", bInfo.GetPriority ());
 
-  os << " " << setw (11) << rInfo.GetTeidHex ()
-     << " " << setw (6)  << rInfo.GetSliceIdStr ()
-     << " " << setw (6)  << rInfo.IsDefault ()
-     << " " << setw (6)  << rInfo.IsActive ()
-     << " " << setw (6)  << rInfo.IsAggregated ()
-     << " " << setw (6)  << rInfo.IsBlocked ()
-     << " " << setw (8)  << rInfo.GetBlockReasonHex ()
-     << " " << setw (4)  << rInfo.GetQciInfo ()
-     << " " << setw (8)  << rInfo.GetQosTypeStr ()
-     << " " << setw (5)  << rInfo.GetDscpStr ()
-     << " " << setw (6)  << rInfo.HasDlTraffic ()
-     << " " << setw (10) << Bps2Kbps (rInfo.GetGbrDlBitRate ())
-     << " " << setw (10) << Bps2Kbps (rInfo.GetMbrDlBitRate ())
-     << " " << setw (6)  << rInfo.IsMbrDlInstalled ()
-     << " " << setw (6)  << rInfo.HasUlTraffic ()
-     << " " << setw (10) << Bps2Kbps (rInfo.GetGbrUlBitRate ())
-     << " " << setw (10) << Bps2Kbps (rInfo.GetMbrUlBitRate ())
-     << " " << setw (6)  << rInfo.IsMbrUlInstalled ()
-     << " " << setw (6)  << rInfo.IsGbrReserved (EpsIface::S1)
-     << " " << setw (6)  << rInfo.IsGbrReserved (EpsIface::S5)
-     << " " << setw (6)  << rInfo.IsIfInstalled (EpsIface::S1)
-     << " " << setw (6)  << rInfo.IsIfInstalled (EpsIface::S5)
-     << " " << setw (6)  << rInfo.IsGwInstalled ()
-     << " " << setw (3)  << rInfo.GetPgwTftIdx ()
+  os << " " << setw (11) << bInfo.GetTeidHex ()
+     << " " << setw (6)  << bInfo.GetSliceIdStr ()
+     << " " << setw (6)  << bInfo.IsDefault ()
+     << " " << setw (6)  << bInfo.IsActive ()
+     << " " << setw (6)  << bInfo.IsAggregated ()
+     << " " << setw (6)  << bInfo.IsBlocked ()
+     << " " << setw (8)  << bInfo.GetBlockReasonHex ()
+     << " " << setw (4)  << bInfo.GetQciInfo ()
+     << " " << setw (8)  << bInfo.GetQosTypeStr ()
+     << " " << setw (5)  << bInfo.GetDscpStr ()
+     << " " << setw (6)  << bInfo.HasDlTraffic ()
+     << " " << setw (10) << Bps2Kbps (bInfo.GetGbrDlBitRate ())
+     << " " << setw (10) << Bps2Kbps (bInfo.GetMbrDlBitRate ())
+     << " " << setw (6)  << bInfo.IsMbrDlInstalled ()
+     << " " << setw (6)  << bInfo.HasUlTraffic ()
+     << " " << setw (10) << Bps2Kbps (bInfo.GetGbrUlBitRate ())
+     << " " << setw (10) << Bps2Kbps (bInfo.GetMbrUlBitRate ())
+     << " " << setw (6)  << bInfo.IsMbrUlInstalled ()
+     << " " << setw (6)  << bInfo.IsGbrReserved (EpsIface::S1)
+     << " " << setw (6)  << bInfo.IsGbrReserved (EpsIface::S5)
+     << " " << setw (6)  << bInfo.IsIfInstalled (EpsIface::S1)
+     << " " << setw (6)  << bInfo.IsIfInstalled (EpsIface::S5)
+     << " " << setw (6)  << bInfo.IsGwInstalled ()
+     << " " << setw (3)  << bInfo.GetPgwTftIdx ()
      << " " << setw (7)  << prioStr
-     << " " << setw (3)  << rInfo.GetTimeout ();
+     << " " << setw (3)  << bInfo.GetTimeout ();
   return os;
 }
 

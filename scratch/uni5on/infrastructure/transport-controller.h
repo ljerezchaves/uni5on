@@ -34,7 +34,7 @@
 #include <ns3/ofswitch13-module.h>
 #include "../logical/slice-controller.h"
 #include "../metadata/link-info.h"
-#include "../metadata/routing-info.h"
+#include "../metadata/bearer-info.h"
 #include "../uni5on-common.h"
 
 namespace ns3 {
@@ -98,50 +98,50 @@ protected:
 
   /**
    * Process the bearer request in the transport network.
-   * \param rInfo The routing information to process.
+   * \param bInfo The bearer information.
    * \return True if succeeded, false otherwise.
    */
-  virtual bool BearerRequest (Ptr<RoutingInfo> rInfo) = 0;
+  virtual bool BearerRequest (Ptr<BearerInfo> bInfo) = 0;
 
   /**
    * Reserve the resources for this bearer.
-   * \param rInfo The ring routing information.
+   * \param bInfo The bearer information.
    * \return True if succeeded, false otherwise.
    */
-  virtual bool BearerReserve (Ptr<RoutingInfo> rInfo) = 0;
+  virtual bool BearerReserve (Ptr<BearerInfo> bInfo) = 0;
 
   /**
    * Release the resources for this bearer.
-   * \param rInfo The routing information to process.
+   * \param bInfo The bearer information.
    * \return True if succeeded, false otherwise.
    */
-  virtual bool BearerRelease (Ptr<RoutingInfo> rInfo) = 0;
+  virtual bool BearerRelease (Ptr<BearerInfo> bInfo) = 0;
 
   /**
-   * Install TEID routing rules into transport switches.
+   * Install bearer routing rules into transport switches.
    * \attention To avoid conflicts with old entries, increase the routing
    *            priority before invoking this method.
-   * \param rInfo The routing information to process.
+   * \param bInfo The bearer information.
    * \return True if succeeded, false otherwise.
    */
-  virtual bool BearerInstall (Ptr<RoutingInfo> rInfo) = 0;
+  virtual bool BearerInstall (Ptr<BearerInfo> bInfo) = 0;
 
   /**
-   * Remove TEID routing rules from transport switches.
-   * \param rInfo The routing information to process.
+   * Remove bearer routing rules from transport switches.
+   * \param bInfo The bearer information.
    * \return True if succeeded, false otherwise.
    */
-  virtual bool BearerRemove (Ptr<RoutingInfo> rInfo) = 0;
+  virtual bool BearerRemove (Ptr<BearerInfo> bInfo) = 0;
 
   /**
-   * Update TEID routing rules at transport switches.
+   * Update bearer routing rules at transport switches.
    * \attention Don't increase the routing priority and don't update the ueInfo
    *            with the destination eNB metadata before invoking this method.
-   * \param rInfo The routing information to process.
+   * \param bInfo The bearer information.
    * \param dstEnbInfo The destination eNB after the handover procedure.
    * \return True if succeeded, false otherwise.
    */
-  virtual bool BearerUpdate (Ptr<RoutingInfo> rInfo,
+  virtual bool BearerUpdate (Ptr<BearerInfo> bInfo,
                              Ptr<EnbInfo> dstEnbInfo) = 0;
 
   /**
@@ -206,9 +206,9 @@ protected:
 
   /**
    * Notify this controller of a new bearer context created.
-   * \param rInfo The routing information to process.
+   * \param bInfo The bearer information.
    */
-  virtual void NotifyBearerCreated (Ptr<RoutingInfo> rInfo);
+  virtual void NotifyBearerCreated (Ptr<BearerInfo> bInfo);
 
   /**
    * Notify this controller of a new EPC entity connected to the OpenFlow

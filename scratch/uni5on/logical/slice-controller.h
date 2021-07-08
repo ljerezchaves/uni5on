@@ -40,7 +40,7 @@ namespace ns3 {
 
 class TransportController;
 class EnbInfo;
-class RoutingInfo;
+class BearerInfo;
 class StatelessMme;
 class SgwInfo;
 class PgwInfo;
@@ -227,28 +227,28 @@ protected:
 private:
   /**
    * Install OpenFlow match rules for this bearer.
-   * \param rInfo The routing information to process.
+   * \param bInfo The bearer information.
    * \return True if succeeded, false otherwise.
    */
-  bool BearerInstall (Ptr<RoutingInfo> rInfo);
+  bool BearerInstall (Ptr<BearerInfo> bInfo);
 
   /**
    * Remove OpenFlow match rules for this bearer.
-   * \param rInfo The routing information to process.
+   * \param bInfo The bearer information.
    * \return True if succeeded, false otherwise.
    */
-  bool BearerRemove (Ptr<RoutingInfo> rInfo);
+  bool BearerRemove (Ptr<BearerInfo> bInfo);
 
   /**
    * Update OpenFlow match rules for this bearer.
    * \attention Don't update the ueInfo with the destination eNB metadata
    *            before invoking this method.
-   * \internal This method must increase the rInfo priority.
-   * \param rInfo The routing information to process.
+   * \internal This method must increase the bInfo priority.
+   * \param bInfo The bearer information.
    * \param dstEnbInfo The destination eNB after the handover procedure.
    * \return True if succeeded, false otherwise.
    */
-  bool BearerUpdate (Ptr<RoutingInfo> rInfo, Ptr<EnbInfo> dstEnbInfo);
+  bool BearerUpdate (Ptr<BearerInfo> bInfo, Ptr<EnbInfo> dstEnbInfo);
 
   /**
    * \name Methods for the S11 SAP S-GW control plane.
@@ -265,13 +265,13 @@ private:
 
   /**
    * Get the active P-GW TFT index for a given traffic flow.
-   * \param rInfo The routing information to process.
+   * \param bInfo The bearer information.
    * \param activeTfts The number of active P-GW TFT switches. When set to 0,
    *        the number of P-GW TFTs will be calculated considering the current
    *        load balancing level.
    * \return The P-GW TFT index.
    */
-  uint16_t GetTftIdx (Ptr<const RoutingInfo> rInfo,
+  uint16_t GetTftIdx (Ptr<const BearerInfo> bInfo,
                       uint16_t activeTfts = 0) const;
 
   /**
@@ -284,71 +284,71 @@ private:
    * Check for available resources on P-GW TFT switch for this bearer request.
    * When any of the requested resources is not available, this method must set
    * the routing information with the block reason.
-   * \param rInfo The routing information to process.
+   * \param bInfo The bearer information.
    * \return True if succeeded, false otherwise.
    */
-  bool PgwBearerRequest (Ptr<RoutingInfo> rInfo) const;
+  bool PgwBearerRequest (Ptr<BearerInfo> bInfo) const;
 
   /**
    * Install downlink packet filtering rules on the P-GW TFT OpenFlow switch.
    * \attention To avoid conflicts with old entries, increase the routing
    *            priority before installing OpenFlow rules.
-   * \param rInfo The routing information to process.
+   * \param bInfo The bearer information.
    * \return True if succeeded, false otherwise.
    */
-  bool PgwRulesInstall (Ptr<RoutingInfo> rInfo);
+  bool PgwRulesInstall (Ptr<BearerInfo> bInfo);
 
   /**
    * Move downlink packet filtering rules from the source P-GW TFT OpenFlow
    * switch to the target one.
-   * \param rInfo The routing information to process.
+   * \param bInfo The bearer information.
    * \param srcTftIdx The source P-GW TFT switch index.
    * \param dstTftIdx The target P-GW TFT switch index.
    * \return True if succeeded, false otherwise.
    */
-  bool PgwRulesMove (Ptr<RoutingInfo> rInfo, uint16_t srcTftIdx,
+  bool PgwRulesMove (Ptr<BearerInfo> bInfo, uint16_t srcTftIdx,
                      uint16_t dstTftIdx);
 
   /**
    * Remove downlink packet filtering rules from the P-GW TFT OpenFlow switch.
-   * \param rInfo The routing information to process.
+   * \param bInfo The bearer information.
    * \return True if succeeded, false otherwise.
    */
-  bool PgwRulesRemove (Ptr<RoutingInfo> rInfo);
+  bool PgwRulesRemove (Ptr<BearerInfo> bInfo);
 
   /**
    * Check for available resources on S-GW switch for this bearer request. When
    * any of the requested resources is not available, this method must set
    * the routing information with the block reason.
-   * \param rInfo The routing information to process.
+   * \param bInfo The bearer information.
    * \return True if succeeded, false otherwise.
    */
-  bool SgwBearerRequest (Ptr<RoutingInfo> rInfo) const;
+  bool SgwBearerRequest (Ptr<BearerInfo> bInfo) const;
 
   /**
    * Install packet forwarding rules on the S-GW OpenFlow switch.
    * \attention To avoid conflicts with old entries, increase the routing
    *            priority before installing S-GW rules.
-   * \param rInfo The routing information to process.
+   * \param bInfo The bearer information.
    * \return True if succeeded, false otherwise.
    */
-  bool SgwRulesInstall (Ptr<RoutingInfo> rInfo);
+  bool SgwRulesInstall (Ptr<BearerInfo> bInfo);
 
   /**
    * Remove packet forwarding rules from the S-GW OpenFlow switch.
-   * \param rInfo The routing information to process.
+   * \param bInfo The bearer information.
    * \return True if succeeded, false otherwise.
    */
-  bool SgwRulesRemove (Ptr<RoutingInfo> rInfo);
+  bool SgwRulesRemove (Ptr<BearerInfo> bInfo);
 
   /**
    * Update packet forwarding rules on the S-GW OpenFlow switch after a
    * successful handover procedure.
-   * \param rInfo The routing information to process.
+   * \param bInfo The bearer information.
    * \param dstEnbInfo The destination eNB after the handover procedure.
    * \return True if succeeded, false otherwise.
    */
-  bool SgwRulesUpdate (Ptr<RoutingInfo> rInfo, Ptr<EnbInfo> dstEnbInfo);
+  bool SgwRulesUpdate (Ptr<BearerInfo> bInfo, Ptr<EnbInfo> dstEnbInfo);
 
   /**
    * Install individual TFT forwarding rules.
@@ -363,10 +363,10 @@ private:
                         std::string cmdStr, std::string actStr);
 
   /** The bearer request trace source, fired at RequestDedicatedBearer. */
-  TracedCallback<Ptr<const RoutingInfo>> m_bearerRequestTrace;
+  TracedCallback<Ptr<const BearerInfo>> m_bearerRequestTrace;
 
   /** The bearer release trace source, fired at ReleaseDedicatedBearer. */
-  TracedCallback<Ptr<const RoutingInfo>> m_bearerReleaseTrace;
+  TracedCallback<Ptr<const BearerInfo>> m_bearerReleaseTrace;
 
   /** The context created trace source, fired at DoCreateSessionRequest. */
   TracedCallback<uint64_t, BearerCreatedList_t> m_sessionCreatedTrace;

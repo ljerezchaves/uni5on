@@ -28,7 +28,7 @@
 
 namespace ns3 {
 
-class RoutingInfo;
+class BearerInfo;
 class BaseClient;
 
 /**

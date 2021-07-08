@@ -27,7 +27,7 @@
 
 namespace ns3 {
 
-class RoutingInfo;
+class BearerInfo;
 
 /**
  * \ingroup uni5onMeta
@@ -50,9 +50,9 @@ public:
 
   /**
    * Complete constructor.
-   * \param rInfo RoutingInfo pointer.
+   * \param bInfo The bearer information.
    */
-  RingInfo (Ptr<RoutingInfo> rInfo);
+  RingInfo (Ptr<BearerInfo> bInfo);
   virtual ~RingInfo (); //!< Dummy destructor, see DoDispose.
 
   /**
@@ -75,10 +75,10 @@ public:
   //\}
 
   /**
-   * Get the bearer routing information aggregated to this object.
-   * \return The routing information.
+   * Get the bearer information aggregated to this object.
+   * \return The bearer information.
    */
-  Ptr<RoutingInfo> GetRoutingInfo (void) const;
+  Ptr<BearerInfo> GetBearerInfo (void) const;
 
   /**
    * Invert the given routing path.
@@ -137,7 +137,7 @@ private:
 
   RingPath         m_downPath [2];  //!< Downlink routing path.
   bool             m_shortPath [2]; //!< True for short downlink routing path.
-  Ptr<RoutingInfo> m_rInfo;         //!< Routing metadata.
+  Ptr<BearerInfo>  m_bInfo;         //!< Bearer metadata.
 };
 
 /**

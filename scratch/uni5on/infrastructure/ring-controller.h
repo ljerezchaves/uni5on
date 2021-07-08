@@ -75,13 +75,13 @@ protected:
   virtual void NotifyConstructionCompleted (void);
 
   // Inherited from TransportController.
-  bool BearerRequest (Ptr<RoutingInfo> rInfo);
-  bool BearerReserve (Ptr<RoutingInfo> rInfo);
-  bool BearerRelease (Ptr<RoutingInfo> rInfo);
-  bool BearerInstall (Ptr<RoutingInfo> rInfo);
-  bool BearerRemove  (Ptr<RoutingInfo> rInfo);
-  bool BearerUpdate  (Ptr<RoutingInfo> rInfo, Ptr<EnbInfo> dstEnbInfo);
-  void NotifyBearerCreated (Ptr<RoutingInfo> rInfo);
+  bool BearerRequest (Ptr<BearerInfo> bInfo);
+  bool BearerReserve (Ptr<BearerInfo> bInfo);
+  bool BearerRelease (Ptr<BearerInfo> bInfo);
+  bool BearerInstall (Ptr<BearerInfo> bInfo);
+  bool BearerRemove  (Ptr<BearerInfo> bInfo);
+  bool BearerUpdate  (Ptr<BearerInfo> bInfo, Ptr<EnbInfo> dstEnbInfo);
+  void NotifyBearerCreated (Ptr<BearerInfo> bInfo);
   void NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices);
   // Inherited from TransportController.
 

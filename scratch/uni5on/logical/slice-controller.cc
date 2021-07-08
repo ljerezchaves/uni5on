@@ -23,7 +23,7 @@
 #include "../infrastructure/transport-network.h"
 #include "../metadata/enb-info.h"
 #include "../metadata/pgw-info.h"
-#include "../metadata/routing-info.h"
+#include "../metadata/bearer-info.h"
 #include "../metadata/ue-info.h"
 #include "gtpu-tunnel-app.h"
 #include "slice-network.h"
@@ -170,11 +170,11 @@ SliceController::GetTypeId (void)
     .AddTraceSource ("BearerRequest", "The bearer request trace source.",
                      MakeTraceSourceAccessor (
                        &SliceController::m_bearerRequestTrace),
-                     "ns3::RoutingInfo::TracedCallback")
+                     "ns3::BearerInfo::TracedCallback")
     .AddTraceSource ("BearerRelease", "The bearer release trace source.",
                      MakeTraceSourceAccessor (
                        &SliceController::m_bearerReleaseTrace),
-                     "ns3::RoutingInfo::TracedCallback")
+                     "ns3::BearerInfo::TracedCallback")
     .AddTraceSource ("SessionCreated", "The session created trace source.",
                      MakeTraceSourceAccessor (
                        &SliceController::m_sessionCreatedTrace),
@@ -197,62 +197,62 @@ SliceController::DedicatedBearerRequest (
 {
   NS_LOG_FUNCTION (this << imsi << teid);
 
-  Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-  NS_ASSERT_MSG (!rInfo->IsDefault (), "Can't request the default bearer.");
-  NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should be inactive.");
+  Ptr<BearerInfo> bInfo = BearerInfo::GetPointer (teid);
+  NS_ASSERT_MSG (!bInfo->IsDefault (), "Can't request the default bearer.");
+  NS_ASSERT_MSG (!bInfo->IsActive (), "Bearer should be inactive.");
 
   // Reseting the blocked flag and the traffic aggregation flag, respecting
   // the operation mode.
-  rInfo->ResetBlocked ();
-  rInfo->SetAggregated (GetAggregation () == OpMode::ON);
+  bInfo->ResetBlocked ();
+  bInfo->SetAggregated (GetAggregation () == OpMode::ON);
 
   // Check for available resources on logical and infrastructure networks.
   bool success = true;
-  success &= PgwBearerRequest (rInfo);
-  success &= SgwBearerRequest (rInfo);
-  success &= m_transportCtrl->BearerRequest (rInfo);
+  success &= PgwBearerRequest (bInfo);
+  success &= SgwBearerRequest (bInfo);
+  success &= m_transportCtrl->BearerRequest (bInfo);
   if (success)
     {
-      NS_ASSERT_MSG (!rInfo->IsBlocked (), "Bearer can't be blocked.");
+      NS_ASSERT_MSG (!bInfo->IsBlocked (), "Bearer can't be blocked.");
       NS_LOG_INFO ("Bearer request accepted by controller.");
-      if (!rInfo->IsAggregated ())
+      if (!bInfo->IsAggregated ())
         {
           // Reserve infrastructure resources and install the bearer.
-          success &= m_transportCtrl->BearerReserve (rInfo);
-          success &= BearerInstall (rInfo);
+          success &= m_transportCtrl->BearerReserve (bInfo);
+          success &= BearerInstall (bInfo);
           NS_ASSERT_MSG (success, "Error when installing the bearer.");
         }
-      m_bearerRequestTrace (rInfo);
+      m_bearerRequestTrace (bInfo);
       return success;
     }
 
   // If we get here it's because the bearer request was blocked. When the
   // aggregation is in auto mode, check whether it can revert this.
-  if (GetAggregation () == OpMode::AUTO && !rInfo->IsAggregated ())
+  if (GetAggregation () == OpMode::AUTO && !bInfo->IsAggregated ())
     {
       // Reseting the blocked status and activating the traffic aggregation.
-      rInfo->ResetBlocked ();
-      rInfo->SetAggregated (true);
+      bInfo->ResetBlocked ();
+      bInfo->SetAggregated (true);
 
       // Check for available resources again.
       success = true;
-      success &= PgwBearerRequest (rInfo);
-      success &= SgwBearerRequest (rInfo);
-      success &= m_transportCtrl->BearerRequest (rInfo);
+      success &= PgwBearerRequest (bInfo);
+      success &= SgwBearerRequest (bInfo);
+      success &= m_transportCtrl->BearerRequest (bInfo);
       if (success)
         {
-          NS_ASSERT_MSG (!rInfo->IsBlocked (), "Bearer can't be blocked.");
+          NS_ASSERT_MSG (!bInfo->IsBlocked (), "Bearer can't be blocked.");
           NS_LOG_INFO ("Bearer request accepted by controller with "
                        "automatic traffic aggregation.");
-          m_bearerRequestTrace (rInfo);
+          m_bearerRequestTrace (bInfo);
           return success;
         }
     }
 
   // If we get here it's because the bearer request was definitely blocked.
-  NS_ASSERT_MSG (rInfo->IsBlocked (), "Bearer should be blocked.");
+  NS_ASSERT_MSG (bInfo->IsBlocked (), "Bearer should be blocked.");
   NS_LOG_INFO ("Bearer request blocked by controller.");
-  m_bearerRequestTrace (rInfo);
+  m_bearerRequestTrace (bInfo);
   return success;
 }
 
@@ -262,20 +262,20 @@ SliceController::DedicatedBearerRelease (
 {
   NS_LOG_FUNCTION (this << imsi << teid);
 
-  Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-  NS_ASSERT_MSG (!rInfo->IsDefault (), "Can't release the default bearer.");
-  NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should be inactive.");
+  Ptr<BearerInfo> bInfo = BearerInfo::GetPointer (teid);
+  NS_ASSERT_MSG (!bInfo->IsDefault (), "Can't release the default bearer.");
+  NS_ASSERT_MSG (!bInfo->IsActive (), "Bearer should be inactive.");
 
   // Release infrastructure resources and remove the bearer.
   bool success = true;
-  if (!rInfo->IsAggregated ())
+  if (!bInfo->IsAggregated ())
     {
-      success &= m_transportCtrl->BearerRelease (rInfo);
-      success &= BearerRemove (rInfo);
+      success &= m_transportCtrl->BearerRelease (bInfo);
+      success &= BearerRemove (bInfo);
     }
 
   NS_LOG_INFO ("Bearer released by controller.");
-  m_bearerReleaseTrace (rInfo);
+  m_bearerReleaseTrace (bInfo);
   return success;
 }
 
@@ -638,25 +638,25 @@ SliceController::HandleFlowRemoved (
 
   NS_LOG_DEBUG ("Flow removed: " << msgStr);
 
-  // Check for existing routing information for this bearer.
-  Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-  NS_ASSERT_MSG (rInfo, "Routing metadata not found");
+  // Check for existing information for this bearer.
+  Ptr<BearerInfo> bInfo = BearerInfo::GetPointer (teid);
+  NS_ASSERT_MSG (bInfo, "Bearer metadata not found");
 
   // When a flow is removed, check the following situations:
   // 1) The application is stopped and the bearer must be inactive.
-  if (!rInfo->IsActive ())
+  if (!bInfo->IsActive ())
     {
       NS_LOG_INFO ("Rule removed from switch dp " << swtch->GetDpId () <<
-                   " for inactive bearer teid " << rInfo->GetTeidHex ());
+                   " for inactive bearer teid " << bInfo->GetTeidHex ());
       return 0;
     }
 
   // 2) The application is running and the bearer is active, but the bearer
   // priority was increased and this removed flow rule is an old one.
-  if (rInfo->GetPriority () > prio)
+  if (bInfo->GetPriority () > prio)
     {
       NS_LOG_INFO ("Rule removed from switch dp " << swtch->GetDpId () <<
-                   " for bearer teid " << rInfo->GetTeidHex () <<
+                   " for bearer teid " << bInfo->GetTeidHex () <<
                    " with old priority " << prio);
       return 0;
     }
@@ -665,7 +665,7 @@ SliceController::HandleFlowRemoved (
   // priority is the same of the removed rule. This is a critical situation!
   // For some reason, the flow rule was removed so we are going to abort the
   // program to avoid wrong results.
-  NS_ASSERT_MSG (rInfo->GetPriority () == prio, "Invalid flow priority.");
+  NS_ASSERT_MSG (bInfo->GetPriority () == prio, "Invalid flow priority.");
   NS_ABORT_MSG ("Rule removed for active bearer. " <<
                 "OpenFlow flow removed message: " << msgStr);
   return 0;
@@ -714,58 +714,58 @@ SliceController::DpctlSchedule (Time delay, uint64_t dpId,
 }
 
 bool
-SliceController::BearerInstall (Ptr<RoutingInfo> rInfo)
+SliceController::BearerInstall (Ptr<BearerInfo> bInfo)
 {
-  NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
+  NS_LOG_FUNCTION (this << bInfo->GetTeidHex ());
 
-  NS_ASSERT_MSG (!rInfo->IsAggregated (), "Bearer should not be aggregated.");
+  NS_ASSERT_MSG (!bInfo->IsAggregated (), "Bearer should not be aggregated.");
 
   // Increasing the priority every time we (re)install routing rules. Doing
   // this, we avoid problems with old 'expiring' rules, and we can even use new
   // routing paths when necessary.
-  rInfo->IncreasePriority ();
+  bInfo->IncreasePriority ();
 
   // Install the rules.
   bool success = true;
-  success &= PgwRulesInstall (rInfo);
-  success &= SgwRulesInstall (rInfo);
-  rInfo->SetGwInstalled (success);
-  success &= m_transportCtrl->BearerInstall (rInfo);
+  success &= PgwRulesInstall (bInfo);
+  success &= SgwRulesInstall (bInfo);
+  bInfo->SetGwInstalled (success);
+  success &= m_transportCtrl->BearerInstall (bInfo);
   return success;
 }
 
 bool
-SliceController::BearerRemove (Ptr<RoutingInfo> rInfo)
+SliceController::BearerRemove (Ptr<BearerInfo> bInfo)
 {
-  NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
+  NS_LOG_FUNCTION (this << bInfo->GetTeidHex ());
 
-  NS_ASSERT_MSG (!rInfo->IsAggregated (), "Bearer should not be aggregated.");
-  NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should not be active.");
+  NS_ASSERT_MSG (!bInfo->IsAggregated (), "Bearer should not be aggregated.");
+  NS_ASSERT_MSG (!bInfo->IsActive (), "Bearer should not be active.");
 
   // Remove the rules.
   bool success = true;
-  success &= PgwRulesRemove (rInfo);
-  success &= SgwRulesRemove (rInfo);
-  rInfo->SetGwInstalled (!success);
-  success &= m_transportCtrl->BearerRemove (rInfo);
+  success &= PgwRulesRemove (bInfo);
+  success &= SgwRulesRemove (bInfo);
+  bInfo->SetGwInstalled (!success);
+  success &= m_transportCtrl->BearerRemove (bInfo);
   return success;
 }
 
 bool
-SliceController::BearerUpdate (Ptr<RoutingInfo> rInfo, Ptr<EnbInfo> dstEnbInfo)
+SliceController::BearerUpdate (Ptr<BearerInfo> bInfo, Ptr<EnbInfo> dstEnbInfo)
 {
-  NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
+  NS_LOG_FUNCTION (this << bInfo->GetTeidHex ());
 
-  NS_ASSERT_MSG (!rInfo->IsAggregated (), "Bearer should not be aggregated.");
+  NS_ASSERT_MSG (!bInfo->IsAggregated (), "Bearer should not be aggregated.");
 
   // Each slice has a single P-GW and S-GW, so handover only changes the eNB.
   // Thus, we only need to modify the S-GW downlink rules and transport rules.
   bool success = true;
-  success &= SgwRulesUpdate (rInfo, dstEnbInfo);
-  success &= m_transportCtrl->BearerUpdate (rInfo, dstEnbInfo);
+  success &= SgwRulesUpdate (bInfo, dstEnbInfo);
+  success &= m_transportCtrl->BearerUpdate (bInfo, dstEnbInfo);
 
   // Increase the routing priority (only after updating OpenFlow rules).
-  rInfo->IncreasePriority ();
+  bInfo->IncreasePriority ();
 
   return success;
 }
@@ -807,41 +807,41 @@ SliceController::DoCreateSessionRequest (
       bearerContext.tft = bit.tft;
       res.bearerContextsCreated.push_back (bearerContext);
 
-      // Creating bearer routing metadata.
-      Ptr<RoutingInfo> rInfo = CreateObject<RoutingInfo> (
+      // Creating bearer metadata.
+      Ptr<BearerInfo> bInfo = CreateObject<BearerInfo> (
           teid, bearerContext, ueInfo, bit.tft->IsDefaultTft ());
       NS_LOG_DEBUG ("Saving bearer info for ue imsi " << imsi <<
                     " slice " << SliceIdStr (m_sliceId) <<
                     " bid " << static_cast<uint16_t> (bit.epsBearerId) <<
-                    " teid " << rInfo->GetTeidHex ());
+                    " teid " << bInfo->GetTeidHex ());
 
-      rInfo->SetPgwTftIdx (GetTftIdx (rInfo));
-      m_transportCtrl->NotifyBearerCreated (rInfo);
+      bInfo->SetPgwTftIdx (GetTftIdx (bInfo));
+      m_transportCtrl->NotifyBearerCreated (bInfo);
 
-      if (rInfo->IsDefault ())
+      if (bInfo->IsDefault ())
         {
           // Configure this default bearer.
-          rInfo->SetPriority (0x7F);
-          rInfo->SetTimeout (OFP_FLOW_PERMANENT);
+          bInfo->SetPriority (0x7F);
+          bInfo->SetTimeout (OFP_FLOW_PERMANENT);
 
           // For logic consistence, let's check for available resources.
           bool success = true;
-          success &= PgwBearerRequest (rInfo);
-          success &= SgwBearerRequest (rInfo);
-          success &= m_transportCtrl->BearerRequest (rInfo);
+          success &= PgwBearerRequest (bInfo);
+          success &= SgwBearerRequest (bInfo);
+          success &= m_transportCtrl->BearerRequest (bInfo);
           NS_ASSERT_MSG (success, "Default bearer must be accepted.");
 
           // Activate and install the default bearer.
-          rInfo->SetActive (true);
-          bool installed = BearerInstall (rInfo);
-          m_bearerRequestTrace (rInfo);
+          bInfo->SetActive (true);
+          bool installed = BearerInstall (bInfo);
+          m_bearerRequestTrace (bInfo);
           NS_ASSERT_MSG (installed, "Default bearer must be installed.");
         }
       else
         {
           // Configure this dedicated bearer.
-          rInfo->SetPriority (0x1FFF);
-          rInfo->SetTimeout (OFP_FLOW_PERMANENT);
+          bInfo->SetPriority (0x1FFF);
+          bInfo->SetTimeout (OFP_FLOW_PERMANENT);
         }
     }
 
@@ -908,13 +908,13 @@ SliceController::DoModifyBearerRequest (
       res.bearerContextsModified.push_back (bearerContext);
     }
 
-  // Iterate over routing infos and update bearers with installed rules.
-  for (auto const &rit : ueInfo->GetRoutingInfoMap ())
+  // Iterate over bearer infos and update bearers with installed rules.
+  for (auto const &rit : ueInfo->GetBearerInfoMap ())
     {
-      Ptr<RoutingInfo> rInfo = rit.second;
-      if (rInfo->IsGwInstalled ())
+      Ptr<BearerInfo> bInfo = rit.second;
+      if (bInfo->IsGwInstalled ())
         {
-          bool success = BearerUpdate (rInfo, dstEnbInfo);
+          bool success = BearerUpdate (bInfo, dstEnbInfo);
           NS_ASSERT_MSG (success, "Error updating bearer after handover.");
         }
     }
@@ -931,15 +931,15 @@ SliceController::DoModifyBearerRequest (
 
 uint16_t
 SliceController::GetTftIdx (
-  Ptr<const RoutingInfo> rInfo, uint16_t activeTfts) const
+  Ptr<const BearerInfo> bInfo, uint16_t activeTfts) const
 {
-  NS_LOG_FUNCTION (this << rInfo << activeTfts);
+  NS_LOG_FUNCTION (this << bInfo << activeTfts);
 
   if (activeTfts == 0)
     {
       activeTfts = m_pgwInfo->GetCurTfts ();
     }
-  return 1 + (rInfo->GetUeAddr ().Get () % activeTfts);
+  return 1 + (bInfo->GetUeAddr ().Get () % activeTfts);
 }
 
 void
@@ -991,29 +991,29 @@ SliceController::PgwTftLoadBalancing (void)
 
       // Iterate over all bearers for this slice, updating the P-GW TFT switch
       // index and moving the bearer when necessary.
-      RoutingInfoList_t bearerList;
-      RoutingInfo::GetList (bearerList, m_sliceId);
-      for (auto const &rInfo : bearerList)
+      BearerInfoList_t bearerList;
+      BearerInfo::GetList (bearerList, m_sliceId);
+      for (auto const &bInfo : bearerList)
         {
-          uint16_t currIdx = rInfo->GetPgwTftIdx ();
-          uint16_t destIdx = GetTftIdx (rInfo, futureTfts);
+          uint16_t currIdx = bInfo->GetPgwTftIdx ();
+          uint16_t destIdx = GetTftIdx (bInfo, futureTfts);
           if (destIdx != currIdx)
             {
-              if (!rInfo->IsGwInstalled ())
+              if (!bInfo->IsGwInstalled ())
                 {
                   // Update the P-GW TFT switch index so new rules will be
                   // installed in the new switch.
-                  rInfo->SetPgwTftIdx (destIdx);
+                  bInfo->SetPgwTftIdx (destIdx);
                 }
               else
                 {
                   // Schedule the rules transfer from old to new switch.
                   moved++;
-                  NS_LOG_INFO ("Move bearer teid " << rInfo->GetTeidHex () <<
+                  NS_LOG_INFO ("Move bearer teid " << bInfo->GetTeidHex () <<
                                " from TFT " << currIdx << " to " << destIdx);
                   Simulator::Schedule (MilliSeconds (rand->GetInteger ()),
                                        &SliceController::PgwRulesMove,
-                                       this, rInfo, currIdx, destIdx);
+                                       this, bInfo, currIdx, destIdx);
                 }
             }
         }
@@ -1042,23 +1042,23 @@ SliceController::PgwTftLoadBalancing (void)
 }
 
 bool
-SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo) const
+SliceController::PgwBearerRequest (Ptr<BearerInfo> bInfo) const
 {
-  NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
+  NS_LOG_FUNCTION (this << bInfo->GetTeidHex ());
 
   bool success = true;
 
   // First check: OpenFlow switch table usage (only non-aggregated bearers).
   // Block the bearer if the P-GW TFT switch table (#1) usage is exceeding the
   // block threshold.
-  if (!rInfo->IsAggregated ())
+  if (!bInfo->IsAggregated ())
     {
-      double tabUse = m_pgwInfo->GetFlowTableUse (rInfo->GetPgwTftIdx (), 0);
+      double tabUse = m_pgwInfo->GetFlowTableUse (bInfo->GetPgwTftIdx (), 0);
       if (tabUse >= GetPgwBlockThs ())
         {
           success = false;
-          rInfo->SetBlocked (RoutingInfo::BRPGWTAB);
-          NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
+          bInfo->SetBlocked (BearerInfo::BRPGWTAB);
+          NS_LOG_WARN ("Blocking bearer teid " << bInfo->GetTeidHex () <<
                        " because the P-GW table is full.");
         }
     }
@@ -1068,12 +1068,12 @@ SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo) const
   // the block threshold.
   if (GetPgwBlockPolicy () == OpMode::ON)
     {
-      double cpuUse = m_pgwInfo->GetEwmaCpuUse (rInfo->GetPgwTftIdx ());
+      double cpuUse = m_pgwInfo->GetEwmaCpuUse (bInfo->GetPgwTftIdx ());
       if (cpuUse >= GetPgwBlockThs ())
         {
           success = false;
-          rInfo->SetBlocked (RoutingInfo::BRPGWCPU);
-          NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
+          bInfo->SetBlocked (BearerInfo::BRPGWCPU);
+          NS_LOG_WARN ("Blocking bearer teid " << bInfo->GetTeidHex () <<
                        " because the P-GW is overloaded.");
         }
     }
@@ -1082,23 +1082,23 @@ SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo) const
 }
 
 bool
-SliceController::PgwRulesInstall (Ptr<RoutingInfo> rInfo)
+SliceController::PgwRulesInstall (Ptr<BearerInfo> bInfo)
 {
-  NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
+  NS_LOG_FUNCTION (this << bInfo->GetTeidHex ());
 
-  NS_ASSERT_MSG (!rInfo->IsGwInstalled (), "Gateway rules installed.");
-  NS_LOG_INFO ("Installing P-GW rules for teid " << rInfo->GetTeidHex ());
+  NS_ASSERT_MSG (!bInfo->IsGwInstalled (), "Gateway rules installed.");
+  NS_LOG_INFO ("Installing P-GW rules for teid " << bInfo->GetTeidHex ());
   bool success = true;
 
-  uint64_t pgwTftDpId = rInfo->GetPgwTftDpId ();
-  NS_LOG_DEBUG ("Installing into P-GW TFT idx " << rInfo->GetPgwTftIdx ());
+  uint64_t pgwTftDpId = bInfo->GetPgwTftDpId ();
+  NS_LOG_DEBUG ("Installing into P-GW TFT idx " << bInfo->GetPgwTftIdx ());
 
   // Configure downlink.
-  if (rInfo->HasDlTraffic ())
+  if (bInfo->HasDlTraffic ())
     {
       // Cookie for new downlink rules.
       uint64_t cookie = CookieCreate (
-          EpsIface::S5, rInfo->GetPriority (), rInfo->GetTeid ());
+          EpsIface::S5, bInfo->GetPriority (), bInfo->GetTeid ());
 
       // Building the dpctl command.
       std::ostringstream cmd, act;
@@ -1106,16 +1106,16 @@ SliceController::PgwRulesInstall (Ptr<RoutingInfo> rInfo)
           << ",table="  << PGW_TFT_TAB
           << ",flags="  << FLAGS_OVERLAP_RESET
           << ",cookie=" << GetUint64Hex (cookie)
-          << ",prio="   << rInfo->GetPriority ()
-          << ",idle="   << rInfo->GetTimeout ();
+          << ",prio="   << bInfo->GetPriority ()
+          << ",idle="   << bInfo->GetTimeout ();
 
       // Instruction: apply action: set tunnel ID, output port.
       act << " apply:set_field=tunn_id:"
-          << GetTunnelIdStr (rInfo->GetTeid (), rInfo->GetSgwS5Addr ())
-          << ",output=" << rInfo->GetPgwTftS5PortNo ();
+          << GetTunnelIdStr (bInfo->GetTeid (), bInfo->GetSgwS5Addr ())
+          << ",output=" << bInfo->GetPgwTftS5PortNo ();
 
       // Install downlink OpenFlow TFT rules.
-      success &= TftRulesInstall (rInfo->GetTft (), Direction::DLINK,
+      success &= TftRulesInstall (bInfo->GetTft (), Direction::DLINK,
                                   pgwTftDpId, cmd.str (), act.str ());
     }
 
@@ -1124,17 +1124,17 @@ SliceController::PgwRulesInstall (Ptr<RoutingInfo> rInfo)
 
 bool
 SliceController::PgwRulesMove (
-  Ptr<RoutingInfo> rInfo, uint16_t srcTftIdx, uint16_t dstTftIdx)
+  Ptr<BearerInfo> bInfo, uint16_t srcTftIdx, uint16_t dstTftIdx)
 {
-  NS_LOG_FUNCTION (this << rInfo->GetTeidHex () << srcTftIdx << dstTftIdx);
+  NS_LOG_FUNCTION (this << bInfo->GetTeidHex () << srcTftIdx << dstTftIdx);
 
-  NS_LOG_INFO ("Moving P-GW rules for teid " << rInfo->GetTeidHex ());
+  NS_LOG_INFO ("Moving P-GW rules for teid " << bInfo->GetTeidHex ());
   bool success = true;
 
   // Update the P-GW TFT switch index.
-  rInfo->SetPgwTftIdx (dstTftIdx);
+  bInfo->SetPgwTftIdx (dstTftIdx);
 
-  if (rInfo->HasDlTraffic () && rInfo->IsGwInstalled ())
+  if (bInfo->HasDlTraffic () && bInfo->IsGwInstalled ())
     {
       uint64_t srcTftDpId = m_pgwInfo->GetTftDpId (srcTftIdx);
       uint64_t dstTftDpId = m_pgwInfo->GetTftDpId (dstTftIdx);
@@ -1146,14 +1146,14 @@ SliceController::PgwRulesMove (
       std::ostringstream del;
       del << "flow-mod cmd=del"
           << ",table="        << PGW_TFT_TAB
-          << ",cookie="       << GetUint64Hex (rInfo->GetTeid ())
+          << ",cookie="       << GetUint64Hex (bInfo->GetTeid ())
           << ",cookie_mask="  << GetUint64Hex (COOKIE_TEID_MASK);
       DpctlSchedule (MilliSeconds (750), srcTftDpId, del.str ());
 
       // Install rules into target switch now.
       // Cookie for new downlink rules.
       uint64_t cookie = CookieCreate (
-          EpsIface::S5, rInfo->GetPriority (), rInfo->GetTeid ());
+          EpsIface::S5, bInfo->GetPriority (), bInfo->GetTeid ());
 
       // Building the dpctl command.
       std::ostringstream cmd, act;
@@ -1161,16 +1161,16 @@ SliceController::PgwRulesMove (
           << ",table="  << PGW_TFT_TAB
           << ",flags="  << FLAGS_OVERLAP_RESET
           << ",cookie=" << GetUint64Hex (cookie)
-          << ",prio="   << rInfo->GetPriority ()
-          << ",idle="   << rInfo->GetTimeout ();
+          << ",prio="   << bInfo->GetPriority ()
+          << ",idle="   << bInfo->GetTimeout ();
 
       // Instruction: apply action: set tunnel ID, output port.
       act << " apply:set_field=tunn_id:"
-          << GetTunnelIdStr (rInfo->GetTeid (), rInfo->GetSgwS5Addr ())
-          << ",output=" << rInfo->GetPgwTftS5PortNo ();
+          << GetTunnelIdStr (bInfo->GetTeid (), bInfo->GetSgwS5Addr ())
+          << ",output=" << bInfo->GetPgwTftS5PortNo ();
 
       // Install downlink OpenFlow TFT rules.
-      success &= TftRulesInstall (rInfo->GetTft (), Direction::DLINK,
+      success &= TftRulesInstall (bInfo->GetTft (), Direction::DLINK,
                                   dstTftDpId, cmd.str (), act.str ());
     }
 
@@ -1178,21 +1178,21 @@ SliceController::PgwRulesMove (
 }
 
 bool
-SliceController::PgwRulesRemove (Ptr<RoutingInfo> rInfo)
+SliceController::PgwRulesRemove (Ptr<BearerInfo> bInfo)
 {
-  NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
+  NS_LOG_FUNCTION (this << bInfo->GetTeidHex ());
 
-  NS_ASSERT_MSG (rInfo->IsGwInstalled (), "Gateway rules not installed.");
-  NS_LOG_INFO ("Removing P-GW rules for teid " << rInfo->GetTeidHex ());
+  NS_ASSERT_MSG (bInfo->IsGwInstalled (), "Gateway rules not installed.");
+  NS_LOG_INFO ("Removing P-GW rules for teid " << bInfo->GetTeidHex ());
 
-  uint64_t pgwTftDpId = rInfo->GetPgwTftDpId ();
-  NS_LOG_DEBUG ("Removing from P-GW TFT idx " << rInfo->GetPgwTftIdx ());
+  uint64_t pgwTftDpId = bInfo->GetPgwTftDpId ();
+  NS_LOG_DEBUG ("Removing from P-GW TFT idx " << bInfo->GetPgwTftIdx ());
 
   // Building the dpctl command. Matching cookie just for TEID.
   std::ostringstream cmd;
   cmd << "flow-mod cmd=del"
       << ",table="        << PGW_TFT_TAB
-      << ",cookie="       << GetUint64Hex (rInfo->GetTeid ())
+      << ",cookie="       << GetUint64Hex (bInfo->GetTeid ())
       << ",cookie_mask="  << GetUint64Hex (COOKIE_TEID_MASK);
   DpctlExecute (pgwTftDpId, cmd.str ());
 
@@ -1200,25 +1200,25 @@ SliceController::PgwRulesRemove (Ptr<RoutingInfo> rInfo)
 }
 
 bool
-SliceController::SgwBearerRequest (Ptr<RoutingInfo> rInfo) const
+SliceController::SgwBearerRequest (Ptr<BearerInfo> bInfo) const
 {
-  NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
+  NS_LOG_FUNCTION (this << bInfo->GetTeidHex ());
 
-  Ptr<SgwInfo> sgwInfo = rInfo->GetUeInfo ()->GetSgwInfo ();
+  Ptr<SgwInfo> sgwInfo = bInfo->GetUeInfo ()->GetSgwInfo ();
   bool success = true;
 
   // First check: OpenFlow switch table usage (only non-aggregated bearers).
   // Block the bearer if any of the S-GW switch tables (#1 or #2) usage is
   // exceeding the block threshold.
-  if (!rInfo->IsAggregated ())
+  if (!bInfo->IsAggregated ())
     {
       double dlTabUse = sgwInfo->GetFlowTableUse (1);
       double ulTabUse = sgwInfo->GetFlowTableUse (2);
       if (dlTabUse >= GetSgwBlockThs () || ulTabUse >= GetSgwBlockThs ())
         {
           success = false;
-          rInfo->SetBlocked (RoutingInfo::BRSGWTAB);
-          NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
+          bInfo->SetBlocked (BearerInfo::BRSGWTAB);
+          NS_LOG_WARN ("Blocking bearer teid " << bInfo->GetTeidHex () <<
                        " because the S-GW table is full.");
         }
     }
@@ -1232,8 +1232,8 @@ SliceController::SgwBearerRequest (Ptr<RoutingInfo> rInfo) const
       if (cpuUse >= GetSgwBlockThs ())
         {
           success = false;
-          rInfo->SetBlocked (RoutingInfo::BRSGWCPU);
-          NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
+          bInfo->SetBlocked (BearerInfo::BRSGWCPU);
+          NS_LOG_WARN ("Blocking bearer teid " << bInfo->GetTeidHex () <<
                        " because the S-GW is overloaded.");
         }
     }
@@ -1242,20 +1242,20 @@ SliceController::SgwBearerRequest (Ptr<RoutingInfo> rInfo) const
 }
 
 bool
-SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
+SliceController::SgwRulesInstall (Ptr<BearerInfo> bInfo)
 {
-  NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
+  NS_LOG_FUNCTION (this << bInfo->GetTeidHex ());
 
-  NS_ASSERT_MSG (!rInfo->IsGwInstalled (), "Gateway rules installed.");
-  NS_LOG_INFO ("Installing S-GW rules for teid " << rInfo->GetTeidHex ());
+  NS_ASSERT_MSG (!bInfo->IsGwInstalled (), "Gateway rules installed.");
+  NS_LOG_INFO ("Installing S-GW rules for teid " << bInfo->GetTeidHex ());
   bool success = true;
 
   // Configure downlink.
-  if (rInfo->HasDlTraffic ())
+  if (bInfo->HasDlTraffic ())
     {
       // Cookie for new downlink rules.
       uint64_t cookie = CookieCreate (
-          EpsIface::S1, rInfo->GetPriority (), rInfo->GetTeid ());
+          EpsIface::S1, bInfo->GetPriority (), bInfo->GetTeid ());
 
       // Building the dpctl command.
       std::ostringstream cmd, act;
@@ -1263,25 +1263,25 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
           << ",table="  << SGW_DL_TAB
           << ",flags="  << FLAGS_REMOVED_OVERLAP_RESET
           << ",cookie=" << GetUint64Hex (cookie)
-          << ",prio="   << rInfo->GetPriority ()
-          << ",idle="   << rInfo->GetTimeout ();
+          << ",prio="   << bInfo->GetPriority ()
+          << ",idle="   << bInfo->GetTimeout ();
 
       // Instruction: apply action: set tunnel ID, output port.
       act << " apply:set_field=tunn_id:"
-          << GetTunnelIdStr (rInfo->GetTeid (), rInfo->GetEnbS1uAddr ())
-          << ",output=" << rInfo->GetSgwS1uPortNo ();
+          << GetTunnelIdStr (bInfo->GetTeid (), bInfo->GetEnbS1uAddr ())
+          << ",output=" << bInfo->GetSgwS1uPortNo ();
 
       // Install downlink OpenFlow TFT rules.
-      success &= TftRulesInstall (rInfo->GetTft (), Direction::DLINK,
-                                  rInfo->GetSgwDpId (), cmd.str (), act.str ());
+      success &= TftRulesInstall (bInfo->GetTft (), Direction::DLINK,
+                                  bInfo->GetSgwDpId (), cmd.str (), act.str ());
     }
 
   // Configure uplink.
-  if (rInfo->HasUlTraffic ())
+  if (bInfo->HasUlTraffic ())
     {
       // Cookie for new uplink rules.
       uint64_t cookie = CookieCreate (
-          EpsIface::S5, rInfo->GetPriority (), rInfo->GetTeid ());
+          EpsIface::S5, bInfo->GetPriority (), bInfo->GetTeid ());
 
       // Building the dpctl command.
       std::ostringstream cmd, act;
@@ -1289,56 +1289,56 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
           << ",table="  << SGW_UL_TAB
           << ",flags="  << FLAGS_REMOVED_OVERLAP_RESET
           << ",cookie=" << GetUint64Hex (cookie)
-          << ",prio="   << rInfo->GetPriority ()
-          << ",idle="   << rInfo->GetTimeout ();
+          << ",prio="   << bInfo->GetPriority ()
+          << ",idle="   << bInfo->GetTimeout ();
 
       // Instruction: apply action: set tunnel ID, output port.
       act << " apply:set_field=tunn_id:"
-          << GetTunnelIdStr (rInfo->GetTeid (), rInfo->GetPgwS5Addr ())
-          << ",output=" << rInfo->GetSgwS5PortNo ();
+          << GetTunnelIdStr (bInfo->GetTeid (), bInfo->GetPgwS5Addr ())
+          << ",output=" << bInfo->GetSgwS5PortNo ();
 
       // Install uplink OpenFlow TFT rules.
-      success &= TftRulesInstall (rInfo->GetTft (), Direction::ULINK,
-                                  rInfo->GetSgwDpId (), cmd.str (), act.str ());
+      success &= TftRulesInstall (bInfo->GetTft (), Direction::ULINK,
+                                  bInfo->GetSgwDpId (), cmd.str (), act.str ());
     }
 
   return success;
 }
 
 bool
-SliceController::SgwRulesRemove (Ptr<RoutingInfo> rInfo)
+SliceController::SgwRulesRemove (Ptr<BearerInfo> bInfo)
 {
-  NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
+  NS_LOG_FUNCTION (this << bInfo->GetTeidHex ());
 
-  NS_ASSERT_MSG (rInfo->IsGwInstalled (), "Gateway rules not installed.");
-  NS_LOG_INFO ("Removing S-GW rules for bearer teid " << rInfo->GetTeidHex ());
+  NS_ASSERT_MSG (bInfo->IsGwInstalled (), "Gateway rules not installed.");
+  NS_LOG_INFO ("Removing S-GW rules for bearer teid " << bInfo->GetTeidHex ());
 
   // Building the dpctl command. Matching cookie just for TEID.
   std::ostringstream cmd;
   cmd << "flow-mod cmd=del"
-      << ",cookie="       << GetUint64Hex (rInfo->GetTeid ())
+      << ",cookie="       << GetUint64Hex (bInfo->GetTeid ())
       << ",cookie_mask="  << GetUint64Hex (COOKIE_TEID_MASK);
-  DpctlExecute (rInfo->GetSgwDpId (), cmd.str ());
+  DpctlExecute (bInfo->GetSgwDpId (), cmd.str ());
 
   return true;
 }
 
 bool
-SliceController::SgwRulesUpdate (Ptr<RoutingInfo> rInfo,
+SliceController::SgwRulesUpdate (Ptr<BearerInfo> bInfo,
                                  Ptr<EnbInfo> dstEnbInfo)
 {
-  NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
+  NS_LOG_FUNCTION (this << bInfo->GetTeidHex ());
 
-  NS_ASSERT_MSG (rInfo->IsGwInstalled (), "Gateway rules not installed.");
-  NS_LOG_INFO ("Updating S-GW S1-U rules for teid " << rInfo->GetTeidHex ());
+  NS_ASSERT_MSG (bInfo->IsGwInstalled (), "Gateway rules not installed.");
+  NS_LOG_INFO ("Updating S-GW S1-U rules for teid " << bInfo->GetTeidHex ());
   bool success = true;
 
-  if (rInfo->HasDlTraffic ())
+  if (bInfo->HasDlTraffic ())
     {
       // Schedule the removal of old low-priority OpenFlow rules.
       // Cookie for old rules.
       uint64_t oldCookie = CookieCreate (
-          EpsIface::S1, rInfo->GetPriority (), rInfo->GetTeid ());
+          EpsIface::S1, bInfo->GetPriority (), bInfo->GetTeid ());
 
       // Building the dpctl command. Strict matching cookie.
       std::ostringstream del;
@@ -1346,13 +1346,13 @@ SliceController::SgwRulesUpdate (Ptr<RoutingInfo> rInfo,
           << ",table="        << SGW_DL_TAB
           << ",cookie="       << GetUint64Hex (oldCookie)
           << ",cookie_mask="  << GetUint64Hex (COOKIE_STRICT_MASK);
-      DpctlSchedule (MilliSeconds (250), rInfo->GetSgwDpId (), del.str ());
+      DpctlSchedule (MilliSeconds (250), bInfo->GetSgwDpId (), del.str ());
 
       // Install updated rules now.
       // Cookie for new downlink rules.
-      uint16_t newPriority = rInfo->GetPriority () + 1;
+      uint16_t newPriority = bInfo->GetPriority () + 1;
       uint64_t newCookie = CookieCreate (
-          EpsIface::S1, newPriority, rInfo->GetTeid ());
+          EpsIface::S1, newPriority, bInfo->GetTeid ());
 
       // Building the dpctl command.
       std::ostringstream cmd, act;
@@ -1361,16 +1361,16 @@ SliceController::SgwRulesUpdate (Ptr<RoutingInfo> rInfo,
           << ",flags="  << FLAGS_REMOVED_OVERLAP_RESET
           << ",cookie=" << GetUint64Hex (newCookie)
           << ",prio="   << newPriority
-          << ",idle="   << rInfo->GetTimeout ();
+          << ",idle="   << bInfo->GetTimeout ();
 
       // Instruction: apply action: set tunnel ID, output port.
       act << " apply:set_field=tunn_id:"          // Target eNB
-          << GetTunnelIdStr (rInfo->GetTeid (), dstEnbInfo->GetS1uAddr ())
-          << ",output=" << rInfo->GetSgwS1uPortNo ();
+          << GetTunnelIdStr (bInfo->GetTeid (), dstEnbInfo->GetS1uAddr ())
+          << ",output=" << bInfo->GetSgwS1uPortNo ();
 
       // Install new high-priority downlink OpenFlow TFT rules.
-      success &= TftRulesInstall (rInfo->GetTft (), Direction::DLINK,
-                                  rInfo->GetSgwDpId (), cmd.str (), act.str ());
+      success &= TftRulesInstall (bInfo->GetTft (), Direction::DLINK,
+                                  bInfo->GetSgwDpId (), cmd.str (), act.str ());
     }
 
   return success;

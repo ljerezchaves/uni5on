@@ -22,7 +22,7 @@
 #include "gtpu-tag.h"
 #include "../uni5on-common.h"
 #include "../metadata/ue-info.h"
-#include "../metadata/routing-info.h"
+#include "../metadata/bearer-info.h"
 
 namespace ns3 {
 
@@ -167,16 +167,16 @@ EnbApplication::SendToS1uSocket (Ptr<Packet> packet, uint32_t teid)
 {
   NS_LOG_FUNCTION (this << packet << teid <<  packet->GetSize ());
 
-  Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
+  Ptr<BearerInfo> bInfo = BearerInfo::GetPointer (teid);
 
   // Attach the GTP-U header.
   GtpuHeader gtpu;
   gtpu.SetTeid (teid);
 
   // Trick for traffic aggregation: use the teid of the default bearer.
-  if (rInfo->IsAggregated ())
+  if (bInfo->IsAggregated ())
     {
-      gtpu.SetTeid (rInfo->GetUeInfo ()->GetDefaultTeid ());
+      gtpu.SetTeid (bInfo->GetUeInfo ()->GetDefaultTeid ());
     }
 
   gtpu.SetLength (packet->GetSize () + gtpu.GetSerializedSize () - 8);
@@ -184,7 +184,7 @@ EnbApplication::SendToS1uSocket (Ptr<Packet> packet, uint32_t teid)
 
   // Add the EPC GTP-U packet tag to the packet.
   GtpuTag gtpuTag (
-    teid, GtpuTag::ENB, rInfo->GetQosType (), rInfo->IsAggregated ());
+    teid, GtpuTag::ENB, bInfo->GetQosType (), bInfo->IsAggregated ());
   packet->AddPacketTag (gtpuTag);
   m_txS1uTrace (packet);
 

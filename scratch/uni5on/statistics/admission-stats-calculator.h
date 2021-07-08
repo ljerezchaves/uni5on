@@ -27,7 +27,7 @@
 
 namespace ns3 {
 
-class RoutingInfo;
+class BearerInfo;
 
 /**
  * \ingroup uni5onStats
@@ -69,15 +69,15 @@ private:
 
   /**
    * Notify a new bearer request.
-   * \param rInfo The bearer routing information.
+   * \param bInfo The bearer information.
    */
-  void NotifyBearerRequest (Ptr<const RoutingInfo> rInfo);
+  void NotifyBearerRequest (Ptr<const BearerInfo> bInfo);
 
   /**
    * Notify a new bearer release.
-   * \param rInfo The bearer routing information.
+   * \param bInfo The bearer information.
    */
-  void NotifyBearerRelease (Ptr<const RoutingInfo> rInfo);
+  void NotifyBearerRelease (Ptr<const BearerInfo> bInfo);
 
   /**
    * Dump statistics into file.

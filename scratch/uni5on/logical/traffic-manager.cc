@@ -21,7 +21,7 @@
 #include "traffic-manager.h"
 #include "slice-controller.h"
 #include "../applications/base-client.h"
-#include "../metadata/routing-info.h"
+#include "../metadata/bearer-info.h"
 #include "../metadata/ue-info.h"
 
 #undef NS_LOG_APPEND_CONTEXT
@@ -200,7 +200,7 @@ TrafficManager::AppStartTry (Ptr<BaseClient> app)
           app->GetEpsBearer (), m_imsi, app->GetTeid ());
 
       // Update the active flag for this bearer.
-      RoutingInfo::GetPointer (teid)->SetActive (authorized);
+      BearerInfo::GetPointer (teid)->SetActive (authorized);
     }
 
   // Check the start authorization before (re)starting the application.
@@ -229,7 +229,7 @@ TrafficManager::NotifyAppStop (Ptr<BaseClient> app)
   if (teid != m_defaultTeid)
     {
       // Update the active flag for this bearer.
-      RoutingInfo::GetPointer (teid)->SetActive (false);
+      BearerInfo::GetPointer (teid)->SetActive (false);
 
       // Schedule the resource release procedure for +1 second.
       Simulator::Schedule (

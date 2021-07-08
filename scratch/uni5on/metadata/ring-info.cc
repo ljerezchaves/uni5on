@@ -21,7 +21,7 @@
 #include <iomanip>
 #include <iostream>
 #include "ring-info.h"
-#include "routing-info.h"
+#include "bearer-info.h"
 
 using namespace std;
 
@@ -30,8 +30,8 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("RingInfo");
 NS_OBJECT_ENSURE_REGISTERED (RingInfo);
 
-RingInfo::RingInfo (Ptr<RoutingInfo> rInfo)
-  : m_rInfo (rInfo)
+RingInfo::RingInfo (Ptr<BearerInfo> bInfo)
+  : m_bInfo (bInfo)
 {
   NS_LOG_FUNCTION (this);
 
@@ -39,7 +39,7 @@ RingInfo::RingInfo (Ptr<RoutingInfo> rInfo)
                  || (EpsIface::S5 == 0 && EpsIface::S1 == 1),
                  "Incompatible EpsIface enum values.");
 
-  AggregateObject (rInfo);
+  AggregateObject (bInfo);
   m_downPath [EpsIface::S1] = RingInfo::UNDEF;
   m_downPath [EpsIface::S5] = RingInfo::UNDEF;
   m_shortPath [EpsIface::S1] = true;
@@ -106,12 +106,12 @@ RingInfo::IsUndefPath (EpsIface iface) const
   return (GetDlPath (iface) == RingInfo::UNDEF);
 }
 
-Ptr<RoutingInfo>
-RingInfo::GetRoutingInfo (void) const
+Ptr<BearerInfo>
+RingInfo::GetBearerInfo (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_rInfo;
+  return m_bInfo;
 }
 
 RingInfo::RingPath
@@ -177,7 +177,7 @@ RingInfo::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
-  m_rInfo = 0;
+  m_bInfo = 0;
   Object::DoDispose ();
 }
 
@@ -219,7 +219,7 @@ RingInfo::ResetPath (EpsIface iface)
 
 std::ostream & operator << (std::ostream &os, const RingInfo &ringInfo)
 {
-  if (ringInfo.GetRoutingInfo ()->IsBlocked ())
+  if (ringInfo.GetBearerInfo ()->IsBlocked ())
     {
       os << " " << setw (7) << "-"
          << " " << setw (7) << "-"

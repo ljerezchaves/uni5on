@@ -18,8 +18,8 @@
  * Author: Luciano Jerez Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef ROUTING_INFO_H
-#define ROUTING_INFO_H
+#ifndef BEARER_INFO_H
+#define BEARER_INFO_H
 
 #include <ns3/core-module.h>
 #include <ns3/lte-module.h>
@@ -29,17 +29,17 @@
 
 namespace ns3 {
 
-class RoutingInfo;
+class BearerInfo;
 class UeInfo;
 
-/** List of bearer routing information. */
-typedef std::vector<Ptr<RoutingInfo>> RoutingInfoList_t;
+/** List of bearer information. */
+typedef std::vector<Ptr<BearerInfo>> BearerInfoList_t;
 
 /**
  * \ingroup uni5onMeta
  * Metadata associated to an eEPC bearer.
  */
-class RoutingInfo : public Object
+class BearerInfo : public Object
 {
   friend class TransportController;
   friend class RingController;
@@ -66,9 +66,9 @@ public:
    * \param ueInfo The UE metadata.
    * \param isDefault True for default bearer.
    */
-  RoutingInfo (uint32_t teid, BearerCreated_t bearer,
-               Ptr<UeInfo> ueInfo, bool isDefault);
-  virtual ~RoutingInfo (); //!< Dummy destructor, see DoDispose.
+  BearerInfo (uint32_t teid, BearerCreated_t bearer,
+              Ptr<UeInfo> ueInfo, bool isDefault);
+  virtual ~BearerInfo (); //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
@@ -77,7 +77,7 @@ public:
   static TypeId GetTypeId (void);
 
   /**
-   * \name Private member accessors for bearer routing information.
+   * \name Private member accessors for bearer information.
    * \param iface The logical interface.
    * \return The requested information.
    */
@@ -208,7 +208,7 @@ public:
   //\}
 
   /**
-   * \name Private member accessors for infrastructure routing.
+   * \name Private member accessors for infrastructure.
    * \param iface The logical interface.
    * \return The requested information.
    */
@@ -238,11 +238,11 @@ public:
   static EpsBearer GetEpsBearer (uint32_t teid);
 
   /**
-   * Get the routing information from the global map for a specific TEID.
+   * Get the bearer information from the global map for a specific TEID.
    * \param teid The GTP tunnel ID.
-   * \return The routing information for this tunnel.
+   * \return The bearer information for this tunnel.
    */
-  static Ptr<RoutingInfo> GetPointer (uint32_t teid);
+  static Ptr<BearerInfo> GetPointer (uint32_t teid);
 
   /**
    * Get the header for the print operator <<.
@@ -253,10 +253,10 @@ public:
   static std::ostream & PrintHeader (std::ostream &os);
 
   /**
-   * TracedCallback signature for Ptr<const RoutingInfo>.
-   * \param rInfo The bearer information.
+   * TracedCallback signature for Ptr<const BearerInfo>.
+   * \param bInfo The bearer information.
    */
-  typedef void (*TracedCallback)(Ptr<const RoutingInfo> rInfo);
+  typedef void (*TracedCallback)(Ptr<const BearerInfo> bInfo);
 
 protected:
   /** Destructor implementation. */
@@ -310,20 +310,20 @@ protected:
   void UnsetBlocked (BlockReason reason);
 
   /**
-   * Get the list of bearer routing information, optionally filtered by the
+   * Get the list of bearer information, optionally filtered by the
    * logical slice.
    * \param slice The logical slice ID.
    * \param [out] returnList The list of installed bearers.
    */
-  static void GetList (RoutingInfoList_t &returnList,
+  static void GetList (BearerInfoList_t &returnList,
                        SliceId slice = SliceId::ALL);
 
 private:
   /**
-   * Register the routing information in global map for further usage.
-   * \param rInfo The routing information to save.
+   * Register the bearer information in global map for further usage.
+   * \param bInfo The bearer information to save.
    */
-  static void RegisterRoutingInfo (Ptr<RoutingInfo> rInfo);
+  static void RegisterBearerInfo (Ptr<BearerInfo> bInfo);
 
   BearerCreated_t  m_bearer;          //!< EPS bearer context created.
   uint16_t         m_blockReason;     //!< Bitmap for blocked reasons.
@@ -342,19 +342,19 @@ private:
   uint16_t         m_timeout;         //!< Flow table idle timeout.
   Ptr<UeInfo>      m_ueInfo;          //!< UE metadata pointer.
 
-  /** Map saving TEID / routing information. */
-  typedef std::map<uint32_t, Ptr<RoutingInfo>> TeidRoutingMap_t;
-  static TeidRoutingMap_t m_routingInfoByTeid;  //!< Global routing info map.
+  /** Map saving TEID / bearer information. */
+  typedef std::map<uint32_t, Ptr<BearerInfo>> TeidBearerMap_t;
+  static TeidBearerMap_t m_BearerInfoByTeid;  //!< Global bearer info map.
 };
 
 /**
- * Print the routing metadata on an output stream.
+ * Print the bearer metadata on an output stream.
  * \param os The output stream.
- * \param rInfo The RoutingInfo object.
+ * \param bInfo The BearerInfo object.
  * \returns The output stream.
- * \internal Keep this method consistent with the RoutingInfo::PrintHeader ().
+ * \internal Keep this method consistent with the BearerInfo::PrintHeader ().
  */
-std::ostream & operator << (std::ostream &os, const RoutingInfo &rInfo);
+std::ostream & operator << (std::ostream &os, const BearerInfo &bInfo);
 
 } // namespace ns3
-#endif // ROUTING_INFO_H
+#endif // BEARER_INFO_H

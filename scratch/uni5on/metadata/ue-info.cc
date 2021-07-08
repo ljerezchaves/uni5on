@@ -23,7 +23,7 @@
 #include "ue-info.h"
 #include "enb-info.h"
 #include "pgw-info.h"
-#include "routing-info.h"
+#include "bearer-info.h"
 #include "sgw-info.h"
 #include "../logical/slice-controller.h"
 
@@ -91,7 +91,7 @@ UeInfo::GetDefaultTeid (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return GetRoutingInfo (GetDefaultBid ())->GetTeid ();
+  return GetBearerInfo (GetDefaultBid ())->GetTeid ();
 }
 
 uint16_t
@@ -209,13 +209,13 @@ UeInfo::GetEpsBearer (uint8_t bearerId) const
   return GetEpsBearerMeta (bearerId).bearer;
 }
 
-Ptr<RoutingInfo>
-UeInfo::GetRoutingInfo (uint8_t bearerId) const
+Ptr<BearerInfo>
+UeInfo::GetBearerInfo (uint8_t bearerId) const
 {
   NS_LOG_FUNCTION (this);
 
-  auto ret = m_rInfoByBid.find (bearerId);
-  NS_ASSERT_MSG (ret != m_rInfoByBid.end (), "No routing info for this BID.");
+  auto ret = m_bInfoByBid.find (bearerId);
+  NS_ASSERT_MSG (ret != m_bInfoByBid.end (), "No bearer info for this BID.");
 
   return ret->second;
 }
@@ -225,7 +225,7 @@ UeInfo::GetTeid (uint8_t bearerId) const
 {
   NS_LOG_FUNCTION (this);
 
-  return GetRoutingInfo (bearerId)->GetTeid ();
+  return GetBearerInfo (bearerId)->GetTeid ();
 }
 
 const UeInfo::EpsBearerMetaList_t&
@@ -236,12 +236,12 @@ UeInfo::GetEpsBearerMetaList (void) const
   return m_bearersList;
 }
 
-const BidRInfoMap_t&
-UeInfo::GetRoutingInfoMap (void) const
+const BidBInfoMap_t&
+UeInfo::GetBearerInfoMap (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_rInfoByBid;
+  return m_bInfoByBid;
 }
 
 Ptr<UeInfo>
@@ -300,7 +300,7 @@ UeInfo::DoDispose ()
   m_pgwInfo = 0;
   m_sliceCtrl = 0;
   m_bearersList.clear ();
-  m_rInfoByBid.clear ();
+  m_bInfoByBid.clear ();
   Object::DoDispose ();
 }
 
@@ -351,20 +351,20 @@ UeInfo::AddEpsBearer (Ptr<EpcTft> tft, EpsBearer bearer)
 }
 
 void
-UeInfo::AddRoutingInfo (Ptr<RoutingInfo> rInfo)
+UeInfo::AddBearerInfo (Ptr<BearerInfo> bInfo)
 {
-  NS_LOG_FUNCTION (this << rInfo);
+  NS_LOG_FUNCTION (this << bInfo);
 
-  NS_ASSERT_MSG (GetEpsBearerMeta (rInfo->GetBearerId ()).tft == rInfo->GetTft (),
+  NS_ASSERT_MSG (GetEpsBearerMeta (bInfo->GetBearerId ()).tft == bInfo->GetTft (),
                  "Inconsistent bearer TFTs for this bearer ID.");
 
-  // Save routing info.
-  std::pair<uint8_t, Ptr<RoutingInfo>> entry (rInfo->GetBearerId (), rInfo);
-  auto ret = m_rInfoByBid.insert (entry);
-  NS_ABORT_MSG_IF (ret.second == false, "Existing routing info for this BID.");
+  // Save bearer info.
+  std::pair<uint8_t, Ptr<BearerInfo>> entry (bInfo->GetBearerId (), bInfo);
+  auto ret = m_bInfoByBid.insert (entry);
+  NS_ABORT_MSG_IF (ret.second == false, "Existing bearer info for this BID.");
 
   // Add TFT to the classifier.
-  m_tftClassifier.Add (rInfo->GetTft (), rInfo->GetTeid ());
+  m_tftClassifier.Add (bInfo->GetTft (), bInfo->GetTeid ());
 
 }
 

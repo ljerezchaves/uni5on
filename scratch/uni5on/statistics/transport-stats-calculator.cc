@@ -22,7 +22,7 @@
 #include <iostream>
 #include "transport-stats-calculator.h"
 #include "../metadata/ue-info.h"
-#include "../metadata/routing-info.h"
+#include "../metadata/bearer-info.h"
 
 using namespace std;
 
@@ -251,10 +251,10 @@ TransportStatsCalculator::OverloadDropPacket (
       uint32_t teid = PgwTftClassify (packet);
       if (teid)
         {
-          Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-          SliceId slice = rInfo->GetSliceId ();
+          Ptr<BearerInfo> bInfo = BearerInfo::GetPointer (teid);
+          SliceId slice = bInfo->GetSliceId ();
           Direction dir = Direction::DLINK;
-          QosType type = rInfo->GetQosType ();
+          QosType type = bInfo->GetQosType ();
 
           sliStats = m_slices [slice].flowStats [dir][type];
           sliStats->NotifyTx (packet->GetSize ());
@@ -306,10 +306,10 @@ TransportStatsCalculator::MeterDropPacket (
       uint32_t teid = PgwTftClassify (packet);
       if (teid)
         {
-          Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-          SliceId slice = rInfo->GetSliceId ();
+          Ptr<BearerInfo> bInfo = BearerInfo::GetPointer (teid);
+          SliceId slice = bInfo->GetSliceId ();
           Direction dir = Direction::DLINK;
-          QosType type = rInfo->GetQosType ();
+          QosType type = bInfo->GetQosType ();
 
           sliStats = m_slices [slice].flowStats [dir][type];
           sliStats->NotifyTx (packet->GetSize ());
@@ -352,10 +352,10 @@ TransportStatsCalculator::QueueDropPacket (
       uint32_t teid = PgwTftClassify (packet);
       if (teid)
         {
-          Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-          SliceId slice = rInfo->GetSliceId ();
+          Ptr<BearerInfo> bInfo = BearerInfo::GetPointer (teid);
+          SliceId slice = bInfo->GetSliceId ();
           Direction dir = Direction::DLINK;
-          QosType type = rInfo->GetQosType ();
+          QosType type = bInfo->GetQosType ();
 
           sliStats = m_slices [slice].flowStats [dir][type];
           sliStats->NotifyTx (packet->GetSize ());
@@ -399,10 +399,10 @@ TransportStatsCalculator::TableDropPacket (
       uint32_t teid = PgwTftClassify (packet);
       if (teid)
         {
-          Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-          SliceId slice = rInfo->GetSliceId ();
+          Ptr<BearerInfo> bInfo = BearerInfo::GetPointer (teid);
+          SliceId slice = bInfo->GetSliceId ();
           Direction dir = Direction::DLINK;
-          QosType type = rInfo->GetQosType ();
+          QosType type = bInfo->GetQosType ();
 
           sliStats = m_slices [slice].flowStats [dir][type];
           sliStats->NotifyTx (packet->GetSize ());

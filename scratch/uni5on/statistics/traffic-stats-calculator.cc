@@ -23,7 +23,7 @@
 #include "traffic-stats-calculator.h"
 #include "../applications/base-client.h"
 #include "../metadata/ue-info.h"
-#include "../metadata/routing-info.h"
+#include "../metadata/bearer-info.h"
 
 using namespace std;
 
@@ -147,7 +147,7 @@ TrafficStatsCalculator::NotifyConstructionCompleted (void)
     << " " << setw (8) << "TimeSec"
     << " " << setw (9) << "AppName"
     << " " << setw (7) << "TrafDir";
-  RoutingInfo::PrintHeader (*m_epcWrapper->GetStream ());
+  BearerInfo::PrintHeader (*m_epcWrapper->GetStream ());
   FlowStatsCalculator::PrintHeader (*m_epcWrapper->GetStream ());
   *m_epcWrapper->GetStream () << std::endl;
 
@@ -161,39 +161,39 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
   NS_LOG_FUNCTION (this << context << app->GetTeidHex ());
 
   uint32_t teid = app->GetTeid ();
-  Ptr<const RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
+  Ptr<const BearerInfo> bInfo = BearerInfo::GetPointer (teid);
   Ptr<const FlowStatsCalculator> stats;
 
   // Dump application statistics.
   *m_appWrapper->GetStream ()
     << " " << setw (8)  << Simulator::Now ().GetSeconds ()
     << " " << setw (9)  << app->GetAppName ()
-    << " " << setw (11) << rInfo->GetTeidHex ()
-    << " " << setw (6)  << rInfo->GetSliceIdStr ()
+    << " " << setw (11) << bInfo->GetTeidHex ()
+    << " " << setw (6)  << bInfo->GetSliceIdStr ()
     << " " << setw (11) << Bps2Kbps (app->GetDlGoodput ())
     << " " << setw (11) << Bps2Kbps (app->GetUlGoodput ())
     << std::endl;
 
   // Dump transport statistics.
-  if (rInfo->HasUlTraffic ())
+  if (bInfo->HasUlTraffic ())
     {
       stats = GetFlowStats (teid, Direction::ULINK);
       *m_epcWrapper->GetStream ()
         << " " << setw (8) << Simulator::Now ().GetSeconds ()
         << " " << setw (9) << app->GetAppName ()
         << " " << setw (7) << DirectionStr (Direction::ULINK)
-        << *rInfo
+        << *bInfo
         << *stats
         << std::endl;
     }
-  if (rInfo->HasDlTraffic ())
+  if (bInfo->HasDlTraffic ())
     {
       stats = GetFlowStats (teid, Direction::DLINK);
       *m_epcWrapper->GetStream ()
         << " " << setw (8) << Simulator::Now ().GetSeconds ()
         << " " << setw (9) << app->GetAppName ()
         << " " << setw (7) << DirectionStr (Direction::DLINK)
-        << *rInfo
+        << *bInfo
         << *stats
         << std::endl;
     }

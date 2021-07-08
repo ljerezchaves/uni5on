@@ -22,7 +22,7 @@
 #include "ring-controller.h"
 #include "../logical/slice-controller.h"
 #include "../metadata/enb-info.h"
-#include "../metadata/routing-info.h"
+#include "../metadata/bearer-info.h"
 #include "transport-network.h"
 
 namespace ns3 {
@@ -96,11 +96,11 @@ RingController::NotifyConstructionCompleted (void)
 }
 
 bool
-RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
+RingController::BearerRequest (Ptr<BearerInfo> bInfo)
 {
-  NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
+  NS_LOG_FUNCTION (this << bInfo->GetTeidHex ());
 
-  Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
+  Ptr<RingInfo> ringInfo = bInfo->GetObject<RingInfo> ();
   NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
 
   // Reset the shortest path for the S1-U interface (the handover procedure may
@@ -111,8 +111,8 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
   bool s5Ok = HasAvailableResources (ringInfo, EpsIface::S5);
   if (!s5Ok)
     {
-      NS_ASSERT_MSG (rInfo->IsBlocked (), "This bearer should be blocked.");
-      NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
+      NS_ASSERT_MSG (bInfo->IsBlocked (), "This bearer should be blocked.");
+      NS_LOG_WARN ("Blocking bearer teid " << bInfo->GetTeidHex () <<
                    " because there are no resources for the S5 interface.");
     }
 
@@ -123,8 +123,8 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
   bool s1Ok = HasAvailableResources (ringInfo, EpsIface::S1, &s5Links);
   if (!s1Ok)
     {
-      NS_ASSERT_MSG (rInfo->IsBlocked (), "This bearer should be blocked.");
-      NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
+      NS_ASSERT_MSG (bInfo->IsBlocked (), "This bearer should be blocked.");
+      NS_LOG_WARN ("Blocking bearer teid " << bInfo->GetTeidHex () <<
                    " because there are no resources for the S1-U interface.");
     }
 
@@ -132,14 +132,14 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
 }
 
 bool
-RingController::BearerReserve (Ptr<RoutingInfo> rInfo)
+RingController::BearerReserve (Ptr<BearerInfo> bInfo)
 {
-  NS_LOG_FUNCTION (this << rInfo);
+  NS_LOG_FUNCTION (this << bInfo);
 
-  NS_ASSERT_MSG (!rInfo->IsBlocked (), "Bearer should not be blocked.");
-  NS_ASSERT_MSG (!rInfo->IsAggregated (), "Bearer should not be aggregated.");
+  NS_ASSERT_MSG (!bInfo->IsBlocked (), "Bearer should not be blocked.");
+  NS_ASSERT_MSG (!bInfo->IsAggregated (), "Bearer should not be aggregated.");
 
-  Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
+  Ptr<RingInfo> ringInfo = bInfo->GetObject<RingInfo> ();
   NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
 
   bool success = true;
@@ -149,13 +149,13 @@ RingController::BearerReserve (Ptr<RoutingInfo> rInfo)
 }
 
 bool
-RingController::BearerRelease (Ptr<RoutingInfo> rInfo)
+RingController::BearerRelease (Ptr<BearerInfo> bInfo)
 {
-  NS_LOG_FUNCTION (this << rInfo);
+  NS_LOG_FUNCTION (this << bInfo);
 
-  NS_ASSERT_MSG (!rInfo->IsAggregated (), "Bearer should not be aggregated.");
+  NS_ASSERT_MSG (!bInfo->IsAggregated (), "Bearer should not be aggregated.");
 
-  Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
+  Ptr<RingInfo> ringInfo = bInfo->GetObject<RingInfo> ();
   NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
 
   bool success = true;
@@ -165,14 +165,14 @@ RingController::BearerRelease (Ptr<RoutingInfo> rInfo)
 }
 
 bool
-RingController::BearerInstall (Ptr<RoutingInfo> rInfo)
+RingController::BearerInstall (Ptr<BearerInfo> bInfo)
 {
-  NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
+  NS_LOG_FUNCTION (this << bInfo->GetTeidHex ());
 
-  NS_ASSERT_MSG (rInfo->IsGwInstalled (), "Gateway rules not installed.");
-  NS_LOG_INFO ("Installing ring rules for teid " << rInfo->GetTeidHex ());
+  NS_ASSERT_MSG (bInfo->IsGwInstalled (), "Gateway rules not installed.");
+  NS_LOG_INFO ("Installing ring rules for teid " << bInfo->GetTeidHex ());
 
-  Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
+  Ptr<RingInfo> ringInfo = bInfo->GetObject<RingInfo> ();
   NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
 
   bool success = true;
@@ -182,14 +182,14 @@ RingController::BearerInstall (Ptr<RoutingInfo> rInfo)
 }
 
 bool
-RingController::BearerRemove (Ptr<RoutingInfo> rInfo)
+RingController::BearerRemove (Ptr<BearerInfo> bInfo)
 {
-  NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
+  NS_LOG_FUNCTION (this << bInfo->GetTeidHex ());
 
-  NS_ASSERT_MSG (!rInfo->IsGwInstalled (), "Gateway rules installed.");
-  NS_LOG_INFO ("Removing ring rules for teid " << rInfo->GetTeidHex ());
+  NS_ASSERT_MSG (!bInfo->IsGwInstalled (), "Gateway rules installed.");
+  NS_LOG_INFO ("Removing ring rules for teid " << bInfo->GetTeidHex ());
 
-  Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
+  Ptr<RingInfo> ringInfo = bInfo->GetObject<RingInfo> ();
   NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
 
   bool success = true;
@@ -199,16 +199,16 @@ RingController::BearerRemove (Ptr<RoutingInfo> rInfo)
 }
 
 bool
-RingController::BearerUpdate (Ptr<RoutingInfo> rInfo, Ptr<EnbInfo> dstEnbInfo)
+RingController::BearerUpdate (Ptr<BearerInfo> bInfo, Ptr<EnbInfo> dstEnbInfo)
 {
-  NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
+  NS_LOG_FUNCTION (this << bInfo->GetTeidHex ());
 
-  NS_ASSERT_MSG (rInfo->IsGwInstalled (), "Gateway rules not installed.");
-  NS_ASSERT_MSG (rInfo->GetEnbCellId () != dstEnbInfo->GetCellId (),
+  NS_ASSERT_MSG (bInfo->IsGwInstalled (), "Gateway rules not installed.");
+  NS_ASSERT_MSG (bInfo->GetEnbCellId () != dstEnbInfo->GetCellId (),
                  "Don't update UE's eNB info before BearerUpdate.");
-  NS_LOG_INFO ("Updating ring rules for teid " << rInfo->GetTeidHex ());
+  NS_LOG_INFO ("Updating ring rules for teid " << bInfo->GetTeidHex ());
 
-  Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
+  Ptr<RingInfo> ringInfo = bInfo->GetObject<RingInfo> ();
   NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
 
   // Each slice has a single P-GW and S-GW, so handover only changes the eNB.
@@ -219,18 +219,18 @@ RingController::BearerUpdate (Ptr<RoutingInfo> rInfo, Ptr<EnbInfo> dstEnbInfo)
 }
 
 void
-RingController::NotifyBearerCreated (Ptr<RoutingInfo> rInfo)
+RingController::NotifyBearerCreated (Ptr<BearerInfo> bInfo)
 {
-  NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
+  NS_LOG_FUNCTION (this << bInfo->GetTeidHex ());
 
   // Let's create its ring routing metadata.
-  Ptr<RingInfo> ringInfo = CreateObject<RingInfo> (rInfo);
+  Ptr<RingInfo> ringInfo = CreateObject<RingInfo> (bInfo);
 
   // Set the downlink shortest path for both S1-U and S5 interfaces.
   SetShortestPath (ringInfo, EpsIface::S5);
   SetShortestPath (ringInfo, EpsIface::S1);
 
-  TransportController::NotifyBearerCreated (rInfo);
+  TransportController::NotifyBearerCreated (bInfo);
 }
 
 void
@@ -349,21 +349,21 @@ RingController::BitRateRequest (
 
   // Ignoring this check for Non-GBR bearers, aggregated bearers,
   // and local-routing bearers.
-  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
-  if (rInfo->IsNonGbr () || ringInfo->IsLocalPath (iface)
-      || (rInfo->IsAggregated () && GetAggBitRateCheck () == OpMode::OFF))
+  Ptr<BearerInfo> bInfo = ringInfo->GetBearerInfo ();
+  if (bInfo->IsNonGbr () || ringInfo->IsLocalPath (iface)
+      || (bInfo->IsAggregated () && GetAggBitRateCheck () == OpMode::OFF))
     {
       return true;
     }
 
   return BitRateRequest (
-    rInfo->GetSrcDlInfraSwIdx (iface),
-    rInfo->GetDstDlInfraSwIdx (iface),
-    rInfo->GetGbrDlBitRate (),
-    rInfo->GetGbrUlBitRate (),
+    bInfo->GetSrcDlInfraSwIdx (iface),
+    bInfo->GetDstDlInfraSwIdx (iface),
+    bInfo->GetGbrDlBitRate (),
+    bInfo->GetGbrUlBitRate (),
     ringInfo->GetDlPath (iface),
-    rInfo->GetSliceId (),
-    GetSliceController (rInfo->GetSliceId ())->GetGbrBlockThs (),
+    bInfo->GetSliceId (),
+    GetSliceController (bInfo->GetSliceId ())->GetGbrBlockThs (),
     overlap);
 }
 
@@ -408,29 +408,29 @@ RingController::BitRateReserve (
 {
   NS_LOG_FUNCTION (this << ringInfo << iface);
 
-  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
-  NS_ASSERT_MSG (!rInfo->IsBlocked (), "Bearer should not be blocked.");
-  NS_ASSERT_MSG (!rInfo->IsAggregated (), "Bearer should not be aggregated.");
-  NS_ASSERT_MSG (!rInfo->IsGbrReserved (iface), "Bit rate already reserved.");
+  Ptr<BearerInfo> bInfo = ringInfo->GetBearerInfo ();
+  NS_ASSERT_MSG (!bInfo->IsBlocked (), "Bearer should not be blocked.");
+  NS_ASSERT_MSG (!bInfo->IsAggregated (), "Bearer should not be aggregated.");
+  NS_ASSERT_MSG (!bInfo->IsGbrReserved (iface), "Bit rate already reserved.");
 
-  NS_LOG_INFO ("Reserving resources for teid " << rInfo->GetTeidHex () <<
+  NS_LOG_INFO ("Reserving resources for teid " << bInfo->GetTeidHex () <<
                " on interface " << EpsIfaceStr (iface));
 
   // Ignoring bearers without guaranteed bit rate or local-routing bearers.
-  if (!rInfo->HasGbrBitRate () || ringInfo->IsLocalPath (iface))
+  if (!bInfo->HasGbrBitRate () || ringInfo->IsLocalPath (iface))
     {
       return true;
     }
-  NS_ASSERT_MSG (rInfo->IsGbr (), "Non-GBR bearers should not get here.");
+  NS_ASSERT_MSG (bInfo->IsGbr (), "Non-GBR bearers should not get here.");
 
   bool success = BitRateReserve (
-      rInfo->GetSrcDlInfraSwIdx (iface),
-      rInfo->GetDstDlInfraSwIdx (iface),
-      rInfo->GetGbrDlBitRate (),
-      rInfo->GetGbrUlBitRate (),
+      bInfo->GetSrcDlInfraSwIdx (iface),
+      bInfo->GetDstDlInfraSwIdx (iface),
+      bInfo->GetGbrDlBitRate (),
+      bInfo->GetGbrUlBitRate (),
       ringInfo->GetDlPath (iface),
-      rInfo->GetSliceId ());
-  rInfo->SetGbrReserved (iface, success);
+      bInfo->GetSliceId ());
+  bInfo->SetGbrReserved (iface, success);
   return success;
 }
 
@@ -466,24 +466,24 @@ RingController::BitRateRelease (
 {
   NS_LOG_FUNCTION (this << ringInfo << iface);
 
-  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
-  NS_LOG_INFO ("Releasing resources for teid " << rInfo->GetTeidHex () <<
+  Ptr<BearerInfo> bInfo = ringInfo->GetBearerInfo ();
+  NS_LOG_INFO ("Releasing resources for teid " << bInfo->GetTeidHex () <<
                " on interface " << EpsIfaceStr (iface));
 
   // Ignoring when there is no bit rate to release.
-  if (!rInfo->IsGbrReserved (iface))
+  if (!bInfo->IsGbrReserved (iface))
     {
       return true;
     }
 
   bool success = BitRateRelease (
-      rInfo->GetSrcDlInfraSwIdx (iface),
-      rInfo->GetDstDlInfraSwIdx (iface),
-      rInfo->GetGbrDlBitRate (),
-      rInfo->GetGbrUlBitRate (),
+      bInfo->GetSrcDlInfraSwIdx (iface),
+      bInfo->GetDstDlInfraSwIdx (iface),
+      bInfo->GetGbrDlBitRate (),
+      bInfo->GetGbrUlBitRate (),
       ringInfo->GetDlPath (iface),
-      rInfo->GetSliceId ());
-  rInfo->SetGbrReserved (iface, !success);
+      bInfo->GetSliceId ());
+  bInfo->SetGbrReserved (iface, !success);
   return success;
 }
 
@@ -551,9 +551,9 @@ RingController::GetLinkSet (
 
   NS_ASSERT_MSG (links && links->empty (), "Set of links should be empty.");
 
-  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
-  uint16_t curr = rInfo->GetSrcDlInfraSwIdx (iface);
-  uint16_t last = rInfo->GetDstDlInfraSwIdx (iface);
+  Ptr<BearerInfo> bInfo = ringInfo->GetBearerInfo ();
+  uint16_t curr = bInfo->GetSrcDlInfraSwIdx (iface);
+  uint16_t last = bInfo->GetDstDlInfraSwIdx (iface);
   RingInfo::RingPath path = ringInfo->GetDlPath (iface);
 
   // Walk through the downlink path.
@@ -647,7 +647,7 @@ RingController::HasAvailableResources (
   NS_LOG_FUNCTION (this << ringInfo << iface);
 
   // Check for the available resources on the default path.
-  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
+  Ptr<BearerInfo> bInfo = ringInfo->GetBearerInfo ();
   bool bwdOk = BitRateRequest (ringInfo, iface, overlap);
   bool cpuOk = SwitchCpuRequest (ringInfo, iface);
   bool tabOk = SwitchTableRequest (ringInfo, iface);
@@ -665,20 +665,20 @@ RingController::HasAvailableResources (
   // Set the blocked flagged when necessary.
   if (!bwdOk)
     {
-      rInfo->SetBlocked (RoutingInfo::BRTPNBWD);
-      NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
+      bInfo->SetBlocked (BearerInfo::BRTPNBWD);
+      NS_LOG_WARN ("Blocking bearer teid " << bInfo->GetTeidHex () <<
                    " because at least one transport link is overloaded.");
     }
   if (!cpuOk)
     {
-      rInfo->SetBlocked (RoutingInfo::BRTPNCPU);
-      NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
+      bInfo->SetBlocked (BearerInfo::BRTPNCPU);
+      NS_LOG_WARN ("Blocking bearer teid " << bInfo->GetTeidHex () <<
                    " because at least one transport switch is overloaded.");
     }
   if (!tabOk)
     {
-      rInfo->SetBlocked (RoutingInfo::BRTPNTAB);
-      NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
+      bInfo->SetBlocked (BearerInfo::BRTPNTAB);
+      NS_LOG_WARN ("Blocking bearer teid " << bInfo->GetTeidHex () <<
                    " because at least one transport switch table is full.");
     }
 
@@ -691,8 +691,8 @@ RingController::RulesInstall (
 {
   NS_LOG_FUNCTION (this << ringInfo << iface);
 
-  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
-  NS_ASSERT_MSG (!rInfo->IsIfInstalled (iface), "Ring rules installed.");
+  Ptr<BearerInfo> bInfo = ringInfo->GetBearerInfo ();
+  NS_ASSERT_MSG (!bInfo->IsIfInstalled (iface), "Ring rules installed.");
   bool success = true;
 
   // No rules to install for local-routing bearers.
@@ -705,78 +705,78 @@ RingController::RulesInstall (
   // Slice table -- [from higher to lower priority]
   //
   // Cookie and MBR meter ID for new rules.
-  uint32_t mbrMeterId = MeterIdMbrCreate (iface, rInfo->GetTeid ());
+  uint32_t mbrMeterId = MeterIdMbrCreate (iface, bInfo->GetTeid ());
   uint64_t cookie = CookieCreate (
-      iface, rInfo->GetPriority (), rInfo->GetTeid ());
+      iface, bInfo->GetPriority (), bInfo->GetTeid ());
 
   // Building the dpctl command.
   std::ostringstream cmd;
   cmd << "flow-mod cmd=add"
-      << ",table="  << GetSliceTable (rInfo->GetSliceId ())
+      << ",table="  << GetSliceTable (bInfo->GetSliceId ())
       << ",flags="  << FLAGS_REMOVED_OVERLAP_RESET
       << ",cookie=" << GetUint64Hex (cookie)
-      << ",prio="   << rInfo->GetPriority ()
-      << ",idle="   << rInfo->GetTimeout ();
+      << ",prio="   << bInfo->GetPriority ()
+      << ",idle="   << bInfo->GetTimeout ();
   std::string cmdStr = cmd.str ();
 
   // Configuring downlink routing.
-  if (rInfo->HasDlTraffic ())
+  if (bInfo->HasDlTraffic ())
     {
-      if (rInfo->HasMbrDl ())
+      if (bInfo->HasMbrDl ())
         {
-          NS_ASSERT_MSG (!rInfo->IsMbrDlInstalled (iface), "Meter installed.");
+          NS_ASSERT_MSG (!bInfo->IsMbrDlInstalled (iface), "Meter installed.");
 
           // Install downlink MBR meter entry on the input switch.
           std::ostringstream met;
           met << "meter-mod cmd=add,flags=1,meter=" << mbrMeterId
-              << " drop:rate=" << rInfo->GetMbrDlBitRate () / 1000;
+              << " drop:rate=" << bInfo->GetMbrDlBitRate () / 1000;
           std::string metStr = met.str ();
 
-          DpctlExecute (GetDpId (rInfo->GetSrcDlInfraSwIdx (iface)), metStr);
-          rInfo->SetMbrDlInstalled (iface, true);
+          DpctlExecute (GetDpId (bInfo->GetSrcDlInfraSwIdx (iface)), metStr);
+          bInfo->SetMbrDlInstalled (iface, true);
         }
 
       success &= RulesInstall (
-          rInfo->GetSrcDlInfraSwIdx (iface),
-          rInfo->GetDstDlInfraSwIdx (iface),
+          bInfo->GetSrcDlInfraSwIdx (iface),
+          bInfo->GetDstDlInfraSwIdx (iface),
           ringInfo->GetDlPath (iface),
-          rInfo->GetTeid (),
-          rInfo->GetDstDlAddr (iface),
-          rInfo->GetDscpValue (),
-          rInfo->IsMbrDlInstalled (iface) ? mbrMeterId : 0,
+          bInfo->GetTeid (),
+          bInfo->GetDstDlAddr (iface),
+          bInfo->GetDscpValue (),
+          bInfo->IsMbrDlInstalled (iface) ? mbrMeterId : 0,
           cmdStr);
     }
 
   // Configuring uplink routing.
-  if (rInfo->HasUlTraffic ())
+  if (bInfo->HasUlTraffic ())
     {
-      if (rInfo->HasMbrUl ())
+      if (bInfo->HasMbrUl ())
         {
-          NS_ASSERT_MSG (!rInfo->IsMbrUlInstalled (iface), "Meter installed.");
+          NS_ASSERT_MSG (!bInfo->IsMbrUlInstalled (iface), "Meter installed.");
 
           // Install uplink MBR meter entry on the input switch.
           std::ostringstream met;
           met << "meter-mod cmd=add,flags=1,meter=" << mbrMeterId
-              << " drop:rate=" << rInfo->GetMbrUlBitRate () / 1000;
+              << " drop:rate=" << bInfo->GetMbrUlBitRate () / 1000;
           std::string metStr = met.str ();
 
-          DpctlExecute (GetDpId (rInfo->GetSrcUlInfraSwIdx (iface)), metStr);
-          rInfo->SetMbrUlInstalled (iface, true);
+          DpctlExecute (GetDpId (bInfo->GetSrcUlInfraSwIdx (iface)), metStr);
+          bInfo->SetMbrUlInstalled (iface, true);
         }
 
       success &= RulesInstall (
-          rInfo->GetSrcUlInfraSwIdx (iface),
-          rInfo->GetDstUlInfraSwIdx (iface),
+          bInfo->GetSrcUlInfraSwIdx (iface),
+          bInfo->GetDstUlInfraSwIdx (iface),
           ringInfo->GetUlPath (iface),
-          rInfo->GetTeid (),
-          rInfo->GetDstUlAddr (iface),
-          rInfo->GetDscpValue (),
-          rInfo->IsMbrUlInstalled (iface) ? mbrMeterId : 0,
+          bInfo->GetTeid (),
+          bInfo->GetDstUlAddr (iface),
+          bInfo->GetDscpValue (),
+          bInfo->IsMbrUlInstalled (iface) ? mbrMeterId : 0,
           cmdStr);
     }
 
   // Update the installed flag for this interface.
-  rInfo->SetIfInstalled (iface, success);
+  bInfo->SetIfInstalled (iface, success);
   return success;
 }
 
@@ -836,24 +836,24 @@ RingController::RulesRemove (
   NS_LOG_FUNCTION (this << ringInfo << iface);
 
   // No rules installed for this interface.
-  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
-  if (!rInfo->IsIfInstalled (iface))
+  Ptr<BearerInfo> bInfo = ringInfo->GetBearerInfo ();
+  if (!bInfo->IsIfInstalled (iface))
     {
       return true;
     }
 
   // Building the dpctl command. Matching cookie for interface and TEID.
-  uint64_t cookie = CookieCreate (iface, 0, rInfo->GetTeid ());
+  uint64_t cookie = CookieCreate (iface, 0, bInfo->GetTeid ());
   std::ostringstream cmd;
   cmd << "flow-mod cmd=del"
-      << ",table="        << GetSliceTable (rInfo->GetSliceId ())
+      << ",table="        << GetSliceTable (bInfo->GetSliceId ())
       << ",cookie="       << GetUint64Hex (cookie)
       << ",cookie_mask="  << GetUint64Hex (COOKIE_IFACE_TEID_MASK);
   std::string cmdStr = cmd.str ();
 
   RingInfo::RingPath dlPath = ringInfo->GetDlPath (iface);
-  uint16_t curr = rInfo->GetSrcDlInfraSwIdx (iface);
-  uint16_t last = rInfo->GetDstDlInfraSwIdx (iface);
+  uint16_t curr = bInfo->GetSrcDlInfraSwIdx (iface);
+  uint16_t last = bInfo->GetDstDlInfraSwIdx (iface);
   while (curr != last)
     {
       DpctlExecute (GetDpId (curr), cmdStr);
@@ -862,28 +862,28 @@ RingController::RulesRemove (
   DpctlExecute (GetDpId (curr), cmdStr);
 
   // Remove installed MBR meter entries.
-  if (rInfo->HasMbr ())
+  if (bInfo->HasMbr ())
     {
-      uint32_t mbrMeterId = MeterIdMbrCreate (iface, rInfo->GetTeid ());
+      uint32_t mbrMeterId = MeterIdMbrCreate (iface, bInfo->GetTeid ());
 
       std::ostringstream met;
       met << "meter-mod cmd=del,meter=" << mbrMeterId;
       std::string metStr = met.str ();
 
-      if (rInfo->IsMbrDlInstalled (iface))
+      if (bInfo->IsMbrDlInstalled (iface))
         {
-          DpctlExecute (GetDpId (rInfo->GetSrcDlInfraSwIdx (iface)), metStr);
-          rInfo->SetMbrDlInstalled (iface, false);
+          DpctlExecute (GetDpId (bInfo->GetSrcDlInfraSwIdx (iface)), metStr);
+          bInfo->SetMbrDlInstalled (iface, false);
         }
-      if (rInfo->IsMbrUlInstalled (iface))
+      if (bInfo->IsMbrUlInstalled (iface))
         {
-          DpctlExecute (GetDpId (rInfo->GetSrcUlInfraSwIdx (iface)), metStr);
-          rInfo->SetMbrUlInstalled (iface, false);
+          DpctlExecute (GetDpId (bInfo->GetSrcUlInfraSwIdx (iface)), metStr);
+          bInfo->SetMbrUlInstalled (iface, false);
         }
     }
 
   // Update the installed flag for this interface.
-  rInfo->SetIfInstalled (iface, false);
+  bInfo->SetIfInstalled (iface, false);
   return true;
 }
 
@@ -895,15 +895,15 @@ RingController::RulesUpdate (
 
   NS_ASSERT_MSG (iface == EpsIface::S1, "Only S1-U interface supported.");
 
-  // During this procedure, the eNB was not updated in the rInfo yet.
+  // During this procedure, the eNB was not updated in the bInfo yet.
   // So, the following methods will return information for the old eNB.
-  // rInfo->GetEnbCellId ()                   // eNB cell ID
-  // rInfo->GetEnbInfraSwIdx ()               // eNB switch index
-  // rInfo->GetDstDlInfraSwIdx (EpsIface::S1) // eNB switch index
-  // rInfo->GetSrcUlInfraSwIdx (EpsIface::S1) // eNB switch index
-  // rInfo->GetEnbS1uAddr ()                  // eNB S1-U address
-  // rInfo->GetDstDlAddr (EpsIface::S1)       // eNB S1-U address
-  // rInfo->GetSrcUlAddr (EpsIface::S1)       // eNB S1-U address
+  // bInfo->GetEnbCellId ()                   // eNB cell ID
+  // bInfo->GetEnbInfraSwIdx ()               // eNB switch index
+  // bInfo->GetDstDlInfraSwIdx (EpsIface::S1) // eNB switch index
+  // bInfo->GetSrcUlInfraSwIdx (EpsIface::S1) // eNB switch index
+  // bInfo->GetEnbS1uAddr ()                  // eNB S1-U address
+  // bInfo->GetDstDlAddr (EpsIface::S1)       // eNB S1-U address
+  // bInfo->GetSrcUlAddr (EpsIface::S1)       // eNB S1-U address
   //
   // We can't just modify the OpenFlow rules in the transport switches because
   // we need to change the match fields. So, we will schedule the removal of
@@ -911,31 +911,31 @@ RingController::RulesUpdate (
   // the new routing path (may be the same), using a higher priority and the
   // dstEnbInfo metadata.
 
-  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
+  Ptr<BearerInfo> bInfo = ringInfo->GetBearerInfo ();
 
   // MBR meter ID for this bearer (won't change on update).
-  uint32_t mbrMeterId = MeterIdMbrCreate (iface, rInfo->GetTeid ());
+  uint32_t mbrMeterId = MeterIdMbrCreate (iface, bInfo->GetTeid ());
   bool success = true;
 
   // Schedule the removal of old low-priority OpenFlow rules.
-  if (rInfo->IsIfInstalled (iface))
+  if (bInfo->IsIfInstalled (iface))
     {
       // Cookie for old rules. Using old low-priority.
       uint64_t oldCookie = CookieCreate (
-          iface, rInfo->GetPriority (), rInfo->GetTeid ());
+          iface, bInfo->GetPriority (), bInfo->GetTeid ());
 
       // Building the dpctl command. Strict matching cookie.
       std::ostringstream del;
       del << "flow-mod cmd=del"
-          << ",table="        << GetSliceTable (rInfo->GetSliceId ())
+          << ",table="        << GetSliceTable (bInfo->GetSliceId ())
           << ",cookie="       << GetUint64Hex (oldCookie)
           << ",cookie_mask="  << GetUint64Hex (COOKIE_STRICT_MASK);
       std::string delStr = del.str ();
 
       // Walking through the old S1-U downlink path.
       RingInfo::RingPath dlPath = ringInfo->GetDlPath (iface);
-      uint16_t curr = rInfo->GetSgwInfraSwIdx ();
-      uint16_t last = rInfo->GetEnbInfraSwIdx ();
+      uint16_t curr = bInfo->GetSgwInfraSwIdx ();
+      uint16_t last = bInfo->GetEnbInfraSwIdx ();
       while (curr != last)
         {
           DpctlSchedule (MilliSeconds (250), GetDpId (curr), delStr);
@@ -944,63 +944,63 @@ RingController::RulesUpdate (
       DpctlSchedule (MilliSeconds (250), GetDpId (curr), delStr);
 
       // Update the installation flag.
-      rInfo->SetIfInstalled (iface, false);
+      bInfo->SetIfInstalled (iface, false);
     }
 
   // When changing the switch index, we must release any possible reserved bit
   // rate from the old path, update the ring routing path to the new (shortest)
   // one, and reserve the bit rate on the new path. For bearers with MBR meter,
   // also remove it from the old switch and install it into the new switch.
-  if (rInfo->GetEnbInfraSwIdx () != dstEnbInfo->GetInfraSwIdx ())
+  if (bInfo->GetEnbInfraSwIdx () != dstEnbInfo->GetInfraSwIdx ())
     {
       // Release the bit rate from the old path.
-      if (rInfo->IsGbrReserved (iface))
+      if (bInfo->IsGbrReserved (iface))
         {
           bool ok = BitRateRelease (
-              rInfo->GetSgwInfraSwIdx (),
-              rInfo->GetEnbInfraSwIdx (),
-              rInfo->GetGbrDlBitRate (),
-              rInfo->GetGbrUlBitRate (),
+              bInfo->GetSgwInfraSwIdx (),
+              bInfo->GetEnbInfraSwIdx (),
+              bInfo->GetGbrDlBitRate (),
+              bInfo->GetGbrUlBitRate (),
               ringInfo->GetDlPath (iface),
-              rInfo->GetSliceId ());
-          rInfo->SetGbrReserved (iface, !ok);
+              bInfo->GetSliceId ());
+          bInfo->SetGbrReserved (iface, !ok);
         }
 
       // Update the new shortest path from the S-GW to the target eNB.
       RingInfo::RingPath newDlPath = GetShortPath (
-          rInfo->GetSgwInfraSwIdx (),
+          bInfo->GetSgwInfraSwIdx (),
           dstEnbInfo->GetInfraSwIdx ());
       ringInfo->SetShortDlPath (iface, newDlPath);
 
       // Try to reserve the bit rate on the new path.
-      if (rInfo->HasGbrBitRate ())
+      if (bInfo->HasGbrBitRate ())
         {
           // Check for the available bit rate in the new path and reserve it.
           // There's no need to check for overlapping paths as the bit rate for
           // the S5 interface is already reserved.
           bool hasBitRate = BitRateRequest (
-              rInfo->GetSgwInfraSwIdx (),
+              bInfo->GetSgwInfraSwIdx (),
               dstEnbInfo->GetInfraSwIdx (),         // Target eNB switch idx.
-              rInfo->GetGbrDlBitRate (),
-              rInfo->GetGbrUlBitRate (),
+              bInfo->GetGbrDlBitRate (),
+              bInfo->GetGbrUlBitRate (),
               ringInfo->GetDlPath (iface),          // New downlink path.
-              rInfo->GetSliceId (),
-              GetSliceController (rInfo->GetSliceId ())->GetGbrBlockThs ());
+              bInfo->GetSliceId (),
+              GetSliceController (bInfo->GetSliceId ())->GetGbrBlockThs ());
           if (hasBitRate)
             {
               bool ok = BitRateReserve (
-                  rInfo->GetSgwInfraSwIdx (),
+                  bInfo->GetSgwInfraSwIdx (),
                   dstEnbInfo->GetInfraSwIdx (),     // Target eNB switch idx.
-                  rInfo->GetGbrDlBitRate (),
-                  rInfo->GetGbrUlBitRate (),
+                  bInfo->GetGbrDlBitRate (),
+                  bInfo->GetGbrUlBitRate (),
                   ringInfo->GetDlPath (iface),      // New downlink path.
-                  rInfo->GetSliceId ());
-              rInfo->SetGbrReserved (iface, ok);
+                  bInfo->GetSliceId ());
+              bInfo->SetGbrReserved (iface, ok);
             }
         }
 
       // Remove the MBR meters from the old switches.
-      if (rInfo->HasMbr ())
+      if (bInfo->HasMbr ())
         {
           std::ostringstream del;
           del << "meter-mod cmd=del,meter=" << mbrMeterId;
@@ -1009,22 +1009,22 @@ RingController::RulesUpdate (
           // In the uplink, the eNB switch will change for sure (we've already
           // tested it!). So, schedule the removal of MBR meters from the old
           // eNB switch.
-          if (rInfo->IsMbrUlInstalled (iface))
+          if (bInfo->IsMbrUlInstalled (iface))
             {
               DpctlSchedule (MilliSeconds (300),
-                             GetDpId (rInfo->GetEnbInfraSwIdx ()), delStr);
-              rInfo->SetMbrUlInstalled (iface, false);
+                             GetDpId (bInfo->GetEnbInfraSwIdx ()), delStr);
+              bInfo->SetMbrUlInstalled (iface, false);
             }
 
           // In the downlink, the S-GW switch won't change. But, there's the
           // speciall case when the new routing path becomes a local one and we
           // must remove the meter. This must be checked here, after updating
           // the new shortest path from the S-GW to the target eNB.
-          if (rInfo->IsMbrDlInstalled (iface) && ringInfo->IsLocalPath (iface))
+          if (bInfo->IsMbrDlInstalled (iface) && ringInfo->IsLocalPath (iface))
             {
               DpctlSchedule (MilliSeconds (300),
-                             GetDpId (rInfo->GetSgwInfraSwIdx ()), delStr);
-              rInfo->SetMbrDlInstalled (iface, false);
+                             GetDpId (bInfo->GetSgwInfraSwIdx ()), delStr);
+              bInfo->SetMbrDlInstalled (iface, false);
             }
         }
     }
@@ -1034,72 +1034,72 @@ RingController::RulesUpdate (
     {
       // Cookie for new rules. Using new high-priority.
       uint64_t newCookie = CookieCreate (
-          iface, rInfo->GetPriority () + 1, rInfo->GetTeid ());
+          iface, bInfo->GetPriority () + 1, bInfo->GetTeid ());
 
       // Building the dpctl command.
       std::ostringstream cmd;
       cmd << "flow-mod cmd=add"
-          << ",table="  << GetSliceTable (rInfo->GetSliceId ())
+          << ",table="  << GetSliceTable (bInfo->GetSliceId ())
           << ",flags="  << FLAGS_REMOVED_OVERLAP_RESET
           << ",cookie=" << GetUint64Hex (newCookie)
-          << ",prio="   << rInfo->GetPriority () + 1
-          << ",idle="   << rInfo->GetTimeout ();
+          << ",prio="   << bInfo->GetPriority () + 1
+          << ",idle="   << bInfo->GetTimeout ();
       std::string cmdStr = cmd.str ();
 
       // Configuring downlink routing.
-      if (rInfo->HasDlTraffic ())
+      if (bInfo->HasDlTraffic ())
         {
-          if (rInfo->HasMbrDl () && !rInfo->IsMbrDlInstalled (iface))
+          if (bInfo->HasMbrDl () && !bInfo->IsMbrDlInstalled (iface))
             {
               // Install downlink MBR meter entry on the input switch.
               std::ostringstream met;
               met << "meter-mod cmd=add,flags=1,meter=" << mbrMeterId
-                  << " drop:rate=" << rInfo->GetMbrDlBitRate () / 1000;
+                  << " drop:rate=" << bInfo->GetMbrDlBitRate () / 1000;
               std::string metStr = met.str ();
 
-              DpctlExecute (GetDpId (rInfo->GetSgwInfraSwIdx ()), metStr);
-              rInfo->SetMbrDlInstalled (iface, true);
+              DpctlExecute (GetDpId (bInfo->GetSgwInfraSwIdx ()), metStr);
+              bInfo->SetMbrDlInstalled (iface, true);
             }
 
           success &= RulesInstall (
-              rInfo->GetSgwInfraSwIdx (),
+              bInfo->GetSgwInfraSwIdx (),
               dstEnbInfo->GetInfraSwIdx (),         // Target eNB switch idx.
               ringInfo->GetDlPath (iface),          // New downlink path.
-              rInfo->GetTeid (),
+              bInfo->GetTeid (),
               dstEnbInfo->GetS1uAddr (),            // Target eNB address.
-              rInfo->GetDscpValue (),
-              rInfo->IsMbrDlInstalled (iface) ? mbrMeterId : 0,
+              bInfo->GetDscpValue (),
+              bInfo->IsMbrDlInstalled (iface) ? mbrMeterId : 0,
               cmdStr);
         }
 
       // Configuring uplink routing.
-      if (rInfo->HasUlTraffic ())
+      if (bInfo->HasUlTraffic ())
         {
-          if (rInfo->HasMbrUl () && !rInfo->IsMbrUlInstalled (iface))
+          if (bInfo->HasMbrUl () && !bInfo->IsMbrUlInstalled (iface))
             {
               // Install uplink MBR meter entry on the input switch.
               std::ostringstream met;
               met << "meter-mod cmd=add,flags=1,meter=" << mbrMeterId
-                  << " drop:rate=" << rInfo->GetMbrUlBitRate () / 1000;
+                  << " drop:rate=" << bInfo->GetMbrUlBitRate () / 1000;
               std::string metStr = met.str ();
 
               DpctlExecute (GetDpId (dstEnbInfo->GetInfraSwIdx ()), metStr);
-              rInfo->SetMbrUlInstalled (iface, true);
+              bInfo->SetMbrUlInstalled (iface, true);
             }
 
           success &= RulesInstall (
               dstEnbInfo->GetInfraSwIdx (),         // Target eNB switch idx.
-              rInfo->GetSgwInfraSwIdx (),
+              bInfo->GetSgwInfraSwIdx (),
               ringInfo->GetUlPath (iface),          // New uplink path.
-              rInfo->GetTeid (),
-              rInfo->GetSgwS1uAddr (),
-              rInfo->GetDscpValue (),
-              rInfo->IsMbrUlInstalled (iface) ? mbrMeterId : 0,
+              bInfo->GetTeid (),
+              bInfo->GetSgwS1uAddr (),
+              bInfo->GetDscpValue (),
+              bInfo->IsMbrUlInstalled (iface) ? mbrMeterId : 0,
               cmdStr);
         }
 
       // Update the installed flag for this interface.
-      rInfo->SetIfInstalled (iface, success);
+      bInfo->SetIfInstalled (iface, success);
     }
 
   return success;
@@ -1111,13 +1111,13 @@ RingController::SetShortestPath (
 {
   NS_LOG_FUNCTION (this << ringInfo);
 
-  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
+  Ptr<BearerInfo> bInfo = ringInfo->GetBearerInfo ();
   RingInfo::RingPath dlPath = GetShortPath (
-      rInfo->GetSrcDlInfraSwIdx (iface),
-      rInfo->GetDstDlInfraSwIdx (iface));
+      bInfo->GetSrcDlInfraSwIdx (iface),
+      bInfo->GetDstDlInfraSwIdx (iface));
   ringInfo->SetShortDlPath (iface, dlPath);
 
-  NS_LOG_DEBUG ("Bearer teid " << rInfo->GetTeidHex () <<
+  NS_LOG_DEBUG ("Bearer teid " << bInfo->GetTeidHex () <<
                 " interface "  << EpsIfaceStr (iface) <<
                 " short path " << RingInfo::RingPathStr (dlPath));
 }
@@ -1185,15 +1185,15 @@ RingController::SwitchCpuRequest (
   NS_LOG_FUNCTION (this << ringInfo << iface);
 
   // Ignoring this check when the BlockPolicy mode is OFF.
-  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
+  Ptr<BearerInfo> bInfo = ringInfo->GetBearerInfo ();
   if (GetSwBlockPolicy () == OpMode::OFF)
     {
       return true;
     }
 
   return SwitchCpuRequest (
-    rInfo->GetSrcDlInfraSwIdx (iface),
-    rInfo->GetDstDlInfraSwIdx (iface),
+    bInfo->GetSrcDlInfraSwIdx (iface),
+    bInfo->GetDstDlInfraSwIdx (iface),
     ringInfo->GetDlPath (iface),
     GetSwBlockThreshold ());
 }
@@ -1223,18 +1223,18 @@ RingController::SwitchTableRequest (
   NS_LOG_FUNCTION (this << ringInfo << iface);
 
   // Ignoring this check for aggregated bearers.
-  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
-  if (rInfo->IsAggregated ())
+  Ptr<BearerInfo> bInfo = ringInfo->GetBearerInfo ();
+  if (bInfo->IsAggregated ())
     {
       return true;
     }
 
   return SwitchTableRequest (
-    rInfo->GetSrcDlInfraSwIdx (iface),
-    rInfo->GetDstDlInfraSwIdx (iface),
+    bInfo->GetSrcDlInfraSwIdx (iface),
+    bInfo->GetDstDlInfraSwIdx (iface),
     ringInfo->GetDlPath (iface),
     GetSwBlockThreshold (),
-    GetSliceTable (rInfo->GetSliceId ()));
+    GetSliceTable (bInfo->GetSliceId ()));
 }
 
 bool

@@ -32,11 +32,11 @@ namespace ns3 {
 class EnbInfo;
 class PgwInfo;
 class SgwInfo;
-class RoutingInfo;
+class BearerInfo;
 class SliceController;
 
-/** Map saving Bearer ID / Routing information. */
-typedef std::map<uint8_t, Ptr<RoutingInfo>> BidRInfoMap_t;
+/** Map saving Bearer ID / bearer information. */
+typedef std::map<uint8_t, Ptr<BearerInfo>> BidBInfoMap_t;
 
 /**
  * \ingroup uni5onMeta
@@ -45,7 +45,7 @@ typedef std::map<uint8_t, Ptr<RoutingInfo>> BidRInfoMap_t;
 class UeInfo : public Object
 {
   friend class PgwuTunnelApp;
-  friend class RoutingInfo;
+  friend class BearerInfo;
   friend class SliceController;
   friend class ScenarioHelper;
   friend class StatelessMme;
@@ -109,7 +109,7 @@ public:
   //\{
   EpsBearerMeta       GetEpsBearerMeta  (uint8_t bearerId) const;
   EpsBearer           GetEpsBearer      (uint8_t bearerId) const;
-  Ptr<RoutingInfo>    GetRoutingInfo    (uint8_t bearerId) const;
+  Ptr<BearerInfo>    GetBearerInfo    (uint8_t bearerId) const;
   uint32_t            GetTeid           (uint8_t bearerId) const;
   //\}
 
@@ -120,10 +120,10 @@ public:
   const EpsBearerMetaList_t& GetEpsBearerMetaList (void) const;
 
   /**
-   * Get the map of routing information for this UE.
-   * \return The const reference to the map of routing information.
+   * Get the map of bearer information for this UE.
+   * \return The const reference to the map of bearer information.
    */
-  const BidRInfoMap_t& GetRoutingInfoMap (void) const;
+  const BidBInfoMap_t& GetBearerInfoMap (void) const;
 
   /**
    * Get the UE information from the global map for a specific IMSI.
@@ -181,11 +181,11 @@ private:
   uint8_t AddEpsBearer (Ptr<EpcTft> tft, EpsBearer bearer);
 
   /**
-   * Add an EPS routing metadata to the list of routing contexts for this UE.
+   * Add an EPS bearer metadata to the list of bearer contexts for this UE.
    * The corresponding TFT will be automatically added to the TFT classifier.
-   * \param rInfo The routing info.
+   * \param bInfo The bearer information.
    */
-  void AddRoutingInfo (Ptr<RoutingInfo> rInfo);
+  void AddBearerInfo (Ptr<BearerInfo> bInfo);
 
   /**
    * Classify the packet using the UE TFT classifier.
@@ -215,7 +215,7 @@ private:
   // Bearers and TFTs.
   EpsBearerMetaList_t     m_bearersList;          //!< Bearer contexts.
   EpcTftClassifier        m_tftClassifier;        //!< P-GW TFT classifier.
-  BidRInfoMap_t           m_rInfoByBid;           //!< Routing info map by BID.
+  BidBInfoMap_t           m_bInfoByBid;           //!< Bearer info map by BID.
 
   /** Map saving UE IMSI / UE information. */
   typedef std::map<uint64_t, Ptr<UeInfo>> ImsiUeInfoMap_t;

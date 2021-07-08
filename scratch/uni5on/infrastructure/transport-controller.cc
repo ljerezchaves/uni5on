@@ -277,9 +277,9 @@ TransportController::GetSliceTable (SliceId slice) const
 }
 
 void
-TransportController::NotifyBearerCreated (Ptr<RoutingInfo> rInfo)
+TransportController::NotifyBearerCreated (Ptr<BearerInfo> bInfo)
 {
-  NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
+  NS_LOG_FUNCTION (this << bInfo->GetTeidHex ());
 }
 
 void
@@ -468,25 +468,25 @@ TransportController::HandleFlowRemoved (
 
   NS_LOG_DEBUG ("Flow removed: " << msgStr);
 
-  // Check for existing routing information for this bearer.
-  Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-  NS_ASSERT_MSG (rInfo, "Routing metadata not found");
+  // Check for existing information for this bearer.
+  Ptr<BearerInfo> bInfo = BearerInfo::GetPointer (teid);
+  NS_ASSERT_MSG (bInfo, "Bearer metadata not found");
 
   // When a flow is removed, check the following situations:
   // 1) The application is stopped and the bearer is inactive.
-  if (!rInfo->IsActive ())
+  if (!bInfo->IsActive ())
     {
       NS_LOG_INFO ("Rule removed from switch dp " << swtch->GetDpId () <<
-                   " for inactive bearer teid " << rInfo->GetTeidHex ());
+                   " for inactive bearer teid " << bInfo->GetTeidHex ());
       return 0;
     }
 
   // 2) The application is running and the bearer is active, but the bearer
   // priority was increased and this removed flow rule is an old one.
-  if (rInfo->GetPriority () > prio)
+  if (bInfo->GetPriority () > prio)
     {
       NS_LOG_INFO ("Rule removed from switch dp " << swtch->GetDpId () <<
-                   " for bearer teid " << rInfo->GetTeidHex () <<
+                   " for bearer teid " << bInfo->GetTeidHex () <<
                    " with old priority " << prio);
       return 0;
     }
@@ -495,7 +495,7 @@ TransportController::HandleFlowRemoved (
   // priority is the same of the removed rule. This is a critical situation!
   // For some reason, the flow rule was removed so we are going to abort the
   // program to avoid wrong results.
-  NS_ASSERT_MSG (rInfo->GetPriority () == prio, "Invalid flow priority.");
+  NS_ASSERT_MSG (bInfo->GetPriority () == prio, "Invalid flow priority.");
   NS_ABORT_MSG ("Rule removed for active bearer. " <<
                 "OpenFlow flow removed message: " << msgStr);
   return 0;

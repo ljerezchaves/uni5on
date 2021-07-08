@@ -22,7 +22,7 @@
 #include <iostream>
 #include "admission-stats-calculator.h"
 #include "../metadata/ring-info.h"
-#include "../metadata/routing-info.h"
+#include "../metadata/bearer-info.h"
 #include "../metadata/ue-info.h"
 #include "../metadata/enb-info.h"
 #include "../metadata/sgw-info.h"
@@ -79,21 +79,21 @@ AdmissionStatsCalculator::GetTypeId (void)
 }
 
 void
-AdmissionStatsCalculator::NotifyBearerRequest (Ptr<const RoutingInfo> rInfo)
+AdmissionStatsCalculator::NotifyBearerRequest (Ptr<const BearerInfo> bInfo)
 {
-  NS_LOG_FUNCTION (this << rInfo);
+  NS_LOG_FUNCTION (this << bInfo);
 
-  Ptr<const UeInfo> ueInfo = rInfo->GetUeInfo ();
-  Ptr<const RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
+  Ptr<const UeInfo> ueInfo = bInfo->GetUeInfo ();
+  Ptr<const RingInfo> ringInfo = bInfo->GetObject<RingInfo> ();
   NS_ASSERT_MSG (ringInfo, "No ring information for this routing info.");
 
   // Update the slice stats.
-  SliceMetadata &slData = m_slices [rInfo->GetSliceId ()];
+  SliceMetadata &slData = m_slices [bInfo->GetSliceId ()];
   SliceMetadata &agData = m_slices [SliceId::ALL];
 
   slData.requests++;
   agData.requests++;
-  if (rInfo->IsBlocked ())
+  if (bInfo->IsBlocked ())
     {
       slData.blocked++;
       agData.blocked++;
@@ -104,7 +104,7 @@ AdmissionStatsCalculator::NotifyBearerRequest (Ptr<const RoutingInfo> rInfo)
       agData.accepted++;
       slData.activeBearers++;
       agData.activeBearers++;
-      if (rInfo->IsAggregated ())
+      if (bInfo->IsAggregated ())
         {
           slData.aggregBearers++;
           agData.aggregBearers++;
@@ -121,21 +121,21 @@ AdmissionStatsCalculator::NotifyBearerRequest (Ptr<const RoutingInfo> rInfo)
   // Save request stats into output file.
   *m_brqWrapper->GetStream ()
     << " " << setw (8) << Simulator::Now ().GetSeconds ()
-    << *rInfo
-    << *(rInfo->GetUeInfo ())
-    << *(rInfo->GetUeInfo ()->GetEnbInfo ())
-    << *(rInfo->GetUeInfo ()->GetSgwInfo ())
-    << *(rInfo->GetUeInfo ()->GetPgwInfo ())
+    << *bInfo
+    << *(bInfo->GetUeInfo ())
+    << *(bInfo->GetUeInfo ()->GetEnbInfo ())
+    << *(bInfo->GetUeInfo ()->GetSgwInfo ())
+    << *(bInfo->GetUeInfo ()->GetPgwInfo ())
     << *ringInfo
     << std::endl;
 }
 
 void
-AdmissionStatsCalculator::NotifyBearerRelease (Ptr<const RoutingInfo> rInfo)
+AdmissionStatsCalculator::NotifyBearerRelease (Ptr<const BearerInfo> bInfo)
 {
-  NS_LOG_FUNCTION (this << rInfo);
+  NS_LOG_FUNCTION (this << bInfo);
 
-  SliceMetadata &slData = m_slices [rInfo->GetSliceId ()];
+  SliceMetadata &slData = m_slices [bInfo->GetSliceId ()];
   SliceMetadata &agData = m_slices [SliceId::ALL];
   NS_ASSERT_MSG (slData.activeBearers, "No active bearer here.");
 
@@ -143,7 +143,7 @@ AdmissionStatsCalculator::NotifyBearerRelease (Ptr<const RoutingInfo> rInfo)
   agData.releases++;
   slData.activeBearers--;
   agData.activeBearers--;
-  if (rInfo->IsAggregated ())
+  if (bInfo->IsAggregated ())
     {
       slData.aggregBearers--;
       agData.aggregBearers--;
@@ -211,7 +211,7 @@ AdmissionStatsCalculator::NotifyConstructionCompleted (void)
   *m_brqWrapper->GetStream ()
     << boolalpha << right << fixed << setprecision (3)
     << " " << setw (8) << "TimeSec";
-  RoutingInfo::PrintHeader (*m_brqWrapper->GetStream ());
+  BearerInfo::PrintHeader (*m_brqWrapper->GetStream ());
   UeInfo::PrintHeader (*m_brqWrapper->GetStream ());
   EnbInfo::PrintHeader (*m_brqWrapper->GetStream ());
   SgwInfo::PrintHeader (*m_brqWrapper->GetStream ());
