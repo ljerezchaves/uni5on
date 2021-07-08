@@ -20,7 +20,7 @@
 
 #include <string>
 #include "ring-controller.h"
-#include "../logical/slice-controller.h"
+#include "../slices/slice-controller.h"
 #include "../metadata/enb-info.h"
 #include "../metadata/bearer-info.h"
 #include "transport-network.h"

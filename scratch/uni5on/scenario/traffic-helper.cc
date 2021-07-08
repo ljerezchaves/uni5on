@@ -28,9 +28,9 @@
 #include "../applications/udp-generic-client.h"
 #include "../applications/udp-generic-server.h"
 #include "../infrastructure/radio-network.h"
-#include "../logical/slice-controller.h"
-#include "../logical/slice-network.h"
-#include "../logical/traffic-manager.h"
+#include "../slices/slice-controller.h"
+#include "../slices/slice-network.h"
+#include "../slices/traffic-manager.h"
 #include "../metadata/ue-info.h"
 #include "../statistics/flow-stats-calculator.h"
 

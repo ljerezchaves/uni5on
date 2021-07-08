@@ -32,7 +32,7 @@
 #include <ns3/lte-module.h>
 #include <ns3/network-module.h>
 #include <ns3/ofswitch13-module.h>
-#include "../logical/slice-controller.h"
+#include "../slices/slice-controller.h"
 #include "../metadata/link-info.h"
 #include "../metadata/bearer-info.h"
 #include "../uni5on-common.h"

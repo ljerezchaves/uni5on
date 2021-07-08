@@ -25,7 +25,7 @@
 #include "pgw-info.h"
 #include "bearer-info.h"
 #include "sgw-info.h"
-#include "../logical/slice-controller.h"
+#include "../slices/slice-controller.h"
 
 using namespace std;
 

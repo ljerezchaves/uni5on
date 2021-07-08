@@ -21,7 +21,7 @@
 #include <iomanip>
 #include <iostream>
 #include "pgw-info.h"
-#include "../logical/slice-controller.h"
+#include "../slices/slice-controller.h"
 
 using namespace std;
 

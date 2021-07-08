@@ -21,7 +21,7 @@
 #include <iomanip>
 #include <iostream>
 #include "link-info.h"
-#include "../logical/gtpu-tag.h"
+#include "../slices/gtpu-tag.h"
 
 using namespace std;
 

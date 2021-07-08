@@ -21,7 +21,7 @@
 #include <iomanip>
 #include <iostream>
 #include "enb-info.h"
-#include "../logical/enb-application.h"
+#include "../slices/enb-application.h"
 
 using namespace std;
 
