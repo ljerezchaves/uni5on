@@ -390,6 +390,9 @@ EnableVerbose (bool enable)
       // Scenario components.
       LogComponentEnable ("ScenarioHelper",           logLevelWarnInfo);
       LogComponentEnable ("TrafficHelper",            logLevelWarnInfo);
+      LogComponentEnable ("MbbTrafficHelper",         logLevelWarnInfo);
+      LogComponentEnable ("MtcTrafficHelper",         logLevelWarnInfo);
+      LogComponentEnable ("TmpTrafficHelper",         logLevelWarnInfo);
 
       // Infrastructure components.
       LogComponentEnable ("QosQueue",                 logLevelWarnInfo);
