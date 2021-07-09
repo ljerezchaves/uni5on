@@ -859,26 +859,4 @@ TrafficHelper::InstallAppDefault (ApplicationHelper& helper)
   clientApp->SetEpsBearerId (bid);
 }
 
-uint8_t
-TrafficHelper::Dscp2Tos (Ipv4Header::DscpType dscp) const
-{
-  switch (dscp)
-    {
-    case Ipv4Header::DSCP_EF:
-      return 0x10;
-    case Ipv4Header::DSCP_AF41:
-      return 0x18;
-    case Ipv4Header::DSCP_AF32:
-    case Ipv4Header::DSCP_AF31:
-    case Ipv4Header::DSCP_AF21:
-    case Ipv4Header::DSCP_AF11:
-      return 0x00;
-    case Ipv4Header::DscpDefault:
-      return 0x08;
-    default:
-      NS_ABORT_MSG ("No ToS mapped value for DSCP " << dscp);
-      return 0x00;
-    }
-}
-
 } // namespace ns3
