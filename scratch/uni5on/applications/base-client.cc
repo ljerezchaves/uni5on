@@ -20,7 +20,6 @@
 
 #include "base-client.h"
 #include "base-server.h"
-#include "../uni5on-common.h"
 
 #undef NS_LOG_APPEND_CONTEXT
 #define NS_LOG_APPEND_CONTEXT                             \
@@ -162,7 +161,9 @@ std::string
 BaseClient::GetTeidHex (void) const
 {
   // No log to avoid infinite recursion.
-  return GetUint32Hex (m_teid);
+  char teidStr [11];
+  sprintf (teidStr, "0x%08x", m_teid);
+  return std::string (teidStr);
 }
 
 Ptr<BaseServer>
