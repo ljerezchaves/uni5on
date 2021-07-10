@@ -87,7 +87,7 @@ TrafficManager::GetTypeId (void)
 }
 
 void
-TrafficManager::AddBaseClient (Ptr<BaseClient> app)
+TrafficManager::AddClientApplication (Ptr<BaseClient> app)
 {
   NS_LOG_FUNCTION (this << app);
 

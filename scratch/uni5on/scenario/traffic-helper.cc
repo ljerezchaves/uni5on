@@ -802,7 +802,7 @@ TrafficHelper::InstallAppDedicated (
       ueInfo->GetNode (), m_webNode,
       ueInfo->GetAddr (), m_webAddr,
       port, Dscp2Tos (Qci2Dscp (bearer.qci)));
-  ueInfo->GetTrafficManager ()->AddBaseClient (clientApp);
+  ueInfo->GetTrafficManager ()->AddClientApplication (clientApp);
 
   // Setup common packet filter parameters.
   filter.remoteAddress   = m_webAddr;
@@ -841,7 +841,7 @@ TrafficHelper::InstallAppDefault (
       ueInfo->GetNode (), m_webNode,
       ueInfo->GetAddr (), m_webAddr,
       port, Dscp2Tos (Qci2Dscp (bearer.qci)));
-  ueInfo->GetTrafficManager ()->AddBaseClient (clientApp);
+  ueInfo->GetTrafficManager ()->AddClientApplication (clientApp);
   clientApp->SetEpsBearer (bearer);
   clientApp->SetEpsBearerId (bid);
 }

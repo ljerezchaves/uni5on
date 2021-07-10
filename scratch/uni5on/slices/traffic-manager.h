@@ -54,7 +54,7 @@ public:
    * Add a new application to this manager.
    * \param app The application pointer.
    */
-  void AddBaseClient (Ptr<BaseClient> app);
+  void AddClientApplication (Ptr<BaseClient> app);
 
   /**
    * Notify this manager when a new session is created in the controller.
