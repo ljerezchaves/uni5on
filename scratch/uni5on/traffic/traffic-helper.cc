@@ -19,6 +19,8 @@
  */
 
 #include "traffic-helper.h"
+#include "traffic-manager.h"
+#include "movie-helper.h"
 #include "../applications/http-client.h"
 #include "../applications/http-server.h"
 #include "../applications/live-video-client.h"
@@ -27,11 +29,9 @@
 #include "../applications/recorded-video-server.h"
 #include "../applications/udp-generic-client.h"
 #include "../applications/udp-generic-server.h"
-#include "../applications/movie-helper.h"
 #include "../infrastructure/radio-network.h"
 #include "../slices/slice-controller.h"
 #include "../slices/slice-network.h"
-#include "../slices/traffic-manager.h"
 #include "../metadata/ue-info.h"
 #include "../statistics/flow-stats-calculator.h"
 

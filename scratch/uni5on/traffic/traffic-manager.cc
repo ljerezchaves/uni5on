@@ -19,7 +19,7 @@
  */
 
 #include "traffic-manager.h"
-#include "slice-controller.h"
+#include "../slices/slice-controller.h"
 #include "../applications/base-client.h"
 #include "../metadata/bearer-info.h"
 #include "../metadata/ue-info.h"

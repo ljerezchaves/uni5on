@@ -21,7 +21,7 @@
 #ifndef MBB_TRAFFIC_HELPER_H
 #define MBB_TRAFFIC_HELPER_H
 
-#include "traffic-helper.h"
+#include "../traffic/traffic-helper.h"
 
 namespace ns3 {
 

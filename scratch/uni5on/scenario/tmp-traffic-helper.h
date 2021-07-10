@@ -21,7 +21,7 @@
 #ifndef TMP_TRAFFIC_HELPER_H
 #define TMP_TRAFFIC_HELPER_H
 
-#include "traffic-helper.h"
+#include "../traffic/traffic-helper.h"
 
 namespace ns3 {
 

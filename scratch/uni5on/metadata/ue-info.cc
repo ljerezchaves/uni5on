@@ -26,7 +26,7 @@
 #include "bearer-info.h"
 #include "sgw-info.h"
 #include "../slices/slice-controller.h"
-#include "../slices/traffic-manager.h"
+#include "../traffic/traffic-manager.h"
 
 using namespace std;
 

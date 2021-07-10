@@ -20,7 +20,7 @@
 
 #include <ns3/csma-module.h>
 #include "scenario-helper.h"
-#include "traffic-helper.h"
+#include "../traffic/traffic-helper.h"
 #include "../infrastructure/transport-controller.h"
 #include "../infrastructure/radio-network.h"
 #include "../infrastructure/ring-network.h"
