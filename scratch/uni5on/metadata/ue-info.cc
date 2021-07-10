@@ -26,6 +26,7 @@
 #include "bearer-info.h"
 #include "sgw-info.h"
 #include "../slices/slice-controller.h"
+#include "../slices/traffic-manager.h"
 
 using namespace std;
 
@@ -38,14 +39,18 @@ NS_OBJECT_ENSURE_REGISTERED (UeInfo);
 UeInfo::ImsiUeInfoMap_t UeInfo::m_ueInfoByImsi;
 UeInfo::Ipv4UeInfoMap_t UeInfo::m_ueInfoByAddr;
 
-UeInfo::UeInfo (uint64_t imsi, Ipv4Address addr,
-                Ptr<SliceController> sliceCtrl)
+UeInfo::UeInfo (uint64_t imsi, Ipv4Address addr, Ipv4Mask mask, Ptr<Node> node,
+                Ptr<NetDevice> device, Ptr<SliceController> controller)
   : m_addr (addr),
+  m_dev (device),
   m_imsi (imsi),
+  m_mask (mask),
+  m_node (node),
   m_enbInfo (0),
   m_pgwInfo (0),
   m_sgwInfo (0),
-  m_sliceCtrl (sliceCtrl),
+  m_sliceCtrl (controller),
+  m_tfcManager (0),
   m_mmeUeS1Id (imsi),
   m_enbUeS1Id (0)
 {
@@ -94,6 +99,14 @@ UeInfo::GetDefaultTeid (void) const
   return GetBearerInfo (GetDefaultBid ())->GetTeid ();
 }
 
+Ptr<NetDevice>
+UeInfo::GetDevice (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_dev;
+}
+
 uint16_t
 UeInfo::GetEnbCellId (void) const
 {
@@ -127,6 +140,14 @@ UeInfo::GetImsi (void) const
   return m_imsi;
 }
 
+Ipv4Mask
+UeInfo::GetMask (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_mask;
+}
+
 uint64_t
 UeInfo::GetMmeUeS1Id (void) const
 {
@@ -141,6 +162,14 @@ UeInfo::GetNBearers (void) const
   NS_LOG_FUNCTION (this);
 
   return m_bearersList.size ();
+}
+
+Ptr<Node>
+UeInfo::GetNode (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_node;
 }
 
 Ptr<PgwInfo>
@@ -190,6 +219,14 @@ UeInfo::GetSliceCtrl (void) const
   NS_LOG_FUNCTION (this);
 
   return m_sliceCtrl;
+}
+
+Ptr<TrafficManager>
+UeInfo::GetTrafficManager (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_tfcManager;
 }
 
 UeInfo::EpsBearerMeta

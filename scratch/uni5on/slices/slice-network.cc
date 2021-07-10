@@ -670,7 +670,8 @@ SliceNetwork::CreateUes (void)
     {
       m_ueDevices.Get (i)->GetAttribute ("Imsi", imsiValue);
       Ptr<UeInfo> ueInfo = CreateObject<UeInfo> (
-          imsiValue.Get (), ueIfaces.GetAddress (i), m_controllerApp);
+          imsiValue.Get (), ueIfaces.GetAddress (i), m_ueMask,
+          m_ueNodes.Get (i), m_ueDevices.Get (i), m_controllerApp);
       NS_LOG_DEBUG ("UE IMSI " << imsiValue.Get () <<
                     " configured with IP " << ueInfo->GetAddr ());
     }

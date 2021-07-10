@@ -33,6 +33,7 @@ class EnbInfo;
 class PgwInfo;
 class SgwInfo;
 class BearerInfo;
+class TrafficManager;
 class SliceController;
 
 /** Map saving Bearer ID / bearer information. */
@@ -57,9 +58,13 @@ public:
    * Complete constructor.
    * \param imsi The IMSI identifier.
    * \param addr The UE IP address.
-   * \param sliceCtrl The slice controller application.
+   * \param mask The UE IP mask.
+   * \param node The UE node.
+   * \param device The LTE UE device.
+   * \param controller The slice controller application.
    */
-  UeInfo (uint64_t imsi, Ipv4Address addr, Ptr<SliceController> sliceCtrl);
+  UeInfo (uint64_t imsi, Ipv4Address addr, Ipv4Mask mask, Ptr<Node> node,
+          Ptr<NetDevice> device, Ptr<SliceController> controller);
   virtual ~UeInfo (); //!< Dummy destructor, see DoDispose.
 
   /**
@@ -84,21 +89,25 @@ public:
    * \return The requested information.
    */
   //\{
-  Ipv4Address           GetAddr         (void) const;
-  uint8_t               GetDefaultBid   (void) const;
-  uint32_t              GetDefaultTeid  (void) const;
-  uint16_t              GetEnbCellId    (void) const;
-  Ptr<EnbInfo>          GetEnbInfo      (void) const;
-  uint64_t              GetEnbUeS1Id    (void) const;
-  uint64_t              GetImsi         (void) const;
-  uint64_t              GetMmeUeS1Id    (void) const;
-  uint16_t              GetNBearers     (void) const;
-  Ptr<PgwInfo>          GetPgwInfo      (void) const;
-  EpcS11SapSgw*         GetS11SapSgw    (void) const;
-  EpcS1apSapEnb*        GetS1apSapEnb   (void) const;
-  Ptr<SgwInfo>          GetSgwInfo      (void) const;
-  Ptr<SliceController>  GetSliceCtrl    (void) const;
-  SliceId               GetSliceId      (void) const;
+  Ipv4Address           GetAddr           (void) const;
+  uint8_t               GetDefaultBid     (void) const;
+  uint32_t              GetDefaultTeid    (void) const;
+  Ptr<NetDevice>        GetDevice         (void) const;
+  uint16_t              GetEnbCellId      (void) const;
+  Ptr<EnbInfo>          GetEnbInfo        (void) const;
+  uint64_t              GetEnbUeS1Id      (void) const;
+  uint64_t              GetImsi           (void) const;
+  Ipv4Mask              GetMask           (void) const;
+  uint64_t              GetMmeUeS1Id      (void) const;
+  uint16_t              GetNBearers       (void) const;
+  Ptr<Node>             GetNode           (void) const;
+  Ptr<PgwInfo>          GetPgwInfo        (void) const;
+  EpcS11SapSgw*         GetS11SapSgw      (void) const;
+  EpcS1apSapEnb*        GetS1apSapEnb     (void) const;
+  Ptr<SgwInfo>          GetSgwInfo        (void) const;
+  Ptr<SliceController>  GetSliceCtrl      (void) const;
+  SliceId               GetSliceId        (void) const;
+  Ptr<TrafficManager>   GetTrafficManager (void) const;
   //\}
 
   /**
@@ -109,7 +118,7 @@ public:
   //\{
   EpsBearerMeta       GetEpsBearerMeta  (uint8_t bearerId) const;
   EpsBearer           GetEpsBearer      (uint8_t bearerId) const;
-  Ptr<BearerInfo>    GetBearerInfo    (uint8_t bearerId) const;
+  Ptr<BearerInfo>     GetBearerInfo     (uint8_t bearerId) const;
   uint32_t            GetTeid           (uint8_t bearerId) const;
   //\}
 
@@ -202,13 +211,17 @@ private:
 
   // UE metadata.
   Ipv4Address             m_addr;                 //!< UE IP address.
+  Ptr<NetDevice>          m_dev;                  //!< LTE UE device.
   uint64_t                m_imsi;                 //!< UE IMSI.
+  Ipv4Mask                m_mask;                 //!< UE IP mask.
+  Ptr<Node>               m_node;                 //!< UE node.
   Ptr<EnbInfo>            m_enbInfo;              //!< Serving eNB info.
   Ptr<PgwInfo>            m_pgwInfo;              //!< Serving P-GW info.
   Ptr<SgwInfo>            m_sgwInfo;              //!< Serving S-GW info.
 
   // Control-plane communication.
   Ptr<SliceController>    m_sliceCtrl;            //!< Slice controller.
+  Ptr<TrafficManager>     m_tfcManager;           //!< UE traffic manager.
   uint64_t                m_mmeUeS1Id;            //!< ID for S1-AP at MME.
   uint16_t                m_enbUeS1Id;            //!< ID for S1-AP at eNB.
 
