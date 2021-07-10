@@ -27,6 +27,7 @@
 #include "../applications/recorded-video-server.h"
 #include "../applications/udp-generic-client.h"
 #include "../applications/udp-generic-server.h"
+#include "../applications/movie-helper.h"
 #include "../infrastructure/radio-network.h"
 #include "../slices/slice-controller.h"
 #include "../slices/slice-network.h"
@@ -41,31 +42,6 @@ NS_OBJECT_ENSURE_REGISTERED (TrafficHelper);
 
 // Initial port number
 uint16_t TrafficHelper::m_port = 10000;
-
-// Trace files directory
-const std::string TrafficHelper::m_videoDir = "./movies/";
-
-// Trace files are sorted in increasing average GBR bit rate
-const std::string TrafficHelper::m_videoTrace [] = {
-  "office-cam-low.txt", "office-cam-medium.txt", "office-cam-high.txt",
-  "first-contact.txt", "star-wars-iv.txt", "ard-talk.txt", "mr-bean.txt",
-  "n3-talk.txt", "the-firm.txt", "ard-news.txt", "jurassic-park.txt",
-  "from-dusk-till-dawn.txt", "formula1.txt", "soccer.txt",
-  "silence-of-the-lambs.txt"
-};
-
-// These values were obtained from observing the first 180 seconds of video
-const uint64_t TrafficHelper::m_gbrBitRate [] = {
-  120000, 128000, 450000, 400000, 500000, 500000, 600000, 650000, 700000,
-  750000, 770000, 800000, 1100000, 1300000, 1500000
-};
-
-// These values were obtained from observing the first 180 seconds of video
-const uint64_t TrafficHelper::m_mbrBitRate [] = {
-  128000, 600000, 500000, 650000, 600000, 700000, 800000, 750000, 800000,
-  1250000, 1000000, 1000000, 1200000, 1500000, 2000000
-};
-
 
 // ------------------------------------------------------------------------ //
 TrafficHelper::TrafficHelper ()
@@ -177,8 +153,6 @@ TrafficHelper::DoDispose ()
   m_poissonRng = 0;
   m_lteHelper = 0;
   m_webNode = 0;
-  m_gbrVidRng = 0;
-  m_nonVidRng = 0;
   Object::DoDispose ();
 }
 
@@ -209,15 +183,6 @@ TrafficHelper::NotifyConstructionCompleted ()
   m_managerFac.Set ("StartProb", DoubleValue (m_initialProb));
   m_managerFac.Set ("StartTime", TimeValue (m_startAppsAt));
   m_managerFac.Set ("StopTime", TimeValue (m_stopAppsAt));
-
-  // Configure random video selections.
-  m_gbrVidRng = CreateObject<UniformRandomVariable> ();
-  m_gbrVidRng->SetAttribute ("Min", DoubleValue (0));
-  m_gbrVidRng->SetAttribute ("Max", DoubleValue (2));
-
-  m_nonVidRng = CreateObject<UniformRandomVariable> ();
-  m_nonVidRng->SetAttribute ("Min", DoubleValue (3));
-  m_nonVidRng->SetAttribute ("Max", DoubleValue (14));
 
   // Configure the helpers and install the applications.
   ConfigureHelpers ();
@@ -483,24 +448,6 @@ TrafficHelper::GetNextPortNo ()
   return m_port++;
 }
 
-const std::string
-TrafficHelper::GetVideoFilename (uint8_t idx)
-{
-  return m_videoDir + m_videoTrace [idx];
-}
-
-const DataRate
-TrafficHelper::GetVideoGbr (uint8_t idx)
-{
-  return DataRate (m_gbrBitRate [idx]);
-}
-
-const DataRate
-TrafficHelper::GetVideoMbr (uint8_t idx)
-{
-  return DataRate (m_mbrBitRate [idx]);
-}
-
 void
 TrafficHelper::InstallApplications ()
 {
@@ -560,16 +507,17 @@ TrafficHelper::InstallApplications ()
             // Video call over dedicated GBR EPS bearer.
             // QCI 2 is typically associated with conversational live video
             // streaming.
-            int videoIdx = m_gbrVidRng->GetInteger ();
+            MovieHelper::VideoTrace video;
+            video = MovieHelper::GetRandomVideo (QosType::GBR);
             m_livVideoHelper.SetServerAttribute (
-              "TraceFilename", StringValue (GetVideoFilename (videoIdx)));
+              "TraceFilename", StringValue (video.name));
             m_livVideoHelper.SetClientAttribute (
-              "TraceFilename", StringValue (GetVideoFilename (videoIdx)));
+              "TraceFilename", StringValue (video.name));
             GbrQosInformation qos;
-            qos.gbrDl = GetVideoGbr (videoIdx).GetBitRate ();
-            qos.gbrUl = GetVideoGbr (videoIdx).GetBitRate ();
-            qos.mbrDl = GetVideoMbr (videoIdx).GetBitRate ();
-            qos.mbrUl = GetVideoMbr (videoIdx).GetBitRate ();
+            qos.gbrDl = video.gbr.GetBitRate ();
+            qos.gbrUl = video.gbr.GetBitRate ();
+            qos.mbrDl = video.mbr.GetBitRate ();
+            qos.mbrUl = video.mbr.GetBitRate ();
             EpsBearer bearer (EpsBearer::GBR_CONV_VIDEO, qos);
 
             // Downlink UDP traffic.
@@ -608,11 +556,12 @@ TrafficHelper::InstallApplications ()
             // Live video streaming over dedicated Non-GBR EPS bearer.
             // QCI 7 is typically associated with voice, live video streaming
             // and interactive games.
-            int videoIdx = m_nonVidRng->GetInteger ();
+            MovieHelper::VideoTrace video;
+            video = MovieHelper::GetRandomVideo (QosType::NON);
             m_livVideoHelper.SetServerAttribute (
-              "TraceFilename", StringValue (GetVideoFilename (videoIdx)));
+              "TraceFilename", StringValue (video.name));
             m_livVideoHelper.SetClientAttribute (
-              "TraceFilename", StringValue (GetVideoFilename (videoIdx)));
+              "TraceFilename", StringValue (video.name));
             EpsBearer bearer (EpsBearer::NGBR_VOICE_VIDEO_GAMING);
 
             // Downlink UDP traffic.
@@ -627,9 +576,10 @@ TrafficHelper::InstallApplications ()
             // TCP-based applications. It could be used for a dedicated
             // 'premium bearer' for any subscriber, or could be used for the
             // default bearer of a UE for 'premium subscribers'.
-            int videoIdx = m_nonVidRng->GetInteger ();
+            MovieHelper::VideoTrace video;
+            video = MovieHelper::GetRandomVideo (QosType::NON);
             m_recVideoHelper.SetServerAttribute (
-              "TraceFilename", StringValue (GetVideoFilename (videoIdx)));
+              "TraceFilename", StringValue (video.name));
             EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM);
 
             // Bidirectional TCP traffic.
@@ -747,12 +697,13 @@ TrafficHelper::InstallApplications ()
             // Live video streaming over dedicated Non-GBR EPS bearer.
             // QCI 7 is typically associated with voice, live video streaming
             // and interactive games.
-            int videoIdxDl = m_nonVidRng->GetInteger ();
-            int videoIdxUl = m_nonVidRng->GetInteger ();
+            MovieHelper::VideoTrace videoDl, videoUl;
+            videoDl = MovieHelper::GetRandomVideo (QosType::NON);
+            videoUl = MovieHelper::GetRandomVideo (QosType::NON);
             m_livVideoHelper.SetServerAttribute (
-              "TraceFilename", StringValue (GetVideoFilename (videoIdxDl)));
+              "TraceFilename", StringValue (videoDl.name));
             m_livVideoHelper.SetClientAttribute (
-              "TraceFilename", StringValue (GetVideoFilename (videoIdxUl)));
+              "TraceFilename", StringValue (videoUl.name));
             EpsBearer bearer (EpsBearer::NGBR_VOICE_VIDEO_GAMING);
 
             // Downlink UDP traffic.

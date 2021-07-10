@@ -182,6 +182,7 @@ typedef enum
 typedef enum
 {
   // Don't change the order. Enum values are used as array indexes.
+  // The last two enum items must be ALL and UNKN, in this order.
   MBB  = 0,  //!< Slice for MBB UEs.
   MTC  = 1,  //!< Slice for MTC UEs.
   TMP  = 2,  //!< Slice for TMP UEs.

@@ -74,27 +74,6 @@ private:
   static uint16_t GetNextPortNo ();
 
   /**
-   * Get complete filename for video trace files.
-   * \param idx The video index (see movies folder).
-   * \return The complete file path.
-   */
-  static const std::string GetVideoFilename (uint8_t idx);
-
-  /**
-   * Get the GBR data rate for video trace files.
-   * \param idx The video index (see movies folder).
-   * \return The gbr video data rate.
-   */
-  static const DataRate GetVideoGbr (uint8_t idx);
-
-  /**
-   * Get the MBR data rate for video trace files.
-   * \param idx The video index (see movies folder).
-   * \return The mbr video data rate.
-   */
-  static const DataRate GetVideoMbr (uint8_t idx);
-
-  /**
    * Install a traffic manager into each UE and configure the EPS bearers and
    * TFT packet filters for enable applications
    * \attention The QCIs used here for each application are strongly related
@@ -169,14 +148,6 @@ private:
 
   // Radio network.
   Ptr<LteHelper>              m_lteHelper;        //!< LTE helper.
-
-  // Video traces.
-  Ptr<UniformRandomVariable>  m_gbrVidRng;        //!< GBR random live video.
-  Ptr<UniformRandomVariable>  m_nonVidRng;        //!< Non-GBR random video.
-  static const std::string    m_videoDir;         //!< Video trace directory.
-  static const std::string    m_videoTrace [];    //!< Video trace filenames.
-  static const uint64_t       m_gbrBitRate [];    //!< Video gbr bit rate.
-  static const uint64_t       m_mbrBitRate [];    //!< Video max bit rate.
 };
 
 } // namespace ns3
