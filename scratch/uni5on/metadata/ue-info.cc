@@ -373,6 +373,15 @@ UeInfo::SetSgwInfo (Ptr<SgwInfo> value)
   m_sgwInfo = value;
 }
 
+void
+UeInfo::SetTrafficManager (Ptr<TrafficManager> value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_tfcManager = value;
+  m_node->AggregateObject (value);
+}
+
 uint8_t
 UeInfo::AddEpsBearer (Ptr<EpcTft> tft, EpsBearer bearer)
 {

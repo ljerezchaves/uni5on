@@ -50,6 +50,7 @@ class UeInfo : public Object
   friend class SliceController;
   friend class ScenarioHelper;
   friend class StatelessMme;
+  friend class TrafficHelper;
   friend class TransportStatsCalculator;
   friend class TrafficStatsCalculator;
 
@@ -174,10 +175,11 @@ private:
    * \param value The value to set.
    */
   //\{
-  void SetEnbUeS1Id (uint64_t value);
-  void SetEnbInfo   (Ptr<EnbInfo> value);
-  void SetPgwInfo   (Ptr<PgwInfo> value);
-  void SetSgwInfo   (Ptr<SgwInfo> value);
+  void SetEnbUeS1Id       (uint64_t value);
+  void SetEnbInfo         (Ptr<EnbInfo> value);
+  void SetPgwInfo         (Ptr<PgwInfo> value);
+  void SetSgwInfo         (Ptr<SgwInfo> value);
+  void SetTrafficManager  (Ptr<TrafficManager> value);
   //\}
 
   /**
