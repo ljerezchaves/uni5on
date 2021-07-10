@@ -261,20 +261,12 @@ SliceNetwork::EnablePcap (std::string prefix, bool promiscuous, bool ofchannel,
     }
 }
 
-NodeContainer
-SliceNetwork::GetUeNodes (void) const
+std::vector<uint64_t>
+SliceNetwork::GetUeImsiList (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_ueNodes;
-}
-
-NetDeviceContainer
-SliceNetwork::GetUeDevices (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_ueDevices;
+  return m_ueImsiList;
 }
 
 Ptr<Node>
@@ -633,12 +625,13 @@ SliceNetwork::CreateUes (void)
   NS_ASSERT_MSG (m_sgwInfo, "S-GW not configured yet.");
 
   // Create the UE nodes and set their names.
-  m_ueNodes.Create (m_nUes);
+  NodeContainer ueNodes;
+  ueNodes.Create (m_nUes);
   for (uint32_t i = 0; i < m_nUes; i++)
     {
       std::ostringstream name;
       name << m_sliceIdStr + "_ue" << i + 1;
-      Names::Add (name.str (), m_ueNodes.Get (i));
+      Names::Add (name.str (), ueNodes.Get (i));
     }
 
   // Configure UE positioning and mobility, considering possible restrictions
@@ -657,21 +650,23 @@ SliceNetwork::CreateUes (void)
     }
 
   // Install LTE protocol stack into UE nodes.
-  m_ueDevices = m_radio->InstallUeDevices (m_ueNodes, mobilityHelper);
+  NetDeviceContainer ueDevices;
+  ueDevices = m_radio->InstallUeDevices (ueNodes, mobilityHelper);
 
   // Install TCP/IP protocol stack into UE nodes and assign IP address.
   InternetStackHelper internet;
-  internet.Install (m_ueNodes);
-  Ipv4InterfaceContainer ueIfaces = m_ueAddrHelper.Assign (m_ueDevices);
+  internet.Install (ueNodes);
+  Ipv4InterfaceContainer ueIfaces = m_ueAddrHelper.Assign (ueDevices);
 
   // Saving UE metadata.
   UintegerValue imsiValue;
-  for (uint32_t i = 0; i < m_ueDevices.GetN (); i++)
+  for (uint32_t i = 0; i < ueDevices.GetN (); i++)
     {
-      m_ueDevices.Get (i)->GetAttribute ("Imsi", imsiValue);
+      ueDevices.Get (i)->GetAttribute ("Imsi", imsiValue);
+      m_ueImsiList.push_back (imsiValue.Get ());
       Ptr<UeInfo> ueInfo = CreateObject<UeInfo> (
-          imsiValue.Get (), ueIfaces.GetAddress (i), m_ueMask,
-          m_ueNodes.Get (i), m_ueDevices.Get (i), m_controllerApp);
+          imsiValue.Get (), ueIfaces.GetAddress (i), ueIfaces.GetMask (i),
+          ueNodes.Get (i), ueDevices.Get (i), m_controllerApp);
       NS_LOG_DEBUG ("UE IMSI " << imsiValue.Get () <<
                     " configured with IP " << ueInfo->GetAddr ());
     }
@@ -679,7 +674,7 @@ SliceNetwork::CreateUes (void)
   // Specify static routes for each UE to its default P-GW.
   Ipv4StaticRoutingHelper ipv4RoutingHelper;
   NodeContainer::Iterator it;
-  for (it = m_ueNodes.Begin (); it != m_ueNodes.End (); it++)
+  for (it = ueNodes.Begin (); it != ueNodes.End (); it++)
     {
       Ptr<Ipv4StaticRouting> ueStaticRouting =
         ipv4RoutingHelper.GetStaticRouting ((*it)->GetObject<Ipv4> ());
@@ -687,7 +682,7 @@ SliceNetwork::CreateUes (void)
     }
 
   // Attach UE to the eNBs using initial cell selection.
-  m_radio->AttachUeDevices (m_ueDevices);
+  m_radio->AttachUeDevices (ueDevices);
 }
 
 } // namespace ns3

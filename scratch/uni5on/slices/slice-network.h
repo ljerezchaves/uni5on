@@ -61,16 +61,10 @@ public:
                    bool pgwDevices, bool sgiDevices);
 
   /**
-   * Get the UE nodes.
-   * \return The UE node container.
+   * Get the list of IMSI values for UEs in this slice.
+   * \return The list of IMSI values.
    */
-  NodeContainer GetUeNodes (void) const;
-
-  /**
-   * Get the UE LTE network devices.
-   * \return The UE network device container.
-   */
-  NetDeviceContainer GetUeDevices (void) const;
+  std::vector<uint64_t> GetUeImsiList (void) const;
 
   /**
    * Get the Internet web server node.
@@ -133,8 +127,7 @@ private:
   bool                          m_ueMobility;       //!< Enable UE mobility.
   Ptr<RandomVariableStream>     m_ueMobPause;       //!< UE random mob pause.
   Ptr<RandomVariableStream>     m_ueMobSpeed;       //!< UE random mob speed.
-  NodeContainer                 m_ueNodes;          //!< UE nodes.
-  NetDeviceContainer            m_ueDevices;        //!< UE devices.
+  std::vector<uint64_t>         m_ueImsiList;       //!< UE IMSIs.
   Ipv4AddressHelper             m_ueAddrHelper;     //!< UE address helper.
   Ipv4Address                   m_ueAddr;           //!< UE network address.
   Ipv4Mask                      m_ueMask;           //!< UE network mask.

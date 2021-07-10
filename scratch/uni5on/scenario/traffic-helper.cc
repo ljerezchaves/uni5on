@@ -177,9 +177,6 @@ TrafficHelper::DoDispose ()
   m_poissonRng = 0;
   m_lteHelper = 0;
   m_webNode = 0;
-  t_ueManager = 0;
-  t_ueDev = 0;
-  t_ueNode = 0;
   m_gbrVidRng = 0;
   m_nonVidRng = 0;
   Object::DoDispose ();
@@ -509,48 +506,38 @@ TrafficHelper::InstallApplications ()
 {
   NS_LOG_FUNCTION (this);
 
-  NodeContainer ueNodes = m_slice->GetUeNodes ();
-  NetDeviceContainer ueDevices = m_slice->GetUeDevices ();
-
   // Install traffic manager and applications into UE nodes.
-  for (uint32_t u = 0; u < ueNodes.GetN (); u++)
+  for (auto const &imsi : m_slice->GetUeImsiList ())
     {
-      t_ueNode = ueNodes.Get (u);
-      t_ueDev = ueDevices.Get (u);
-      NS_ASSERT (t_ueDev->GetNode () == t_ueNode);
-      t_ueImsi = DynamicCast<LteUeNetDevice> (t_ueDev)->GetImsi ();
+      Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
 
-      Ptr<Ipv4> clientIpv4 = t_ueNode->GetObject<Ipv4> ();
-      t_ueAddr = clientIpv4->GetAddress (1, 0).GetLocal ();
-      t_ueMask = clientIpv4->GetAddress (1, 0).GetMask ();
-
-      // Each UE gets one traffic manager.
-      t_ueManager = m_managerFac.Create<TrafficManager> ();
-      t_ueManager->SetController (m_controller);
-      t_ueManager->SetImsi (t_ueImsi);
-      t_ueNode->AggregateObject (t_ueManager);
+      // Create a traffic manager for this UE.
+      Ptr<TrafficManager> ueManager = m_managerFac.Create<TrafficManager> ();
+      ueManager->SetController (m_controller);
+      ueManager->SetImsi (imsi);
+      ueInfo->SetTrafficManager (ueManager);
 
       // Schedule traffic manager start probability updates.
       if (!m_fullProbAt.IsZero ())
         {
           Simulator::Schedule (m_fullProbAt, &TrafficManager::SetAttribute,
-                               t_ueManager, "StartProb", DoubleValue (1.0));
+                               ueManager, "StartProb", DoubleValue (1.0));
         }
       if (!m_halfProbAt.IsZero ())
         {
           Simulator::Schedule (m_halfProbAt, &TrafficManager::SetAttribute,
-                               t_ueManager, "StartProb", DoubleValue (0.5));
+                               ueManager, "StartProb", DoubleValue (0.5));
         }
       if (!m_zeroProbAt.IsZero ())
         {
           Simulator::Schedule (m_zeroProbAt, &TrafficManager::SetAttribute,
-                               t_ueManager, "StartProb", DoubleValue (0.0));
+                               ueManager, "StartProb", DoubleValue (0.0));
         }
 
       // Connect the manager to the controller session created trace source.
       Config::ConnectWithoutContext (
         "/NodeList/*/ApplicationList/*/$ns3::SliceController/SessionCreated",
-        MakeCallback (&TrafficManager::NotifySessionCreated, t_ueManager));
+        MakeCallback (&TrafficManager::NotifySessionCreated, ueManager));
 
       // Install applications into this UE according to network slice.
       if (m_sliceId == SliceId::MBB)
@@ -567,7 +554,7 @@ TrafficHelper::InstallApplications ()
             EpcTft::PacketFilter filter;
             filter.direction = EpcTft::BIDIRECTIONAL;
             filter.protocol = UdpL4Protocol::PROT_NUMBER;
-            InstallAppDedicated (m_voipCallHelper, bearer, filter);
+            InstallAppDedicated (ueInfo, m_voipCallHelper, bearer, filter);
           }
           {
             // Video call over dedicated GBR EPS bearer.
@@ -589,7 +576,7 @@ TrafficHelper::InstallApplications ()
             EpcTft::PacketFilter filter;
             filter.direction = EpcTft::BIDIRECTIONAL;
             filter.protocol = UdpL4Protocol::PROT_NUMBER;
-            InstallAppDedicated (m_livVideoHelper, bearer, filter);
+            InstallAppDedicated (ueInfo, m_livVideoHelper, bearer, filter);
           }
           {
             // Open Arena game over dedicated Non-GBR EPS bearer.
@@ -602,7 +589,7 @@ TrafficHelper::InstallApplications ()
             EpcTft::PacketFilter filter;
             filter.direction = EpcTft::BIDIRECTIONAL;
             filter.protocol = UdpL4Protocol::PROT_NUMBER;
-            InstallAppDedicated (m_gameOpenHelper, bearer, filter);
+            InstallAppDedicated (ueInfo, m_gameOpenHelper, bearer, filter);
           }
           {
             // Team Fortress game over dedicated Non-GBR EPS bearer.
@@ -615,7 +602,7 @@ TrafficHelper::InstallApplications ()
             EpcTft::PacketFilter filter;
             filter.direction = EpcTft::BIDIRECTIONAL;
             filter.protocol = UdpL4Protocol::PROT_NUMBER;
-            InstallAppDedicated (m_gameTeamHelper, bearer, filter);
+            InstallAppDedicated (ueInfo, m_gameTeamHelper, bearer, filter);
           }
           {
             // Live video streaming over dedicated Non-GBR EPS bearer.
@@ -632,7 +619,7 @@ TrafficHelper::InstallApplications ()
             EpcTft::PacketFilter filter;
             filter.direction = EpcTft::BIDIRECTIONAL;
             filter.protocol = UdpL4Protocol::PROT_NUMBER;
-            InstallAppDedicated (m_livVideoHelper, bearer, filter);
+            InstallAppDedicated (ueInfo, m_livVideoHelper, bearer, filter);
           }
           {
             // Pre-recorded video streaming over dedicated Non-GBR EPS bearer.
@@ -649,7 +636,7 @@ TrafficHelper::InstallApplications ()
             EpcTft::PacketFilter filter;
             filter.direction = EpcTft::BIDIRECTIONAL;
             filter.protocol = TcpL4Protocol::PROT_NUMBER;
-            InstallAppDedicated (m_recVideoHelper, bearer, filter);
+            InstallAppDedicated (ueInfo, m_recVideoHelper, bearer, filter);
           }
           {
             // HTTP webpage traffic over dedicated Non-GBR EPS bearer.
@@ -662,11 +649,11 @@ TrafficHelper::InstallApplications ()
             EpcTft::PacketFilter filter;
             filter.direction = EpcTft::BIDIRECTIONAL;
             filter.protocol = TcpL4Protocol::PROT_NUMBER;
-            InstallAppDedicated (m_httpPageHelper, bearer, filter);
+            InstallAppDedicated (ueInfo, m_httpPageHelper, bearer, filter);
           }
           {
             // HTTP webpage traffic over default Non-GBR EPS bearer.
-            InstallAppDefault (m_httpPageHelper);
+            InstallAppDefault (ueInfo, m_httpPageHelper);
           }
           continue;
         }
@@ -685,7 +672,7 @@ TrafficHelper::InstallApplications ()
             EpcTft::PacketFilter filter;
             filter.direction = EpcTft::BIDIRECTIONAL;
             filter.protocol = UdpL4Protocol::PROT_NUMBER;
-            InstallAppDedicated (m_autPilotHelper, bearer, filter);
+            InstallAppDedicated (ueInfo, m_autPilotHelper, bearer, filter);
           }
           {
             // Auto-pilot traffic over dedicated Non-GBR EPS bearer.
@@ -698,9 +685,9 @@ TrafficHelper::InstallApplications ()
             EpcTft::PacketFilter filter;
             filter.direction = EpcTft::BIDIRECTIONAL;
             filter.protocol = UdpL4Protocol::PROT_NUMBER;
-            InstallAppDedicated (m_autPilotHelper, bearer, filter);
-            InstallAppDedicated (m_autPilotHelper, bearer, filter);
-            InstallAppDedicated (m_autPilotHelper, bearer, filter);
+            InstallAppDedicated (ueInfo, m_autPilotHelper, bearer, filter);
+            InstallAppDedicated (ueInfo, m_autPilotHelper, bearer, filter);
+            InstallAppDedicated (ueInfo, m_autPilotHelper, bearer, filter);
           }
           {
             // Virtual bicycle race traffic over dedicated Non-GBR EPS bearer.
@@ -714,9 +701,9 @@ TrafficHelper::InstallApplications ()
             EpcTft::PacketFilter filter;
             filter.direction = EpcTft::BIDIRECTIONAL;
             filter.protocol = UdpL4Protocol::PROT_NUMBER;
-            InstallAppDedicated (m_bikeRaceHelper, bearer, filter);
-            InstallAppDedicated (m_bikeRaceHelper, bearer, filter);
-            InstallAppDedicated (m_bikeRaceHelper, bearer, filter);
+            InstallAppDedicated (ueInfo, m_bikeRaceHelper, bearer, filter);
+            InstallAppDedicated (ueInfo, m_bikeRaceHelper, bearer, filter);
+            InstallAppDedicated (ueInfo, m_bikeRaceHelper, bearer, filter);
           }
           {
             // GPS Team Tracking traffic over dedicated Non-GBR EPS bearer.
@@ -730,9 +717,9 @@ TrafficHelper::InstallApplications ()
             EpcTft::PacketFilter filter;
             filter.direction = EpcTft::BIDIRECTIONAL;
             filter.protocol = UdpL4Protocol::PROT_NUMBER;
-            InstallAppDedicated (m_gpsTrackHelper, bearer, filter);
-            InstallAppDedicated (m_gpsTrackHelper, bearer, filter);
-            InstallAppDedicated (m_gpsTrackHelper, bearer, filter);
+            InstallAppDedicated (ueInfo, m_gpsTrackHelper, bearer, filter);
+            InstallAppDedicated (ueInfo, m_gpsTrackHelper, bearer, filter);
+            InstallAppDedicated (ueInfo, m_gpsTrackHelper, bearer, filter);
           }
           continue;
         }
@@ -751,10 +738,10 @@ TrafficHelper::InstallApplications ()
             EpcTft::PacketFilter filter;
             filter.direction = EpcTft::BIDIRECTIONAL;
             filter.protocol = UdpL4Protocol::PROT_NUMBER;
-            InstallAppDedicated (m_voipCallHelper, bearer, filter);
-            InstallAppDedicated (m_voipCallHelper, bearer, filter);
-            InstallAppDedicated (m_voipCallHelper, bearer, filter);
-            InstallAppDedicated (m_voipCallHelper, bearer, filter);
+            InstallAppDedicated (ueInfo, m_voipCallHelper, bearer, filter);
+            InstallAppDedicated (ueInfo, m_voipCallHelper, bearer, filter);
+            InstallAppDedicated (ueInfo, m_voipCallHelper, bearer, filter);
+            InstallAppDedicated (ueInfo, m_voipCallHelper, bearer, filter);
           }
           {
             // Live video streaming over dedicated Non-GBR EPS bearer.
@@ -772,7 +759,7 @@ TrafficHelper::InstallApplications ()
             EpcTft::PacketFilter filter;
             filter.direction = EpcTft::BIDIRECTIONAL;
             filter.protocol = UdpL4Protocol::PROT_NUMBER;
-            InstallAppDedicated (m_livVideoHelper, bearer, filter);
+            InstallAppDedicated (ueInfo, m_livVideoHelper, bearer, filter);
           }
           {
             // HTTP webpage traffic over dedicated Non-GBR EPS bearer.
@@ -785,47 +772,45 @@ TrafficHelper::InstallApplications ()
             EpcTft::PacketFilter filter;
             filter.direction = EpcTft::BIDIRECTIONAL;
             filter.protocol = TcpL4Protocol::PROT_NUMBER;
-            InstallAppDedicated (m_httpPageHelper, bearer, filter);
+            InstallAppDedicated (ueInfo, m_httpPageHelper, bearer, filter);
           }
           {
             // HTTP webpage traffic over default Non-GBR EPS bearer.
-            InstallAppDefault (m_httpPageHelper);
+            InstallAppDefault (ueInfo, m_httpPageHelper);
           }
         }
     }
-
-  t_ueManager = 0;
-  t_ueNode = 0;
-  t_ueDev = 0;
 }
 
 void
 TrafficHelper::InstallAppDedicated (
-  ApplicationHelper& helper, EpsBearer& bearer, EpcTft::PacketFilter& filter)
+  Ptr<UeInfo> ueInfo, ApplicationHelper& helper,
+  EpsBearer& bearer, EpcTft::PacketFilter& filter)
 {
   NS_LOG_FUNCTION (this);
 
   // When enable, install all applications over the default UE EPS bearer.
   if (m_useOnlyDefault)
     {
-      InstallAppDefault (helper);
+      InstallAppDefault (ueInfo, helper);
       return;
     }
 
   // Create the client and server applications.
   uint16_t port = GetNextPortNo ();
   Ptr<BaseClient> clientApp = helper.Install (
-      t_ueNode, m_webNode, t_ueAddr, m_webAddr, port,
-      Dscp2Tos (Qci2Dscp (bearer.qci)));
-  t_ueManager->AddBaseClient (clientApp);
+      ueInfo->GetNode (), m_webNode,
+      ueInfo->GetAddr (), m_webAddr,
+      port, Dscp2Tos (Qci2Dscp (bearer.qci)));
+  ueInfo->GetTrafficManager ()->AddBaseClient (clientApp);
 
   // Setup common packet filter parameters.
   filter.remoteAddress   = m_webAddr;
   filter.remoteMask      = m_webMask;
   filter.remotePortStart = port;
   filter.remotePortEnd   = port;
-  filter.localAddress    = t_ueAddr;
-  filter.localMask       = t_ueMask;
+  filter.localAddress    = ueInfo->GetAddr ();
+  filter.localMask       = ueInfo->GetMask ();
   filter.localPortStart  = 0;
   filter.localPortEnd    = 65535;
 
@@ -834,27 +819,29 @@ TrafficHelper::InstallAppDedicated (
   tft->Add (filter);
 
   // Create the dedicated bearer for this traffic.
-  uint8_t bid = m_lteHelper->ActivateDedicatedEpsBearer (t_ueDev, bearer, tft);
+  uint8_t bid = m_lteHelper->ActivateDedicatedEpsBearer (
+      ueInfo->GetDevice (), bearer, tft);
   clientApp->SetEpsBearer (bearer);
   clientApp->SetEpsBearerId (bid);
 }
 
 void
-TrafficHelper::InstallAppDefault (ApplicationHelper& helper)
+TrafficHelper::InstallAppDefault (
+  Ptr<UeInfo> ueInfo, ApplicationHelper& helper)
 {
   NS_LOG_FUNCTION (this);
 
   // Get default EPS bearer information for this UE.
-  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (t_ueImsi);
   uint8_t bid = ueInfo->GetDefaultBid ();
   EpsBearer bearer = ueInfo->GetEpsBearer (bid);
 
   // Create the client and server applications.
   uint16_t port = GetNextPortNo ();
   Ptr<BaseClient> clientApp = helper.Install (
-      t_ueNode, m_webNode, t_ueAddr, m_webAddr, port,
-      Dscp2Tos (Qci2Dscp (bearer.qci)));
-  t_ueManager->AddBaseClient (clientApp);
+      ueInfo->GetNode (), m_webNode,
+      ueInfo->GetAddr (), m_webAddr,
+      port, Dscp2Tos (Qci2Dscp (bearer.qci)));
+  ueInfo->GetTrafficManager ()->AddBaseClient (clientApp);
   clientApp->SetEpsBearer (bearer);
   clientApp->SetEpsBearerId (bid);
 }

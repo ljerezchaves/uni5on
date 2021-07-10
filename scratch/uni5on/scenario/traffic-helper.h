@@ -30,6 +30,7 @@
 
 namespace ns3 {
 
+class UeInfo;
 class RadioNetwork;
 class SliceController;
 class SliceNetwork;
@@ -110,22 +111,26 @@ private:
   void InstallApplications ();
 
   /**
-   * Create the pair of client/server applications and install them into UE,
+   * Create the pair of client/server applications and install them,
    * configuring a dedicated EPS bearer for this traffic according to bearer
    * and packet filter parameters.
+   * \param ueInfo The UE metadata.
    * \param helper The reference to the application helper.
    * \param bearer The reference to the EPS bearer.
    * \param filter The reference to the packet filter.
    */
-  void InstallAppDedicated (ApplicationHelper& helper, EpsBearer& bearer,
-                            EpcTft::PacketFilter& filter);
+  void InstallAppDedicated (
+    Ptr<UeInfo> ueInfo, ApplicationHelper& helper,
+    EpsBearer& bearer, EpcTft::PacketFilter& filter);
 
   /**
-   * Create the pair of client/server applications and install them into UE,
+   * Create the pair of client/server applications and install them,
    * using the default EPS bearer for this traffic.
+   * \param ueInfo The UE metadata.
    * \param helper The reference to the application helper.
    */
-  void InstallAppDefault (ApplicationHelper& helper);
+  void InstallAppDefault (
+    Ptr<UeInfo> ueInfo, ApplicationHelper& helper);
 
   // Traffic helper.
   SliceId                     m_sliceId;          //!< Logical slice ID.
@@ -157,17 +162,13 @@ private:
   ApplicationHelper           m_recVideoHelper;   //!< Recorded video helper.
   ApplicationHelper           m_voipCallHelper;   //!< VoIP call helper.
 
-  // Temporary variables used only when installing applications.
-  Ptr<LteHelper>              m_lteHelper;        //!< LTE helper.
+  // Web server.
   Ptr<Node>                   m_webNode;          //!< Server node.
   Ipv4Address                 m_webAddr;          //!< Server address.
   Ipv4Mask                    m_webMask;          //!< Server address mask.
-  Ptr<TrafficManager>         t_ueManager;        //!< Traffic manager.
-  Ptr<NetDevice>              t_ueDev;            //!< Client dev.
-  Ptr<Node>                   t_ueNode;           //!< Client node.
-  Ipv4Address                 t_ueAddr;           //!< Client address.
-  uint64_t                    t_ueImsi;           //!< Client IMSI.
-  Ipv4Mask                    t_ueMask;           //!< Client address mask.
+
+  // Radio network.
+  Ptr<LteHelper>              m_lteHelper;        //!< LTE helper.
 
   // Video traces.
   Ptr<UniformRandomVariable>  m_gbrVidRng;        //!< GBR random live video.
