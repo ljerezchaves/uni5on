@@ -21,12 +21,12 @@
 #include <iomanip>
 #include <iostream>
 #include "admission-stats-calculator.h"
-#include "../metadata/ring-info.h"
 #include "../metadata/bearer-info.h"
-#include "../metadata/ue-info.h"
 #include "../metadata/enb-info.h"
-#include "../metadata/sgw-info.h"
 #include "../metadata/pgw-info.h"
+#include "../metadata/ring-info.h"
+#include "../metadata/sgw-info.h"
+#include "../metadata/ue-info.h"
 
 using namespace std;
 

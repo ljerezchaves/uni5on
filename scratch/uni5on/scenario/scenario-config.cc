@@ -19,24 +19,24 @@
  */
 
 #include <ns3/csma-module.h>
-#include "scenario-helper.h"
-#include "../traffic/traffic-helper.h"
-#include "../infrastructure/transport-controller.h"
+#include "scenario-config.h"
 #include "../infrastructure/radio-network.h"
 #include "../infrastructure/ring-network.h"
+#include "../infrastructure/transport-controller.h"
+#include "../metadata/enb-info.h"
+#include "../metadata/ue-info.h"
 #include "../slices/enb-application.h"
 #include "../slices/slice-controller.h"
 #include "../slices/slice-network.h"
 #include "../slices/stateless-mme.h"
-#include "../metadata/enb-info.h"
-#include "../metadata/ue-info.h"
+#include "../traffic/traffic-helper.h"
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("ScenarioHelper");
-NS_OBJECT_ENSURE_REGISTERED (ScenarioHelper);
+NS_LOG_COMPONENT_DEFINE ("ScenarioConfig");
+NS_OBJECT_ENSURE_REGISTERED (ScenarioConfig);
 
-ScenarioHelper::ScenarioHelper ()
+ScenarioConfig::ScenarioConfig ()
   : m_transport (0),
   m_radio (0),
   m_mme (0),
@@ -58,80 +58,80 @@ ScenarioHelper::ScenarioHelper ()
   NS_LOG_FUNCTION (this);
 }
 
-ScenarioHelper::~ScenarioHelper ()
+ScenarioConfig::~ScenarioConfig ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-ScenarioHelper::GetTypeId (void)
+ScenarioConfig::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::ScenarioHelper")
+  static TypeId tid = TypeId ("ns3::ScenarioConfig")
     .SetParent<EpcHelper> ()
 
     .AddAttribute ("MbbController", "The MBB slice controller configuration.",
                    ObjectFactoryValue (ObjectFactory ()),
                    MakeObjectFactoryAccessor (
-                     &ScenarioHelper::m_mbbControllerFac),
+                     &ScenarioConfig::m_mbbControllerFac),
                    MakeObjectFactoryChecker ())
     .AddAttribute ("MbbSlice", "The MBB slice network configuration.",
                    ObjectFactoryValue (ObjectFactory ()),
                    MakeObjectFactoryAccessor (
-                     &ScenarioHelper::m_mbbNetworkFac),
+                     &ScenarioConfig::m_mbbNetworkFac),
                    MakeObjectFactoryChecker ())
     .AddAttribute ("MbbTraffic", "The MBB slice traffic configuration.",
                    ObjectFactoryValue (ObjectFactory ()),
                    MakeObjectFactoryAccessor (
-                     &ScenarioHelper::m_mbbTrafficFac),
+                     &ScenarioConfig::m_mbbTrafficFac),
                    MakeObjectFactoryChecker ())
 
     .AddAttribute ("MtcController", "The MTC slice controller configuration.",
                    ObjectFactoryValue (ObjectFactory ()),
                    MakeObjectFactoryAccessor (
-                     &ScenarioHelper::m_mtcControllerFac),
+                     &ScenarioConfig::m_mtcControllerFac),
                    MakeObjectFactoryChecker ())
     .AddAttribute ("MtcSlice", "The MTC slice network configuration.",
                    ObjectFactoryValue (ObjectFactory ()),
                    MakeObjectFactoryAccessor (
-                     &ScenarioHelper::m_mtcNetworkFac),
+                     &ScenarioConfig::m_mtcNetworkFac),
                    MakeObjectFactoryChecker ())
     .AddAttribute ("MtcTraffic", "The MTC slice traffic configuration.",
                    ObjectFactoryValue (ObjectFactory ()),
                    MakeObjectFactoryAccessor (
-                     &ScenarioHelper::m_mtcTrafficFac),
+                     &ScenarioConfig::m_mtcTrafficFac),
                    MakeObjectFactoryChecker ())
 
     .AddAttribute ("TmpController", "The TMP slice controller configuration.",
                    ObjectFactoryValue (ObjectFactory ()),
                    MakeObjectFactoryAccessor (
-                     &ScenarioHelper::m_tmpControllerFac),
+                     &ScenarioConfig::m_tmpControllerFac),
                    MakeObjectFactoryChecker ())
     .AddAttribute ("TmpSlice", "The TMP slice network configuration.",
                    ObjectFactoryValue (ObjectFactory ()),
                    MakeObjectFactoryAccessor (
-                     &ScenarioHelper::m_tmpNetworkFac),
+                     &ScenarioConfig::m_tmpNetworkFac),
                    MakeObjectFactoryChecker ())
     .AddAttribute ("TmpTraffic", "The TMP slice traffic configuration.",
                    ObjectFactoryValue (ObjectFactory ()),
                    MakeObjectFactoryAccessor (
-                     &ScenarioHelper::m_tmpTrafficFac),
+                     &ScenarioConfig::m_tmpTrafficFac),
                    MakeObjectFactoryChecker ())
   ;
   return tid;
 }
 
 void
-ScenarioHelper::ConfigurePcap (std::string prefix, uint8_t config)
+ScenarioConfig::ConfigurePcap (std::string prefix, uint8_t config)
 {
   NS_LOG_FUNCTION (this << prefix);
 
-  bool slcofp = HasPcapFlag (ScenarioHelper::PCSLCOFP, config);
-  bool slcpgw = HasPcapFlag (ScenarioHelper::PCSLCPGW, config);
-  bool slcsgi = HasPcapFlag (ScenarioHelper::PCSLCSGI, config);
-  bool tpnofp = HasPcapFlag (ScenarioHelper::PCTPNOFP, config);
-  bool tpnepc = HasPcapFlag (ScenarioHelper::PCTPNEPC, config);
-  bool tpnswt = HasPcapFlag (ScenarioHelper::PCTPNSWT, config);
-  bool promsc = HasPcapFlag (ScenarioHelper::PCPROMSC, config);
+  bool slcofp = HasPcapFlag (ScenarioConfig::PCSLCOFP, config);
+  bool slcpgw = HasPcapFlag (ScenarioConfig::PCSLCPGW, config);
+  bool slcsgi = HasPcapFlag (ScenarioConfig::PCSLCSGI, config);
+  bool tpnofp = HasPcapFlag (ScenarioConfig::PCTPNOFP, config);
+  bool tpnepc = HasPcapFlag (ScenarioConfig::PCTPNEPC, config);
+  bool tpnswt = HasPcapFlag (ScenarioConfig::PCTPNSWT, config);
+  bool promsc = HasPcapFlag (ScenarioConfig::PCPROMSC, config);
 
   // Enable PCAP on the transport network.
   m_transport->EnablePcap (prefix, promsc, tpnofp, tpnepc, tpnswt);
@@ -152,7 +152,7 @@ ScenarioHelper::ConfigurePcap (std::string prefix, uint8_t config)
 }
 
 bool
-ScenarioHelper::HasPcapFlag (PcapConfig flag, uint8_t config) const
+ScenarioConfig::HasPcapFlag (PcapConfig flag, uint8_t config) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -160,7 +160,7 @@ ScenarioHelper::HasPcapFlag (PcapConfig flag, uint8_t config) const
 }
 
 void
-ScenarioHelper::PrintLteRem (bool enable)
+ScenarioConfig::PrintLteRem (bool enable)
 {
   NS_LOG_FUNCTION (this);
 
@@ -175,7 +175,7 @@ ScenarioHelper::PrintLteRem (bool enable)
 // Implementing methods inherited from EpcHelper.
 //
 uint8_t
-ScenarioHelper::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi,
+ScenarioConfig::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi,
                                    Ptr<EpcTft> tft, EpsBearer bearer)
 {
   NS_LOG_FUNCTION (this << ueDevice << imsi);
@@ -212,7 +212,7 @@ ScenarioHelper::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi,
 }
 
 void
-ScenarioHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
+ScenarioConfig::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
                         uint16_t cellId)
 {
   NS_LOG_FUNCTION (this << enb << lteEnbNetDevice << cellId);
@@ -280,7 +280,7 @@ ScenarioHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
 }
 
 void
-ScenarioHelper::AddX2Interface (Ptr<Node> enb1Node, Ptr<Node> enb2Node)
+ScenarioConfig::AddX2Interface (Ptr<Node> enb1Node, Ptr<Node> enb2Node)
 {
   NS_LOG_FUNCTION (this << enb1Node << enb1Node);
 
@@ -333,13 +333,13 @@ ScenarioHelper::AddX2Interface (Ptr<Node> enb1Node, Ptr<Node> enb2Node)
 }
 
 void
-ScenarioHelper::AddUe (Ptr<NetDevice> ueDevice, uint64_t imsi)
+ScenarioConfig::AddUe (Ptr<NetDevice> ueDevice, uint64_t imsi)
 {
   NS_LOG_FUNCTION (this << imsi << ueDevice);
 }
 
 Ptr<Node>
-ScenarioHelper::GetPgwNode ()
+ScenarioConfig::GetPgwNode ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -347,7 +347,7 @@ ScenarioHelper::GetPgwNode ()
 }
 
 Ipv4InterfaceContainer
-ScenarioHelper::AssignUeIpv4Address (NetDeviceContainer ueDevices)
+ScenarioConfig::AssignUeIpv4Address (NetDeviceContainer ueDevices)
 {
   NS_LOG_FUNCTION (this);
 
@@ -355,7 +355,7 @@ ScenarioHelper::AssignUeIpv4Address (NetDeviceContainer ueDevices)
 }
 
 Ipv6InterfaceContainer
-ScenarioHelper::AssignUeIpv6Address (NetDeviceContainer ueDevices)
+ScenarioConfig::AssignUeIpv6Address (NetDeviceContainer ueDevices)
 {
   NS_LOG_FUNCTION (this);
 
@@ -363,7 +363,7 @@ ScenarioHelper::AssignUeIpv6Address (NetDeviceContainer ueDevices)
 }
 
 Ipv4Address
-ScenarioHelper::GetUeDefaultGatewayAddress ()
+ScenarioConfig::GetUeDefaultGatewayAddress ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -371,7 +371,7 @@ ScenarioHelper::GetUeDefaultGatewayAddress ()
 }
 
 Ipv6Address
-ScenarioHelper::GetUeDefaultGatewayAddress6 ()
+ScenarioConfig::GetUeDefaultGatewayAddress6 ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -379,7 +379,7 @@ ScenarioHelper::GetUeDefaultGatewayAddress6 ()
 }
 
 void
-ScenarioHelper::DoDispose (void)
+ScenarioConfig::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -414,14 +414,14 @@ ScenarioHelper::DoDispose (void)
 }
 
 void
-ScenarioHelper::NotifyConstructionCompleted (void)
+ScenarioConfig::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
   // Create the UNI5ON infrastructure (don't change the order).
   m_mme = CreateObject<StatelessMme> ();
   m_transport = CreateObject<RingNetwork> ();
-  m_radio = CreateObject<RadioNetwork> (Ptr<ScenarioHelper> (this));
+  m_radio = CreateObject<RadioNetwork> (Ptr<ScenarioConfig> (this));
 
   Ptr<TransportController> transportCtrl = m_transport->GetControllerApp ();
   ApplicationContainer sliceControllers;
@@ -540,7 +540,7 @@ ScenarioHelper::NotifyConstructionCompleted (void)
 }
 
 bool
-ScenarioHelper::AreFactoriesOk (ObjectFactory &controller,
+ScenarioConfig::AreFactoriesOk (ObjectFactory &controller,
                                 ObjectFactory &network,
                                 ObjectFactory &traffic) const
 {

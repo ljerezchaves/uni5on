@@ -48,7 +48,7 @@ class UeInfo : public Object
   friend class PgwuTunnelApp;
   friend class BearerInfo;
   friend class SliceController;
-  friend class ScenarioHelper;
+  friend class ScenarioConfig;
   friend class StatelessMme;
   friend class TrafficHelper;
   friend class TransportStatsCalculator;

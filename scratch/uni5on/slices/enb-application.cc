@@ -20,9 +20,9 @@
 
 #include "enb-application.h"
 #include "gtpu-tag.h"
-#include "../uni5on-common.h"
-#include "../metadata/ue-info.h"
 #include "../metadata/bearer-info.h"
+#include "../metadata/ue-info.h"
+#include "../uni5on-common.h"
 
 namespace ns3 {
 

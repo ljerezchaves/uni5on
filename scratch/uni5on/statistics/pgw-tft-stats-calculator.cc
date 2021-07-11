@@ -21,8 +21,8 @@
 #include <iomanip>
 #include <iostream>
 #include "pgw-tft-stats-calculator.h"
-#include "../slices/slice-controller.h"
 #include "../metadata/pgw-info.h"
+#include "../slices/slice-controller.h"
 
 using namespace std;
 

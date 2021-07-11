@@ -22,8 +22,8 @@
 #include <iostream>
 #include "traffic-stats-calculator.h"
 #include "../applications/base-client.h"
-#include "../metadata/ue-info.h"
 #include "../metadata/bearer-info.h"
+#include "../metadata/ue-info.h"
 
 using namespace std;
 

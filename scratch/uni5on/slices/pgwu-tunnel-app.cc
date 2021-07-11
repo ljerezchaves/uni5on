@@ -21,8 +21,8 @@
 #include <ns3/epc-gtpu-header.h>
 #include "gtpu-tag.h"
 #include "pgwu-tunnel-app.h"
-#include "../metadata/ue-info.h"
 #include "../metadata/bearer-info.h"
+#include "../metadata/ue-info.h"
 
 namespace ns3 {
 

@@ -21,8 +21,8 @@
 #include <iomanip>
 #include <iostream>
 #include "transport-stats-calculator.h"
-#include "../metadata/ue-info.h"
 #include "../metadata/bearer-info.h"
+#include "../metadata/ue-info.h"
 
 using namespace std;
 

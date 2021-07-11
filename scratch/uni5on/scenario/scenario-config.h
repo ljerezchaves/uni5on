@@ -18,8 +18,8 @@
  * Author: Luciano Jerez Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef SCENARIO_HELPER_H
-#define SCENARIO_HELPER_H
+#ifndef SCENARIO_CONFIG_H
+#define SCENARIO_CONFIG_H
 
 #include <ns3/core-module.h>
 #include <ns3/lte-module.h>
@@ -46,7 +46,7 @@ class TrafficHelper;
  * The helper to create and configure the infrastructure and slices for the
  * UNI5ON architecture.
  */
-class ScenarioHelper : public EpcHelper
+class ScenarioConfig : public EpcHelper
 {
 public:
   /** The bitmap for PCAP configuration. */
@@ -62,8 +62,8 @@ public:
     PCPROMSC = (1U << 7),  //!< Enable promiscuous mode.
   };
 
-  ScenarioHelper ();          //!< Default constructor.
-  virtual ~ScenarioHelper (); //!< Dummy destructor, see DoDispose.
+  ScenarioConfig ();          //!< Default constructor.
+  virtual ~ScenarioConfig (); //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
@@ -177,4 +177,4 @@ private:
 };
 
 } // namespace ns3
-#endif  // SCENARIO_HELPER_H
+#endif  // SCENARIO_CONFIG_H

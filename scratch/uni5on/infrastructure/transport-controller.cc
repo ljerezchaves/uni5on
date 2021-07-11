@@ -20,8 +20,8 @@
 
 #include <algorithm>
 #include "transport-controller.h"
-#include "../metadata/link-info.h"
 #include "transport-network.h"
+#include "../metadata/link-info.h"
 
 namespace ns3 {
 

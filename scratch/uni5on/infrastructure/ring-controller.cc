@@ -20,10 +20,10 @@
 
 #include <string>
 #include "ring-controller.h"
-#include "../slices/slice-controller.h"
-#include "../metadata/enb-info.h"
-#include "../metadata/bearer-info.h"
 #include "transport-network.h"
+#include "../metadata/bearer-info.h"
+#include "../metadata/enb-info.h"
+#include "../slices/slice-controller.h"
 
 namespace ns3 {
 

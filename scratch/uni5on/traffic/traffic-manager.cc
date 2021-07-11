@@ -19,10 +19,10 @@
  */
 
 #include "traffic-manager.h"
-#include "../slices/slice-controller.h"
 #include "../applications/base-client.h"
 #include "../metadata/bearer-info.h"
 #include "../metadata/ue-info.h"
+#include "../slices/slice-controller.h"
 
 #undef NS_LOG_APPEND_CONTEXT
 #define NS_LOG_APPEND_CONTEXT \

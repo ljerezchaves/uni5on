@@ -19,15 +19,15 @@
  */
 
 #include <ns3/csma-module.h>
-#include "../infrastructure/transport-network.h"
-#include "../infrastructure/radio-network.h"
-#include "../metadata/pgw-info.h"
-#include "../metadata/sgw-info.h"
-#include "../metadata/ue-info.h"
 #include "gtpu-tunnel-app.h"
 #include "pgwu-tunnel-app.h"
 #include "slice-controller.h"
 #include "slice-network.h"
+#include "../infrastructure/radio-network.h"
+#include "../infrastructure/transport-network.h"
+#include "../metadata/pgw-info.h"
+#include "../metadata/sgw-info.h"
+#include "../metadata/ue-info.h"
 
 #undef NS_LOG_APPEND_CONTEXT
 #define NS_LOG_APPEND_CONTEXT \

@@ -19,16 +19,16 @@
  */
 
 #include "slice-controller.h"
-#include "../infrastructure/transport-controller.h"
-#include "../infrastructure/transport-network.h"
-#include "../metadata/enb-info.h"
-#include "../metadata/pgw-info.h"
-#include "../metadata/bearer-info.h"
-#include "../metadata/ue-info.h"
-#include "../traffic/traffic-manager.h"
 #include "gtpu-tunnel-app.h"
 #include "slice-network.h"
 #include "stateless-mme.h"
+#include "../infrastructure/transport-controller.h"
+#include "../infrastructure/transport-network.h"
+#include "../metadata/bearer-info.h"
+#include "../metadata/enb-info.h"
+#include "../metadata/pgw-info.h"
+#include "../metadata/ue-info.h"
+#include "../traffic/traffic-manager.h"
 
 #undef NS_LOG_APPEND_CONTEXT
 #define NS_LOG_APPEND_CONTEXT \

@@ -24,7 +24,7 @@
 #include <ns3/core-module.h>
 #include <ns3/internet-module.h>
 #include <ns3/ofswitch13-module.h>
-#include "scenario/scenario-helper.h"
+#include "scenario/scenario-config.h"
 
 using namespace ns3;
 
@@ -127,12 +127,11 @@ main (int argc, char *argv[])
   // Create the helper object, which is responsible for creating and
   // configuring the infrastructure and logical networks.
   NS_LOG_INFO ("Creating simulation scenario...");
-  Ptr<ScenarioHelper> scenarioHelper = CreateObject<ScenarioHelper> ();
+  Ptr<ScenarioConfig> scenario = CreateObject<ScenarioConfig> ();
 
   // Configure helper with command line parameters.
-  scenarioHelper->PrintLteRem (lteRem);
-  scenarioHelper->ConfigurePcap (outputPrefix.str (),
-                                 static_cast<uint8_t> (pcapCfg));
+  scenario->PrintLteRem (lteRem);
+  scenario->ConfigurePcap (outputPrefix.str (), static_cast<uint8_t> (pcapCfg));
 
   // Populating routing and ARP tables. The 'perfect' ARP used here comes from
   // the patch at https://www.nsnam.org/bugzilla/show_bug.cgi?id=187. This
@@ -156,8 +155,8 @@ main (int argc, char *argv[])
 
   // Finish the simulation.
   Simulator::Destroy ();
-  scenarioHelper->Dispose ();
-  scenarioHelper = 0;
+  scenario->Dispose ();
+  scenario = 0;
 
   // Print the final status message.
   BooleanValue cerrValue;
@@ -388,7 +387,7 @@ EnableVerbose (bool enable)
       LogComponentEnable ("Uni5onCommon",             logLevelWarnInfo);
 
       // Scenario components.
-      LogComponentEnable ("ScenarioHelper",           logLevelWarnInfo);
+      LogComponentEnable ("ScenarioConfig",           logLevelWarnInfo);
       LogComponentEnable ("ScenarioTraffic",          logLevelWarnInfo);
 
       // Traffic components.
@@ -403,7 +402,7 @@ EnableVerbose (bool enable)
       LogComponentEnable ("TransportController",      logLevelWarnInfo);
       LogComponentEnable ("TransportNetwork",         logLevelWarnInfo);
 
-      // Logical components.
+      // Slice components.
       LogComponentEnable ("EnbApplication",           logLevelWarnInfo);
       LogComponentEnable ("GtpuTunnelApp",            logLevelWarnInfo);
       LogComponentEnable ("PgwuTunnelApp",            logLevelWarnInfo);

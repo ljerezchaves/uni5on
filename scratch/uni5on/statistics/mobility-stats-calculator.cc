@@ -24,9 +24,9 @@
 #include "mobility-stats-calculator.h"
 #include "../uni5on-common.h"
 #include "../metadata/enb-info.h"
-#include "../metadata/ue-info.h"
-#include "../metadata/sgw-info.h"
 #include "../metadata/pgw-info.h"
+#include "../metadata/sgw-info.h"
+#include "../metadata/ue-info.h"
 
 using namespace std;
 
