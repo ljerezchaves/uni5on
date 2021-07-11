@@ -21,6 +21,7 @@
 #include <iomanip>
 #include <iostream>
 #include "transport-stats-calculator.h"
+#include "../mano-apps/global-ids.h"
 #include "../metadata/bearer-info.h"
 #include "../metadata/ue-info.h"
 

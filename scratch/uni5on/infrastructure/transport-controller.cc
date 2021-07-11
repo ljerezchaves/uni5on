@@ -455,7 +455,7 @@ TransportController::HandleFlowRemoved (
 {
   NS_LOG_FUNCTION (this << swtch << xid << msg->stats->cookie);
 
-  uint32_t teid = CookieGetTeid (msg->stats->cookie);
+  uint32_t teid = GlobalIds::CookieGetTeid (msg->stats->cookie);
   uint16_t prio = msg->stats->priority;
 
   // Print the message.
@@ -555,12 +555,12 @@ TransportController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // Classification table -- [from higher to lower priority]
   //
   // Classify GTP-U packets on the corresponding logical slice using
-  // the GTP-U TEID masked value.
+  // the system-wide GTP-U TEID masked value.
   // Send the packet to the corresponding slice table.
   for (int s = 0; s < N_SLICE_IDS; s++)
     {
       SliceId slice = static_cast<SliceId> (s);
-      uint32_t sliceTeid = TeidCreate (slice, 0, 0);
+      uint32_t teidSliceMask = GlobalIds::TeidSliceMask (slice);
 
       std::ostringstream cmd;
       cmd << "flow-mod cmd=add,prio=64"
@@ -570,7 +570,7 @@ TransportController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
           << ",ip_proto="   << UDP_PROT_NUM
           << ",udp_src="    << GTPU_PORT
           << ",udp_dst="    << GTPU_PORT
-          << ",gtpu_teid="  << (sliceTeid & TEID_SLICE_MASK)
+          << ",gtpu_teid="  << teidSliceMask
           << "/"            << TEID_SLICE_MASK
           << " goto:"       << GetSliceTable (slice);
       DpctlExecute (swDpId, cmd.str ());
@@ -882,7 +882,7 @@ TransportController::SlicingMeterAdjust (
 
       if (diffBitRate >= m_meterStep.GetBitRate ())
         {
-          uint32_t meterId = MeterIdSlcCreate (slice, d);
+          uint32_t meterId = GlobalIds::MeterIdSlcCreate (slice, d);
           int64_t meterKbps = Bps2Kbps (meterBitRate);
           bool success = lInfo->SetMetBitRate (dir, slice, meterKbps * 1000);
           NS_ASSERT_MSG (success, "Error when setting meter bit rate.");
@@ -939,7 +939,7 @@ TransportController::SlicingMeterInstall (Ptr<LinkInfo> lInfo, SliceId slice)
           meterBitRate = lInfo->GetQuoBitRate (dir, slice);
         }
 
-      uint32_t meterId = MeterIdSlcCreate (slice, d);
+      uint32_t meterId = GlobalIds::MeterIdSlcCreate (slice, d);
       int64_t meterKbps = Bps2Kbps (meterBitRate);
       bool success = lInfo->SetMetBitRate (dir, slice, meterKbps * 1000);
       NS_ASSERT_MSG (success, "Error when setting meter bit rate.");

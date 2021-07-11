@@ -19,6 +19,7 @@
  */
 
 #include "gtpu-tag.h"
+#include "../mano-apps/global-ids.h"
 
 // Metadata bitmap.
 #define META_NODE 0
@@ -121,7 +122,7 @@ GtpuTag::GetQosType () const
 SliceId
 GtpuTag::GetSliceId () const
 {
-  return TeidGetSliceId (m_teid);
+  return GlobalIds::TeidGetSliceId (m_teid);
 }
 
 uint32_t

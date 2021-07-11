@@ -24,6 +24,7 @@
 #include "stateless-mme.h"
 #include "../infrastructure/transport-controller.h"
 #include "../infrastructure/transport-network.h"
+#include "../mano-apps/global-ids.h"
 #include "../metadata/bearer-info.h"
 #include "../metadata/enb-info.h"
 #include "../metadata/pgw-info.h"
@@ -618,7 +619,7 @@ SliceController::HandleFlowRemoved (
 {
   NS_LOG_FUNCTION (this << swtch << xid << msg->stats->cookie);
 
-  uint32_t teid = CookieGetTeid (msg->stats->cookie);
+  uint32_t teid = GlobalIds::CookieGetTeid (msg->stats->cookie);
   uint16_t prio = msg->stats->priority;
 
   // Print the message.
@@ -790,7 +791,7 @@ SliceController::DoCreateSessionRequest (
   for (auto const &bit : msg.bearerContextsToBeCreated)
     {
       // Allocate an unique (system-wide) TEID for this EPS bearer.
-      uint32_t teid = TeidCreate (m_sliceId, imsi, bit.epsBearerId);
+      uint32_t teid = GlobalIds::TeidCreate (m_sliceId, imsi, bit.epsBearerId);
 
       EpcS11SapMme::BearerContextCreated bearerContext;
       bearerContext.sgwFteid.address = ueInfo->GetSgwInfo ()->GetS1uAddr ();
@@ -1088,7 +1089,7 @@ SliceController::PgwRulesInstall (Ptr<BearerInfo> bInfo)
   if (bInfo->HasDlTraffic ())
     {
       // Cookie for new downlink rules.
-      uint64_t cookie = CookieCreate (
+      uint64_t cookie = GlobalIds::CookieCreate (
           EpsIface::S5, bInfo->GetPriority (), bInfo->GetTeid ());
 
       // Building the dpctl command.
@@ -1143,7 +1144,7 @@ SliceController::PgwRulesMove (
 
       // Install rules into target switch now.
       // Cookie for new downlink rules.
-      uint64_t cookie = CookieCreate (
+      uint64_t cookie = GlobalIds::CookieCreate (
           EpsIface::S5, bInfo->GetPriority (), bInfo->GetTeid ());
 
       // Building the dpctl command.
@@ -1245,7 +1246,7 @@ SliceController::SgwRulesInstall (Ptr<BearerInfo> bInfo)
   if (bInfo->HasDlTraffic ())
     {
       // Cookie for new downlink rules.
-      uint64_t cookie = CookieCreate (
+      uint64_t cookie = GlobalIds::CookieCreate (
           EpsIface::S1, bInfo->GetPriority (), bInfo->GetTeid ());
 
       // Building the dpctl command.
@@ -1271,7 +1272,7 @@ SliceController::SgwRulesInstall (Ptr<BearerInfo> bInfo)
   if (bInfo->HasUlTraffic ())
     {
       // Cookie for new uplink rules.
-      uint64_t cookie = CookieCreate (
+      uint64_t cookie = GlobalIds::CookieCreate (
           EpsIface::S5, bInfo->GetPriority (), bInfo->GetTeid ());
 
       // Building the dpctl command.
@@ -1328,7 +1329,7 @@ SliceController::SgwRulesUpdate (Ptr<BearerInfo> bInfo,
     {
       // Schedule the removal of old low-priority OpenFlow rules.
       // Cookie for old rules.
-      uint64_t oldCookie = CookieCreate (
+      uint64_t oldCookie = GlobalIds::CookieCreate (
           EpsIface::S1, bInfo->GetPriority (), bInfo->GetTeid ());
 
       // Building the dpctl command. Strict matching cookie.
@@ -1342,7 +1343,7 @@ SliceController::SgwRulesUpdate (Ptr<BearerInfo> bInfo,
       // Install updated rules now.
       // Cookie for new downlink rules.
       uint16_t newPriority = bInfo->GetPriority () + 1;
-      uint64_t newCookie = CookieCreate (
+      uint64_t newCookie = GlobalIds::CookieCreate (
           EpsIface::S1, newPriority, bInfo->GetTeid ());
 
       // Building the dpctl command.

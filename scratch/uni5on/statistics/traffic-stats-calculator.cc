@@ -22,6 +22,7 @@
 #include <iostream>
 #include "traffic-stats-calculator.h"
 #include "../applications/base-client.h"
+#include "../mano-apps/global-ids.h"
 #include "../metadata/bearer-info.h"
 #include "../metadata/ue-info.h"
 

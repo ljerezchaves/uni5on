@@ -32,6 +32,7 @@
 #include <ns3/lte-module.h>
 #include <ns3/network-module.h>
 #include <ns3/ofswitch13-module.h>
+#include "../mano-apps/global-ids.h"
 #include "../metadata/bearer-info.h"
 #include "../metadata/link-info.h"
 #include "../slices/slice-controller.h"

@@ -705,8 +705,8 @@ RingController::RulesInstall (
   // Slice table -- [from higher to lower priority]
   //
   // Cookie and MBR meter ID for new rules.
-  uint32_t mbrMeterId = MeterIdMbrCreate (iface, bInfo->GetTeid ());
-  uint64_t cookie = CookieCreate (
+  uint32_t mbrMeterId = GlobalIds::MeterIdMbrCreate (iface, bInfo->GetTeid ());
+  uint64_t cookie = GlobalIds::CookieCreate (
       iface, bInfo->GetPriority (), bInfo->GetTeid ());
 
   // Building the dpctl command.
@@ -843,7 +843,7 @@ RingController::RulesRemove (
     }
 
   // Building the dpctl command. Matching cookie for interface and TEID.
-  uint64_t cookie = CookieCreate (iface, 0, bInfo->GetTeid ());
+  uint64_t cookie = GlobalIds::CookieCreate (iface, 0, bInfo->GetTeid ());
   std::ostringstream cmd;
   cmd << "flow-mod cmd=del"
       << ",table="        << GetSliceTable (bInfo->GetSliceId ())
@@ -864,7 +864,7 @@ RingController::RulesRemove (
   // Remove installed MBR meter entries.
   if (bInfo->HasMbr ())
     {
-      uint32_t mbrMeterId = MeterIdMbrCreate (iface, bInfo->GetTeid ());
+      uint32_t mbrMeterId = GlobalIds::MeterIdMbrCreate (iface, bInfo->GetTeid ());
 
       std::ostringstream met;
       met << "meter-mod cmd=del,meter=" << mbrMeterId;
@@ -914,14 +914,14 @@ RingController::RulesUpdate (
   Ptr<BearerInfo> bInfo = ringInfo->GetBearerInfo ();
 
   // MBR meter ID for this bearer (won't change on update).
-  uint32_t mbrMeterId = MeterIdMbrCreate (iface, bInfo->GetTeid ());
+  uint32_t mbrMeterId = GlobalIds::MeterIdMbrCreate (iface, bInfo->GetTeid ());
   bool success = true;
 
   // Schedule the removal of old low-priority OpenFlow rules.
   if (bInfo->IsIfInstalled (iface))
     {
       // Cookie for old rules. Using old low-priority.
-      uint64_t oldCookie = CookieCreate (
+      uint64_t oldCookie = GlobalIds::CookieCreate (
           iface, bInfo->GetPriority (), bInfo->GetTeid ());
 
       // Building the dpctl command. Strict matching cookie.
@@ -1033,7 +1033,7 @@ RingController::RulesUpdate (
   if (!ringInfo->IsLocalPath (iface))
     {
       // Cookie for new rules. Using new high-priority.
-      uint64_t newCookie = CookieCreate (
+      uint64_t newCookie = GlobalIds::CookieCreate (
           iface, bInfo->GetPriority () + 1, bInfo->GetTeid ());
 
       // Building the dpctl command.
@@ -1146,7 +1146,7 @@ RingController::SlicingMeterApply (
   for (int d = 0; d < N_LINK_DIRS; d++)
     {
       LinkInfo::LinkDir dir = static_cast<LinkInfo::LinkDir> (d);
-      uint32_t meterId = MeterIdSlcCreate (slice, d);
+      uint32_t meterId = GlobalIds::MeterIdSlcCreate (slice, d);
 
       // We are using the IP DSCP field to identify Non-GBR traffic.
       // Non-GBR QCIs range is [5, 9].
