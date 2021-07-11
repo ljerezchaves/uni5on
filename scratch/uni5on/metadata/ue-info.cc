@@ -379,7 +379,6 @@ UeInfo::SetTrafficManager (Ptr<TrafficManager> value)
   NS_LOG_FUNCTION (this << value);
 
   m_tfcManager = value;
-  m_node->AggregateObject (value);
 }
 
 uint8_t
