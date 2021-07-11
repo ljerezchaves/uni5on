@@ -25,6 +25,7 @@
 #include "../metadata/pgw-info.h"
 #include "../metadata/bearer-info.h"
 #include "../metadata/ue-info.h"
+#include "../traffic/traffic-manager.h"
 #include "gtpu-tunnel-app.h"
 #include "slice-network.h"
 #include "stateless-mme.h"
@@ -175,14 +176,6 @@ SliceController::GetTypeId (void)
                      MakeTraceSourceAccessor (
                        &SliceController::m_bearerReleaseTrace),
                      "ns3::BearerInfo::TracedCallback")
-    .AddTraceSource ("SessionCreated", "The session created trace source.",
-                     MakeTraceSourceAccessor (
-                       &SliceController::m_sessionCreatedTrace),
-                     "ns3::SliceController::SessionCreatedTracedCallback")
-    .AddTraceSource ("SessionModified", "The session modified trace source.",
-                     MakeTraceSourceAccessor (
-                       &SliceController::m_sessionModifiedTrace),
-                     "ns3::SliceController::SessionModifiedTracedCallback")
     .AddTraceSource ("PgwTftLoadBal", "P-GW TFT load balancing trace source.",
                      MakeTraceSourceAccessor (
                        &SliceController::m_pgwTftLoadBalTrace),
@@ -845,8 +838,9 @@ SliceController::DoCreateSessionRequest (
         }
     }
 
-  // Fire trace source notifying the created session.
-  m_sessionCreatedTrace (imsi, res.bearerContextsCreated);
+  // Notify the UE traffic manager about the created session.
+  Ptr<TrafficManager> ueManager = ueInfo->GetTrafficManager ();
+  ueManager->NotifySessionCreated (res.bearerContextsCreated);
 
   // Forward the response message to the MME.
   m_s11SapMme->CreateSessionResponse (res);
@@ -921,9 +915,6 @@ SliceController::DoModifyBearerRequest (
 
   // Finally, update the UE's eNB info (only after updating OpenFlow rules).
   ueInfo->SetEnbInfo (dstEnbInfo);
-
-  // Fire trace source notifying the modified session.
-  m_sessionModifiedTrace (imsi, res.bearerContextsModified);
 
   // Forward the response message to the MME.
   m_s11SapMme->ModifyBearerResponse (res);

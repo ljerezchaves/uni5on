@@ -111,19 +111,12 @@ TrafficManager::AddClientApplication (Ptr<BaseClient> app)
 }
 
 void
-TrafficManager::NotifySessionCreated (
-  uint64_t imsi, BearerCreatedList_t bearerList)
+TrafficManager::NotifySessionCreated (BearerCreatedList_t bearerList)
 {
   NS_LOG_FUNCTION (this);
 
-  // Check the IMSI match for current manager.
-  if (imsi != m_imsi)
-    {
-      return;
-    }
-
   // Set the default TEID.
-  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (m_imsi);
   m_defaultTeid = ueInfo->GetDefaultTeid ();
 
   // For each application, set the corresponding TEID.

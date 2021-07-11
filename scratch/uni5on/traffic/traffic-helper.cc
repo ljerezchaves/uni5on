@@ -481,11 +481,6 @@ TrafficHelper::InstallApplications ()
                                ueManager, "StartProb", DoubleValue (0.0));
         }
 
-      // Connect the manager to the controller session created trace source.
-      Config::ConnectWithoutContext (
-        "/NodeList/*/ApplicationList/*/$ns3::SliceController/SessionCreated",
-        MakeCallback (&TrafficManager::NotifySessionCreated, ueManager));
-
       // Install applications into this UE according to network slice.
       if (m_sliceId == SliceId::MBB)
         {

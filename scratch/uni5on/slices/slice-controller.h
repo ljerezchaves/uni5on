@@ -180,22 +180,6 @@ public:
   typedef void (*PgwTftStatsTracedCallback)(
     Ptr<const PgwInfo> pgwInfo, uint32_t nextLevel, uint32_t bearersMoved);
 
-  /**
-   * TracedCallback signature for session created trace source.
-   * \param imsi The IMSI UE identifier.
-   * \param bearerList The list of bearer contexts created.
-   */
-  typedef void (*SessionCreatedTracedCallback)(
-    uint64_t imsi, BearerCreatedList_t bearerList);
-
-  /**
-   * TracedCallback signature for session modified trace source.
-   * \param imsi The IMSI UE identifier.
-   * \param bearerList The list of bearer contexts modified.
-   */
-  typedef void (*SessionModifiedTracedCallback)(
-    uint64_t imsi, BearerModifiedList_t bearerList);
-
 protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
@@ -367,12 +351,6 @@ private:
 
   /** The bearer release trace source, fired at ReleaseDedicatedBearer. */
   TracedCallback<Ptr<const BearerInfo>> m_bearerReleaseTrace;
-
-  /** The context created trace source, fired at DoCreateSessionRequest. */
-  TracedCallback<uint64_t, BearerCreatedList_t> m_sessionCreatedTrace;
-
-  /** The context modified trace source, fired at DoModifyBearerRequest. */
-  TracedCallback<uint64_t, BearerModifiedList_t> m_sessionModifiedTrace;
 
   /** The P-GW TFT load balacing trace source, fired at PgwTftLoadBalancing. */
   TracedCallback<Ptr<const PgwInfo>, uint32_t, uint32_t> m_pgwTftLoadBalTrace;
