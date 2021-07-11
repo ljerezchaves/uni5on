@@ -27,7 +27,7 @@
 namespace ns3 {
 
 /**
- * \ingroup uni5onApps
+ * \ingroup uni5onTraffic
  * The helper handles MPEG trace file metadata.
  */
 class MovieHelper

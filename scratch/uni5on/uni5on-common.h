@@ -50,6 +50,10 @@ namespace ns3 {
  * The metadata for the UNI5ON architecture.
  *
  * \ingroup uni5on
+ * \defgroup uni5onTraffic Traffic
+ * Traffic configuration helpers and manager.
+ *
+ * \ingroup uni5on
  * \defgroup uni5onStats Statistics
  * Statistics calculators for monitoring the UNI5ON architecture.
  */

@@ -37,7 +37,7 @@ class SliceNetwork;
 class TrafficManager;
 
 /**
- * \ingroup uni5on
+ * \ingroup uni5onTraffic
  * The helper to create and configure client and server applications into UEs
  * and web server nodes. This helper also creates and aggregates a traffic
  * manager object to each UE.

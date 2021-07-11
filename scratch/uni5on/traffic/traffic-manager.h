@@ -33,7 +33,7 @@ class SliceController;
 class BaseClient;
 
 /**
- * \ingroup uni5onLogical
+ * \ingroup uni5onTraffic
  * Traffic manager which handles UNI5ON client applications start/stop events.
  * It interacts with the UNI5ON architecture to request and release bearers.
  * Each LteUeNetDevice has one TrafficManager object aggregated to it.
