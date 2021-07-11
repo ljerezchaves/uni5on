@@ -27,7 +27,8 @@ namespace ns3 {
 
 /**
  * \ingroup uni5on
- * The helper to create and configure MBB client and server applications.
+ * The helper to create and configure the network traffic for the
+ * UNI5ON architecture.
  */
 class ScenarioTraffic : public TrafficHelper
 {
@@ -46,9 +47,25 @@ protected:
   virtual void DoDispose ();
 
   // Inherited from ObjectBase
-  void NotifyConstructionCompleted (void);
+  void ConfigureHelpers (void);
+  void ConfigureUeTraffic (Ptr<UeInfo> ueInfo);
 
 private:
+  // Traffic manager attributes.
+  Time                        m_fullProbAt;       //!< Time to 100% requests.
+  Time                        m_halfProbAt;       //!< Time to 50% requests.
+  Time                        m_zeroProbAt;       //!< Time to 0% requests.
+
+  // Application helpers.
+  ApplicationHelper           m_autPilotHelper;   //!< Auto-pilot helper.
+  ApplicationHelper           m_bikeRaceHelper;   //!< Bicycle race helper.
+  ApplicationHelper           m_gameOpenHelper;   //!< Open Arena helper.
+  ApplicationHelper           m_gameTeamHelper;   //!< Team Fortress helper.
+  ApplicationHelper           m_gpsTrackHelper;   //!< GPS tracking helper.
+  ApplicationHelper           m_httpPageHelper;   //!< HTTP page helper.
+  ApplicationHelper           m_livVideoHelper;   //!< Live video helper.
+  ApplicationHelper           m_recVideoHelper;   //!< Recorded video helper.
+  ApplicationHelper           m_voipCallHelper;   //!< VoIP call helper.
 };
 
 } // namespace ns3

@@ -54,6 +54,12 @@ public:
    */
   static TypeId GetTypeId (void);
 
+  /**
+   * Slice ID accessor.
+   * \return The slice ID.
+   */
+  SliceId GetSliceId (void) const;
+
 protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
@@ -61,33 +67,16 @@ protected:
   // Inherited from ObjectBase
   void NotifyConstructionCompleted (void);
 
-private:
   /**
    * Configure application helpers for different traffic patterns.
    */
-  void ConfigureHelpers ();
+  virtual void ConfigureHelpers () = 0;
 
   /**
-   * Get the next port number available for use.
-   * \return The port number to use.
+   * Configure the UE and install applications for different traffic patterns.
+   * \param ueInfo The UE metadata.
    */
-  static uint16_t GetNextPortNo ();
-
-  /**
-   * Install a traffic manager into each UE and configure the EPS bearers and
-   * TFT packet filters for enable applications
-   * \attention The QCIs used here for each application are strongly related
-   *     to the DSCP mapping, which will reflect on the queues used by both
-   *     OpenFlow switches and traffic control module. Be careful if you
-   *     intend to change it.
-   * \internal Some notes about internal GbrQosInformation usage:
-   * \li The Maximum Bit Rate field is used by controller to install meter
-   *     rules for this traffic. When this value is left to 0, no meter rules
-   *     will be installed.
-   * \li The Guaranteed Bit Rate field is used by the controller to reserve the
-   *     requested bandwidth in OpenFlow EPC network (only for GBR beares).
-   */
-  void InstallApplications ();
+  virtual void ConfigureUeTraffic (Ptr<UeInfo> ueInfo) = 0;
 
   /**
    * Create the pair of client/server applications and install them,
@@ -111,6 +100,13 @@ private:
   void InstallAppDefault (
     Ptr<UeInfo> ueInfo, ApplicationHelper& helper);
 
+private:
+  /**
+   * Get the next port number available for use.
+   * \return The port number to use.
+   */
+  static uint16_t GetNextPortNo ();
+
   // Traffic helper.
   SliceId                     m_sliceId;          //!< Logical slice ID.
   Ptr<RadioNetwork>           m_radio;            //!< Radio network.
@@ -120,26 +116,12 @@ private:
   bool                        m_useOnlyDefault;   //!< Use only default bearer.
 
   // Traffic manager.
-  Time                        m_fullProbAt;       //!< Time to 100% requests.
-  Time                        m_halfProbAt;       //!< Time to 50% requests.
-  Time                        m_zeroProbAt;       //!< Time to 0% requests.
-  double                      m_initialProb;      //!< Initial start probab.
   ObjectFactory               m_managerFac;       //!< Traffic manager factory.
   Ptr<RandomVariableStream>   m_poissonRng;       //!< Inter-arrival traffic.
   bool                        m_restartApps;      //!< Continuous restart apps.
+  double                      m_initialProb;      //!< Initial start probab.
   Time                        m_startAppsAt;      //!< Time to start apps.
   Time                        m_stopAppsAt;       //!< Time to stop apps.
-
-  // Application helpers.
-  ApplicationHelper           m_autPilotHelper;   //!< Auto-pilot helper.
-  ApplicationHelper           m_bikeRaceHelper;   //!< Bicycle race helper.
-  ApplicationHelper           m_gameOpenHelper;   //!< Open Arena helper.
-  ApplicationHelper           m_gameTeamHelper;   //!< Team Fortress helper.
-  ApplicationHelper           m_gpsTrackHelper;   //!< GPS tracking helper.
-  ApplicationHelper           m_httpPageHelper;   //!< HTTP page helper.
-  ApplicationHelper           m_livVideoHelper;   //!< Live video helper.
-  ApplicationHelper           m_recVideoHelper;   //!< Recorded video helper.
-  ApplicationHelper           m_voipCallHelper;   //!< VoIP call helper.
 
   // Web server.
   Ptr<Node>                   m_webNode;          //!< Server node.
