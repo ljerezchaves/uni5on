@@ -389,10 +389,11 @@ EnableVerbose (bool enable)
 
       // Scenario components.
       LogComponentEnable ("ScenarioHelper",           logLevelWarnInfo);
+      LogComponentEnable ("ScenarioTraffic",          logLevelWarnInfo);
+
+      // Traffic components.
       LogComponentEnable ("TrafficHelper",            logLevelWarnInfo);
-      LogComponentEnable ("MbbTrafficHelper",         logLevelWarnInfo);
-      LogComponentEnable ("MtcTrafficHelper",         logLevelWarnInfo);
-      LogComponentEnable ("TmpTrafficHelper",         logLevelWarnInfo);
+      LogComponentEnable ("TrafficManager",           logLevelWarnInfo);
 
       // Infrastructure components.
       LogComponentEnable ("QosQueue",                 logLevelWarnInfo);
@@ -409,14 +410,13 @@ EnableVerbose (bool enable)
       LogComponentEnable ("SliceController",          logLevelWarnInfo);
       LogComponentEnable ("SliceNetwork",             logLevelWarnInfo);
       LogComponentEnable ("StatelessMme",             logLevelWarnInfo);
-      LogComponentEnable ("TrafficManager",           logLevelWarnInfo);
 
       // Metadata components.
+      LogComponentEnable ("BearerInfo",               logLevelWarnInfo);
       LogComponentEnable ("EnbInfo",                  logLevelWarnInfo);
       LogComponentEnable ("LinkInfo",                 logLevelWarnInfo);
       LogComponentEnable ("PgwInfo",                  logLevelWarnInfo);
       LogComponentEnable ("RingInfo",                 logLevelWarnInfo);
-      LogComponentEnable ("BearerInfo",               logLevelWarnInfo);
       LogComponentEnable ("SgwInfo",                  logLevelWarnInfo);
       LogComponentEnable ("UeInfo",                   logLevelWarnInfo);
 

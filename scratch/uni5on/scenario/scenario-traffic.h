@@ -1,6 +1,6 @@
 /* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2015 University of Campinas (Unicamp)
+ * Copyright (c) 2021 University of Campinas (Unicamp)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -18,8 +18,8 @@
  * Author: Luciano Jerez Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef MBB_TRAFFIC_HELPER_H
-#define MBB_TRAFFIC_HELPER_H
+#ifndef SCENARIO_TRAFFIC_H
+#define SCENARIO_TRAFFIC_H
 
 #include "../traffic/traffic-helper.h"
 
@@ -29,11 +29,11 @@ namespace ns3 {
  * \ingroup uni5on
  * The helper to create and configure MBB client and server applications.
  */
-class MbbTrafficHelper : public TrafficHelper
+class ScenarioTraffic : public TrafficHelper
 {
 public:
-  MbbTrafficHelper ();           //!< Default constructor.
-  virtual ~MbbTrafficHelper ();  //!< Dummy destructor, see DoDispose.
+  ScenarioTraffic ();           //!< Default constructor.
+  virtual ~ScenarioTraffic ();  //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
@@ -52,4 +52,4 @@ private:
 };
 
 } // namespace ns3
-#endif // MBB_TRAFFIC_HELPER_H
+#endif // SCENARIO_TRAFFIC_H

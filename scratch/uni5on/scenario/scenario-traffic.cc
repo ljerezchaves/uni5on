@@ -18,38 +18,48 @@
  * Author: Luciano Jerez Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef MTC_TRAFFIC_HELPER_H
-#define MTC_TRAFFIC_HELPER_H
-
-#include "../traffic/traffic-helper.h"
+#include "scenario-traffic.h"
 
 namespace ns3 {
 
-/**
- * \ingroup uni5on
- * The helper to create and configure MTC client and server applications.
- */
-class MtcTrafficHelper : public TrafficHelper
+NS_LOG_COMPONENT_DEFINE ("ScenarioTraffic");
+NS_OBJECT_ENSURE_REGISTERED (ScenarioTraffic);
+
+// ------------------------------------------------------------------------ //
+ScenarioTraffic::ScenarioTraffic ()
 {
-public:
-  MtcTrafficHelper ();           //!< Default constructor.
-  virtual ~MtcTrafficHelper ();  //!< Dummy destructor, see DoDispose.
+  NS_LOG_FUNCTION (this);
+}
 
-  /**
-   * Register this type.
-   * \return The object TypeId.
-   */
-  static TypeId GetTypeId (void);
+ScenarioTraffic::~ScenarioTraffic ()
+{
+  NS_LOG_FUNCTION (this);
+}
 
-protected:
-  /** Destructor implementation. */
-  virtual void DoDispose ();
+TypeId
+ScenarioTraffic::GetTypeId (void)
+{
+  static TypeId tid = TypeId ("ns3::ScenarioTraffic")
+    .SetParent<TrafficHelper> ()
+    .AddConstructor<ScenarioTraffic> ()
+  ;
+  return tid;
+}
 
-  // Inherited from ObjectBase
-  void NotifyConstructionCompleted (void);
+void
+ScenarioTraffic::DoDispose ()
+{
+  NS_LOG_FUNCTION (this);
 
-private:
-};
+  TrafficHelper::DoDispose ();
+}
+
+void
+ScenarioTraffic::NotifyConstructionCompleted ()
+{
+  NS_LOG_FUNCTION (this);
+
+  TrafficHelper::NotifyConstructionCompleted ();
+}
 
 } // namespace ns3
-#endif // MTC_TRAFFIC_HELPER_H
