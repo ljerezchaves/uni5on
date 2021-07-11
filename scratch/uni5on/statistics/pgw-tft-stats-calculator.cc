@@ -54,7 +54,7 @@ PgwTftStatsCalculator::GetTypeId (void)
     .AddConstructor<PgwTftStatsCalculator> ()
     .AddAttribute ("LbmStatsFilename",
                    "Filename for EPC P-GW TFT statistics.",
-                   StringValue ("pgw-tft-loadbal"),
+                   StringValue ("pgw-scaling"),
                    MakeStringAccessor (&PgwTftStatsCalculator::m_tftFilename),
                    MakeStringChecker ())
   ;

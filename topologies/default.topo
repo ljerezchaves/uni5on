@@ -112,7 +112,7 @@ default ns3::TransportStatsCalculator::TffStatsFilename "transport-traffic"
 default ns3::MobilityStatsCalculator::HvoStatsFilename "rrc-handover"
 default ns3::MobilityStatsCalculator::MobStatsFilename "ue-mobility"
 default ns3::MobilityStatsCalculator::RrcStatsFilename "rrc-procedures"
-default ns3::PgwTftStatsCalculator::LbmStatsFilename "pgw-tft-loadbal"
+default ns3::PgwTftStatsCalculator::LbmStatsFilename "pgw-scaling"
 default ns3::TrafficStatsCalculator::AppStatsFilename "traffic-flows-app-l7"
 default ns3::TrafficStatsCalculator::EpcStatsFilename "traffic-flows-epc-l2"
 
