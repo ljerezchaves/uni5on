@@ -151,13 +151,13 @@ private:
   DataRate                      m_pgwLinkRate;      //!< P-GW link data rate.
   Time                          m_pgwLinkDelay;     //!< P-GW link delay.
   uint16_t                      m_pgwInfraSwIdx;    //!< Transport switch index.
-  DataRate                      m_mainCpuCapacity;  //!< Main CPU capacity.
-  uint32_t                      m_mainFlowSize;     //!< Main flow table size.
   uint16_t                      m_nTfts;            //!< Number of TFT nodes.
   DataRate                      m_tftCpuCapacity;   //!< TFT CPU capacity.
-  uint32_t                      m_tftFlowSize;      //!< TFT flow table size.
-  uint32_t                      m_tftMeterSize;     //!< TFT meter table size.
+  uint32_t                      m_tftTableSize;      //!< TFT flow table size.
   Time                          m_tftTcamDelay;     //!< TFT TCAM delay.
+  DataRate                      m_ulDlCpuCapacity;  //!< UL/DL CPU capacity.
+  uint32_t                      m_ulDlTableSize;    //!< UL/DL table size.
+  Time                          m_ulDlTcamDelay;    //!< UL/DL TCAM delay.
 
   // S-GW user planes.
   Ptr<SgwInfo>                  m_sgwInfo;          //!< S-GW metadata.
@@ -165,7 +165,7 @@ private:
   Ptr<OFSwitch13Device>         m_sgwDevice;        //!< S-GW switch device.
   uint16_t                      m_sgwInfraSwIdx;    //!< Transport switch idx.
   DataRate                      m_sgwCpuCapacity;   //!< S-GW CPU capacity.
-  uint32_t                      m_sgwFlowSize;      //!< S-GW flow table size.
+  uint32_t                      m_sgwTableSize;      //!< S-GW flow table size.
   uint32_t                      m_sgwMeterSize;     //!< S-GW meter table size.
 
   // Helper and attributes for CSMA interface.

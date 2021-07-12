@@ -165,29 +165,34 @@ SliceNetwork::GetTypeId (void)
                    UintegerValue (0),
                    MakeUintegerAccessor (&SliceNetwork::m_pgwInfraSwIdx),
                    MakeUintegerChecker<uint16_t> ())
-    .AddAttribute ("PgwMainCpuCapacity",
-                   "CPU capacity for the P-GW main switch.",
+    .AddAttribute ("PgwUlDlCpuCapacity",
+                   "CPU capacity for the P-GW UL/DL switch.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    DataRateValue (DataRate ("2Gbps")),
-                   MakeDataRateAccessor (&SliceNetwork::m_mainCpuCapacity),
+                   MakeDataRateAccessor (&SliceNetwork::m_ulDlCpuCapacity),
                    MakeDataRateChecker ())
-    .AddAttribute ("PgwMainFlowTableSize",
-                   "Flow table size for the P-GW main switch.",
+    .AddAttribute ("PgwUlDlTableSize",
+                   "Flow table size for the P-GW UL/DL switch.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    UintegerValue (8192),
-                   MakeUintegerAccessor (&SliceNetwork::m_mainFlowSize),
+                   MakeUintegerAccessor (&SliceNetwork::m_ulDlTableSize),
                    MakeUintegerChecker<uint16_t> (0, 65535))
+    .AddAttribute ("PgwUlDlTcamDelay",
+                   "Average time for a TCAM operation in P-GW UL/DL switches.",
+                   TimeValue (MicroSeconds (20)),
+                   MakeTimeAccessor (&SliceNetwork::m_ulDlTcamDelay),
+                   MakeTimeChecker (Time (0)))
     .AddAttribute ("PgwTftCpuCapacity",
                    "CPU capacity for the P-GW TFT switches.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    DataRateValue (DataRate ("2Gbps")),
                    MakeDataRateAccessor (&SliceNetwork::m_tftCpuCapacity),
                    MakeDataRateChecker ())
-    .AddAttribute ("PgwTftFlowTableSize",
+    .AddAttribute ("PgwTftTableSize",
                    "Flow table size for the P-GW TFT switches.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    UintegerValue (8192),
-                   MakeUintegerAccessor (&SliceNetwork::m_tftFlowSize),
+                   MakeUintegerAccessor (&SliceNetwork::m_tftTableSize),
                    MakeUintegerChecker<uint16_t> (0, 65535))
     .AddAttribute ("PgwTftTcamDelay",
                    "Average time for a TCAM operation in P-GW TFT switches.",
@@ -220,11 +225,11 @@ SliceNetwork::GetTypeId (void)
                    DataRateValue (DataRate ("2Gbps")),
                    MakeDataRateAccessor (&SliceNetwork::m_sgwCpuCapacity),
                    MakeDataRateChecker ())
-    .AddAttribute ("SgwFlowTableSize",
+    .AddAttribute ("SgwTableSize",
                    "Flow table size for the S-GW switches.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    UintegerValue (8192),
-                   MakeUintegerAccessor (&SliceNetwork::m_sgwFlowSize),
+                   MakeUintegerAccessor (&SliceNetwork::m_sgwTableSize),
                    MakeUintegerChecker<uint16_t> (0, 65535))
 
     .AddAttribute ("LinkMtu",
@@ -399,15 +404,17 @@ SliceNetwork::CreatePgw (void)
   // No meter/group entries and 7 pipeline table (1 + the maximum number of TFT
   // adaptive levels considering the maximum of 32 TFT switches).
   m_switchHelper->SetDeviceAttribute (
-    "CpuCapacity", DataRateValue (m_mainCpuCapacity));
+    "CpuCapacity", DataRateValue (m_ulDlCpuCapacity));
   m_switchHelper->SetDeviceAttribute (
-    "FlowTableSize", UintegerValue (m_mainFlowSize));
+    "FlowTableSize", UintegerValue (m_ulDlTableSize));
   m_switchHelper->SetDeviceAttribute (
-    "GroupTableSize", UintegerValue (0));
+    "GroupTableSize", UintegerValue (m_ulDlTableSize));
   m_switchHelper->SetDeviceAttribute (
-    "MeterTableSize", UintegerValue (0));
+    "MeterTableSize", UintegerValue (m_ulDlTableSize));
   m_switchHelper->SetDeviceAttribute (
     "PipelineTables", UintegerValue (7));
+  m_switchHelper->SetDeviceAttribute (
+    "TcamDelay", TimeValue (m_ulDlTcamDelay));
 
   // Configure the P-GW main node as an OpenFlow switch.
   Ptr<Node> pgwMainNode = m_pgwNodes.Get (0);
@@ -487,15 +494,15 @@ SliceNetwork::CreatePgw (void)
   m_switchHelper->SetDeviceAttribute (
     "CpuCapacity", DataRateValue (m_tftCpuCapacity));
   m_switchHelper->SetDeviceAttribute (
-    "FlowTableSize", UintegerValue (m_tftFlowSize));
+    "FlowTableSize", UintegerValue (m_tftTableSize));
   m_switchHelper->SetDeviceAttribute (
-    "TcamDelay", TimeValue (m_tftTcamDelay));
+    "GroupTableSize", UintegerValue (m_tftTableSize));
   m_switchHelper->SetDeviceAttribute (
-    "GroupTableSize", UintegerValue (0));
-  m_switchHelper->SetDeviceAttribute (
-    "MeterTableSize", UintegerValue (0));
+    "MeterTableSize", UintegerValue (m_tftTableSize));
   m_switchHelper->SetDeviceAttribute (
     "PipelineTables", UintegerValue (1));
+  m_switchHelper->SetDeviceAttribute (
+    "TcamDelay", TimeValue (m_tftTcamDelay));
 
   // Connect all P-GW TFT switches to the P-GW main switch and to the S5
   // interface. Only downlink traffic will be sent to these switches.
@@ -563,11 +570,11 @@ SliceNetwork::CreateSgw (void)
   m_switchHelper->SetDeviceAttribute (
     "CpuCapacity", DataRateValue (m_sgwCpuCapacity));
   m_switchHelper->SetDeviceAttribute (
-    "FlowTableSize", UintegerValue (m_sgwFlowSize));
+    "FlowTableSize", UintegerValue (m_sgwTableSize));
   m_switchHelper->SetDeviceAttribute (
-    "GroupTableSize", UintegerValue (0));
+    "GroupTableSize", UintegerValue (m_sgwTableSize));
   m_switchHelper->SetDeviceAttribute (
-    "MeterTableSize", UintegerValue (0));
+    "MeterTableSize", UintegerValue (m_sgwTableSize));
   m_switchHelper->SetDeviceAttribute (
     "PipelineTables", UintegerValue (3));
 
