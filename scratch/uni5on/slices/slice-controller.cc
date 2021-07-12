@@ -1204,8 +1204,8 @@ SliceController::SgwBearerRequest (Ptr<BearerInfo> bInfo) const
   // exceeding the block threshold.
   if (!bInfo->IsAggregated ())
     {
-      double dlTabUse = sgwInfo->GetFlowTableUse (1);
-      double ulTabUse = sgwInfo->GetFlowTableUse (2);
+      double dlTabUse = sgwInfo->GetFlowTableUse (SGW_DL_TAB);
+      double ulTabUse = sgwInfo->GetFlowTableUse (SGW_UL_TAB);
       if (dlTabUse >= GetSgwBlockThs () || ulTabUse >= GetSgwBlockThs ())
         {
           success = false;
