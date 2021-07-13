@@ -18,8 +18,8 @@
  * Author: Luciano Jerez Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef INTER_TEID_H
-#define INTER_TEID_H
+#ifndef GLOBAL_IDS_H
+#define GLOBAL_IDS_H
 
 #include <ns3/core-module.h>
 #include "../uni5on-common.h"
@@ -201,4 +201,4 @@ public:
 };
 
 } // namespace ns3
-#endif // INTER_TEID_H
+#endif // GLOBAL_IDS_H
