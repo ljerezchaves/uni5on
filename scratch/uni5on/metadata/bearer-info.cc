@@ -534,7 +534,7 @@ BearerInfo::GetPgwS5Addr (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_ueInfo->GetPgwInfo ()->GetMainS5Addr ();
+  return m_ueInfo->GetPgwInfo ()->GetS5Addr ();
 }
 
 uint64_t
@@ -546,11 +546,11 @@ BearerInfo::GetPgwTftDpId (void) const
 }
 
 uint32_t
-BearerInfo::GetPgwTftS5PortNo (void) const
+BearerInfo::GetPgwTftToUlPortNo (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_ueInfo->GetPgwInfo ()->GetTftS5PortNo (GetPgwTftIdx ());
+  return m_ueInfo->GetPgwInfo ()->GetTftToUlPortNo (GetPgwTftIdx ());
 }
 
 uint64_t
@@ -824,7 +824,6 @@ BearerInfo::SetPgwTftIdx (uint16_t value)
 {
   NS_LOG_FUNCTION (this << value);
 
-  NS_ASSERT_MSG (value > 0, "The index 0 cannot be used.");
   m_pgwTftIdx = value;
 }
 

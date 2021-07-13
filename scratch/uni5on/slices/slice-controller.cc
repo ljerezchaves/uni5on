@@ -416,64 +416,108 @@ SliceController::NotifyPgwAttach (
       }
     }
 
-  // Configuring the P-GW MAIN switch.
+  // Configuring the P-GW UL switch.
   // -------------------------------------------------------------------------
-  // Table 0 -- P-GW MAIN default table -- [from higher to lower priority]
+  // Table 0 -- P-GW UL default table -- [from higher to lower priority]
   //
   {
     // IP packets coming from the S-GW (P-GW S5 port) and addressed to the
-    // Internet (Web IP address) have their destination MAC address rewritten
-    // to the Web SGi MAC address (mandatory when using logical ports) and are
-    // forward to the SGi interface port.
-    Mac48Address webMac = Mac48Address::ConvertFrom (webSgiDev->GetAddress ());
-    std::ostringstream cmd;
-    cmd << "flow-mod cmd=add,prio=64"
-        << ",table="    << PGW_MAIN_TAB
-        << ",flags="    << FLAGS_REMOVED_OVERLAP_RESET
-        << " eth_type=" << IPV4_PROT_NUM
-        << ",in_port="  << pgwInfo->GetMainS5PortNo ()
-        << ",ip_dst="   << Ipv4AddressHelper::GetAddress (webSgiDev)
-        << " write:set_field=eth_dst:" << webMac
-        << ",output="   << pgwInfo->GetMainSgiPortNo ();
-    DpctlExecute (pgwInfo->GetMainDpId (), cmd.str ());
-  }
-  {
-    // IP packets coming from the Internet (P-GW SGi port) and addressed to the
-    // UE network are sent to the table corresponding to the current P-GW TFT
-    // load balancing level. This is the only rule that is updated when the
+    // Internet (Web IP address) are sent to the table corresponding to the
+    // current P-GW TFT load balancing level. This rule is updated when the
     // level changes, sending packets to a different pipeline table.
     std::ostringstream cmd;
     cmd << "flow-mod cmd=add,prio=64"
         << ",table="    << PGW_MAIN_TAB
         << ",flags="    << FLAGS_REMOVED_OVERLAP_RESET
         << " eth_type=" << IPV4_PROT_NUM
-        << ",in_port="  << pgwInfo->GetMainSgiPortNo ()
+        << ",in_port="  << pgwInfo->GetUlS5PortNo ()
+        << ",ip_dst="   << m_webAddr
+        << "/"          << m_webMask.GetPrefixLength ()
+        << " goto:"     << pgwInfo->GetCurLevel () + 1;
+    DpctlExecute (pgwInfo->GetUlDpId (), cmd.str ());
+  }
+  {
+    // IP packets addressed to the UE network are sent to the S5 port.
+    std::ostringstream cmd;
+    cmd << "flow-mod cmd=add,prio=32"
+        << ",table="    << PGW_MAIN_TAB
+        << ",flags="    << FLAGS_REMOVED_OVERLAP_RESET
+        << " eth_type=" << IPV4_PROT_NUM
+        << ",ip_dst="   << m_ueAddr
+        << "/"          << m_ueMask.GetPrefixLength ()
+        << " apply:output=" << pgwInfo->GetUlS5PortNo ();
+    DpctlExecute (pgwInfo->GetUlDpId (), cmd.str ());
+  }
+
+  // Configuring the P-GW DL switch.
+  // -------------------------------------------------------------------------
+  // Table 0 -- P-GW DL default table -- [from higher to lower priority]
+  //
+  {
+    // IP packets coming from the Internet (P-GW SGi port) and addressed to the
+    // UE network are sent to the table corresponding to the current P-GW TFT
+    // load balancing level. This rule is updated when the level changes,
+    // sending packets to a different pipeline table.
+    std::ostringstream cmd;
+    cmd << "flow-mod cmd=add,prio=64"
+        << ",table="    << PGW_MAIN_TAB
+        << ",flags="    << FLAGS_REMOVED_OVERLAP_RESET
+        << " eth_type=" << IPV4_PROT_NUM
+        << ",in_port="  << pgwInfo->GetDlSgiPortNo ()
         << ",ip_dst="   << m_ueAddr
         << "/"          << m_ueMask.GetPrefixLength ()
         << " goto:"     << pgwInfo->GetCurLevel () + 1;
-    DpctlExecute (pgwInfo->GetMainDpId (), cmd.str ());
+    DpctlExecute (pgwInfo->GetDlDpId (), cmd.str ());
+  }
+  {
+    // IP packets addressed to the Internet (Web IP address) have their
+    // destination MAC address rewritten to the Web SGi MAC address (mandatory
+    // when using logical ports for tunneling) and are sent to the SGi port.
+    Mac48Address webMac = Mac48Address::ConvertFrom (webSgiDev->GetAddress ());
+    std::ostringstream cmd;
+    cmd << "flow-mod cmd=add,prio=32"
+        << ",table="    << PGW_MAIN_TAB
+        << ",flags="    << FLAGS_REMOVED_OVERLAP_RESET
+        << " eth_type=" << IPV4_PROT_NUM
+        << ",ip_dst="   << Ipv4AddressHelper::GetAddress (webSgiDev)
+        << " write:set_field=eth_dst:" << webMac
+        << ",output=" << pgwInfo->GetDlSgiPortNo ();
+    DpctlExecute (pgwInfo->GetDlDpId (), cmd.str ());
   }
 
   // -------------------------------------------------------------------------
-  // Table 1..N -- P-GW MAIN load balancing -- [from higher to lower priority]
+  // Table 1..N -- P-GW load balancing -- [from higher to lower priority]
   //
-  for (uint16_t tftIdx = 1; tftIdx <= pgwInfo->GetMaxTfts (); tftIdx++)
+  for (uint16_t tftIdx = 0; tftIdx < pgwInfo->GetMaxTfts (); tftIdx++)
     {
-      // Configuring the P-GW main switch to forward traffic to different P-GW
-      // TFT switches considering all possible load balancing levels.
-      for (uint16_t tft = pgwInfo->GetMaxTfts (); tftIdx <= tft; tft /= 2)
+      // Configuring the P-GW UL and DL switches to forward traffic to different
+      // P-GW TFT switches considering all possible load balancing levels.
+      for (uint16_t tft = pgwInfo->GetMaxTfts (); tftIdx < tft; tft /= 2)
         {
           uint16_t lbLevel = static_cast<uint16_t> (log2 (tft));
           uint16_t ipMask = (1 << lbLevel) - 1;
-          std::ostringstream cmd;
-          cmd << "flow-mod cmd=add,prio=64"
-              << ",table="        << lbLevel + 1
-              << ",flags="        << FLAGS_REMOVED_OVERLAP_RESET
-              << " eth_type="     << IPV4_PROT_NUM
-              << ",ip_dst=0.0.0." << tftIdx - 1
-              << "/0.0.0."        << ipMask
-              << " apply:output=" << pgwInfo->GetMainToTftPortNo (tftIdx);
-          DpctlExecute (pgwInfo->GetMainDpId (), cmd.str ());
+
+          // Use UE (destination) address.
+          std::ostringstream cmdDl;
+          cmdDl << "flow-mod cmd=add,prio=64"
+                << ",table="        << lbLevel + 1
+                << ",flags="        << FLAGS_REMOVED_OVERLAP_RESET
+                << " eth_type="     << IPV4_PROT_NUM
+                << ",ip_dst=0.0.0." << tftIdx
+                << "/0.0.0."        << ipMask
+                << " apply:output=" << pgwInfo->GetDlToTftPortNo (tftIdx);
+          DpctlExecute (pgwInfo->GetDlDpId (), cmdDl.str ());
+
+          // Use UE (source) address.
+          std::ostringstream cmdUl;
+          cmdUl << "flow-mod cmd=add,prio=64"
+                << ",table="        << lbLevel + 1
+                << ",flags="        << FLAGS_REMOVED_OVERLAP_RESET
+                << " eth_type="     << IPV4_PROT_NUM
+                << ",ip_src=0.0.0." << tftIdx
+                << "/0.0.0."        << ipMask
+                << " apply:output=" << pgwInfo->GetUlToTftPortNo (tftIdx);
+          DpctlExecute (pgwInfo->GetUlDpId (), cmdUl.str ());
         }
     }
 
@@ -481,7 +525,20 @@ SliceController::NotifyPgwAttach (
   // ---------------------------------------------------------------------
   // Table 0 -- P-GW TFT default table -- [from higher to lower priority]
   //
-  // Entries will be installed here by PgwRulesInstall function.
+  // Downlink rules will be installed here by PgwRulesInstall function.
+  //
+  // Default uplink rules.
+  for (uint16_t tftIdx = 0; tftIdx < pgwInfo->GetMaxTfts (); tftIdx++)
+    {
+      std::ostringstream cmd;
+      cmd << "flow-mod cmd=add,prio=32"
+          << ",table="        << PGW_TFT_TAB
+          << ",flags="        << FLAGS_REMOVED_OVERLAP_RESET
+          << " eth_type="     << IPV4_PROT_NUM
+          << ",in_port="      << pgwInfo->GetTftToUlPortNo (tftIdx)
+          << " apply:output=" << pgwInfo->GetTftToDlPortNo (tftIdx);
+      DpctlExecute (pgwInfo->GetTftDpId (tftIdx), cmd.str ());
+    }
 }
 
 void
@@ -931,7 +988,7 @@ SliceController::GetTftIdx (
     {
       activeTfts = m_pgwInfo->GetCurTfts ();
     }
-  return 1 + (bInfo->GetUeAddr ().Get () % activeTfts);
+  return (bInfo->GetUeAddr ().Get () % activeTfts);
 }
 
 void
@@ -1010,16 +1067,27 @@ SliceController::PgwTftLoadBalancing (void)
             }
         }
 
-      // Schedule to update the P-GW main switch.
-      std::ostringstream cmd;
-      cmd << "flow-mod cmd=mods,prio=64"
-          << ",table="    << PGW_MAIN_TAB
-          << " eth_type=" << IPV4_PROT_NUM
-          << ",in_port="  << m_pgwInfo->GetMainSgiPortNo ()
-          << ",ip_dst="   << m_ueAddr
-          << "/"          << m_ueMask.GetPrefixLength ()
-          << " goto:"     << nextLevel + 1;
-      DpctlSchedule (MilliSeconds (500), m_pgwInfo->GetMainDpId (), cmd.str ());
+      // Schedule to update the P-GW DL switch.
+      std::ostringstream cmdDl;
+      cmdDl << "flow-mod cmd=mods,prio=64"
+            << ",table="    << PGW_MAIN_TAB
+            << " eth_type=" << IPV4_PROT_NUM
+            << ",in_port="  << m_pgwInfo->GetDlSgiPortNo ()
+            << ",ip_dst="   << m_ueAddr
+            << "/"          << m_ueMask.GetPrefixLength ()
+            << " goto:"     << nextLevel + 1;
+      DpctlSchedule (MilliSeconds (500), m_pgwInfo->GetDlDpId (), cmdDl.str ());
+
+      // Schedule to update the P-GW UL switch.
+      std::ostringstream cmdUl;
+      cmdUl << "flow-mod cmd=mods,prio=64"
+            << ",table="    << PGW_MAIN_TAB
+            << " eth_type=" << IPV4_PROT_NUM
+            << ",in_port="  << m_pgwInfo->GetUlS5PortNo ()
+            << ",ip_dst="   << m_webAddr
+            << "/"          << m_webMask.GetPrefixLength ()
+            << " goto:"     << nextLevel + 1;
+      DpctlSchedule (MilliSeconds (500), m_pgwInfo->GetUlDpId (), cmdUl.str ());
     }
 
   // Fire the load balancing trace source.
@@ -1045,7 +1113,7 @@ SliceController::PgwBearerRequest (Ptr<BearerInfo> bInfo) const
   // block threshold.
   if (!bInfo->IsAggregated ())
     {
-      double tabUse = m_pgwInfo->GetFlowTableUse (bInfo->GetPgwTftIdx (), 0);
+      double tabUse = m_pgwInfo->GetTftFlowTableUse (bInfo->GetPgwTftIdx (), 0);
       if (tabUse >= GetPgwBlockThs ())
         {
           success = false;
@@ -1060,7 +1128,7 @@ SliceController::PgwBearerRequest (Ptr<BearerInfo> bInfo) const
   // the block threshold.
   if (GetPgwBlockPolicy () == OpMode::ON)
     {
-      double cpuUse = m_pgwInfo->GetEwmaCpuUse (bInfo->GetPgwTftIdx ());
+      double cpuUse = m_pgwInfo->GetTftEwmaCpuUse (bInfo->GetPgwTftIdx ());
       if (cpuUse >= GetPgwBlockThs ())
         {
           success = false;
@@ -1104,7 +1172,7 @@ SliceController::PgwRulesInstall (Ptr<BearerInfo> bInfo)
       // Instruction: apply action: set tunnel ID, output port.
       act << " apply:set_field=tunn_id:"
           << GetTunnelIdStr (bInfo->GetTeid (), bInfo->GetSgwS5Addr ())
-          << ",output=" << bInfo->GetPgwTftS5PortNo ();
+          << ",output=" << bInfo->GetPgwTftToUlPortNo ();
 
       // Install downlink OpenFlow TFT rules.
       success &= TftRulesInstall (bInfo->GetTft (), Direction::DLINK,
@@ -1159,7 +1227,7 @@ SliceController::PgwRulesMove (
       // Instruction: apply action: set tunnel ID, output port.
       act << " apply:set_field=tunn_id:"
           << GetTunnelIdStr (bInfo->GetTeid (), bInfo->GetSgwS5Addr ())
-          << ",output=" << bInfo->GetPgwTftS5PortNo ();
+          << ",output=" << bInfo->GetPgwTftToUlPortNo ();
 
       // Install downlink OpenFlow TFT rules.
       success &= TftRulesInstall (bInfo->GetTft (), Direction::DLINK,

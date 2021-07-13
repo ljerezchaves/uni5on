@@ -30,11 +30,8 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("PgwInfo");
 NS_OBJECT_ENSURE_REGISTERED (PgwInfo);
 
-PgwInfo::PgwInfo (uint32_t pgwId, uint16_t nTfts, uint32_t sgiPortNo,
-                  uint16_t infraSwIdx, Ptr<SliceController> ctrlApp)
-  : m_infraSwIdx (infraSwIdx),
-  m_pgwId (pgwId),
-  m_sgiPortNo (sgiPortNo),
+PgwInfo::PgwInfo (uint32_t pgwId, uint16_t nTfts, Ptr<SliceController> ctrlApp)
+  : m_pgwId (pgwId),
   m_sliceCtrl (ctrlApp),
   m_tftSwitches (nTfts)
 {
@@ -64,11 +61,35 @@ PgwInfo::GetInfraSwIdx (void) const
 }
 
 uint32_t
+PgwInfo::GetInfraSwS5PortNo (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_infraSwS5PortNo;
+}
+
+uint32_t
 PgwInfo::GetPgwId (void) const
 {
   NS_LOG_FUNCTION (this);
 
   return m_pgwId;
+}
+
+Ipv4Address
+PgwInfo::GetS5Addr (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_s5Addr;
+}
+
+Ipv4Address
+PgwInfo::GetSgiAddr (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_sgiAddr;
 }
 
 Ptr<SliceController>
@@ -111,98 +132,26 @@ PgwInfo::GetMaxTfts (void) const
   return m_tftSwitches;
 }
 
-uint32_t
-PgwInfo::GetFlowTableCur (uint16_t idx, uint8_t tableId) const
+uint64_t
+PgwInfo::GetDlDpId (void) const
 {
-  NS_LOG_FUNCTION (this << idx);
+  NS_LOG_FUNCTION (this);
 
-  NS_ASSERT_MSG (idx < m_devices.GetN (), "Invalid index.");
-  return m_devices.Get (idx)->GetFlowTableEntries (tableId);
-}
-
-uint32_t
-PgwInfo::GetFlowTableMax (uint16_t idx, uint8_t tableId) const
-{
-  NS_LOG_FUNCTION (this << idx);
-
-  NS_ASSERT_MSG (idx < m_devices.GetN (), "Invalid index.");
-  return m_devices.Get (idx)->GetFlowTableSize (tableId);
-}
-
-double
-PgwInfo::GetFlowTableUse (uint16_t idx, uint8_t tableId) const
-{
-  NS_LOG_FUNCTION (this << idx);
-
-  NS_ASSERT_MSG (idx < m_devices.GetN (), "Invalid index.");
-  return m_devices.Get (idx)->GetFlowTableUsage (tableId);
-}
-
-DataRate
-PgwInfo::GetEwmaCpuCur (uint16_t idx) const
-{
-  NS_LOG_FUNCTION (this << idx);
-
-  NS_ASSERT_MSG (idx < m_devices.GetN (), "Invalid index.");
-  return GetStats (idx)->GetEwmaCpuLoad ();
-}
-
-DataRate
-PgwInfo::GetCpuMax (uint16_t idx) const
-{
-  NS_LOG_FUNCTION (this << idx);
-
-  NS_ASSERT_MSG (idx < m_devices.GetN (), "Invalid index.");
-  return m_devices.Get (idx)->GetCpuCapacity ();
-}
-
-double
-PgwInfo::GetEwmaCpuUse (uint16_t idx) const
-{
-  NS_LOG_FUNCTION (this << idx);
-
-  return static_cast<double> (GetEwmaCpuCur (idx).GetBitRate ()) /
-         static_cast<double> (GetCpuMax (idx).GetBitRate ());
+  NS_ASSERT_MSG (m_ulDlDevices.GetN () == 2, "No P-GW DL switch registered");
+  return m_ulDlDevices.Get (PGW_DL_IDX)->GetDatapathId ();
 }
 
 uint64_t
-PgwInfo::GetMainDpId (void) const
+PgwInfo::GetUlDpId (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  NS_ASSERT_MSG (m_infraSwS5PortNos.size (), "No P-GW main switch registered");
-  return m_devices.Get (0)->GetDatapathId ();
+  NS_ASSERT_MSG (m_ulDlDevices.GetN () == 2, "No P-GW UL switch registered");
+  return m_ulDlDevices.Get (PGW_UL_IDX)->GetDatapathId ();
 }
 
 uint32_t
-PgwInfo::GetMainInfraSwS5PortNo (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  NS_ASSERT_MSG (m_infraSwS5PortNos.size (), "No P-GW main switch registered");
-  return m_infraSwS5PortNos.at (0);
-}
-
-Ipv4Address
-PgwInfo::GetMainS5Addr (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  NS_ASSERT_MSG (m_s5Addrs.size (), "No P-GW main switch registered.");
-  return m_s5Addrs.at (0);
-}
-
-uint32_t
-PgwInfo::GetMainS5PortNo (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  NS_ASSERT_MSG (m_s5PortNos.size (), "No P-GW main switch registered.");
-  return m_s5PortNos.at (0);
-}
-
-uint32_t
-PgwInfo::GetMainSgiPortNo (void) const
+PgwInfo::GetDlSgiPortNo (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -210,13 +159,101 @@ PgwInfo::GetMainSgiPortNo (void) const
 }
 
 uint32_t
-PgwInfo::GetMainToTftPortNo (uint16_t idx) const
+PgwInfo::GetUlS5PortNo (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_s5PortNo;
+}
+
+uint32_t
+PgwInfo::GetDlToTftPortNo (uint16_t idx) const
 {
   NS_LOG_FUNCTION (this << idx);
 
-  NS_ASSERT_MSG (idx > 0, "Invalid TFT index.");
-  NS_ASSERT_MSG (idx < m_mainToTftPortNos.size (), "Invalid TFT index.");
-  return m_mainToTftPortNos.at (idx);
+  NS_ASSERT_MSG (idx < m_dlToTftPortNos.size (), "Invalid TFT index.");
+  return m_dlToTftPortNos.at (idx);
+}
+
+uint32_t
+PgwInfo::GetUlToTftPortNo (uint16_t idx) const
+{
+  NS_LOG_FUNCTION (this << idx);
+
+  NS_ASSERT_MSG (idx < m_ulToTftPortNos.size (), "Invalid TFT index.");
+  return m_ulToTftPortNos.at (idx);
+}
+
+uint32_t
+PgwInfo::GetTftToDlPortNo (uint16_t idx) const
+{
+  NS_LOG_FUNCTION (this << idx);
+
+  NS_ASSERT_MSG (idx < m_tftToDlPortNos.size (), "Invalid TFT index.");
+  return m_tftToDlPortNos.at (idx);
+}
+
+uint32_t
+PgwInfo::GetTftToUlPortNo (uint16_t idx) const
+{
+  NS_LOG_FUNCTION (this << idx);
+
+  NS_ASSERT_MSG (idx < m_tftToUlPortNos.size (), "Invalid TFT index.");
+  return m_tftToUlPortNos.at (idx);
+}
+
+uint32_t
+PgwInfo::GetTftFlowTableCur (uint16_t idx, uint8_t tableId) const
+{
+  NS_LOG_FUNCTION (this << idx);
+
+  NS_ASSERT_MSG (idx < m_tftDevices.GetN (), "Invalid index.");
+  return m_tftDevices.Get (idx)->GetFlowTableEntries (tableId);
+}
+
+uint32_t
+PgwInfo::GetTftFlowTableMax (uint16_t idx, uint8_t tableId) const
+{
+  NS_LOG_FUNCTION (this << idx);
+
+  NS_ASSERT_MSG (idx < m_tftDevices.GetN (), "Invalid index.");
+  return m_tftDevices.Get (idx)->GetFlowTableSize (tableId);
+}
+
+double
+PgwInfo::GetTftFlowTableUse (uint16_t idx, uint8_t tableId) const
+{
+  NS_LOG_FUNCTION (this << idx);
+
+  NS_ASSERT_MSG (idx < m_tftDevices.GetN (), "Invalid index.");
+  return m_tftDevices.Get (idx)->GetFlowTableUsage (tableId);
+}
+
+DataRate
+PgwInfo::GetTftEwmaCpuCur (uint16_t idx) const
+{
+  NS_LOG_FUNCTION (this << idx);
+
+  NS_ASSERT_MSG (idx < m_tftDevices.GetN (), "Invalid index.");
+  return GetTftStats (idx)->GetEwmaCpuLoad ();
+}
+
+double
+PgwInfo::GetTftEwmaCpuUse (uint16_t idx) const
+{
+  NS_LOG_FUNCTION (this << idx);
+
+  return static_cast<double> (GetTftEwmaCpuCur (idx).GetBitRate ()) /
+         static_cast<double> (GetTftCpuMax (idx).GetBitRate ());
+}
+
+DataRate
+PgwInfo::GetTftCpuMax (uint16_t idx) const
+{
+  NS_LOG_FUNCTION (this << idx);
+
+  NS_ASSERT_MSG (idx < m_tftDevices.GetN (), "Invalid index.");
+  return m_tftDevices.Get (idx)->GetCpuCapacity ();
 }
 
 uint64_t
@@ -224,49 +261,8 @@ PgwInfo::GetTftDpId (uint16_t idx) const
 {
   NS_LOG_FUNCTION (this << idx);
 
-  NS_ASSERT_MSG (idx > 0, "Invalid TFT index.");
-  NS_ASSERT_MSG (idx < m_devices.GetN (), "Invalid TFT index.");
-  return m_devices.Get (idx)->GetDatapathId ();
-}
-
-uint32_t
-PgwInfo::GetTftInfraSwS5PortNo (uint16_t idx) const
-{
-  NS_LOG_FUNCTION (this << idx);
-
-  NS_ASSERT_MSG (idx > 0, "Invalid TFT index.");
-  NS_ASSERT_MSG (idx < m_infraSwS5PortNos.size (), "Invalid TFT index.");
-  return m_infraSwS5PortNos.at (idx);
-}
-
-Ipv4Address
-PgwInfo::GetTftS5Addr (uint16_t idx) const
-{
-  NS_LOG_FUNCTION (this << idx);
-
-  NS_ASSERT_MSG (idx > 0, "Invalid TFT index.");
-  NS_ASSERT_MSG (idx < m_s5Addrs.size (), "Invalid TFT index.");
-  return m_s5Addrs.at (idx);
-}
-
-uint32_t
-PgwInfo::GetTftS5PortNo (uint16_t idx) const
-{
-  NS_LOG_FUNCTION (this << idx);
-
-  NS_ASSERT_MSG (idx > 0, "Invalid TFT index.");
-  NS_ASSERT_MSG (idx < m_s5PortNos.size (), "Invalid TFT index.");
-  return m_s5PortNos.at (idx);
-}
-
-uint32_t
-PgwInfo::GetTftToMainPortNo (uint16_t idx) const
-{
-  NS_LOG_FUNCTION (this << idx);
-
-  NS_ASSERT_MSG (idx > 0, "Invalid TFT index.");
-  NS_ASSERT_MSG (idx < m_tftToMainPortNos.size (), "Invalid TFT index.");
-  return m_tftToMainPortNos.at (idx);
+  NS_ASSERT_MSG (idx < m_tftDevices.GetN (), "Invalid TFT index.");
+  return m_tftDevices.Get (idx)->GetDatapathId ();
 }
 
 uint32_t
@@ -275,9 +271,9 @@ PgwInfo::GetTftAvgFlowTableCur (uint8_t tableId) const
   NS_LOG_FUNCTION (this);
 
   uint32_t value = 0;
-  for (uint16_t idx = 1; idx <= GetCurTfts (); idx++)
+  for (uint16_t idx = 0; idx < GetCurTfts (); idx++)
     {
-      value += GetFlowTableCur (idx, tableId);
+      value += GetTftFlowTableCur (idx, tableId);
     }
   return value / GetCurTfts ();
 }
@@ -288,9 +284,9 @@ PgwInfo::GetTftAvgFlowTableMax (uint8_t tableId) const
   NS_LOG_FUNCTION (this);
 
   uint32_t value = 0;
-  for (uint16_t idx = 1; idx <= GetCurTfts (); idx++)
+  for (uint16_t idx = 0; idx < GetCurTfts (); idx++)
     {
-      value += GetFlowTableMax (idx, tableId);
+      value += GetTftFlowTableMax (idx, tableId);
     }
   return value / GetCurTfts ();
 }
@@ -301,9 +297,9 @@ PgwInfo::GetTftAvgFlowTableUse (uint8_t tableId) const
   NS_LOG_FUNCTION (this);
 
   double value = 0.0;
-  for (uint16_t idx = 1; idx <= GetCurTfts (); idx++)
+  for (uint16_t idx = 0; idx < GetCurTfts (); idx++)
     {
-      value += GetFlowTableUse (idx, tableId);
+      value += GetTftFlowTableUse (idx, tableId);
     }
   return value / GetCurTfts ();
 }
@@ -314,9 +310,9 @@ PgwInfo::GetTftAvgEwmaCpuCur (void) const
   NS_LOG_FUNCTION (this);
 
   uint64_t value = 0;
-  for (uint16_t idx = 1; idx <= GetCurTfts (); idx++)
+  for (uint16_t idx = 0; idx < GetCurTfts (); idx++)
     {
-      value += GetEwmaCpuCur (idx).GetBitRate ();
+      value += GetTftEwmaCpuCur (idx).GetBitRate ();
     }
   return DataRate (value / GetCurTfts ());
 }
@@ -327,9 +323,9 @@ PgwInfo::GetTftAvgCpuMax (void) const
   NS_LOG_FUNCTION (this);
 
   uint64_t value = 0;
-  for (uint16_t idx = 1; idx <= GetCurTfts (); idx++)
+  for (uint16_t idx = 0; idx < GetCurTfts (); idx++)
     {
-      value += GetCpuMax (idx).GetBitRate ();
+      value += GetTftCpuMax (idx).GetBitRate ();
     }
   return DataRate (value / GetCurTfts ());
 }
@@ -340,9 +336,9 @@ PgwInfo::GetTftAvgEwmaCpuUse (void) const
   NS_LOG_FUNCTION (this);
 
   double value = 0.0;
-  for (uint16_t idx = 1; idx <= GetCurTfts (); idx++)
+  for (uint16_t idx = 0; idx < GetCurTfts (); idx++)
     {
-      value += GetEwmaCpuUse (idx);
+      value += GetTftEwmaCpuUse (idx);
     }
   return value / GetCurTfts ();
 }
@@ -353,9 +349,9 @@ PgwInfo::GetTftMaxFlowTableMax (uint8_t tableId) const
   NS_LOG_FUNCTION (this);
 
   uint32_t value = 0;
-  for (uint16_t idx = 1; idx <= GetCurTfts (); idx++)
+  for (uint16_t idx = 0; idx < GetCurTfts (); idx++)
     {
-      value = std::max (value, GetFlowTableMax (idx, tableId));
+      value = std::max (value, GetTftFlowTableMax (idx, tableId));
     }
   return value;
 }
@@ -366,9 +362,9 @@ PgwInfo::GetTftMaxFlowTableCur (uint8_t tableId) const
   NS_LOG_FUNCTION (this);
 
   uint32_t value = 0;
-  for (uint16_t idx = 1; idx <= GetCurTfts (); idx++)
+  for (uint16_t idx = 0; idx < GetCurTfts (); idx++)
     {
-      value = std::max (value, GetFlowTableCur (idx, tableId));
+      value = std::max (value, GetTftFlowTableCur (idx, tableId));
     }
   return value;
 }
@@ -379,9 +375,9 @@ PgwInfo::GetTftMaxFlowTableUse (uint8_t tableId) const
   NS_LOG_FUNCTION (this);
 
   double value = 0.0;
-  for (uint16_t idx = 1; idx <= GetCurTfts (); idx++)
+  for (uint16_t idx = 0; idx < GetCurTfts (); idx++)
     {
-      value = std::max (value, GetFlowTableUse (idx, tableId));
+      value = std::max (value, GetTftFlowTableUse (idx, tableId));
     }
   return value;
 }
@@ -392,9 +388,9 @@ PgwInfo::GetTftMaxEwmaCpuCur (void) const
   NS_LOG_FUNCTION (this);
 
   uint64_t value = 0;
-  for (uint16_t idx = 1; idx <= GetCurTfts (); idx++)
+  for (uint16_t idx = 0; idx < GetCurTfts (); idx++)
     {
-      value = std::max (value, GetEwmaCpuCur (idx).GetBitRate ());
+      value = std::max (value, GetTftEwmaCpuCur (idx).GetBitRate ());
     }
   return DataRate (value);
 }
@@ -405,9 +401,9 @@ PgwInfo::GetTftMaxCpuMax (void) const
   NS_LOG_FUNCTION (this);
 
   uint64_t value = 0;
-  for (uint16_t idx = 1; idx <= GetCurTfts (); idx++)
+  for (uint16_t idx = 0; idx < GetCurTfts (); idx++)
     {
-      value = std::max (value, GetCpuMax (idx).GetBitRate ());
+      value = std::max (value, GetTftCpuMax (idx).GetBitRate ());
     }
   return DataRate (value);
 }
@@ -418,9 +414,9 @@ PgwInfo::GetTftMaxEwmaCpuUse () const
   NS_LOG_FUNCTION (this);
 
   double value = 0.0;
-  for (uint16_t idx = 1; idx <= GetCurTfts (); idx++)
+  for (uint16_t idx = 0; idx < GetCurTfts (); idx++)
     {
-      value = std::max (value, GetEwmaCpuUse (idx));
+      value = std::max (value, GetTftEwmaCpuUse (idx));
     }
   return value;
 }
@@ -429,7 +425,6 @@ std::ostream &
 PgwInfo::PrintHeader (std::ostream &os)
 {
   os << " " << setw (6)  << "PgwId"
-     << " " << setw (6)  << "PgwDp"
      << " " << setw (6)  << "PgwSw"
      << " " << setw (11) << "PgwS5Addr";
   return os;
@@ -439,7 +434,6 @@ std::ostream &
 PgwInfo::PrintNull (std::ostream &os)
 {
   os << " " << setw (6)  << "-"
-     << " " << setw (6)  << "-"
      << " " << setw (6)  << "-"
      << " " << setw (11) << "-";
   return os;
@@ -455,27 +449,47 @@ PgwInfo::DoDispose ()
 }
 
 Ptr<OFSwitch13StatsCalculator>
-PgwInfo::GetStats (uint16_t idx) const
+PgwInfo::GetTftStats (uint16_t idx) const
 {
   Ptr<OFSwitch13StatsCalculator> stats;
-  stats = m_devices.Get (idx)->GetObject<OFSwitch13StatsCalculator> ();
+  stats = m_tftDevices.Get (idx)->GetObject<OFSwitch13StatsCalculator> ();
   NS_ABORT_MSG_IF (!stats, "Enable OFSwitch13 datapath stats.");
   return stats;
 }
 
 void
-PgwInfo::SaveSwitchInfo (Ptr<OFSwitch13Device> device, Ipv4Address s5Addr,
-                         uint32_t s5PortNo, uint32_t infraSwS5PortNo,
-                         uint32_t mainToTftPortNo, uint32_t tftToMainPortNo)
+PgwInfo::SaveTftInfo (
+  Ptr<OFSwitch13Device> device, uint32_t tftToDlPortNo,
+  uint32_t tftToUlPortNo, uint32_t dlToTftPortNo, uint32_t ulToTftPortNo)
 {
-  NS_LOG_FUNCTION (this << device << s5Addr << s5PortNo << infraSwS5PortNo);
+  NS_LOG_FUNCTION (this << device << tftToDlPortNo << tftToUlPortNo <<
+                   dlToTftPortNo << ulToTftPortNo);
 
-  m_devices.Add (device);
-  m_s5Addrs.push_back (s5Addr);
-  m_s5PortNos.push_back (s5PortNo);
-  m_infraSwS5PortNos.push_back (infraSwS5PortNo);
-  m_mainToTftPortNos.push_back (mainToTftPortNo);
-  m_tftToMainPortNos.push_back (tftToMainPortNo);
+  m_tftDevices.Add (device);
+  m_tftToDlPortNos.push_back (tftToDlPortNo);
+  m_tftToUlPortNos.push_back (tftToUlPortNo);
+  m_dlToTftPortNos.push_back (dlToTftPortNo);
+  m_ulToTftPortNos.push_back (ulToTftPortNo);
+}
+
+void
+PgwInfo::SaveUlDlInfo (
+  Ptr<OFSwitch13Device> dlDevice, Ptr<OFSwitch13Device> ulDevice,
+  uint32_t sgiPortNo, Ipv4Address sgiAddr,
+  uint32_t s5PortNo, Ipv4Address s5Addr,
+  uint16_t infraSwIdx, uint32_t infraSwS5PortNo)
+{
+  NS_LOG_FUNCTION (this << dlDevice << ulDevice << sgiPortNo << sgiAddr <<
+                   s5PortNo << s5Addr << infraSwIdx << infraSwS5PortNo);
+
+  m_ulDlDevices.Add (dlDevice);
+  m_ulDlDevices.Add (ulDevice);
+  m_sgiPortNo = sgiPortNo;
+  m_sgiAddr = sgiAddr;
+  m_s5PortNo = s5PortNo;
+  m_s5Addr = s5Addr;
+  m_infraSwIdx = infraSwIdx;
+  m_infraSwS5PortNo = infraSwS5PortNo;
 }
 
 void
@@ -490,10 +504,9 @@ std::ostream & operator << (std::ostream &os, const PgwInfo &pgwInfo)
 {
   // Trick to preserve alignment.
   std::ostringstream ipS5Str;
-  pgwInfo.GetMainS5Addr ().Print (ipS5Str);
+  pgwInfo.GetS5Addr ().Print (ipS5Str);
 
   os << " " << setw (6)  << pgwInfo.GetPgwId ()
-     << " " << setw (6)  << pgwInfo.GetMainDpId ()
      << " " << setw (6)  << pgwInfo.GetInfraSwIdx ()
      << " " << setw (11) << ipS5Str.str ();
   return os;

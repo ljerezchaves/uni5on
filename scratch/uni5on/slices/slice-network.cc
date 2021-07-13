@@ -382,27 +382,37 @@ SliceNetwork::CreatePgw (void)
   NS_ASSERT_MSG (!m_pgwInfo, "P-GW already configured.");
   const uint16_t pgwId = 1; // A single P-GW in current implementation.
 
+  // Create the P-GW metadata.
+  m_pgwInfo = CreateObject<PgwInfo> (pgwId, m_nTfts, m_controllerApp);
+
   // Create and name the P-GW nodes.
-  m_pgwNodes.Create (m_nTfts + 1);
-  std::ostringstream mainName;
-  mainName << m_sliceIdStr << "_pgw" << pgwId;
-  Names::Add (mainName.str () + "_main", m_pgwNodes.Get (0));
-  for (uint16_t tftIdx = 1; tftIdx <= m_nTfts; tftIdx++)
+  m_ulDlNodes.Create (2);
+  m_tftNodes.Create (m_nTfts);
+  std::ostringstream nodeName;
+  nodeName << m_sliceIdStr << "_pgw" << pgwId;
+  Names::Add (nodeName.str () + "_dl", m_ulDlNodes.Get (PGW_DL_IDX));
+  Names::Add (nodeName.str () + "_ul", m_ulDlNodes.Get (PGW_UL_IDX));
+  for (uint16_t tftIdx = 0; tftIdx < m_nTfts; tftIdx++)
     {
       std::ostringstream name;
-      name << mainName.str () << "_tft" << tftIdx;
-      Names::Add (name.str (), m_pgwNodes.Get (tftIdx));
+      name << nodeName.str () << "_tft" << tftIdx;
+      Names::Add (name.str (), m_tftNodes.Get (tftIdx));
     }
-  NS_LOG_INFO ("P-GW with main switch + " << m_nTfts << " TFT switches.");
+  NS_LOG_INFO ("P-GW with " << m_nTfts << " TFT switches.");
 
   // Set the default P-GW gateway logical address, which will be used to set
   // the static route at all UEs.
   m_pgwAddress = m_ueAddrHelper.NewAddress ();
   NS_LOG_INFO ("P-GW default IP address: " << m_pgwAddress);
 
-  // Configuring OpenFlow helper for P-GW main switch.
-  // No meter/group entries and 7 pipeline table (1 + the maximum number of TFT
-  // adaptive levels considering the maximum of 32 TFT switches).
+  // Configure CSMA helper for connecting the P-GW node to the web server node.
+  m_csmaHelper.SetDeviceAttribute  ("Mtu", UintegerValue (m_linkMtu));
+  m_csmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_webLinkRate));
+  m_csmaHelper.SetChannelAttribute ("Delay", TimeValue (m_webLinkDelay));
+
+  // Configuring OpenFlow helper for P-GW UL/DL switches.
+  // 7 pipeline table (1 + the maximum number of TFT adaptive levels,
+  // considering the maximum of 32 TFT switches).
   m_switchHelper->SetDeviceAttribute (
     "CpuCapacity", DataRateValue (m_ulDlCpuCapacity));
   m_switchHelper->SetDeviceAttribute (
@@ -416,24 +426,18 @@ SliceNetwork::CreatePgw (void)
   m_switchHelper->SetDeviceAttribute (
     "TcamDelay", TimeValue (m_ulDlTcamDelay));
 
-  // Configure the P-GW main node as an OpenFlow switch.
-  Ptr<Node> pgwMainNode = m_pgwNodes.Get (0);
-  m_pgwDevices = m_switchHelper->InstallSwitch (pgwMainNode);
-  Ptr<OFSwitch13Device> pgwMainOfDev = m_pgwDevices.Get (0);
-  uint64_t pgwDpId = pgwMainOfDev->GetDatapathId ();
+  // Configure the P-GW UL/DL nodes as OpenFlow switches.
+  m_ulDlDevices = m_switchHelper->InstallSwitch (m_ulDlNodes);
 
-  // Connect the P-GW main switch to the SGi and S5 interfaces. On the uplink
-  // direction, the traffic will flow directly from the S5 to the SGi interface
-  // thought this switch. On the downlink direction, this switch will send the
-  // traffic to the TFT switches.
-  //
-  // Configure CSMA helper for connecting the P-GW node to the web server node.
-  m_csmaHelper.SetDeviceAttribute  ("Mtu", UintegerValue (m_linkMtu));
-  m_csmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_webLinkRate));
-  m_csmaHelper.SetChannelAttribute ("Delay", TimeValue (m_webLinkDelay));
+  // Connect the P-GW DL switch to the SGi interfaces. On the uplink direction,
+  // the traffic will flow directly to the SGi interface thought this switch. On
+  // the downlink direction, this switch will send the traffic to the TFT
+  // switches.
+  Ptr<Node> pgwDlNode = m_ulDlNodes.Get (PGW_DL_IDX);
+  Ptr<OFSwitch13Device> pgwDlOfDev = m_ulDlDevices.Get (PGW_DL_IDX);
 
-  // Connect the P-GW main node to the web server node (SGi interface).
-  NetDeviceContainer devices = m_csmaHelper.Install (pgwMainNode, m_webNode);
+  // Connect the P-GW DL node to the web server node (SGi interface).
+  NetDeviceContainer devices = m_csmaHelper.Install (pgwDlNode, m_webNode);
   Ptr<CsmaNetDevice> pgwSgiDev = DynamicCast<CsmaNetDevice> (devices.Get (0));
   Ptr<CsmaNetDevice> webSgiDev = DynamicCast<CsmaNetDevice> (devices.Get (1));
   m_webDevices.Add (devices);
@@ -443,54 +447,53 @@ SliceNetwork::CreatePgw (void)
   SetDeviceNames (pgwSgiDev, webSgiDev, tempStr);
 
   // Add the pgwSgiDev as physical port on the P-GW main OpenFlow switch.
-  Ptr<OFSwitch13Port> pgwSgiPort = pgwMainOfDev->AddSwitchPort (pgwSgiDev);
+  Ptr<OFSwitch13Port> pgwSgiPort = pgwDlOfDev->AddSwitchPort (pgwSgiDev);
 
   // Set the IP address on the Internet network.
   m_webAddrHelper.Assign (m_webDevices);
+  Ipv4Address pgwSgiAddr = Ipv4AddressHelper::GetAddress (pgwSgiDev);
   NS_LOG_INFO ("Web node " << m_webNode << " attached to the sgi interface " <<
                "with IP " << Ipv4AddressHelper::GetAddress (webSgiDev));
-  NS_LOG_INFO ("P-GW " << pgwMainNode << " attached to the sgi interface " <<
-               "with IP " << Ipv4AddressHelper::GetAddress (pgwSgiDev));
+  NS_LOG_INFO ("P-GW " << pgwId << " attached to the sgi interface " <<
+               "with IP " << pgwSgiAddr);
 
   // Define static routes at the web server to the logical network.
   Ipv4StaticRoutingHelper ipv4RoutingHelper;
   Ptr<Ipv4StaticRouting> webHostStaticRouting =
     ipv4RoutingHelper.GetStaticRouting (m_webNode->GetObject<Ipv4> ());
-  webHostStaticRouting->AddNetworkRouteTo (
-    m_ueAddr, m_ueMask, Ipv4AddressHelper::GetAddress (pgwSgiDev), 1);
+  webHostStaticRouting->AddNetworkRouteTo (m_ueAddr, m_ueMask, pgwSgiAddr, 1);
 
-  // Connect the P-GW node to the OpenFlow transport network.
+  // Connect the P-GW UL switch to the S5 interfaces. On the downlink direction,
+  // the traffic will flow directly to the S5 interface thought this switch. On
+  // the uplink direction, this switch will send the traffic to the TFT
+  Ptr<Node> pgwUlNode = m_ulDlNodes.Get (PGW_UL_IDX);
+  Ptr<OFSwitch13Device> pgwUlOfDev = m_ulDlDevices.Get (PGW_UL_IDX);
+
   Ptr<CsmaNetDevice> pgwS5Dev;
   Ptr<OFSwitch13Port> infraSwS5Port;
-  Ipv4Address pgwS5Addr;
   std::tie (pgwS5Dev, infraSwS5Port) = m_transport->AttachEpcNode (
-      pgwMainNode, m_pgwInfraSwIdx, EpsIface::S5);
-  pgwS5Addr = Ipv4AddressHelper::GetAddress (pgwS5Dev);
-  NS_LOG_INFO ("P-GW " << pgwId << " main switch dpId " << pgwDpId <<
-               " attached to the s5 interface with IP " << pgwS5Addr);
+      pgwUlNode, m_pgwInfraSwIdx, EpsIface::S5);
+  Ipv4Address pgwS5Addr = Ipv4AddressHelper::GetAddress (pgwS5Dev);
+  NS_LOG_INFO ("P-GW " << pgwId << " attached to the s5 interface " <<
+               "with IP " << pgwS5Addr);
 
   // Create the logical port on the P-GW S5 interface.
   Ptr<VirtualNetDevice> pgwS5PortDev = CreateObject<VirtualNetDevice> ();
   pgwS5PortDev->SetAddress (Mac48Address::Allocate ());
-  Ptr<OFSwitch13Port> pgwS5Port = pgwMainOfDev->AddSwitchPort (pgwS5PortDev);
-  pgwMainNode->AddApplication (
+  Ptr<OFSwitch13Port> pgwS5Port = pgwUlOfDev->AddSwitchPort (pgwS5PortDev);
+  pgwUlNode->AddApplication (
     CreateObject<PgwuTunnelApp> (pgwS5PortDev, pgwS5Dev));
 
-  // Saving P-GW metadata.
-  m_pgwInfo = CreateObject<PgwInfo> (
-      pgwId, m_nTfts, pgwSgiPort->GetPortNo (),
-      m_pgwInfraSwIdx, m_controllerApp);
+  // Saving P-GW DL/UL metadata.
+  m_pgwInfo->SaveUlDlInfo (pgwDlOfDev, pgwUlOfDev, pgwSgiPort->GetPortNo (),
+                           pgwSgiAddr, pgwS5Port->GetPortNo (), pgwS5Addr,
+                           m_pgwInfraSwIdx, infraSwS5Port->GetPortNo ());
 
-  // Saving P-GW MAIN metadata first.
-  m_pgwInfo->SaveSwitchInfo (pgwMainOfDev, pgwS5Addr, pgwS5Port->GetPortNo (),
-                             infraSwS5Port->GetPortNo ());
-
-  // Configure CSMA helper for connecting P-GW internal node.
+  // Reconfigure CSMA helper for internal P-GW connections.
   m_csmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_pgwLinkRate));
   m_csmaHelper.SetChannelAttribute ("Delay", TimeValue (m_pgwLinkDelay));
 
   // Configuring OpenFlow helper for P-GW TFT switches.
-  // No group entries and 1 pipeline table.
   m_switchHelper->SetDeviceAttribute (
     "CpuCapacity", DataRateValue (m_tftCpuCapacity));
   m_switchHelper->SetDeviceAttribute (
@@ -504,47 +507,35 @@ SliceNetwork::CreatePgw (void)
   m_switchHelper->SetDeviceAttribute (
     "TcamDelay", TimeValue (m_tftTcamDelay));
 
-  // Connect all P-GW TFT switches to the P-GW main switch and to the S5
-  // interface. Only downlink traffic will be sent to these switches.
-  for (uint16_t tftIdx = 1; tftIdx <= m_nTfts; tftIdx++)
-    {
-      // Configure the P-GW TFT node as an OpenFlow switch.
-      Ptr<Node> pgwTftNode = m_pgwNodes.Get (tftIdx);
-      m_pgwDevices.Add (m_switchHelper->InstallSwitch (pgwTftNode));
-      Ptr<OFSwitch13Device> pgwTftOfDev = m_pgwDevices.Get (tftIdx);
-      pgwDpId = pgwTftOfDev->GetDatapathId ();
+  // Configure the P-GW TFT nodes as OpenFlow switches.
+  m_tftDevices = m_switchHelper->InstallSwitch (m_tftNodes);
 
-      // Connect the P-GW main node to the P-GW TFT node.
-      devices = m_csmaHelper.Install (pgwTftNode, pgwMainNode);
-      Ptr<CsmaNetDevice> tftDev = DynamicCast<CsmaNetDevice> (devices.Get (0));
-      Ptr<CsmaNetDevice> manDev = DynamicCast<CsmaNetDevice> (devices.Get (1));
+  // Connect all P-GW TFT switches to the P-GW DL and UL switches
+  for (uint16_t tftIdx = 0; tftIdx < m_nTfts; tftIdx++)
+    {
+      Ptr<Node> pgwTftNode = m_tftNodes.Get (tftIdx);
+      Ptr<OFSwitch13Device> pgwTftOfDev = m_tftDevices.Get (tftIdx);
+
+      // Connect the P-GW TFT node to the DL node.
+      devices = m_csmaHelper.Install (pgwTftNode, pgwDlNode);
+      Ptr<CsmaNetDevice> tftDlDev = DynamicCast<CsmaNetDevice> (devices.Get (0));
+      Ptr<CsmaNetDevice> dlTftDev = DynamicCast<CsmaNetDevice> (devices.Get (1));
+      Ptr<OFSwitch13Port> tftDlPort = pgwTftOfDev->AddSwitchPort (tftDlDev);
+      Ptr<OFSwitch13Port> dlTftPort = pgwDlOfDev->AddSwitchPort (dlTftDev);
       m_pgwIntDevices.Add (devices);
 
-      // Add the mainDev as physical port on the P-GW main OpenFlow switch.
-      Ptr<OFSwitch13Port> mainPort = pgwMainOfDev->AddSwitchPort (manDev);
-
-      // Add the tftDev as physical port on the P-GW TFT OpenFlow switch.
-      Ptr<OFSwitch13Port> tftPort = pgwTftOfDev->AddSwitchPort (tftDev);
-
-      // Connect the P-GW TFT node to the OpenFlow transport network.
-      std::tie (pgwS5Dev, infraSwS5Port) = m_transport->AttachEpcNode (
-          pgwTftNode, m_pgwInfraSwIdx, EpsIface::S5);
-      pgwS5Addr = Ipv4AddressHelper::GetAddress (pgwS5Dev);
-      NS_LOG_INFO ("P-GW TFT " << tftIdx << " switch dpId " << pgwDpId <<
-                   " attached to the s5 interface with IP " << pgwS5Addr);
-
-      // Create the logical port on the P-GW S5 interface.
-      pgwS5PortDev = CreateObject<VirtualNetDevice> ();
-      pgwS5PortDev->SetAddress (Mac48Address::Allocate ());
-      pgwS5Port = pgwTftOfDev->AddSwitchPort (pgwS5PortDev);
-      pgwTftNode->AddApplication (
-        CreateObject<PgwuTunnelApp> (pgwS5PortDev, pgwS5Dev));
+      // Connect the P-GW TFT node to the UL node.
+      devices = m_csmaHelper.Install (pgwTftNode, pgwUlNode);
+      Ptr<CsmaNetDevice> tftUlDev = DynamicCast<CsmaNetDevice> (devices.Get (0));
+      Ptr<CsmaNetDevice> ulTftDev = DynamicCast<CsmaNetDevice> (devices.Get (1));
+      Ptr<OFSwitch13Port> tftUlPort = pgwTftOfDev->AddSwitchPort (tftUlDev);
+      Ptr<OFSwitch13Port> ulTftPort = pgwUlOfDev->AddSwitchPort (ulTftDev);
+      m_pgwIntDevices.Add (devices);
 
       // Saving P-GW TFT metadata.
-      m_pgwInfo->SaveSwitchInfo (
-        pgwTftOfDev, pgwS5Addr, pgwS5Port->GetPortNo (),
-        infraSwS5Port->GetPortNo (), mainPort->GetPortNo (),
-        tftPort->GetPortNo ());
+      m_pgwInfo->SaveTftInfo (
+        pgwTftOfDev, tftDlPort->GetPortNo (), tftUlPort->GetPortNo (),
+        dlTftPort->GetPortNo (), ulTftPort->GetPortNo ());
     }
 
   // Notify the controller of the new P-GW entity.
