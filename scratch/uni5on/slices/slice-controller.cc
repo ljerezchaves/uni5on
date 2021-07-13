@@ -427,7 +427,7 @@ SliceController::NotifyPgwAttach (
     // level changes, sending packets to a different pipeline table.
     std::ostringstream cmd;
     cmd << "flow-mod cmd=add,prio=64"
-        << ",table="    << PGW_MAIN_TAB
+        << ",table="    << PGW_ULDL_TAB
         << ",flags="    << FLAGS_REMOVED_OVERLAP_RESET
         << " eth_type=" << IPV4_PROT_NUM
         << ",in_port="  << pgwInfo->GetUlS5PortNo ()
@@ -440,7 +440,7 @@ SliceController::NotifyPgwAttach (
     // IP packets addressed to the UE network are sent to the S5 port.
     std::ostringstream cmd;
     cmd << "flow-mod cmd=add,prio=32"
-        << ",table="    << PGW_MAIN_TAB
+        << ",table="    << PGW_ULDL_TAB
         << ",flags="    << FLAGS_REMOVED_OVERLAP_RESET
         << " eth_type=" << IPV4_PROT_NUM
         << ",ip_dst="   << m_ueAddr
@@ -460,7 +460,7 @@ SliceController::NotifyPgwAttach (
     // sending packets to a different pipeline table.
     std::ostringstream cmd;
     cmd << "flow-mod cmd=add,prio=64"
-        << ",table="    << PGW_MAIN_TAB
+        << ",table="    << PGW_ULDL_TAB
         << ",flags="    << FLAGS_REMOVED_OVERLAP_RESET
         << " eth_type=" << IPV4_PROT_NUM
         << ",in_port="  << pgwInfo->GetDlSgiPortNo ()
@@ -476,7 +476,7 @@ SliceController::NotifyPgwAttach (
     Mac48Address webMac = Mac48Address::ConvertFrom (webSgiDev->GetAddress ());
     std::ostringstream cmd;
     cmd << "flow-mod cmd=add,prio=32"
-        << ",table="    << PGW_MAIN_TAB
+        << ",table="    << PGW_ULDL_TAB
         << ",flags="    << FLAGS_REMOVED_OVERLAP_RESET
         << " eth_type=" << IPV4_PROT_NUM
         << ",ip_dst="   << Ipv4AddressHelper::GetAddress (webSgiDev)
@@ -1070,7 +1070,7 @@ SliceController::PgwTftLoadBalancing (void)
       // Schedule to update the P-GW DL switch.
       std::ostringstream cmdDl;
       cmdDl << "flow-mod cmd=mods,prio=64"
-            << ",table="    << PGW_MAIN_TAB
+            << ",table="    << PGW_ULDL_TAB
             << " eth_type=" << IPV4_PROT_NUM
             << ",in_port="  << m_pgwInfo->GetDlSgiPortNo ()
             << ",ip_dst="   << m_ueAddr
@@ -1081,7 +1081,7 @@ SliceController::PgwTftLoadBalancing (void)
       // Schedule to update the P-GW UL switch.
       std::ostringstream cmdUl;
       cmdUl << "flow-mod cmd=mods,prio=64"
-            << ",table="    << PGW_MAIN_TAB
+            << ",table="    << PGW_ULDL_TAB
             << " eth_type=" << IPV4_PROT_NUM
             << ",in_port="  << m_pgwInfo->GetUlS5PortNo ()
             << ",ip_dst="   << m_webAddr

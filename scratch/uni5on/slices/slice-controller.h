@@ -22,7 +22,7 @@
 #define SLICE_CONTROLLER_H
 
 // Pipeline tables at OpenFlow S/P-GW switches.
-#define PGW_MAIN_TAB  0
+#define PGW_ULDL_TAB  0
 #define PGW_TFT_TAB   0
 #define SGW_MAIN_TAB  0
 #define SGW_DL_TAB    1
