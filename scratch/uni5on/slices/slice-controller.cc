@@ -23,11 +23,12 @@
 #include "slice-network.h"
 #include "stateless-mme.h"
 #include "../infrastructure/transport-controller.h"
-#include "../infrastructure/transport-network.h"
 #include "../mano-apps/global-ids.h"
+#include "../mano-apps/pgwu-scaling.h"
 #include "../metadata/bearer-info.h"
 #include "../metadata/enb-info.h"
 #include "../metadata/pgw-info.h"
+#include "../metadata/sgw-info.h"
 #include "../metadata/ue-info.h"
 #include "../traffic/traffic-manager.h"
 
@@ -127,34 +128,6 @@ SliceController::GetTypeId (void)
                    DoubleValue (0.9),
                    MakeDoubleAccessor (&SliceController::m_pgwBlockThs),
                    MakeDoubleChecker<double> (0.8, 1.0))
-    .AddAttribute ("PgwTftLoadBal",
-                   "P-GW TFT load balancing operation mode.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   EnumValue (OpMode::OFF),
-                   MakeEnumAccessor (&SliceController::m_tftLoadBal),
-                   MakeEnumChecker (OpMode::OFF,  OpModeStr (OpMode::OFF),
-                                    OpMode::ON,   OpModeStr (OpMode::ON),
-                                    OpMode::AUTO, OpModeStr (OpMode::AUTO)))
-    .AddAttribute ("PgwTftJoinThs",
-                   "The P-GW TFT join threshold.",
-                   DoubleValue (0.30),
-                   MakeDoubleAccessor (&SliceController::m_tftJoinThs),
-                   MakeDoubleChecker<double> (0.0, 0.5))
-    .AddAttribute ("PgwTftSplitThs",
-                   "The P-GW TFT split threshold.",
-                   DoubleValue (0.80),
-                   MakeDoubleAccessor (&SliceController::m_tftSplitThs),
-                   MakeDoubleChecker<double> (0.5, 1.0))
-    .AddAttribute ("PgwTftStartMax",
-                   "When in auto mode, start with maximum number of P-GW TFTs.",
-                   BooleanValue (false),
-                   MakeBooleanAccessor (&SliceController::m_tftStartMax),
-                   MakeBooleanChecker ())
-    .AddAttribute ("PgwTftTimeout",
-                   "The interval between P-GW TFT load balancing operations.",
-                   TimeValue (Seconds (5)),
-                   MakeTimeAccessor (&SliceController::m_tftTimeout),
-                   MakeTimeChecker (Seconds (1)))
 
     // S-GW.
     .AddAttribute ("SgwBlockPolicy",
@@ -177,10 +150,6 @@ SliceController::GetTypeId (void)
                      MakeTraceSourceAccessor (
                        &SliceController::m_bearerReleaseTrace),
                      "ns3::BearerInfo::TracedCallback")
-    .AddTraceSource ("PgwTftLoadBal", "P-GW TFT load balancing trace source.",
-                     MakeTraceSourceAccessor (
-                       &SliceController::m_pgwTftLoadBalTrace),
-                     "ns3::SliceController::PgwTftStatsTracedCallback")
   ;
   return tid;
 }
@@ -338,30 +307,6 @@ SliceController::GetPgwBlockThs (void) const
 }
 
 OpMode
-SliceController::GetPgwTftLoadBal (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_tftLoadBal;
-}
-
-double
-SliceController::GetPgwTftJoinThs (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_tftJoinThs;
-}
-
-double
-SliceController::GetPgwTftSplitThs (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_tftSplitThs;
-}
-
-OpMode
 SliceController::GetSgwBlockPolicy (void) const
 {
   NS_LOG_FUNCTION (this);
@@ -385,7 +330,7 @@ SliceController::GetS11SapSgw (void) const
   return m_s11SapSgw;
 }
 
-void
+void // FIXME review
 SliceController::NotifyPgwAttach (
   Ptr<PgwInfo> pgwInfo, Ptr<NetDevice> webSgiDev)
 {
@@ -396,25 +341,8 @@ SliceController::NotifyPgwAttach (
                  " already configured with this controller.");
   m_pgwInfo = pgwInfo;
 
-  // Set the P-GW TFT load balancing initial level.
-  switch (GetPgwTftLoadBal ())
-    {
-    case OpMode::OFF:
-      {
-        pgwInfo->SetCurLevel (0);
-        break;
-      }
-    case OpMode::ON:
-      {
-        pgwInfo->SetCurLevel (pgwInfo->GetMaxLevel ());
-        break;
-      }
-    case OpMode::AUTO:
-      {
-        pgwInfo->SetCurLevel (m_tftStartMax ? pgwInfo->GetMaxLevel () : 0);
-        break;
-      }
-    }
+  // FIXME
+  m_pgwScaling = CreateObject<PgwuScaling> (pgwInfo, Ptr<SliceController> (this));
 
   // Configuring the P-GW UL switch.
   // -------------------------------------------------------------------------
@@ -433,7 +361,7 @@ SliceController::NotifyPgwAttach (
         << ",in_port="  << pgwInfo->GetUlS5PortNo ()
         << ",ip_dst="   << m_webAddr
         << "/"          << m_webMask.GetPrefixLength ()
-        << " goto:"     << pgwInfo->GetCurLevel () + 1;
+        << " goto:"     << m_pgwScaling->GetCurLevel () + 1;
     DpctlExecute (pgwInfo->GetUlDpId (), cmd.str ());
   }
   {
@@ -466,7 +394,7 @@ SliceController::NotifyPgwAttach (
         << ",in_port="  << pgwInfo->GetDlSgiPortNo ()
         << ",ip_dst="   << m_ueAddr
         << "/"          << m_ueMask.GetPrefixLength ()
-        << " goto:"     << pgwInfo->GetCurLevel () + 1;
+        << " goto:"     << m_pgwScaling->GetCurLevel () + 1;
     DpctlExecute (pgwInfo->GetDlDpId (), cmd.str ());
   }
   {
@@ -488,11 +416,11 @@ SliceController::NotifyPgwAttach (
   // -------------------------------------------------------------------------
   // Table 1..N -- P-GW load balancing -- [from higher to lower priority]
   //
-  for (uint16_t tftIdx = 0; tftIdx < pgwInfo->GetMaxTfts (); tftIdx++)
+  for (uint16_t tftIdx = 0; tftIdx < pgwInfo->GetNumTfts (); tftIdx++)
     {
       // Configuring the P-GW UL and DL switches to forward traffic to different
       // P-GW TFT switches considering all possible load balancing levels.
-      for (uint16_t tft = pgwInfo->GetMaxTfts (); tftIdx < tft; tft /= 2)
+      for (uint16_t tft = pgwInfo->GetNumTfts (); tftIdx < tft; tft /= 2)
         {
           uint16_t lbLevel = static_cast<uint16_t> (log2 (tft));
           uint16_t ipMask = (1 << lbLevel) - 1;
@@ -528,7 +456,7 @@ SliceController::NotifyPgwAttach (
   // Downlink rules will be installed here by PgwRulesInstall function.
   //
   // Default uplink rules.
-  for (uint16_t tftIdx = 0; tftIdx < pgwInfo->GetMaxTfts (); tftIdx++)
+  for (uint16_t tftIdx = 0; tftIdx < pgwInfo->GetNumTfts (); tftIdx++)
     {
       std::ostringstream cmd;
       cmd << "flow-mod cmd=add,prio=32"
@@ -615,6 +543,7 @@ SliceController::DoDispose ()
 
   m_mme = 0;
   m_transportCtrl = 0;
+  m_pgwScaling = 0;
   m_pgwInfo = 0;
   m_sgwInfo = 0;
   delete (m_s11SapSgw);
@@ -636,11 +565,17 @@ SliceController::NotifyConstructionCompleted (void)
   m_s11SapSgw = new MemberEpcS11SapSgw<SliceController> (this);
   m_s11SapMme = m_mme->GetS11SapMme ();
 
-  // Schedule the first P-GW TFT load balancing operation.
-  Simulator::Schedule (
-    m_tftTimeout, &SliceController::PgwTftLoadBalancing, this);
-
   OFSwitch13Controller::NotifyConstructionCompleted ();
+}
+
+void
+SliceController::DpctlSchedule (Time delay, uint64_t dpId,
+                                const std::string textCmd)
+{
+  NS_LOG_FUNCTION (this << delay << dpId << textCmd);
+
+  Simulator::Schedule (delay, &SliceController::DpctlExecute,
+                       this, dpId, textCmd);
 }
 
 ofl_err
@@ -754,16 +689,6 @@ SliceController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   NS_LOG_FUNCTION (this << swtch);
 }
 
-void
-SliceController::DpctlSchedule (Time delay, uint64_t dpId,
-                                const std::string textCmd)
-{
-  NS_LOG_FUNCTION (this << delay << dpId << textCmd);
-
-  Simulator::Schedule (delay, &SliceController::DpctlExecute,
-                       this, dpId, textCmd);
-}
-
 bool
 SliceController::BearerInstall (Ptr<BearerInfo> bInfo)
 {
@@ -866,7 +791,8 @@ SliceController::DoCreateSessionRequest (
                     " bid " << static_cast<uint16_t> (bit.epsBearerId) <<
                     " teid " << bInfo->GetTeidHex ());
 
-      bInfo->SetPgwTftIdx (GetTftIdx (bInfo));
+      // Notify applications and the transport controller.
+      m_pgwScaling->NotifyBearerCreated (bInfo);
       m_transportCtrl->NotifyBearerCreated (bInfo);
 
       if (bInfo->IsDefault ())
@@ -978,142 +904,20 @@ SliceController::DoModifyBearerRequest (
   m_s11SapMme->ModifyBearerResponse (res);
 }
 
-uint16_t
-SliceController::GetTftIdx (
-  Ptr<const BearerInfo> bInfo, uint16_t activeTfts) const
-{
-  NS_LOG_FUNCTION (this << bInfo << activeTfts);
-
-  if (activeTfts == 0)
-    {
-      activeTfts = m_pgwInfo->GetCurTfts ();
-    }
-  return (bInfo->GetUeAddr ().Get () % activeTfts);
-}
-
-void
-SliceController::PgwTftLoadBalancing (void)
-{
-  NS_LOG_FUNCTION (this);
-
-  NS_ASSERT_MSG (m_pgwInfo, "No P-GW attached to this slice.");
-
-  // Check for valid P-GW TFT thresholds attributes.
-  NS_ASSERT_MSG (m_tftSplitThs < m_pgwBlockThs
-                 && m_tftSplitThs > 2 * m_tftJoinThs,
-                 "The split threshold should be smaller than the block "
-                 "threshold and two times larger than the join threshold.");
-
-  uint16_t nextLevel = m_pgwInfo->GetCurLevel ();
-  if (GetPgwTftLoadBal () == OpMode::AUTO)
-    {
-      double maxTabUse = m_pgwInfo->GetTftMaxFlowTableUse ();
-      double maxCpuUse = m_pgwInfo->GetTftMaxEwmaCpuUse ();
-
-      // We may increase the level when we hit the split threshold.
-      if ((m_pgwInfo->GetCurLevel () < m_pgwInfo->GetMaxLevel ())
-          && (maxTabUse >= m_tftSplitThs || maxCpuUse >= m_tftSplitThs))
-        {
-          NS_LOG_INFO ("Increasing the load balancing level.");
-          nextLevel++;
-        }
-
-      // We may decrease the level when we hit the join threshold.
-      else if ((m_pgwInfo->GetCurLevel () > 0)
-               && (maxTabUse < m_tftJoinThs) && (maxCpuUse < m_tftJoinThs))
-        {
-          NS_LOG_INFO ("Decreasing the load balancing level.");
-          nextLevel--;
-        }
-    }
-
-  // Check if we need to update the load balancing level.
-  uint32_t moved = 0;
-  if (m_pgwInfo->GetCurLevel () != nextLevel)
-    {
-      uint16_t futureTfts = 1 << nextLevel;
-
-      // Random variable to avoid simultaneously moving all bearers.
-      Ptr<RandomVariableStream> rand = CreateObject<UniformRandomVariable> ();
-      rand->SetAttribute ("Min", DoubleValue (0));
-      rand->SetAttribute ("Max", DoubleValue (250));
-
-      // Iterate over all bearers for this slice, updating the P-GW TFT switch
-      // index and moving the bearer when necessary.
-      BearerInfoList_t bearerList;
-      BearerInfo::GetList (bearerList, m_sliceId);
-      for (auto const &bInfo : bearerList)
-        {
-          uint16_t currIdx = bInfo->GetPgwTftIdx ();
-          uint16_t destIdx = GetTftIdx (bInfo, futureTfts);
-          if (destIdx != currIdx)
-            {
-              if (!bInfo->IsGwInstalled ())
-                {
-                  // Update the P-GW TFT switch index so new rules will be
-                  // installed in the new switch.
-                  bInfo->SetPgwTftIdx (destIdx);
-                }
-              else
-                {
-                  // Schedule the rules transfer from old to new switch.
-                  moved++;
-                  NS_LOG_INFO ("Move bearer teid " << bInfo->GetTeidHex () <<
-                               " from TFT " << currIdx << " to " << destIdx);
-                  Simulator::Schedule (MilliSeconds (rand->GetInteger ()),
-                                       &SliceController::PgwRulesMove,
-                                       this, bInfo, currIdx, destIdx);
-                }
-            }
-        }
-
-      // Schedule to update the P-GW DL switch.
-      std::ostringstream cmdDl;
-      cmdDl << "flow-mod cmd=mods,prio=64"
-            << ",table="    << PGW_ULDL_TAB
-            << " eth_type=" << IPV4_PROT_NUM
-            << ",in_port="  << m_pgwInfo->GetDlSgiPortNo ()
-            << ",ip_dst="   << m_ueAddr
-            << "/"          << m_ueMask.GetPrefixLength ()
-            << " goto:"     << nextLevel + 1;
-      DpctlSchedule (MilliSeconds (500), m_pgwInfo->GetDlDpId (), cmdDl.str ());
-
-      // Schedule to update the P-GW UL switch.
-      std::ostringstream cmdUl;
-      cmdUl << "flow-mod cmd=mods,prio=64"
-            << ",table="    << PGW_ULDL_TAB
-            << " eth_type=" << IPV4_PROT_NUM
-            << ",in_port="  << m_pgwInfo->GetUlS5PortNo ()
-            << ",ip_dst="   << m_webAddr
-            << "/"          << m_webMask.GetPrefixLength ()
-            << " goto:"     << nextLevel + 1;
-      DpctlSchedule (MilliSeconds (500), m_pgwInfo->GetUlDpId (), cmdUl.str ());
-    }
-
-  // Fire the load balancing trace source.
-  m_pgwTftLoadBalTrace (m_pgwInfo, nextLevel, moved);
-
-  // Update the load balancing level.
-  m_pgwInfo->SetCurLevel (nextLevel);
-
-  // Schedule the next load balancing operation.
-  Simulator::Schedule (
-    m_tftTimeout, &SliceController::PgwTftLoadBalancing, this);
-}
-
 bool
 SliceController::PgwBearerRequest (Ptr<BearerInfo> bInfo) const
 {
   NS_LOG_FUNCTION (this << bInfo->GetTeidHex ());
 
   bool success = true;
+  uint16_t tftIdx = bInfo->GetPgwTftIdx ();
 
   // First check: OpenFlow switch table usage (only non-aggregated bearers).
   // Block the bearer if the P-GW TFT switch table (#1) usage is exceeding the
   // block threshold.
   if (!bInfo->IsAggregated ())
     {
-      double tabUse = m_pgwInfo->GetTftFlowTableUse (bInfo->GetPgwTftIdx (), 0);
+      double tabUse = m_pgwInfo->GetTftFlowTableUse (tftIdx, PGW_TFT_TAB);
       if (tabUse >= GetPgwBlockThs ())
         {
           success = false;
@@ -1128,7 +932,7 @@ SliceController::PgwBearerRequest (Ptr<BearerInfo> bInfo) const
   // the block threshold.
   if (GetPgwBlockPolicy () == OpMode::ON)
     {
-      double cpuUse = m_pgwInfo->GetTftEwmaCpuUse (bInfo->GetPgwTftIdx ());
+      double cpuUse = m_pgwInfo->GetTftEwmaCpuUse (tftIdx);
       if (cpuUse >= GetPgwBlockThs ())
         {
           success = false;
@@ -1255,6 +1059,36 @@ SliceController::PgwRulesRemove (Ptr<BearerInfo> bInfo)
       << ",cookie="       << GetUint64Hex (bInfo->GetTeid ())
       << ",cookie_mask="  << GetUint64Hex (COOKIE_TEID_MASK);
   DpctlExecute (pgwTftDpId, cmd.str ());
+
+  return true;
+}
+
+bool
+SliceController::PgwTftLevelUpdate (uint16_t level)
+{
+  NS_LOG_FUNCTION (this << level);
+
+  // Update the P-GW DL switch.
+  std::ostringstream cmdDl;
+  cmdDl << "flow-mod cmd=mods,prio=64"
+        << ",table="    << PGW_ULDL_TAB
+        << " eth_type=" << IPV4_PROT_NUM
+        << ",in_port="  << m_pgwInfo->GetDlSgiPortNo ()
+        << ",ip_dst="   << m_ueAddr
+        << "/"          << m_ueMask.GetPrefixLength ()
+        << " goto:"     << level + 1;
+  DpctlExecute (m_pgwInfo->GetDlDpId (), cmdDl.str ());
+
+  // Update the P-GW UL switch.
+  std::ostringstream cmdUl;
+  cmdUl << "flow-mod cmd=mods,prio=64"
+        << ",table="    << PGW_ULDL_TAB
+        << " eth_type=" << IPV4_PROT_NUM
+        << ",in_port="  << m_pgwInfo->GetUlS5PortNo ()
+        << ",ip_dst="   << m_webAddr
+        << "/"          << m_webMask.GetPrefixLength ()
+        << " goto:"     << level + 1;
+  DpctlExecute (m_pgwInfo->GetUlDpId (), cmdUl.str ());
 
   return true;
 }

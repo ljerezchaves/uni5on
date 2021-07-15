@@ -33,7 +33,6 @@
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
 #include <ns3/ofswitch13-module.h>
-#include "../metadata/sgw-info.h"
 #include "../uni5on-common.h"
 
 namespace ns3 {
@@ -102,16 +101,11 @@ public:
                                        uint32_t teid);
 
   /**
-   * Get the slice ID for this controller.
-   * \return The slice ID.
-   */
-  SliceId GetSliceId (void) const;
-
-  /**
-   * \name Private member accessors for transport interface metadata.
+   * \name Private member accessors for controller metadata.
    * \return The requested information.
    */
   //\{
+  SliceId   GetSliceId                (void) const;
   double    GetGbrBlockThs            (void) const;
   int       GetPriority               (void) const;
   int       GetQuota                  (void) const;
@@ -126,9 +120,6 @@ public:
   //\{
   OpMode    GetPgwBlockPolicy         (void) const;
   double    GetPgwBlockThs            (void) const;
-  OpMode    GetPgwTftLoadBal          (void) const;
-  double    GetPgwTftJoinThs          (void) const;
-  double    GetPgwTftSplitThs         (void) const;
   //\}
 
   /**
@@ -141,7 +132,7 @@ public:
   //\}
 
   /**
-   * Get The S-GW side of the S11 SAP.
+   * Get the S-GW side of the S11 SAP.
    * \return The S-GW side of the S11 SAP.
    */
   EpcS11SapSgw* GetS11SapSgw (void) const;
@@ -153,8 +144,7 @@ public:
    * \param pgwInfo The P-GW metadata.
    * \param webSgiDev The SGi device on the Web server.
    */
-  virtual void NotifyPgwAttach (Ptr<PgwInfo> pgwInfo,
-                                Ptr<NetDevice> webSgiDev);
+  virtual void NotifyPgwAttach (Ptr<PgwInfo> pgwInfo, Ptr<NetDevice> webSgiDev);
 
   /**
    * Notify this controller of the S-GW connected to the OpenFlow transport
@@ -172,15 +162,6 @@ public:
    */
   void SetNetworkAttributes (Ipv4Address ueAddr, Ipv4Mask ueMask,
                              Ipv4Address webAddr, Ipv4Mask webMask);
-
-  /**
-   * TracedCallback signature for the P-GW TFT load balancing trace source.
-   * \param pgwInfo The P-GW metadata.
-   * \param nextLevel The load balacing level for next cycle.
-   * \param bearersMoved The number of bearers moved.
-   */
-  typedef void (*PgwTftStatsTracedCallback)(
-    Ptr<const PgwInfo> pgwInfo, uint32_t nextLevel, uint32_t bearersMoved);
 
 protected:
   /** Destructor implementation. */
@@ -250,23 +231,6 @@ private:
   //\}
 
   /**
-   * Get the active P-GW TFT index for a given traffic flow.
-   * \param bInfo The bearer information.
-   * \param activeTfts The number of active P-GW TFT switches. When set to 0,
-   *        the number of P-GW TFTs will be calculated considering the current
-   *        load balancing level.
-   * \return The P-GW TFT index.
-   */
-  uint16_t GetTftIdx (Ptr<const BearerInfo> bInfo,
-                      uint16_t activeTfts = 0) const;
-
-  /**
-   * Periodically check for the P-GW TFT processing load and flow table usage
-   * to update the load balacing level.
-   */
-  void PgwTftLoadBalancing (void);
-
-  /**
    * Check for available resources on P-GW TFT switch for this bearer request.
    * When any of the requested resources is not available, this method must set
    * the routing information with the block reason.
@@ -301,6 +265,13 @@ private:
    * \return True if succeeded, false otherwise.
    */
   bool PgwRulesRemove (Ptr<BearerInfo> bInfo);
+
+  /**
+   * Update the P-GW TFT level by reconfiguring UL and DL switches.
+   * \param level The next operation level.
+   * \return True if succeed, false otherwise.
+   */
+  bool PgwTftLevelUpdate (uint16_t level);
 
   /**
    * Check for available resources on S-GW switch for this bearer request. When
@@ -354,9 +325,6 @@ private:
   /** The bearer release trace source, fired at ReleaseDedicatedBearer. */
   TracedCallback<Ptr<const BearerInfo>> m_bearerReleaseTrace;
 
-  /** The P-GW TFT load balacing trace source, fired at PgwTftLoadBalancing. */
-  TracedCallback<Ptr<const PgwInfo>, uint32_t, uint32_t> m_pgwTftLoadBalTrace;
-
   // Slice identification.
   SliceId                   m_sliceId;        //!< Logical slice ID.
   std::string               m_sliceIdStr;     //!< Slice ID string.
@@ -381,14 +349,10 @@ private:
   Ipv4Mask                  m_webMask;        //!< Web network mask.
 
   // P-GW metadata and TFT load balancing mechanism.
+  Ptr<PgwuScaling>          m_pgwScaling;     //!< P-GW scaling application.
   Ptr<PgwInfo>              m_pgwInfo;        //!< P-GW metadata for slice.
   OpMode                    m_pgwBlockPolicy; //!< P-GW overload block policy.
   double                    m_pgwBlockThs;    //!< P-GW block threshold.
-  OpMode                    m_tftLoadBal;     //!< P-GW TFT load balancing.
-  double                    m_tftJoinThs;     //!< P-GW TFT join threshold.
-  double                    m_tftSplitThs;    //!< P-GW TFT split threshold.
-  bool                      m_tftStartMax;    //!< P-GW TFT start with maximum.
-  Time                      m_tftTimeout;     //!< P-GW TFT load bal timeout.
 
   // S-GW metadata.
   Ptr<SgwInfo>              m_sgwInfo;        //!< S-GW metadata for slice.
