@@ -45,6 +45,7 @@ class BearerInfo : public Object
   friend class RingController;
   friend class SliceController;
   friend class TrafficManager;
+  friend class PgwuScaling;
 
 public:
   /** The reason for any blocked request. */

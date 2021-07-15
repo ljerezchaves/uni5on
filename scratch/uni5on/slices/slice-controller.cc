@@ -330,7 +330,7 @@ SliceController::GetS11SapSgw (void) const
   return m_s11SapSgw;
 }
 
-void // FIXME review
+void
 SliceController::NotifyPgwAttach (
   Ptr<PgwInfo> pgwInfo, Ptr<NetDevice> webSgiDev)
 {
@@ -341,8 +341,9 @@ SliceController::NotifyPgwAttach (
                  " already configured with this controller.");
   m_pgwInfo = pgwInfo;
 
-  // FIXME
-  m_pgwScaling = CreateObject<PgwuScaling> (pgwInfo, Ptr<SliceController> (this));
+  // Create the P-GW scaling application for this gateway.
+  m_pgwScaling = CreateObject<PgwuScaling> (
+      pgwInfo, Ptr<SliceController> (this));
 
   // Configuring the P-GW UL switch.
   // -------------------------------------------------------------------------

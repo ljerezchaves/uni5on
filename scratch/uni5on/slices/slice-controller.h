@@ -56,6 +56,7 @@ typedef std::vector<Ptr<SliceController>> SliceControllerList_t;
 class SliceController : public OFSwitch13Controller
 {
   friend class MemberEpcS11SapSgw<SliceController>;
+  friend class PgwuScaling;
 
 public:
   SliceController ();           //!< Default constructor.
