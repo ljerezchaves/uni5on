@@ -21,7 +21,6 @@
 #include <iomanip>
 #include <iostream>
 #include "pgw-info.h"
-#include "../slices/slice-controller.h"
 
 using namespace std;
 
@@ -30,9 +29,8 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("PgwInfo");
 NS_OBJECT_ENSURE_REGISTERED (PgwInfo);
 
-PgwInfo::PgwInfo (uint32_t pgwId, uint16_t nTfts, Ptr<SliceController> ctrlApp)
+PgwInfo::PgwInfo (uint32_t pgwId, uint16_t nTfts)
   : m_pgwId (pgwId),
-  m_sliceCtrl (ctrlApp),
   m_tftSwitches (nTfts)
 {
   NS_LOG_FUNCTION (this);
@@ -90,14 +88,6 @@ PgwInfo::GetSgiAddr (void) const
   NS_LOG_FUNCTION (this);
 
   return m_sgiAddr;
-}
-
-Ptr<SliceController>
-PgwInfo::GetSliceCtrl (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_sliceCtrl;
 }
 
 uint16_t
@@ -444,7 +434,6 @@ PgwInfo::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
-  m_sliceCtrl = 0;
   Object::DoDispose ();
 }
 

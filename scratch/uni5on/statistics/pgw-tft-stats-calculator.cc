@@ -129,7 +129,7 @@ PgwTftStatsCalculator::NotifyPgwTftStats (
 {
   NS_LOG_FUNCTION (this << context << pgwInfo << nextLevel << bearersMoved);
 
-  SliceId slice = pgwInfo->GetSliceCtrl ()->GetSliceId ();
+  SliceId slice = SliceId::UNKN; // pgwInfo->GetSliceCtrl ()->GetSliceId (); // FIXME
   *m_slices [slice].tftWrapper->GetStream ()
     << " " << setw (8)  << Simulator::Now ().GetSeconds ()
     << " " << setw (7)  << pgwInfo->GetCurLevel ()
@@ -137,9 +137,9 @@ PgwTftStatsCalculator::NotifyPgwTftStats (
     << " " << setw (7)  << pgwInfo->GetMaxLevel ()
     << " " << setw (7)  << pgwInfo->GetCurTfts ()
     << " " << setw (7)  << bearersMoved
-    << " " << setw (7)  << pgwInfo->GetSliceCtrl ()->GetPgwBlockThs ()
-    << " " << setw (7)  << pgwInfo->GetSliceCtrl ()->GetPgwTftSplitThs ()
-    << " " << setw (7)  << pgwInfo->GetSliceCtrl ()->GetPgwTftJoinThs ()
+    << " " << setw (7)  << 1 // pgwInfo->GetSliceCtrl ()->GetPgwBlockThs () // FIXME
+    << " " << setw (7)  << 0 // pgwInfo->GetSliceCtrl ()->GetPgwTftSplitThs () // FIXME
+    << " " << setw (7)  << 0 // pgwInfo->GetSliceCtrl ()->GetPgwTftJoinThs ()  // FIXME
     << " " << setw (9)  << pgwInfo->GetTftAvgFlowTableMax ()
     << " " << setw (9)  << pgwInfo->GetTftMaxFlowTableMax ()
     << " " << setw (9)  << pgwInfo->GetTftAvgFlowTableCur ()

@@ -383,7 +383,7 @@ SliceNetwork::CreatePgw (void)
   const uint16_t pgwId = 1; // A single P-GW in current implementation.
 
   // Create the P-GW metadata.
-  m_pgwInfo = CreateObject<PgwInfo> (pgwId, m_nTfts, m_controllerApp);
+  m_pgwInfo = CreateObject<PgwInfo> (pgwId, m_nTfts);
 
   // Create and name the P-GW nodes.
   m_ulDlNodes.Create (2);
@@ -608,7 +608,7 @@ SliceNetwork::CreateSgw (void)
       sgwId, m_sgwDevice, Ipv4AddressHelper::GetAddress (sgwS1Dev),
       Ipv4AddressHelper::GetAddress (sgwS5Dev), sgwS1Port->GetPortNo (),
       sgwS5Port->GetPortNo (), m_sgwInfraSwIdx, infraSwS1Port->GetPortNo (),
-      infraSwS5Port->GetPortNo (), m_controllerApp);
+      infraSwS5Port->GetPortNo ());
 
   // Notify the controller of the new S-GW entity.
   m_controllerApp->NotifySgwAttach (m_sgwInfo);

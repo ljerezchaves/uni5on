@@ -21,7 +21,6 @@
 #include <iomanip>
 #include <iostream>
 #include "sgw-info.h"
-#include "../slices/slice-controller.h"
 
 using namespace std;
 
@@ -33,8 +32,7 @@ NS_OBJECT_ENSURE_REGISTERED (SgwInfo);
 SgwInfo::SgwInfo (
   uint32_t sgwId, Ptr<OFSwitch13Device> device, Ipv4Address s1uAddr,
   Ipv4Address s5Addr, uint32_t s1uPortNo, uint32_t s5PortNo,
-  uint16_t infraSwIdx, uint32_t infraSwS1uPortNo, uint32_t infraSwS5PortNo,
-  Ptr<SliceController> ctrlApp)
+  uint16_t infraSwIdx, uint32_t infraSwS1uPortNo, uint32_t infraSwS5PortNo)
   : m_device (device),
   m_infraSwIdx (infraSwIdx),
   m_infraSwS1uPortNo (infraSwS1uPortNo),
@@ -43,8 +41,7 @@ SgwInfo::SgwInfo (
   m_s1uPortNo (s1uPortNo),
   m_s5Addr (s5Addr),
   m_s5PortNo (s5PortNo),
-  m_sgwId (sgwId),
-  m_sliceCtrl (ctrlApp)
+  m_sgwId (sgwId)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -135,14 +132,6 @@ SgwInfo::GetSgwId (void) const
   return m_sgwId;
 }
 
-Ptr<SliceController>
-SgwInfo::GetSliceController (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_sliceCtrl;
-}
-
 uint32_t
 SgwInfo::GetFlowTableCur (uint8_t tableId) const
 {
@@ -219,7 +208,6 @@ SgwInfo::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
-  m_sliceCtrl = 0;
   Object::DoDispose ();
 }
 

@@ -30,9 +30,6 @@
 
 namespace ns3 {
 
-class SgwInfo;
-class SliceController;
-
 /**
  * \ingroup uni5onMeta
  * Metadata associated to a logical S-GW.
@@ -51,12 +48,11 @@ public:
    * \param infraSwIdx The OpenFlow transport switch index.
    * \param infraSwS1uPortNo The port number for S1-U interface at the switch.
    * \param infraSwS5PortNo The port number for S5 interface at the switch.
-   * \param sliceCtrl The slice controller application.
    */
   SgwInfo (uint32_t sgwId, Ptr<OFSwitch13Device> device, Ipv4Address s1uAddr,
            Ipv4Address s5Addr, uint32_t s1uPortNo, uint32_t s5PortNo,
            uint16_t infraSwIdx, uint32_t infraSwS1uPortNo,
-           uint32_t infraSwS5PortNo, Ptr<SliceController> ctrlApp);
+           uint32_t infraSwS5PortNo);
   virtual ~SgwInfo (); //!< Dummy destructor, see DoDispose.
 
   /**
@@ -79,7 +75,6 @@ public:
   Ipv4Address           GetS5Addr           (void) const;
   uint32_t              GetS5PortNo         (void) const;
   uint32_t              GetSgwId            (void) const;
-  Ptr<SliceController>  GetSliceController  (void) const;
   //\}
 
   /**
@@ -133,7 +128,6 @@ private:
   Ipv4Address            m_s5Addr;               //!< S-GW S5 IP address.
   uint32_t               m_s5PortNo;             //!< S-GW S5 port no.
   uint32_t               m_sgwId;                //!< S-GW ID.
-  Ptr<SliceController>   m_sliceCtrl;            //!< Slice controller.
 };
 
 /**

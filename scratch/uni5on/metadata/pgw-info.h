@@ -34,8 +34,6 @@ namespace ns3 {
 #define PGW_DL_IDX 0
 #define PGW_UL_IDX 1
 
-class SliceController;
-
 /**
  * \ingroup uni5onMeta
  * Metadata associated to a logical P-GW.
@@ -44,15 +42,15 @@ class PgwInfo : public Object
 {
   friend class SliceController;
   friend class SliceNetwork;
+  friend class PgwuScaling;
 
 public:
   /**
    * Complete constructor.
    * \param pgwId The P-GW ID.
    * \param nTfts The number of TFT switches.
-   * \param sliceCtrl The slice controller application.
    */
-  PgwInfo (uint32_t pgwId, uint16_t nTfts, Ptr<SliceController> ctrlApp);
+  PgwInfo (uint32_t pgwId, uint16_t nTfts);
   virtual ~PgwInfo (); //!< Dummy destructor, see DoDispose.
 
   /**
@@ -71,7 +69,6 @@ public:
   uint32_t              GetPgwId              (void) const;
   Ipv4Address           GetS5Addr             (void) const;
   Ipv4Address           GetSgiAddr            (void) const;
-  Ptr<SliceController>  GetSliceCtrl          (void) const;
   //\}
 
   /**
@@ -237,7 +234,6 @@ private:
   std::vector<uint32_t>     m_ulToTftPortNos;     //!< UL port nos to TFTs.
   std::vector<uint32_t>     m_tftToDlPortNos;     //!< TFT port nos to DL.
   std::vector<uint32_t>     m_tftToUlPortNos;     //!< TFT port nos to UL.
-  Ptr<SliceController>      m_sliceCtrl;          //!< Slice controller.
 
   // TFT adaptive mechanism.
   uint16_t                  m_tftSwitches;        //!< Total no. TFT switches.

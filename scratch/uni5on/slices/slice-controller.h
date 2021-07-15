@@ -38,12 +38,14 @@
 
 namespace ns3 {
 
+class SliceController;
 class TransportController;
-class EnbInfo;
 class BearerInfo;
-class StatelessMme;
-class SgwInfo;
+class EnbInfo;
 class PgwInfo;
+class SgwInfo;
+class PgwuScaling;
+class StatelessMme;
 
 /** A list of slice controller applications. */
 typedef std::vector<Ptr<SliceController>> SliceControllerList_t;
