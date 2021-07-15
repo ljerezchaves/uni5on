@@ -40,9 +40,7 @@ namespace ns3 {
  */
 class PgwInfo : public Object
 {
-  friend class SliceController;
   friend class SliceNetwork;
-  friend class PgwuScaling;
 
 public:
   /**
@@ -64,22 +62,12 @@ public:
    * \return The requested information.
    */
   //\{
-  uint16_t              GetInfraSwIdx         (void) const;
-  uint32_t              GetInfraSwS5PortNo    (void) const;
-  uint32_t              GetPgwId              (void) const;
-  Ipv4Address           GetS5Addr             (void) const;
-  Ipv4Address           GetSgiAddr            (void) const;
-  //\}
-
-  /**
-   * \name Private member accessors for P-GW TFT adaptive mechanism.
-   * \return The requested information.
-   */
-  //\{
-  uint16_t      GetCurLevel           (void) const;
-  uint16_t      GetCurTfts            (void) const;
-  uint16_t      GetMaxLevel           (void) const;
-  uint16_t      GetMaxTfts            (void) const;
+  uint16_t      GetInfraSwIdx         (void) const;
+  uint32_t      GetInfraSwS5PortNo    (void) const;
+  uint16_t      GetNumTfts            (void) const;
+  uint32_t      GetPgwId              (void) const;
+  Ipv4Address   GetS5Addr             (void) const;
+  Ipv4Address   GetSgiAddr            (void) const;
   //\}
 
   /**
@@ -107,7 +95,7 @@ public:
   //\}
 
   /**
-   * \name Private member accessors for P-GW TFT switch datapath information.
+   * \name Private member accessors for P-GW TFT switch information.
    * \param idx The internal switch index.
    * \param tableId The flow table ID.
    * \return The requested information.
@@ -120,30 +108,6 @@ public:
   double        GetTftEwmaCpuUse      (uint16_t idx) const;
   DataRate      GetTftCpuMax          (uint16_t idx) const;
   uint64_t      GetTftDpId            (uint16_t idx) const;
-  //\}
-
-  /**
-   * \name Private member accessors for P-GW TFT active switches aggregated
-   *       datapath information.
-   * \param tableId The flow table ID. The default value of 0 can be used as
-   *        P-GW TFT switches have only one pipeline table.
-   * \return The requested information.
-   * \internal These methods iterate only over active TFT switches for
-   *           collecting statistics.
-   */
-  //\{
-  uint32_t      GetTftAvgFlowTableCur   (uint8_t tableId = 0) const;
-  uint32_t      GetTftAvgFlowTableMax   (uint8_t tableId = 0) const;
-  double        GetTftAvgFlowTableUse   (uint8_t tableId = 0) const;
-  DataRate      GetTftAvgEwmaCpuCur     (void) const;
-  double        GetTftAvgEwmaCpuUse     (void) const;
-  DataRate      GetTftAvgCpuMax         (void) const;
-  uint32_t      GetTftMaxFlowTableCur   (uint8_t tableId = 0) const;
-  uint32_t      GetTftMaxFlowTableMax   (uint8_t tableId = 0) const;
-  double        GetTftMaxFlowTableUse   (uint8_t tableId = 0) const;
-  DataRate      GetTftMaxEwmaCpuCur     (void) const;
-  double        GetTftMaxEwmaCpuUse     (void) const;
-  DataRate      GetTftMaxCpuMax         (void) const;
   //\}
 
   /**
@@ -167,13 +131,6 @@ protected:
   virtual void DoDispose ();
 
 private:
-  /**
-   * Get the OpenFlow TFT switch stats calculator.
-   * \param idx The internal switch index.
-   * \return The OpenFlow switch stats.
-   */
-  Ptr<OFSwitch13StatsCalculator> GetTftStats (uint16_t idx) const;
-
   /**
    * Save the metadata associated to the P-GW TFT OpenFlow switch.
    * \param device The OpenFlow switch device.
@@ -213,19 +170,13 @@ private:
     uint32_t s5PortNo, Ipv4Address s5Addr,
     uint16_t infraSwIdx, uint32_t infraSwS5PortNo);
 
-
-  /**
-   * Update the current TFT adaptive mechanism level.
-   * \param value The value to set.
-   */
-  void SetCurLevel (uint16_t value);
-
   // P-GW metadata.
+  uint32_t                  m_pgwId;              //!< P-GW ID.
+  uint16_t                  m_tftNum;             //!< Number of TFT switches.
   OFSwitch13DeviceContainer m_tftDevices;         //!< OpenFlow TTT devices.
   OFSwitch13DeviceContainer m_ulDlDevices;        //!< OpenFlow UL/DL devices.
   uint16_t                  m_infraSwIdx;         //!< Transport switch index.
   uint16_t                  m_infraSwS5PortNo;    //!< Transport S5 port no.
-  uint32_t                  m_pgwId;              //!< P-GW ID.
   Ipv4Address               m_s5Addr;             //!< P-GW S5 IP address.
   uint32_t                  m_s5PortNo;           //!< P-GW S5 port no.
   Ipv4Address               m_sgiAddr;            //!< P-GW SGi IP address.
@@ -234,10 +185,6 @@ private:
   std::vector<uint32_t>     m_ulToTftPortNos;     //!< UL port nos to TFTs.
   std::vector<uint32_t>     m_tftToDlPortNos;     //!< TFT port nos to DL.
   std::vector<uint32_t>     m_tftToUlPortNos;     //!< TFT port nos to UL.
-
-  // TFT adaptive mechanism.
-  uint16_t                  m_tftSwitches;        //!< Total no. TFT switches.
-  uint8_t                   m_tftLevel;           //!< Current adaptive level.
 };
 
 /**

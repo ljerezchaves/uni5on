@@ -31,7 +31,7 @@ NS_OBJECT_ENSURE_REGISTERED (PgwInfo);
 
 PgwInfo::PgwInfo (uint32_t pgwId, uint16_t nTfts)
   : m_pgwId (pgwId),
-  m_tftSwitches (nTfts)
+  m_tftNum (nTfts)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -66,6 +66,14 @@ PgwInfo::GetInfraSwS5PortNo (void) const
   return m_infraSwS5PortNo;
 }
 
+uint16_t
+PgwInfo::GetNumTfts (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_tftNum;
+}
+
 uint32_t
 PgwInfo::GetPgwId (void) const
 {
@@ -88,38 +96,6 @@ PgwInfo::GetSgiAddr (void) const
   NS_LOG_FUNCTION (this);
 
   return m_sgiAddr;
-}
-
-uint16_t
-PgwInfo::GetCurLevel (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_tftLevel;
-}
-
-uint16_t
-PgwInfo::GetCurTfts (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return 1 << m_tftLevel;
-}
-
-uint16_t
-PgwInfo::GetMaxLevel (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return static_cast<uint16_t> (log2 (GetMaxTfts ()));
-}
-
-uint16_t
-PgwInfo::GetMaxTfts (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_tftSwitches;
 }
 
 uint64_t
@@ -225,7 +201,13 @@ PgwInfo::GetTftEwmaCpuCur (uint16_t idx) const
   NS_LOG_FUNCTION (this << idx);
 
   NS_ASSERT_MSG (idx < m_tftDevices.GetN (), "Invalid index.");
-  return GetTftStats (idx)->GetEwmaCpuLoad ();
+
+  // Use the moving average for CPU load.
+  Ptr<OFSwitch13StatsCalculator> stats;
+  stats = m_tftDevices.Get (idx)->GetObject<OFSwitch13StatsCalculator> ();
+  NS_ABORT_MSG_IF (!stats, "Enable OFSwitch13 datapath stats.");
+
+  return stats->GetEwmaCpuLoad ();
 }
 
 double
@@ -255,162 +237,6 @@ PgwInfo::GetTftDpId (uint16_t idx) const
   return m_tftDevices.Get (idx)->GetDatapathId ();
 }
 
-uint32_t
-PgwInfo::GetTftAvgFlowTableCur (uint8_t tableId) const
-{
-  NS_LOG_FUNCTION (this);
-
-  uint32_t value = 0;
-  for (uint16_t idx = 0; idx < GetCurTfts (); idx++)
-    {
-      value += GetTftFlowTableCur (idx, tableId);
-    }
-  return value / GetCurTfts ();
-}
-
-uint32_t
-PgwInfo::GetTftAvgFlowTableMax (uint8_t tableId) const
-{
-  NS_LOG_FUNCTION (this);
-
-  uint32_t value = 0;
-  for (uint16_t idx = 0; idx < GetCurTfts (); idx++)
-    {
-      value += GetTftFlowTableMax (idx, tableId);
-    }
-  return value / GetCurTfts ();
-}
-
-double
-PgwInfo::GetTftAvgFlowTableUse (uint8_t tableId) const
-{
-  NS_LOG_FUNCTION (this);
-
-  double value = 0.0;
-  for (uint16_t idx = 0; idx < GetCurTfts (); idx++)
-    {
-      value += GetTftFlowTableUse (idx, tableId);
-    }
-  return value / GetCurTfts ();
-}
-
-DataRate
-PgwInfo::GetTftAvgEwmaCpuCur (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  uint64_t value = 0;
-  for (uint16_t idx = 0; idx < GetCurTfts (); idx++)
-    {
-      value += GetTftEwmaCpuCur (idx).GetBitRate ();
-    }
-  return DataRate (value / GetCurTfts ());
-}
-
-DataRate
-PgwInfo::GetTftAvgCpuMax (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  uint64_t value = 0;
-  for (uint16_t idx = 0; idx < GetCurTfts (); idx++)
-    {
-      value += GetTftCpuMax (idx).GetBitRate ();
-    }
-  return DataRate (value / GetCurTfts ());
-}
-
-double
-PgwInfo::GetTftAvgEwmaCpuUse (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  double value = 0.0;
-  for (uint16_t idx = 0; idx < GetCurTfts (); idx++)
-    {
-      value += GetTftEwmaCpuUse (idx);
-    }
-  return value / GetCurTfts ();
-}
-
-uint32_t
-PgwInfo::GetTftMaxFlowTableMax (uint8_t tableId) const
-{
-  NS_LOG_FUNCTION (this);
-
-  uint32_t value = 0;
-  for (uint16_t idx = 0; idx < GetCurTfts (); idx++)
-    {
-      value = std::max (value, GetTftFlowTableMax (idx, tableId));
-    }
-  return value;
-}
-
-uint32_t
-PgwInfo::GetTftMaxFlowTableCur (uint8_t tableId) const
-{
-  NS_LOG_FUNCTION (this);
-
-  uint32_t value = 0;
-  for (uint16_t idx = 0; idx < GetCurTfts (); idx++)
-    {
-      value = std::max (value, GetTftFlowTableCur (idx, tableId));
-    }
-  return value;
-}
-
-double
-PgwInfo::GetTftMaxFlowTableUse (uint8_t tableId) const
-{
-  NS_LOG_FUNCTION (this);
-
-  double value = 0.0;
-  for (uint16_t idx = 0; idx < GetCurTfts (); idx++)
-    {
-      value = std::max (value, GetTftFlowTableUse (idx, tableId));
-    }
-  return value;
-}
-
-DataRate
-PgwInfo::GetTftMaxEwmaCpuCur (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  uint64_t value = 0;
-  for (uint16_t idx = 0; idx < GetCurTfts (); idx++)
-    {
-      value = std::max (value, GetTftEwmaCpuCur (idx).GetBitRate ());
-    }
-  return DataRate (value);
-}
-
-DataRate
-PgwInfo::GetTftMaxCpuMax (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  uint64_t value = 0;
-  for (uint16_t idx = 0; idx < GetCurTfts (); idx++)
-    {
-      value = std::max (value, GetTftCpuMax (idx).GetBitRate ());
-    }
-  return DataRate (value);
-}
-
-double
-PgwInfo::GetTftMaxEwmaCpuUse () const
-{
-  NS_LOG_FUNCTION (this);
-
-  double value = 0.0;
-  for (uint16_t idx = 0; idx < GetCurTfts (); idx++)
-    {
-      value = std::max (value, GetTftEwmaCpuUse (idx));
-    }
-  return value;
-}
-
 std::ostream &
 PgwInfo::PrintHeader (std::ostream &os)
 {
@@ -435,15 +261,6 @@ PgwInfo::DoDispose ()
   NS_LOG_FUNCTION (this);
 
   Object::DoDispose ();
-}
-
-Ptr<OFSwitch13StatsCalculator>
-PgwInfo::GetTftStats (uint16_t idx) const
-{
-  Ptr<OFSwitch13StatsCalculator> stats;
-  stats = m_tftDevices.Get (idx)->GetObject<OFSwitch13StatsCalculator> ();
-  NS_ABORT_MSG_IF (!stats, "Enable OFSwitch13 datapath stats.");
-  return stats;
 }
 
 void
@@ -479,14 +296,6 @@ PgwInfo::SaveUlDlInfo (
   m_s5Addr = s5Addr;
   m_infraSwIdx = infraSwIdx;
   m_infraSwS5PortNo = infraSwS5PortNo;
-}
-
-void
-PgwInfo::SetCurLevel (uint16_t value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_tftLevel = value;
 }
 
 std::ostream & operator << (std::ostream &os, const PgwInfo &pgwInfo)
