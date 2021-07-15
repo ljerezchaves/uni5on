@@ -129,30 +129,31 @@ PgwTftStatsCalculator::NotifyPgwTftStats (
 {
   NS_LOG_FUNCTION (this << context << pgwInfo << nextLevel << bearersMoved);
 
-  SliceId slice = SliceId::UNKN; // pgwInfo->GetSliceCtrl ()->GetSliceId (); // FIXME
-  *m_slices [slice].tftWrapper->GetStream ()
-    << " " << setw (8)  << Simulator::Now ().GetSeconds ()
-    << " " << setw (7)  << pgwInfo->GetCurLevel ()
-    << " " << setw (7)  << nextLevel
-    << " " << setw (7)  << pgwInfo->GetMaxLevel ()
-    << " " << setw (7)  << pgwInfo->GetCurTfts ()
-    << " " << setw (7)  << bearersMoved
-    << " " << setw (7)  << 1 // pgwInfo->GetSliceCtrl ()->GetPgwBlockThs () // FIXME
-    << " " << setw (7)  << 0 // pgwInfo->GetSliceCtrl ()->GetPgwTftSplitThs () // FIXME
-    << " " << setw (7)  << 0 // pgwInfo->GetSliceCtrl ()->GetPgwTftJoinThs ()  // FIXME
-    << " " << setw (9)  << pgwInfo->GetTftAvgFlowTableMax ()
-    << " " << setw (9)  << pgwInfo->GetTftMaxFlowTableMax ()
-    << " " << setw (9)  << pgwInfo->GetTftAvgFlowTableCur ()
-    << " " << setw (9)  << pgwInfo->GetTftMaxFlowTableCur ()
-    << " " << setw (9)  << pgwInfo->GetTftAvgFlowTableUse () * 100
-    << " " << setw (9)  << pgwInfo->GetTftMaxFlowTableUse () * 100
-    << " " << setw (11) << Bps2Kbps (pgwInfo->GetTftAvgCpuMax ())
-    << " " << setw (11) << Bps2Kbps (pgwInfo->GetTftMaxCpuMax ())
-    << " " << setw (11) << Bps2Kbps (pgwInfo->GetTftAvgEwmaCpuCur ())
-    << " " << setw (11) << Bps2Kbps (pgwInfo->GetTftMaxEwmaCpuCur ())
-    << " " << setw (9)  << pgwInfo->GetTftAvgEwmaCpuUse () * 100
-    << " " << setw (9)  << pgwInfo->GetTftMaxEwmaCpuUse () * 100
-    << std::endl;
+  // FIXME Revert this with a new trace source for scaling application.
+  // SliceId slice = pgwInfo->GetSliceCtrl ()->GetSliceId ();
+  // *m_slices [slice].tftWrapper->GetStream ()
+  //   << " " << setw (8)  << Simulator::Now ().GetSeconds ()
+  //   << " " << setw (7)  << pgwInfo->GetCurLevel ()
+  //   << " " << setw (7)  << nextLevel
+  //   << " " << setw (7)  << pgwInfo->GetMaxLevel ()
+  //   << " " << setw (7)  << pgwInfo->GetCurTfts ()
+  //   << " " << setw (7)  << bearersMoved
+  //   << " " << setw (7)  << pgwInfo->GetSliceCtrl ()->GetPgwBlockThs ()
+  //   << " " << setw (7)  << pgwInfo->GetSliceCtrl ()->GetPgwTftSplitThs ()
+  //   << " " << setw (7)  << pgwInfo->GetSliceCtrl ()->GetPgwTftJoinThs ()
+  //   << " " << setw (9)  << pgwInfo->GetTftAvgFlowTableMax ()
+  //   << " " << setw (9)  << pgwInfo->GetTftMaxFlowTableMax ()
+  //   << " " << setw (9)  << pgwInfo->GetTftAvgFlowTableCur ()
+  //   << " " << setw (9)  << pgwInfo->GetTftMaxFlowTableCur ()
+  //   << " " << setw (9)  << pgwInfo->GetTftAvgFlowTableUse () * 100
+  //   << " " << setw (9)  << pgwInfo->GetTftMaxFlowTableUse () * 100
+  //   << " " << setw (11) << Bps2Kbps (pgwInfo->GetTftAvgCpuMax ())
+  //   << " " << setw (11) << Bps2Kbps (pgwInfo->GetTftMaxCpuMax ())
+  //   << " " << setw (11) << Bps2Kbps (pgwInfo->GetTftAvgEwmaCpuCur ())
+  //   << " " << setw (11) << Bps2Kbps (pgwInfo->GetTftMaxEwmaCpuCur ())
+  //   << " " << setw (9)  << pgwInfo->GetTftAvgEwmaCpuUse () * 100
+  //   << " " << setw (9)  << pgwInfo->GetTftMaxEwmaCpuUse () * 100
+  //   << std::endl;
 }
 
 } // Namespace ns3
