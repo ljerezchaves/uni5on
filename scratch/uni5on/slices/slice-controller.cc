@@ -341,9 +341,10 @@ SliceController::NotifyPgwAttach (
                  " already configured with this controller.");
   m_pgwInfo = pgwInfo;
 
-  // Create the P-GW scaling application for this gateway.
+  // Create the P-GW scaling application and aggregate it to controller node.
   m_pgwScaling = CreateObject<PgwuScaling> (
       pgwInfo, Ptr<SliceController> (this));
+  GetNode ()->AggregateObject (m_pgwScaling);
 
   // Configuring the P-GW UL switch.
   // -------------------------------------------------------------------------

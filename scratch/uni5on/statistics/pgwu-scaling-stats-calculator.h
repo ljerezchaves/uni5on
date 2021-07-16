@@ -18,8 +18,8 @@
  * Author: Luciano Jerez Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef PGW_TFT_STATS_CALCULATOR_H
-#define PGW_TFT_STATS_CALCULATOR_H
+#ifndef PGWU_SCALING_STATS_CALCULATOR_H
+#define PGWU_SCALING_STATS_CALCULATOR_H
 
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
@@ -28,16 +28,17 @@
 namespace ns3 {
 
 class PgwInfo;
+class PgwuScaling;
 
 /**
  * \ingroup uni5onStats
  * This class monitors the P-GW TFT scaling mechanism.
  */
-class PgwTftStatsCalculator : public Object
+class PgwuScalingStatsCalculator : public Object
 {
 public:
-  PgwTftStatsCalculator ();          //!< Default constructor.
-  virtual ~PgwTftStatsCalculator (); //!< Dummy destructor, see DoDispose.
+  PgwuScalingStatsCalculator ();          //!< Default constructor.
+  virtual ~PgwuScalingStatsCalculator (); //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
@@ -53,14 +54,15 @@ protected:
   virtual void NotifyConstructionCompleted (void);
 
   /**
-   * Notify the statistics for P-GW adaptive mechanism.
+   * Notify the statistics for the P-GW scaling mechanism.
    * \param context Trace source context.
-   * \param pgwInfo The P-GW metadata.
-   * \param nextLevel The mechanism level for next cycle.
-   * \param bearersMoved The number of bearers moved.
+   * \param pgwInfo The P-GW scaling application.
+   * \param nextLevel The level for the next cycle.
+   * \param bearersMoved The number of bearers being moved.
    */
-  void NotifyPgwTftStats (std::string context, Ptr<const PgwInfo> pgwInfo,
-                          uint32_t nextLevel, uint32_t bearersMoved);
+  void NotifyScalingStats (
+    std::string context, Ptr<const PgwuScaling> scalingApp,
+    uint32_t nextLevel, uint32_t bearersMoved);
 
 private:
   /** Metadata associated to a network slice. */
@@ -75,4 +77,4 @@ private:
 };
 
 } // namespace ns3
-#endif /* PGW_TFT_STATS_CALCULATOR_H */
+#endif /* PGWU_SCALING_STATS_CALCULATOR_H */

@@ -402,6 +402,9 @@ EnableVerbose (bool enable)
       LogComponentEnable ("TransportController",      logLevelWarnInfo);
       LogComponentEnable ("TransportNetwork",         logLevelWarnInfo);
 
+      // MANO apps components
+      LogComponentEnable ("PgwuScaling",              logLevelWarnInfo);
+
       // Slice components.
       LogComponentEnable ("EnbApplication",           logLevelWarnInfo);
       LogComponentEnable ("GtpuTunnelApp",            logLevelWarnInfo);
@@ -432,12 +435,12 @@ EnableVerbose (bool enable)
       LogComponentEnable ("UdpGenericServer",         logLevelWarnInfo);
 
       // Statistic components.
-      LogComponentEnable ("AdmissionStatsCalculator", logLevelWarnInfo);
-      LogComponentEnable ("FlowStatsCalculator",      logLevelWarnInfo);
-      LogComponentEnable ("MobilityStatsCalculator",  logLevelWarnInfo);
-      LogComponentEnable ("PgwTftStatsCalculator",    logLevelWarnInfo);
-      LogComponentEnable ("TrafficStatsCalculator",   logLevelWarnInfo);
-      LogComponentEnable ("TransportStatsCalculator", logLevelWarnInfo);
+      LogComponentEnable ("AdmissionStatsCalculator",   logLevelWarnInfo);
+      LogComponentEnable ("FlowStatsCalculator",        logLevelWarnInfo);
+      LogComponentEnable ("MobilityStatsCalculator",    logLevelWarnInfo);
+      LogComponentEnable ("PgwuScalingStatsCalculator", logLevelWarnInfo);
+      LogComponentEnable ("TrafficStatsCalculator",     logLevelWarnInfo);
+      LogComponentEnable ("TransportStatsCalculator",   logLevelWarnInfo);
 
       // OFSwitch13 module components.
       LogComponentEnable ("OFSwitch13Controller",     logLevelWarn);

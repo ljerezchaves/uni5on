@@ -20,49 +20,50 @@
 
 #include <iomanip>
 #include <iostream>
-#include "pgw-tft-stats-calculator.h"
+#include "pgwu-scaling-stats-calculator.h"
 #include "../metadata/pgw-info.h"
+#include "../mano-apps/pgwu-scaling.h"
 #include "../slices/slice-controller.h"
 
 using namespace std;
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("PgwTftStatsCalculator");
-NS_OBJECT_ENSURE_REGISTERED (PgwTftStatsCalculator);
+NS_LOG_COMPONENT_DEFINE ("PgwuScalingStatsCalculator");
+NS_OBJECT_ENSURE_REGISTERED (PgwuScalingStatsCalculator);
 
-PgwTftStatsCalculator::PgwTftStatsCalculator ()
+PgwuScalingStatsCalculator::PgwuScalingStatsCalculator ()
 {
   NS_LOG_FUNCTION (this);
 
   // Connect this stats calculator to required trace sources.
   Config::Connect (
-    "/NodeList/*/ApplicationList/*/$ns3::SliceController/PgwTftLoadBal",
-    MakeCallback (&PgwTftStatsCalculator::NotifyPgwTftStats, this));
+    "/NodeList/*/$ns3::PgwuScaling/ScalingStats",
+    MakeCallback (&PgwuScalingStatsCalculator::NotifyScalingStats, this));
 }
 
-PgwTftStatsCalculator::~PgwTftStatsCalculator ()
+PgwuScalingStatsCalculator::~PgwuScalingStatsCalculator ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-PgwTftStatsCalculator::GetTypeId (void)
+PgwuScalingStatsCalculator::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::PgwTftStatsCalculator")
+  static TypeId tid = TypeId ("ns3::PgwuScalingStatsCalculator")
     .SetParent<Object> ()
-    .AddConstructor<PgwTftStatsCalculator> ()
+    .AddConstructor<PgwuScalingStatsCalculator> ()
     .AddAttribute ("LbmStatsFilename",
                    "Filename for EPC P-GW TFT statistics.",
                    StringValue ("pgw-scaling"),
-                   MakeStringAccessor (&PgwTftStatsCalculator::m_tftFilename),
+                   MakeStringAccessor (&PgwuScalingStatsCalculator::m_tftFilename),
                    MakeStringChecker ())
   ;
   return tid;
 }
 
 void
-PgwTftStatsCalculator::DoDispose ()
+PgwuScalingStatsCalculator::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -74,7 +75,7 @@ PgwTftStatsCalculator::DoDispose ()
 }
 
 void
-PgwTftStatsCalculator::NotifyConstructionCompleted (void)
+PgwuScalingStatsCalculator::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -101,7 +102,6 @@ PgwTftStatsCalculator::NotifyConstructionCompleted (void)
         << " " << setw (7)  << "MaxLev"
         << " " << setw (7)  << "NumTft"
         << " " << setw (7)  << "BeaMov"
-        << " " << setw (7)  << "BloThs"
         << " " << setw (7)  << "SplThs"
         << " " << setw (7)  << "JoiThs"
         << " " << setw (9)  << "AvgTabSiz"
@@ -123,37 +123,35 @@ PgwTftStatsCalculator::NotifyConstructionCompleted (void)
 }
 
 void
-PgwTftStatsCalculator::NotifyPgwTftStats (
-  std::string context, Ptr<const PgwInfo> pgwInfo, uint32_t nextLevel,
-  uint32_t bearersMoved)
+PgwuScalingStatsCalculator::NotifyScalingStats (
+  std::string context, Ptr<const PgwuScaling> scalingApp,
+  uint32_t nextLevel, uint32_t bearersMoved)
 {
-  NS_LOG_FUNCTION (this << context << pgwInfo << nextLevel << bearersMoved);
+  NS_LOG_FUNCTION (this << context << scalingApp << nextLevel << bearersMoved);
 
-  // FIXME Revert this with a new trace source for scaling application.
-  // SliceId slice = pgwInfo->GetSliceCtrl ()->GetSliceId ();
-  // *m_slices [slice].tftWrapper->GetStream ()
-  //   << " " << setw (8)  << Simulator::Now ().GetSeconds ()
-  //   << " " << setw (7)  << pgwInfo->GetCurLevel ()
-  //   << " " << setw (7)  << nextLevel
-  //   << " " << setw (7)  << pgwInfo->GetMaxLevel ()
-  //   << " " << setw (7)  << pgwInfo->GetCurTfts ()
-  //   << " " << setw (7)  << bearersMoved
-  //   << " " << setw (7)  << pgwInfo->GetSliceCtrl ()->GetPgwBlockThs ()
-  //   << " " << setw (7)  << pgwInfo->GetSliceCtrl ()->GetPgwTftSplitThs ()
-  //   << " " << setw (7)  << pgwInfo->GetSliceCtrl ()->GetPgwTftJoinThs ()
-  //   << " " << setw (9)  << pgwInfo->GetTftAvgFlowTableMax ()
-  //   << " " << setw (9)  << pgwInfo->GetTftMaxFlowTableMax ()
-  //   << " " << setw (9)  << pgwInfo->GetTftAvgFlowTableCur ()
-  //   << " " << setw (9)  << pgwInfo->GetTftMaxFlowTableCur ()
-  //   << " " << setw (9)  << pgwInfo->GetTftAvgFlowTableUse () * 100
-  //   << " " << setw (9)  << pgwInfo->GetTftMaxFlowTableUse () * 100
-  //   << " " << setw (11) << Bps2Kbps (pgwInfo->GetTftAvgCpuMax ())
-  //   << " " << setw (11) << Bps2Kbps (pgwInfo->GetTftMaxCpuMax ())
-  //   << " " << setw (11) << Bps2Kbps (pgwInfo->GetTftAvgEwmaCpuCur ())
-  //   << " " << setw (11) << Bps2Kbps (pgwInfo->GetTftMaxEwmaCpuCur ())
-  //   << " " << setw (9)  << pgwInfo->GetTftAvgEwmaCpuUse () * 100
-  //   << " " << setw (9)  << pgwInfo->GetTftMaxEwmaCpuUse () * 100
-  //   << std::endl;
+  SliceId slice = scalingApp->GetSliceCtrl ()->GetSliceId ();
+  *m_slices [slice].tftWrapper->GetStream ()
+    << " " << setw (8)  << Simulator::Now ().GetSeconds ()
+    << " " << setw (7)  << scalingApp->GetCurLevel ()
+    << " " << setw (7)  << nextLevel
+    << " " << setw (7)  << scalingApp->GetMaxLevel ()
+    << " " << setw (7)  << scalingApp->GetCurTfts ()
+    << " " << setw (7)  << bearersMoved
+    << " " << setw (7)  << scalingApp->GetSplitThs ()
+    << " " << setw (7)  << scalingApp->GetJoinThs ()
+    << " " << setw (9)  << scalingApp->GetTftAvgFlowTableMax ()
+    << " " << setw (9)  << scalingApp->GetTftMaxFlowTableMax ()
+    << " " << setw (9)  << scalingApp->GetTftAvgFlowTableCur ()
+    << " " << setw (9)  << scalingApp->GetTftMaxFlowTableCur ()
+    << " " << setw (9)  << scalingApp->GetTftAvgFlowTableUse () * 100
+    << " " << setw (9)  << scalingApp->GetTftMaxFlowTableUse () * 100
+    << " " << setw (11) << Bps2Kbps (scalingApp->GetTftAvgCpuMax ())
+    << " " << setw (11) << Bps2Kbps (scalingApp->GetTftMaxCpuMax ())
+    << " " << setw (11) << Bps2Kbps (scalingApp->GetTftAvgEwmaCpuCur ())
+    << " " << setw (11) << Bps2Kbps (scalingApp->GetTftMaxEwmaCpuCur ())
+    << " " << setw (9)  << scalingApp->GetTftAvgEwmaCpuUse () * 100
+    << " " << setw (9)  << scalingApp->GetTftMaxEwmaCpuUse () * 100
+    << std::endl;
 }
 
 } // Namespace ns3

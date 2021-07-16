@@ -28,7 +28,7 @@
 #include "../statistics/admission-stats-calculator.h"
 #include "../statistics/transport-stats-calculator.h"
 #include "../statistics/mobility-stats-calculator.h"
-#include "../statistics/pgw-tft-stats-calculator.h"
+#include "../statistics/pgwu-scaling-stats-calculator.h"
 #include "../statistics/traffic-stats-calculator.h"
 #include "../uni5on-common.h"
 
@@ -169,11 +169,11 @@ private:
   Ptr<TrafficHelper>        m_tmpTraffic;       //!< TMP slice traffic.
 
   // Statistic calculators.
-  Ptr<AdmissionStatsCalculator> m_admissionStats; //!< Admission stats.
-  Ptr<TransportStatsCalculator> m_transportStats; //!< Transport stats.
-  Ptr<MobilityStatsCalculator>  m_mobilityStats;  //!< LTE RRC stats.
-  Ptr<PgwTftStatsCalculator>    m_pgwTftStats;    //!< P-GW TFT stats.
-  Ptr<TrafficStatsCalculator>   m_trafficStats;   //!< Traffic stats.
+  Ptr<AdmissionStatsCalculator>   m_admissionStats; //!< Admission stats.
+  Ptr<TransportStatsCalculator>   m_transportStats; //!< Transport stats.
+  Ptr<MobilityStatsCalculator>    m_mobilityStats;  //!< LTE RRC stats.
+  Ptr<PgwuScalingStatsCalculator> m_scalingStats;   //!< P-GW TFT stats.
+  Ptr<TrafficStatsCalculator>     m_trafficStats;   //!< Traffic stats.
 };
 
 } // namespace ns3

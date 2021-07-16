@@ -52,7 +52,7 @@ ScenarioConfig::ScenarioConfig ()
   m_admissionStats (0),
   m_transportStats (0),
   m_mobilityStats (0),
-  m_pgwTftStats (0),
+  m_scalingStats (0),
   m_trafficStats (0)
 {
   NS_LOG_FUNCTION (this);
@@ -386,7 +386,7 @@ ScenarioConfig::DoDispose (void)
   // This will force output files to get closed.
   m_admissionStats->Dispose ();
   m_transportStats->Dispose ();
-  m_pgwTftStats->Dispose ();
+  m_scalingStats->Dispose ();
   m_trafficStats->Dispose ();
   m_mobilityStats->Dispose ();
 
@@ -406,7 +406,7 @@ ScenarioConfig::DoDispose (void)
 
   m_admissionStats = 0;
   m_transportStats = 0;
-  m_pgwTftStats = 0;
+  m_scalingStats = 0;
   m_trafficStats = 0;
   m_mobilityStats = 0;
 
@@ -533,7 +533,7 @@ ScenarioConfig::NotifyConstructionCompleted (void)
   m_admissionStats  = CreateObject<AdmissionStatsCalculator> ();
   m_transportStats  = CreateObject<TransportStatsCalculator> ();
   m_mobilityStats   = CreateObject<MobilityStatsCalculator> ();
-  m_pgwTftStats     = CreateObject<PgwTftStatsCalculator> ();
+  m_scalingStats    = CreateObject<PgwuScalingStatsCalculator> ();
   m_trafficStats    = CreateObject<TrafficStatsCalculator> ();
 
   Object::NotifyConstructionCompleted ();

@@ -381,7 +381,7 @@ PgwuScaling::PgwTftScaling (void)
   NS_ASSERT_MSG (m_pgwInfo, "No P-GW attached to this slice.");
 
   // Check for valid P-GW TFT thresholds attributes.
-  NS_ASSERT_MSG (m_splitThs < m_controller->GetGbrBlockThs ()
+  NS_ASSERT_MSG (m_splitThs < m_controller->GetPgwBlockThs ()
                  && m_splitThs > 2 * m_joinThs,
                  "The split threshold should be smaller than the block "
                  "threshold and two times larger than the join threshold.");
