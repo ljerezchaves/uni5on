@@ -22,6 +22,8 @@
 
 namespace ns3 {
 
+NS_LOG_COMPONENT_DEFINE ("GlobalIds");
+
 uint32_t
 GlobalIds::TeidCreate (SliceId sliceId, uint32_t ueImsi, uint32_t bearerId)
 {

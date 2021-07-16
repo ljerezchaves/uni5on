@@ -33,7 +33,7 @@ class SliceController;
 
 /**
  * \ingroup uni5onMano
- * The P-GWu TFT scaling application.
+ * The intra-slice P-GWu scaling application.
  */
 class PgwuScaling : public Object
 {

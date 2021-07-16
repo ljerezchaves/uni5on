@@ -403,6 +403,8 @@ EnableVerbose (bool enable)
       LogComponentEnable ("TransportNetwork",         logLevelWarnInfo);
 
       // MANO apps components
+      LogComponentEnable ("GlobalIds",                logLevelWarnInfo);
+      LogComponentEnable ("LinkSharing",              logLevelWarnInfo);
       LogComponentEnable ("PgwuScaling",              logLevelWarnInfo);
 
       // Slice components.
