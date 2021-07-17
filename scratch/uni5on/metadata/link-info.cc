@@ -42,6 +42,11 @@ NS_OBJECT_ENSURE_REGISTERED (LinkInfo);
 LinkInfo::LinkInfoMap_t LinkInfo::m_linkInfoByDpIds;
 LinkInfoList_t LinkInfo::m_linkInfoList;
 
+const LinkInfo::LinkDirList_t LinkInfo::m_linkDirList = {
+  LinkInfo::LinkDir::FWD,
+  LinkInfo::LinkDir::BWD
+};
+
 LinkInfo::LinkInfo (Ptr<OFSwitch13Port> port1, Ptr<OFSwitch13Port> port2,
                     Ptr<CsmaChannel> channel)
   : m_channel (channel)
@@ -343,6 +348,12 @@ LinkInfo::LinkDir
 LinkInfo::InvertDir (LinkDir dir)
 {
   return (dir == LinkInfo::FWD) ? LinkInfo::BWD : LinkInfo::FWD;
+}
+
+const LinkInfo::LinkDirList_t&
+LinkInfo::GetDirs (void)
+{
+  return LinkInfo::m_linkDirList;
 }
 
 const LinkInfoList_t&

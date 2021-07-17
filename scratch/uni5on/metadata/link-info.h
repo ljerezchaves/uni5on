@@ -86,6 +86,9 @@ public:
   // Total number of valid LinkDir items + 1.
   #define N_LINK_DIRS (static_cast<int> (LinkInfo::BWD) + 1)
 
+  /** A list of link information objects. */
+  typedef std::vector<LinkInfo::LinkDir> LinkDirList_t;
+
   /** EWMA period of evaluation. */
   enum EwmaTerm
   {
@@ -300,6 +303,12 @@ public:
   static LinkDir InvertDir (LinkDir dir);
 
   /**
+   * Get the list of link directions.
+   * \return The const reference to the list of link directions.
+   */
+  static const LinkDirList_t& GetDirs (void);
+
+  /**
    * Get the list of link information.
    * \return The const reference to the list of link information.
    */
@@ -426,6 +435,8 @@ private:
   static LinkInfoMap_t  m_linkInfoByDpIds;      //!< Global link info map.
 
   static LinkInfoList_t m_linkInfoList;         //!< Global link info list.
+
+  static const LinkDirList_t m_linkDirList;     //!< Global link dir list.
 };
 
 } // namespace ns3
