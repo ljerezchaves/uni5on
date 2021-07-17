@@ -88,14 +88,6 @@ RingController::DoDispose ()
   TransportController::DoDispose ();
 }
 
-void
-RingController::NotifyConstructionCompleted (void)
-{
-  NS_LOG_FUNCTION (this);
-
-  TransportController::NotifyConstructionCompleted ();
-}
-
 bool
 RingController::BearerRequest (Ptr<BearerInfo> bInfo)
 {

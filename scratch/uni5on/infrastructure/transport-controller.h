@@ -94,9 +94,6 @@ protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
 
-  // Inherited from ObjectBase.
-  virtual void NotifyConstructionCompleted (void);
-
   /**
    * Process the bearer request in the transport network.
    * \param bInfo The bearer information.

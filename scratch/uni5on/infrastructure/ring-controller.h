@@ -71,9 +71,6 @@ protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
 
-  // Inherited from ObjectBase.
-  virtual void NotifyConstructionCompleted (void);
-
   // Inherited from TransportController.
   bool BearerRequest (Ptr<BearerInfo> bInfo);
   bool BearerReserve (Ptr<BearerInfo> bInfo);

@@ -149,18 +149,6 @@ TransportController::DoDispose ()
 }
 
 void
-TransportController::NotifyConstructionCompleted (void)
-{
-  NS_LOG_FUNCTION (this);
-
-  // Create the link sharing application and aggregate it to controller node.
-  m_sharingApp = CreateObject<LinkSharing> (Ptr<TransportController> (this));
-  // GetNode ()->AggregateObject (m_sharingApp); // FIXME Aggregation.
-
-  OFSwitch13Controller::NotifyConstructionCompleted ();
-}
-
-void
 TransportController::DpctlSchedule (Time delay, uint64_t dpId,
                                     const std::string textCmd)
 {
@@ -323,6 +311,10 @@ void
 TransportController::NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices)
 {
   NS_LOG_FUNCTION (this);
+
+  // Create the link sharing application and aggregate it to controller node.
+  m_sharingApp = CreateObject<LinkSharing> (Ptr<TransportController> (this));
+  GetNode ()->AggregateObject (m_sharingApp);
 
   // Save the collection of switch devices.
   m_switchDevices = devices;
