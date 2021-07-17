@@ -184,10 +184,8 @@ TransportStatsCalculator::DumpStatistics (Time nextDump)
       // Dump slice bandwidth usage for each link.
       for (auto const &lInfo : LinkInfo::GetList ())
         {
-          for (int d = 0; d < N_LINK_DIRS; d++)
+          for (auto const &dir : LinkInfo::GetDirs ())
             {
-              LinkInfo::LinkDir dir = static_cast<LinkInfo::LinkDir> (d);
-
               *slData.bwdWrapper->GetStream ()
                 << " " << setw (8) << Simulator::Now ().GetSeconds ()
                 << " " << setw (7) << LinkInfo::LinkDirStr (dir);

@@ -72,9 +72,10 @@ LinkSharing::GetTypeId (void)
     .AddAttribute ("SpareUse",
                    "Use spare link bit rate for sharing purposes.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   BooleanValue (true),
-                   MakeBooleanAccessor (&LinkSharing::m_spareUse),
-                   MakeBooleanChecker ())
+                   EnumValue (OpMode::ON),
+                   MakeEnumAccessor (&LinkSharing::m_spareUse),
+                   MakeEnumChecker (OpMode::OFF, OpModeStr (OpMode::OFF),
+                                    OpMode::ON,  OpModeStr (OpMode::ON)))
     .AddAttribute ("Timeout",
                    "The interval between adjustment operations.",
                    TimeValue (Seconds (20)),
@@ -108,7 +109,7 @@ LinkSharing::GetSharingMode (void) const
   return m_sharingMode;
 }
 
-bool
+OpMode
 LinkSharing::GetSpareUse (void) const
 {
   NS_LOG_FUNCTION (this);
@@ -138,7 +139,7 @@ LinkSharing::ShareModeStr (ShareMode mode)
     case ShareMode::DYNA:
       return "dynamic";
     default:
-      NS_LOG_ERROR ("Invalid inter-slice operation mode.");
+      NS_LOG_ERROR ("Invalid link sharing operation mode.");
       return std::string ();
     }
 }
@@ -182,7 +183,7 @@ LinkSharing::DynamicExtraAdjust (
 
   // TODO Review this entire method.
   NS_ASSERT_MSG (GetSharingMode () == ShareMode::DYNA,
-                 "Invalid inter-slice operation mode.");
+                 "Invalid link sharing operation mode.");
 
   const LinkInfo::EwmaTerm lTerm = LinkInfo::LTERM;
   int64_t stepRate = static_cast<int64_t> (m_extraStep.GetBitRate ());
@@ -199,7 +200,7 @@ LinkSharing::DynamicExtraAdjust (
       useShareBitRate += lInfo->GetUseBitRate (lTerm, dir, slice);
     }
   // When enable, sum the spare bit rate too.
-  if (GetSpareUse ())
+  if (GetSpareUse () == OpMode::ON)
     {
       maxShareBitRate += lInfo->GetQuoBitRate (dir, SliceId::UNKN);
     }
@@ -514,7 +515,7 @@ LinkSharing::MeterAdjust (
               meterBitRate += lInfo->GetUnrBitRate (dir, slc);
             }
           // When enable, sum the spare bit rate too.
-          if (GetSpareUse ())
+          if (GetSpareUse () == OpMode::ON)
             {
               meterBitRate += lInfo->GetUnrBitRate (dir, SliceId::UNKN);
             }
@@ -553,7 +554,7 @@ LinkSharing::MeterInstall (Ptr<LinkInfo> lInfo, SliceId slice)
               meterBitRate += lInfo->GetQuoBitRate (dir, slc);
             }
           // When enable, sum the spare bit rate too.
-          if (GetSpareUse ())
+          if (GetSpareUse () == OpMode::ON)
             {
               meterBitRate += lInfo->GetQuoBitRate (dir, SliceId::UNKN);
             }

@@ -34,7 +34,7 @@ default ns3::PgwuScaling::Timeout "5s"
 default ns3::SliceNetwork::NumPgwTftSwitches "4"
 
 default ns3::LinkSharing::SharingMode "shared"
-default ns3::LinkSharing::SpareUse "true"
+default ns3::LinkSharing::SpareUse "on"
 default ns3::LinkSharing::ExtraStep "12Mbps"
 default ns3::LinkSharing::GuardStep "5Mbps"
 default ns3::LinkSharing::Timeout "20s"

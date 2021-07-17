@@ -97,13 +97,13 @@ SliceController::GetTypeId (void)
                    MakeIntegerAccessor (&SliceController::m_slicePrio),
                    MakeIntegerChecker<int> ())
     .AddAttribute ("Quota",
-                   "The transport bandwidth quota for this slice.",
+                   "The transport link quota for this slice.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    IntegerValue (0),
                    MakeIntegerAccessor (&SliceController::m_linkQuota),
                    MakeIntegerChecker<int> (0, 100))
     .AddAttribute ("Sharing",
-                   "Enable transport bandwidth sharing.",
+                   "Enable the link bit rate sharing for this slices.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    EnumValue (OpMode::ON),
                    MakeEnumAccessor (&SliceController::m_linkSharing),

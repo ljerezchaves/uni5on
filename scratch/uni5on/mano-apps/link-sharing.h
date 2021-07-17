@@ -35,7 +35,7 @@ class LinkInfo;
 
 /**
  * \ingroup uni5onMano
- * The inter-slice link bandwdith sharing application for transport network.
+ * The inter-slice link sharing application for transport network.
  */
 class LinkSharing : public Object
 {
@@ -78,7 +78,7 @@ public:
   DataRate  GetExtraStep          (void) const;
   DataRate  GetGuardStep          (void) const;
   ShareMode GetSharingMode        (void) const;
-  bool      GetSpareUse           (void) const;
+  OpMode    GetSpareUse           (void) const;
   Time      GetTimeout            (void) const;
   //\}
 
@@ -108,14 +108,14 @@ protected:
 
 private:
   /**
-   * Adjust the inter-slice extra bit rate.
+   * Adjust the link sharing extra bit rate.
    * \param lInfo The link information.
    * \param dir The link direction.
    */
   void DynamicExtraAdjust (Ptr<LinkInfo> lInfo, LinkInfo::LinkDir dir);
 
   /**
-   * Periodically triggers the inter-slice extra bit rate adjustment for
+   * Periodically triggers the link sharing extra bit rate adjustment for
    * transport network links.
    */
   void DynamicTimeout (void);
@@ -159,7 +159,7 @@ private:
   DataRate                  m_extraStep;    //!< Extra adjustment step.
   DataRate                  m_guardStep;    //!< Dynamic slice link guard.
   ShareMode                 m_sharingMode;  //!< Link sharing operation mode.
-  bool                      m_spareUse;     //!< Spare bit rate sharing mode.
+  OpMode                    m_spareUse;     //!< Spare bit rate sharing mode.
   Time                      m_timeout;      //!< Dynamic slice timeout interval.
 
   /** Slice controllers sorted by increasing priority. */
