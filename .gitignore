@@ -44,6 +44,7 @@ topologies/**/*.dat
 topologies/**/*.gpi
 topologies/**/*.pdf
 topologies/**/*.topo
+topologies/**/*.ipynb
 
 .vscode/**
 .DS_Store
