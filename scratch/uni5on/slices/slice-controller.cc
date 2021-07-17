@@ -42,7 +42,8 @@ NS_LOG_COMPONENT_DEFINE ("SliceController");
 NS_OBJECT_ENSURE_REGISTERED (SliceController);
 
 SliceController::SliceController ()
-  : m_pgwInfo (0)
+  : m_pgwScaling (0),
+  m_pgwInfo (0)
 {
   NS_LOG_FUNCTION (this);
 }
