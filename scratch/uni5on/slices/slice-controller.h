@@ -334,8 +334,8 @@ private:
   Ptr<TransportController>  m_transportCtrl; //!< Transport controller.
   double                    m_gbrBlockThs;    //!< GBR block threshold.
   int                       m_slicePrio;      //!< Slice priority.
-  int                       m_linkQuota;      //!< Initial bandwitdh quota.
-  OpMode                    m_linkSharing;    //!< Bandwitdh sharing mode.
+  int                       m_linkQuota;      //!< Initial link sharing quota.
+  OpMode                    m_linkSharing;    //!< Bit rate sharing flag.
   OpMode                    m_aggregation;    //!< Bearer traffic aggregation.
 
   // MME interface.

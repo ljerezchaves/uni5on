@@ -48,10 +48,10 @@ public:
    */
   typedef enum
   {
-    NONE = 0,   //!< No inter-slicing.
-    SHAR = 1,   //!< Partial Non-GBR shared inter-slicing.
-    STAT = 2,   //!< Full static inter-slicing.
-    DYNA = 3    //!< Full dinaymic inter-slicing.
+    NONE = 0,   //!< Disabled meters.
+    SHAR = 1,   //!< Non-GBR aggregate meter.
+    STAT = 2,   //!< Non-GBR individual meters.
+    DYNA = 3    //!< Non-GBR dynamic individual meters.
   } ShareMode;
 
   // Total number of valid ShareMode items.
@@ -99,8 +99,7 @@ protected:
 
   /**
    * Get the list of slice controller applications.
-   * \param sharing Filter controller applications with enabled
-   *        bandwdith sharing flag.
+   * \param sharing Filter controller applications with enabled sharing flag.
    * \return The list of controller applications.
    */
   const SliceControllerList_t& GetSliceControllerList (

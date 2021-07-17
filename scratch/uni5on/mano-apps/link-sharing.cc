@@ -47,17 +47,17 @@ LinkSharing::GetTypeId (void)
     .SetParent<Object> ()
 
     .AddAttribute ("ExtraStep",
-                   "Extra bit rate adjustment step.",
+                   "Link sharing extra bit rate adjustment step.",
                    DataRateValue (DataRate ("12Mbps")),
                    MakeDataRateAccessor (&LinkSharing::m_extraStep),
                    MakeDataRateChecker ())
     .AddAttribute ("GuardStep",
-                   "Link guard bit rate.",
+                   "Link sharing guard bit rate.",
                    DataRateValue (DataRate ("10Mbps")),
                    MakeDataRateAccessor (&LinkSharing::m_guardStep),
                    MakeDataRateChecker ())
     .AddAttribute ("SharingMode",
-                   "Inter-slice operation mode.",
+                   "Link sharing operation mode.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    EnumValue (ShareMode::NONE),
                    MakeEnumAccessor (&LinkSharing::m_sharingMode),
@@ -70,14 +70,14 @@ LinkSharing::GetTypeId (void)
                                     ShareMode::DYNA,
                                     ShareModeStr (ShareMode::DYNA)))
     .AddAttribute ("SpareUse",
-                   "Use spare link bit rate for sharing purposes.",
+                   "Use the spare link bit rate in link sharing.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    EnumValue (OpMode::ON),
                    MakeEnumAccessor (&LinkSharing::m_spareUse),
                    MakeEnumChecker (OpMode::OFF, OpModeStr (OpMode::OFF),
                                     OpMode::ON,  OpModeStr (OpMode::ON)))
     .AddAttribute ("Timeout",
-                   "The interval between adjustment operations.",
+                   "The interval between dynamic extra bit rate adjustments.",
                    TimeValue (Seconds (20)),
                    MakeTimeAccessor (&LinkSharing::m_timeout),
                    MakeTimeChecker ())
