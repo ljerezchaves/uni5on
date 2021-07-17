@@ -83,6 +83,7 @@ protected:
   bool BearerUpdate  (Ptr<BearerInfo> bInfo, Ptr<EnbInfo> dstEnbInfo);
   void NotifyBearerCreated (Ptr<BearerInfo> bInfo);
   void NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices);
+  void SharingMeterApply (uint64_t swDpId, LinkInfo::LinkDir dir, SliceId slice);
   // Inherited from TransportController.
 
   // Inherited from OFSwitch13Controller.
@@ -275,13 +276,6 @@ private:
   void SetShortestPath (Ptr<RingInfo> ringInfo, EpsIface iface) const;
 
   /**
-   * Apply the infrastructure inter-slicing OpenFlow meters.
-   * \param swtch The switch information.
-   * \param slice The network slice.
-   */
-  void SlicingMeterApply (Ptr<const RemoteSwitch> swtch, SliceId slice);
-
-  /**
    * Check for the CPU usage on switches for the given logical interface.
    * \param ringInfo The ring routing information.
    * \param iface The logical interface.
@@ -325,7 +319,7 @@ private:
                            RingInfo::RingPath path, double blockThs,
                            uint16_t table) const;
 
-  RoutingStrategy           m_strategy;       //!< Routing strategy in use.
+  RoutingStrategy m_strategy;   //!< Routing strategy in use.
 };
 
 } // namespace ns3

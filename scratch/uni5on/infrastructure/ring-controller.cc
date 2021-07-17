@@ -21,6 +21,7 @@
 #include <string>
 #include "ring-controller.h"
 #include "transport-network.h"
+#include "../mano-apps/link-sharing.h"
 #include "../metadata/bearer-info.h"
 #include "../metadata/enb-info.h"
 #include "../slices/slice-controller.h"
@@ -299,45 +300,6 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
     DpctlExecute (swDpId, cmd.str ());
   }
 
-  // -------------------------------------------------------------------------
-  // Bandwidth table -- [from higher to lower priority]
-  //
-  // Apply Non-GBR meter band.
-  // Send the packet to the output table.
-  switch (GetInterSliceMode ())
-    {
-    case SliceMode::NONE:
-      // Nothing to do when inter-slicing is disabled.
-      break;
-
-    case SliceMode::SHAR:
-      // Apply high-priority individual Non-GBR meter entries for slices with
-      // disabled bandwidth sharing and the low-priority shared Non-GBR meter
-      // entry for other slices.
-      SlicingMeterApply (swtch, SliceId::ALL);
-      for (auto const &ctrl : GetSliceControllerList ())
-        {
-          if (ctrl->GetSharing () == OpMode::OFF)
-            {
-              SlicingMeterApply (swtch, ctrl->GetSliceId ());
-            }
-        }
-      break;
-
-    case SliceMode::STAT:
-    case SliceMode::DYNA:
-      // Apply individual Non-GBR meter entries for each slice.
-      for (auto const &ctrl : GetSliceControllerList ())
-        {
-          SlicingMeterApply (swtch, ctrl->GetSliceId ());
-        }
-      break;
-
-    default:
-      NS_LOG_WARN ("Undefined inter-slicing operation mode.");
-      break;
-    }
-
   TransportController::HandshakeSuccessful (swtch);
 }
 
@@ -452,7 +414,7 @@ RingController::BitRateReserve (
       std::tie (lInfo, fwdDir, bwdDir) = GetLinkInfo (srcIdx, next);
       ok &= lInfo->UpdateResBitRate (fwdDir, slice, fwdBitRate);
       ok &= lInfo->UpdateResBitRate (bwdDir, slice, bwdBitRate);
-      SlicingMeterAdjust (lInfo, slice);
+      GetSharingApp ()->MeterAdjust (lInfo, slice);
       srcIdx = next;
     }
 
@@ -505,7 +467,7 @@ RingController::BitRateRelease (
       std::tie (lInfo, fwdDir, bwdDir) = GetLinkInfo (srcIdx, next);
       ok &= lInfo->UpdateResBitRate (fwdDir, slice, -fwdBitRate);
       ok &= lInfo->UpdateResBitRate (bwdDir, slice, -bwdBitRate);
-      SlicingMeterAdjust (lInfo, slice);
+      GetSharingApp ()->MeterAdjust (lInfo, slice);
       srcIdx = next;
     }
 
@@ -1123,17 +1085,17 @@ RingController::SetShortestPath (
 }
 
 void
-RingController::SlicingMeterApply (
-  Ptr<const RemoteSwitch> swtch, SliceId slice)
+RingController::SharingMeterApply (
+  uint64_t swDpId, LinkInfo::LinkDir dir, SliceId slice)
 {
-  NS_LOG_FUNCTION (this << swtch << slice);
-
-  // Get the OpenFlow switch datapath ID.
-  uint64_t swDpId = swtch->GetDpId ();
+  NS_LOG_FUNCTION (this << swDpId << dir << slice);
 
   // -------------------------------------------------------------------------
   // Bandwidth table -- [from higher to lower priority]
   //
+  // Apply the Non-GBR meter band.
+  // Send the packet to the output table.
+
   // Build the command string.
   // Using a low-priority rule for ALL slice.
   std::ostringstream cmd;
@@ -1142,40 +1104,36 @@ RingController::SlicingMeterApply (
       << ",table="      << BANDW_TAB
       << ",flags="      << FLAGS_REMOVED_OVERLAP_RESET;
 
-  // Install rules on each port direction (FWD and BWD).
-  for (int d = 0; d < N_LINK_DIRS; d++)
+  uint32_t meterId = GlobalIds::MeterIdSlcCreate (slice, dir);
+
+  // We are using the IP DSCP field to identify Non-GBR traffic.
+  for (auto &qci : GetNonGbrQcis ())
     {
-      LinkInfo::LinkDir dir = static_cast<LinkInfo::LinkDir> (d);
-      uint32_t meterId = GlobalIds::MeterIdSlcCreate (slice, d);
+      Ipv4Header::DscpType dscp = Qci2Dscp (qci);
 
-      // We are using the IP DSCP field to identify Non-GBR traffic.
-      // Non-GBR QCIs range is [5, 9].
-      for (int q = 5; q <= 9; q++)
+      // Build the match string.
+      std::ostringstream mtc;
+      mtc << " eth_type="   << IPV4_PROT_NUM
+          << ",meta="       << RingInfo::LinkDirToRingPath (dir)
+          << ",ip_dscp="    << static_cast<uint16_t> (dscp)
+          << ",ip_proto="   << UDP_PROT_NUM;
+      if (slice != SliceId::ALL)
         {
-          EpsBearer::Qci qci = static_cast<EpsBearer::Qci> (q);
-          Ipv4Header::DscpType dscp = Qci2Dscp (qci);
-
-          // Build the match string.
-          std::ostringstream mtc;
-          mtc << " eth_type="   << IPV4_PROT_NUM
-              << ",meta="       << RingInfo::LinkDirToRingPath (dir)
-              << ",ip_dscp="    << static_cast<uint16_t> (dscp)
-              << ",ip_proto="   << UDP_PROT_NUM;
-          if (slice != SliceId::ALL)
-            {
-              // Filter traffic for individual slices.
-              mtc << ",gtpu_teid="  << (meterId & TEID_SLICE_MASK)
-                  << "/"            << TEID_SLICE_MASK;
-            }
-
-          // Build the instructions string.
-          std::ostringstream act;
-          act << " meter:"      << meterId
-              << " goto:"       << OUTPT_TAB;
-
-          DpctlExecute (swDpId, cmd.str () + mtc.str () + act.str ());
+          // Filter traffic for individual slices.
+          mtc << ",gtpu_teid="  << (meterId & TEID_SLICE_MASK)
+              << "/"            << TEID_SLICE_MASK;
         }
+
+      // Build the instructions string.
+      std::ostringstream act;
+      act << " meter:"      << meterId
+          << " goto:"       << OUTPT_TAB;
+
+      DpctlExecute (swDpId, cmd.str () + mtc.str () + act.str ());
     }
+
+  // Chain up
+  TransportController::SharingMeterApply (swDpId, dir, slice);
 }
 
 bool

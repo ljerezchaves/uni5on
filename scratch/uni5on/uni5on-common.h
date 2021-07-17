@@ -180,21 +180,6 @@ typedef enum
 
 /**
  * \ingroup uni5on
- * Enumeration of available inter-slicing operation modes.
- */
-typedef enum
-{
-  NONE = 0,   //!< No inter-slicing.
-  SHAR = 1,   //!< Partial Non-GBR shared inter-slicing.
-  STAT = 2,   //!< Full static inter-slicing.
-  DYNA = 3    //!< Full dinaymic inter-slicing.
-} SliceMode;
-
-// Total number of valid SliceMode items.
-#define N_SLICE_MODES (static_cast<int> (SliceMode::DYNA) + 1)
-
-/**
- * \ingroup uni5on
  * Get the direction name.
  * \param dir The direction.
  * \return The string with the direction string.
@@ -232,14 +217,6 @@ std::string QosTypeStr (QosType type);
  * \return The string with the slice ID name.
  */
 std::string SliceIdStr (SliceId slice);
-
-/**
- * \ingroup uni5on
- * Get the inter-slicing operation mode name.
- * \param mode The inter-slicing operation mode.
- * \return The string with the inter-slicing operation mode name.
- */
-std::string SliceModeStr (SliceMode mode);
 
 /**
  * \ingroup uni5on

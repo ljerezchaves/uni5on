@@ -2,13 +2,9 @@ global DumpStatsTimeout "1s"
 global SimTime "0s"
 
 default ns3::TransportController::AggBitRateCheck "off"
-default ns3::TransportController::ExtraStep "12Mbps"
-default ns3::TransportController::GuardStep "10Mbps"
 default ns3::TransportController::MeterStep "2Mbps"
 default ns3::TransportController::QosQueues "on"
-default ns3::TransportController::SliceMode "none"
-default ns3::TransportController::SliceTimeout "20s"
-default ns3::TransportController::SpareUse "on"
+
 default ns3::TransportController::SwBlockPolicy "on"
 default ns3::TransportController::SwBlockThs "0.9"
 
@@ -31,6 +27,12 @@ default ns3::RingController::Routing "spo"
 
 default ns3::RingNetwork::NumRingSwitches "3"
 default ns3::RingNetwork::SkipFirstSwitch "true"
+
+default ns3::LinkSharing::SharingMode "none"
+default ns3::LinkSharing::ExtraStep "12Mbps"
+default ns3::LinkSharing::GuardStep "10Mbps"
+default ns3::LinkSharing::SpareUse "true"
+default ns3::LinkSharing::Timeout "20s"
 
 default ns3::PgwuScaling::ScalingMode "off"
 default ns3::PgwuScaling::JoinThs "0.3"
@@ -114,7 +116,7 @@ default ns3::TransportStatsCalculator::TffStatsFilename "transport-traffic"
 default ns3::MobilityStatsCalculator::HvoStatsFilename "rrc-handover"
 default ns3::MobilityStatsCalculator::MobStatsFilename "ue-mobility"
 default ns3::MobilityStatsCalculator::RrcStatsFilename "rrc-procedures"
-default ns3::PgwTftStatsCalculator::LbmStatsFilename "pgw-scaling"
+default ns3::PgwuScalingStatsCalculator::LbmStatsFilename "pgw-scaling"
 default ns3::TrafficStatsCalculator::AppStatsFilename "traffic-flows-app-l7"
 default ns3::TrafficStatsCalculator::EpcStatsFilename "traffic-flows-epc-l2"
 

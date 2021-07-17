@@ -121,25 +121,6 @@ SliceIdStr (SliceId slice)
     }
 }
 
-std::string
-SliceModeStr (SliceMode mode)
-{
-  switch (mode)
-    {
-    case SliceMode::NONE:
-      return "none";
-    case SliceMode::SHAR:
-      return "shared";
-    case SliceMode::STAT:
-      return "static";
-    case SliceMode::DYNA:
-      return "dynamic";
-    default:
-      NS_LOG_ERROR ("Invalid inter-slice operation mode.");
-      return std::string ();
-    }
-}
-
 double
 Bps2Kbps (int64_t bitrate)
 {
@@ -293,8 +274,6 @@ Dscp2Tos (Ipv4Header::DscpType dscp)
       return 0x00;
     }
 }
-
-
 
 std::string
 GetTunnelIdStr (uint32_t teid, Ipv4Address dstIp)

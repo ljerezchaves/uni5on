@@ -24,8 +24,9 @@
 // Pipeline tables at OpenFlow transport switches.
 #define INPUT_TAB 0
 #define CLASS_TAB 1
-#define BANDW_TAB (static_cast<int> (SliceId::ALL) + 2)
-#define OUTPT_TAB (static_cast<int> (SliceId::ALL) + 3)
+#define SLICE_TAB_START 2
+#define BANDW_TAB (SLICE_TAB_START + static_cast<int> (SliceId::ALL))
+#define OUTPT_TAB (BANDW_TAB + 1)
 
 #include <ns3/core-module.h>
 #include <ns3/internet-module.h>
@@ -33,7 +34,6 @@
 #include <ns3/network-module.h>
 #include <ns3/ofswitch13-module.h>
 #include "../mano-apps/global-ids.h"
-#include "../metadata/bearer-info.h"
 #include "../metadata/link-info.h"
 #include "../slices/slice-controller.h"
 #include "../uni5on-common.h"
@@ -42,6 +42,7 @@ namespace ns3 {
 
 class EnbInfo;
 class LinkInfo;
+class LinkSharing;
 
 /**
  * \ingroup uni5onInfra
@@ -53,6 +54,7 @@ class TransportController : public OFSwitch13Controller
   friend class TransportNetwork;
   friend class SliceController;
   friend class ScenarioConfig;
+  friend class LinkSharing;
 
 public:
   TransportController ();           //!< Default constructor.
@@ -85,9 +87,7 @@ public:
   OpMode    GetAggBitRateCheck    (void) const;
   OpMode    GetSwBlockPolicy      (void) const;
   double    GetSwBlockThreshold   (void) const;
-  SliceMode GetInterSliceMode     (void) const;
   OpMode    GetQosQueuesMode      (void) const;
-  OpMode    GetSpareUseMode       (void) const;
   //\}
 
 protected:
@@ -181,6 +181,15 @@ protected:
    */
   double GetEwmaCpuUse (uint16_t idx) const;
 
+  /** A list of link information objects. */
+  typedef std::vector<EpsBearer::Qci> QciList_t;
+
+  /**
+   * Get the list of Non-GBR QCIs.
+   * \return The const reference to the list of Non-GBR QCIs.
+   */
+  static const QciList_t& GetNonGbrQcis (void);
+
   /**
    * Get the slice controller application for a given slice ID.
    * \param slice The network slice.
@@ -189,21 +198,18 @@ protected:
   Ptr<SliceController> GetSliceController (SliceId slice) const;
 
   /**
-   * Get the list of slice controller applications.
-   * \param sharing Filter controller applications with enabled
-   *        bandwdith sharing flag.
-   * \return The list of controller applications.
-   */
-  const SliceControllerList_t& GetSliceControllerList (
-    bool sharing = false) const;
-
-  /**
    * Get the number of the OpenFlow pipeline table exclusively used by this
    * slice for GTP tunnel handling (routing and QoS).
    * \param slice The slice ID.
    * \return The pipeline table for this slice.
    */
   uint16_t GetSliceTable (SliceId slice) const;
+
+  /**
+   * Get the link sharing application.
+   * \return The link sharing application.
+   */
+  Ptr<LinkSharing> GetSharingApp (void) const;
 
   /**
    * Notify this controller of a new bearer context created.
@@ -249,58 +255,48 @@ protected:
   // Inherited from OFSwitch13Controller.
 
   /**
-   * Periodically check for infrastructure bandwidth utilization over transport
-   * links to adjust extra bit rate when in dynamic inter-slice operation mode.
+   * Apply the link sharing OpenFlow meter.
+   * \param swDpId The transport switch datapath id.
+   * \param dir The link direction.
+   * \param slice The network slice.
    */
-  void SlicingDynamicTimeout (void);
+  virtual void SharingMeterApply (uint64_t swDpId, LinkInfo::LinkDir dir,
+                                  SliceId slice);
 
   /**
-   * Adjust the infrastructure inter-slicing extra bit rate, depending on the
-   * ExtraStep attribute value and current link configuration.
+   * Install the link sharing OpenFlow meter.
    * \param lInfo The link information.
    * \param dir The link direction.
+   * \param slice The network slice.
+   * \param bitRate The meter bit rate.
    */
-  void SlicingExtraAdjust (Ptr<LinkInfo> lInfo, LinkInfo::LinkDir dir);
+  virtual void SharingMeterInstall (Ptr<LinkInfo> lInfo, LinkInfo::LinkDir dir,
+                                    SliceId slice, int64_t bitRate);
 
   /**
-   * Adjust the infrastructure inter-slicing OpenFlow meter, depending on the
-   * MeterStep attribute value and current link configuration.
+   * Adjust the link sharing OpenFlow meter.
    * \param lInfo The link information.
+   * \param dir The link direction.
    * \param slice The network slice.
+   * \param bitRate The meter bit rate.
    */
-  void SlicingMeterAdjust (Ptr<LinkInfo> lInfo, SliceId slice);
-
-  /**
-   * Install the infrastructure inter-slicing OpenFlow meters.
-   * \param lInfo The link information.
-   * \param slice The network slice.
-   */
-  void SlicingMeterInstall (Ptr<LinkInfo> lInfo, SliceId slice);
+  virtual void SharingMeterUpdate (Ptr<LinkInfo> lInfo, LinkInfo::LinkDir dir,
+                                   SliceId slice, int64_t bitRate);
 
 private:
+  OpMode                    m_aggCheck;       //!< Check rate for agg bearers.
+  DataRate                  m_meterStep;      //!< Meter adjustment step.
+  OpMode                    m_qosQueues;      //!< QoS output queues mechanism.
+  OpMode                    m_swBlockPolicy;  //!< Switch overload block policy.
+  double                    m_swBlockThs;     //!< Switch block threshold.
+  Ptr<LinkSharing>          m_sharingApp;     //!< Link sharing application.
   OFSwitch13DeviceContainer m_switchDevices;  //!< OpenFlow switch devices.
-
-  // Internal mechanisms metadata.
-  OpMode                m_aggCheck;       //!< Check bit rate for agg bearers.
-  DataRate              m_extraStep;      //!< Extra adjustment step.
-  DataRate              m_guardStep;      //!< Dynamic slice link guard.
-  DataRate              m_meterStep;      //!< Meter adjustment step.
-  OpMode                m_qosQueues;      //!< QoS output queues mechanism.
-  SliceMode             m_sliceMode;      //!< Inter-slicing operation mode.
-  Time                  m_sliceTimeout;   //!< Dynamic slice timeout interval.
-  OpMode                m_spareUse;       //!< Spare bit rate sharing mode.
-  OpMode                m_swBlockPolicy;  //!< Switch overload block policy.
-  double                m_swBlockThs;     //!< Switch block threshold.
-
-  /** Slice controllers sorted by increasing priority. */
-  SliceControllerList_t m_sliceCtrlsAll;
-
-  /** Slice controllers with enabled sharing sorted by increasing priority. */
-  SliceControllerList_t m_sliceCtrlsSha;
 
   /** Map saving Slice ID / Slice controller application. */
   typedef std::map<SliceId, Ptr<SliceController>> SliceIdCtrlAppMap_t;
-  SliceIdCtrlAppMap_t   m_sliceCtrlById;  //!< Slice controller mapped values.
+  SliceIdCtrlAppMap_t       m_sliceCtrlById;  //!< Controller mapped values.
+
+  static const QciList_t    m_nonQciList;     //!< List of Non-GBR QCIs.
 };
 
 } // namespace ns3

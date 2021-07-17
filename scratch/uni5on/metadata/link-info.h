@@ -73,6 +73,7 @@ class LinkInfo : public Object
 {
   friend class TransportController;
   friend class RingController;
+  friend class LinkSharing;
 
 public:
   /** Link direction. */
