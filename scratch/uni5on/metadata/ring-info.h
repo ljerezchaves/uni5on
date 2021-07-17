@@ -31,7 +31,7 @@ class BearerInfo;
 
 /**
  * \ingroup uni5onMeta
- * Metadata associated to the routing path for an eEPC bearer in the OpenFlow
+ * Metadata associated to the routing path for an EPC bearer in the OpenFlow
  * transport ring network.
  */
 class RingInfo : public Object

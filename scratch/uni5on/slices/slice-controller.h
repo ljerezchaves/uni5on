@@ -51,7 +51,7 @@ typedef std::vector<Ptr<SliceController>> SliceControllerList_t;
 
 /**
  * \ingroup uni5onLogical
- * The logical eEPC network controller.
+ * The logical EPC network controller.
  */
 class SliceController : public OFSwitch13Controller
 {

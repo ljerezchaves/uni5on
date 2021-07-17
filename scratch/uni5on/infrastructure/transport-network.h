@@ -56,7 +56,7 @@ public:
    * \param prefix Filename prefix to use for PCAP files.
    * \param promiscuous If true, enable PCAP promiscuous traces.
    * \param ofchannel If true, enable PCAP on OpenFlow transport channels.
-   * \param epcDevices If true, enable PCAP on eEPC S1, S5, and X2 interfaces.
+   * \param epcDevices If true, enable PCAP on EPC S1, S5, and X2 interfaces.
    * \param swtDevices If true, enable PCAP on transport switches.
    */
   void EnablePcap (std::string prefix, bool promiscuous, bool ofchannel,

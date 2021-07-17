@@ -35,7 +35,7 @@ class SliceController;
 
 /**
  * \ingroup uni5onLogical
- * The logical eEPC network slice.
+ * The logical EPC network slice.
  */
 class SliceNetwork : public Object
 {

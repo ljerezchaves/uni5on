@@ -47,7 +47,7 @@ namespace ns3 {
  *
  * \ingroup uni5on
  * \defgroup uni5onLogical Logical
- * The logical eEPC network slices.
+ * The logical EPC network slices.
  *
  * \ingroup uni5on
  * \defgroup uni5onMeta Metadata

@@ -28,7 +28,7 @@ namespace ns3 {
 /**
  * \ingroup uni5onLogical
  * Custom eNB application that can handle connection with multiple S-GWs and
- * traffic aggregation within eEPC bearers It also attachs/removes the GtpuTag
+ * traffic aggregation within EPC bearers It also attachs/removes the GtpuTag
  * tag on packets entering.leaving the transport network over S1-U interface.
  */
 class EnbApplication : public EpcEnbApplication

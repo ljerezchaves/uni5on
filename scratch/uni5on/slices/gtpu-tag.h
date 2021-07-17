@@ -32,7 +32,7 @@ class Tag;
 
 /**
  * \ingroup uni5onLogical
- * GTP-U tag for eEPC traffic monitoring.
+ * GTP-U tag for EPC traffic monitoring.
  */
 class GtpuTag : public Tag
 {

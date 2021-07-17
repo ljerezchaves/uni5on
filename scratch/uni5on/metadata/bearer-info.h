@@ -37,7 +37,7 @@ typedef std::vector<Ptr<BearerInfo>> BearerInfoList_t;
 
 /**
  * \ingroup uni5onMeta
- * Metadata associated to an eEPC bearer.
+ * Metadata associated to an EPC bearer.
  */
 class BearerInfo : public Object
 {
