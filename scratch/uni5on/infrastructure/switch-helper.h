@@ -26,10 +26,9 @@
 namespace ns3 {
 
 /**
- * \ingroup ofswitch13
- *
- * Custom OFSwitch13 switch helper for handling eNBs simultaneously managed by
- * infrastructure and slice controllers.
+ * \ingroup uni5onInfra
+ * Custom OFSwitch13 switch helper for handling eNBs switches simultaneously
+ * managed by infrastructure and slice controllers.
  */
 class SwitchHelper : public OFSwitch13InternalHelper
 {
@@ -44,11 +43,11 @@ public:
   static TypeId GetTypeId (void);
 
   /**
-   * This method adds the given OpenFlow switch into the internal container for
-   * further connection with configured controller.
-   * \param ofDevice The OpenFlow device.
+   * This method adds the given OpenFlow switch into the internal container
+   * for further connection with the already configured OpenFlow controller.
+   * \param device The OpenFlow device.
    */
-  void AddConfiguredSwitch (Ptr<OFSwitch13Device> ofDevice);
+  void AddSwitch (Ptr<OFSwitch13Device> device);
 
 protected:
   /** Destructor implementation. */

@@ -46,18 +46,18 @@ SwitchHelper::GetTypeId (void)
 }
 
 void
-SwitchHelper::AddConfiguredSwitch (Ptr<OFSwitch13Device> ofDevice)
+SwitchHelper::AddSwitch (Ptr<OFSwitch13Device> device)
 {
-  NS_LOG_FUNCTION (this << ofDevice);
+  NS_LOG_FUNCTION (this << device);
 
   NS_ABORT_MSG_IF (m_blocked, "OpenFlow channels already configured.");
 
   // Get the node for this switch device.
-  Ptr<Node> node = ofDevice->GetObject<Node> ();
+  Ptr<Node> node = device->GetObject<Node> ();
   NS_ABORT_MSG_IF (!node, "OpenFlow device not aggregated to any node.");
 
   // Saving device and node.
-  m_openFlowDevs.Add (ofDevice);
+  m_openFlowDevs.Add (device);
   m_switchNodes.Add (node);
 }
 
