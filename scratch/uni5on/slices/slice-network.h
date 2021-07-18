@@ -32,6 +32,7 @@ namespace ns3 {
 class TransportNetwork;
 class RadioNetwork;
 class SliceController;
+class SwitchHelper;
 
 /**
  * \ingroup uni5onLogical
@@ -118,7 +119,7 @@ private:
   Ptr<RadioNetwork>             m_radio;            //!< Radio network.
 
   // OpenFlow network configuration.
-  Ptr<OFSwitch13InternalHelper> m_switchHelper;     //!< Switch helper.
+  Ptr<SwitchHelper>             m_switchHelper;     //!< Switch helper.
   Ptr<SliceController>          m_controllerApp;    //!< Controller app.
   Ptr<Node>                     m_controllerNode;   //!< Controller node.
 

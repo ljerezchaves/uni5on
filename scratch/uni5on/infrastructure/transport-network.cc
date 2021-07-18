@@ -21,6 +21,7 @@
 #include <ns3/csma-module.h>
 #include "transport-network.h"
 #include "transport-controller.h"
+#include "switch-helper.h"
 
 namespace ns3 {
 
@@ -225,7 +226,7 @@ TransportNetwork::NotifyConstructionCompleted (void)
   m_csmaHelper.SetChannelAttribute ("Delay", TimeValue (m_linkDelay));
 
   // Create the OFSwitch13 helper for the OpenFlow channel.
-  m_switchHelper = CreateObjectWithAttributes<OFSwitch13InternalHelper> (
+  m_switchHelper = CreateObjectWithAttributes<SwitchHelper> (
       "ChannelType", EnumValue (OFSwitch13Helper::DEDICATEDP2P));
 
   // Configuring the OFSwitch13 helper for the transport switches.

@@ -21,6 +21,7 @@
 #include "ring-network.h"
 #include "ring-controller.h"
 #include "../metadata/link-info.h"
+#include "switch-helper.h"
 
 namespace ns3 {
 

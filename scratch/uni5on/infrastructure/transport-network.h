@@ -30,6 +30,7 @@
 namespace ns3 {
 
 class TransportController;
+class SwitchHelper;
 
 /**
  * \ingroup uni5onInfra
@@ -113,7 +114,7 @@ protected:
   Ptr<Node>                     m_controllerNode; //!< Controller node.
 
   // OpenFlow switches and helper.
-  Ptr<OFSwitch13InternalHelper> m_switchHelper;   //!< Switch helper.
+  Ptr<SwitchHelper>             m_switchHelper;   //!< Switch helper.
   NodeContainer                 m_switchNodes;    //!< Switch nodes.
   OFSwitch13DeviceContainer     m_switchDevices;  //!< Switch devices.
 

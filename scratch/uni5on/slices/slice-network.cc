@@ -24,6 +24,7 @@
 #include "slice-controller.h"
 #include "slice-network.h"
 #include "../infrastructure/radio-network.h"
+#include "../infrastructure/switch-helper.h"
 #include "../infrastructure/transport-network.h"
 #include "../metadata/pgw-info.h"
 #include "../metadata/sgw-info.h"
@@ -321,7 +322,7 @@ SliceNetwork::NotifyConstructionCompleted (void)
   m_webAddrHelper.SetBase (m_webAddr, m_webMask);
 
   // Create the OFSwitch13 helper using P2P connections for OpenFlow channel.
-  m_switchHelper = CreateObjectWithAttributes<OFSwitch13InternalHelper> (
+  m_switchHelper = CreateObjectWithAttributes<SwitchHelper> (
       "ChannelType", EnumValue (OFSwitch13Helper::DEDICATEDP2P));
 
   // Configure and install the slice controller application.
