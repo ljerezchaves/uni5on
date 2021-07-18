@@ -109,7 +109,7 @@ protected:
   virtual void CreateTopology (void) = 0;
 
   // Transport network controller.
-  Ptr<TransportController>       m_controllerApp;  //!< Controller app.
+  Ptr<TransportController>      m_controllerApp;  //!< Controller app.
   Ptr<Node>                     m_controllerNode; //!< Controller node.
 
   // OpenFlow switches and helper.
