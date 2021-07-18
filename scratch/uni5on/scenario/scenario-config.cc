@@ -212,35 +212,32 @@ ScenarioConfig::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi,
 }
 
 void
-ScenarioConfig::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
+ScenarioConfig::AddEnb (Ptr<Node> enbNode, Ptr<NetDevice> lteEnbNetDevice,
                         uint16_t cellId)
 {
-  NS_LOG_FUNCTION (this << enb << lteEnbNetDevice << cellId);
+  NS_LOG_FUNCTION (this << enbNode << lteEnbNetDevice << cellId);
 
-  NS_ASSERT (enb == lteEnbNetDevice->GetNode ());
+  NS_ASSERT (enbNode == lteEnbNetDevice->GetNode ());
 
-  // Add an IPv4 stack to the previously created eNB node.
-  InternetStackHelper internet;
-  internet.Install (enb);
+  // Configure the eNB as OpenFlow switch and attach to the transport network.
+  Ptr<VirtualNetDevice> enbAppDev = m_transport->ConfigureEnb (enbNode, cellId);
 
-  // Attach the eNB node to the OpenFlow transport network over S1-U interface.
-  uint16_t infraSwIdx = m_transport->GetEnbSwIdx (cellId);
-  Ptr<CsmaNetDevice> enbS1uDev;
-  Ptr<OFSwitch13Port> infraSwPort;
-  std::tie (enbS1uDev, infraSwPort) = m_transport->AttachEpcNode (
-      enb, infraSwIdx, EpsIface::S1);
-  Ipv4Address enbS1uAddr = Ipv4AddressHelper::GetAddress (enbS1uDev);
-  NS_LOG_DEBUG ("eNB cell ID " << cellId << " at switch index " << infraSwIdx);
-  NS_LOG_INFO ("eNB " << enb << " attached to s1u with IP " << enbS1uAddr);
-
-  // Create the S1-U socket for the eNB node.
-  TypeId udpSocketTid = TypeId::LookupByName ("ns3::UdpSocketFactory");
-  Ptr<Socket> enbS1uSocket = Socket::CreateSocket (enb, udpSocketTid);
-  enbS1uSocket->Bind (InetSocketAddress (enbS1uAddr, GTPU_PORT));
-
-  // Create the LTE IPv4 and IPv6 sockets for the eNB node.
+  // Create the S1-U socket for the eNB node application.
   TypeId pktSocketTid = TypeId::LookupByName ("ns3::PacketSocketFactory");
-  Ptr<Socket> enbLteSocket = Socket::CreateSocket (enb, pktSocketTid);
+  Ptr<Socket> enbS1uSocket = Socket::CreateSocket (enbNode, pktSocketTid);
+  PacketSocketAddress enbS1uSocketBindAddress;
+  enbS1uSocketBindAddress.SetSingleDevice (enbAppDev->GetIfIndex ());
+  enbS1uSocketBindAddress.SetProtocol (Ipv4L3Protocol::PROT_NUMBER);
+  enbS1uSocket->Bind (enbS1uSocketBindAddress);
+
+  PacketSocketAddress enbS1uSocketAddress;
+  enbS1uSocketAddress.SetPhysicalAddress (Mac48Address::GetBroadcast ());
+  enbS1uSocketAddress.SetSingleDevice (enbAppDev->GetIfIndex ());
+  enbS1uSocketAddress.SetProtocol (Ipv4L3Protocol::PROT_NUMBER);
+  enbS1uSocket->Connect (enbS1uSocketAddress);
+
+  // Create the LTE IPv4 socket for the eNB node.
+  Ptr<Socket> enbLteSocket = Socket::CreateSocket (enbNode, pktSocketTid);
   PacketSocketAddress enbLteSocketBindAddress;
   enbLteSocketBindAddress.SetSingleDevice (lteEnbNetDevice->GetIfIndex ());
   enbLteSocketBindAddress.SetProtocol (Ipv4L3Protocol::PROT_NUMBER);
@@ -252,7 +249,8 @@ ScenarioConfig::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
   enbLteSocketAddress.SetProtocol (Ipv4L3Protocol::PROT_NUMBER);
   enbLteSocket->Connect (enbLteSocketAddress);
 
-  Ptr<Socket> enbLteSocket6 = Socket::CreateSocket (enb, pktSocketTid);
+  // Create the LTE IPv6 socket for the eNB node.
+  Ptr<Socket> enbLteSocket6 = Socket::CreateSocket (enbNode, pktSocketTid);
   PacketSocketAddress enbLteSocketBindAddress6;
   enbLteSocketBindAddress6.SetSingleDevice (lteEnbNetDevice->GetIfIndex ());
   enbLteSocketBindAddress6.SetProtocol (Ipv6L3Protocol::PROT_NUMBER);
@@ -265,18 +263,19 @@ ScenarioConfig::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
   enbLteSocket6->Connect (enbLteSocketAddress6);
 
   // Create the custom eNB application for the UNI5ON architecture.
+  Ptr<EnbInfo> enbInfo = EnbInfo::GetPointer (cellId);
   Ptr<EnbApplication> enbApp = CreateObject<EnbApplication> (
-      enbLteSocket, enbLteSocket6, enbS1uSocket, enbS1uAddr, cellId);
+      enbLteSocket, enbLteSocket6, enbS1uSocket,
+      enbInfo->GetS1uAddr (), cellId);
   enbApp->SetS1apSapMme (m_mme->GetS1apSapMme ());
-  enb->AddApplication (enbApp);
-  NS_ASSERT (enb->GetNApplications () == 1);
+  enbNode->AddApplication (enbApp);
 
   Ptr<EpcX2> x2 = CreateObject<EpcX2> ();
-  enb->AggregateObject (x2);
+  enbNode->AggregateObject (x2);
 
-  // Saving eNB metadata.
-  Ptr<EnbInfo> enbInfo = CreateObject<EnbInfo> (
-      cellId, enbS1uAddr, infraSwIdx, infraSwPort->GetPortNo (), enbApp);
+  // Update the eNB info and notify the controllers
+  enbInfo->SetApplication (enbApp);
+  // TODO Notify the controllers
 }
 
 void
@@ -305,6 +304,7 @@ ScenarioConfig::AddX2Interface (Ptr<Node> enb1Node, Ptr<Node> enb2Node)
   NS_ASSERT_MSG (enb1Dev, "eNB device not found for node " << enb1Node);
   NS_ASSERT_MSG (enb2Dev, "eNB device not found for node " << enb2Node);
 
+  // FIXME
   // Attach both eNB nodes to the OpenFlow transport network over X2 interface.
   uint16_t enb1CellId = enb1Dev->GetCellId ();
   uint16_t enb2CellId = enb2Dev->GetCellId ();
@@ -528,6 +528,9 @@ ScenarioConfig::NotifyConstructionCompleted (void)
 
   // Notify the transport controller of the slice controllers.
   transportCtrl->NotifySlicesBuilt (sliceControllers);
+
+  // Finish OpenFlow network configurations.
+  m_transport->CreateOpenFlowChannels ();
 
   // Creating the statistic calculators.
   m_admissionStats  = CreateObject<AdmissionStatsCalculator> ();

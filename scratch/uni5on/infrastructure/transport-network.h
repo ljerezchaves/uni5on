@@ -31,6 +31,7 @@ namespace ns3 {
 
 class TransportController;
 class SwitchHelper;
+class EnbInfo;
 
 /**
  * \ingroup uni5onInfra
@@ -65,7 +66,7 @@ public:
 
   /**
    * Attach the EPC node to the OpenFlow transport network.
-   * \param epcNode The eNB node.
+   * \param epcNode The EPC node.
    * \param swIdx The switch index at which the EPC node should be connected.
    * \param iface The logical interface for this connection.
    * \param ifaceStr Custom name for this logical interface. When this
@@ -74,8 +75,24 @@ public:
    *         port device create at the transport switch.
    */
   virtual std::pair<Ptr<CsmaNetDevice>, Ptr<OFSwitch13Port>>
-  AttachEpcNode (Ptr<Node> enbNode, uint16_t swIdx, EpsIface iface,
+  AttachEpcNode (Ptr<Node> epcNode, uint16_t swIdx, EpsIface iface,
                  std::string ifaceStr = std::string ());
+
+  /**
+   * Interconnect OpenFlow switches and controllers.
+   */
+  void CreateOpenFlowChannels (void);
+
+  /**
+   * Configure this eNB as an OpenFlow switch and connect it to the transport
+   * network via S1-U interface.
+   * \param enbNode The eNB node.
+   * \param cellId Tne eNB cell ID.
+   * \return The virtual device for communication between eNB application and
+   *         the OpenFlow switch.
+   */
+  virtual Ptr<VirtualNetDevice> ConfigureEnb (Ptr<Node> enbNode,
+                                              uint16_t cellId);
 
   /**
    * Get the backahul switch index at which the given eNB should be connected.

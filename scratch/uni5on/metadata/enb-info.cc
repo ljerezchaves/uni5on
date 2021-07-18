@@ -33,13 +33,18 @@ NS_OBJECT_ENSURE_REGISTERED (EnbInfo);
 // Initializing EnbInfo static members.
 EnbInfo::CellIdEnbInfoMap_t EnbInfo::m_enbInfoByCellId;
 
-EnbInfo::EnbInfo (uint16_t cellId, Ipv4Address s1uAddr, uint16_t infraSwIdx,
-                  uint32_t infraSwS1uPortNo, Ptr<EnbApplication> enbApp)
-  : m_application (enbApp),
+EnbInfo::EnbInfo (
+  uint16_t cellId, Ptr<OFSwitch13Device> device, Ipv4Address s1uAddr,
+  uint16_t infraSwIdx, uint32_t infraSwS1uPortNo, uint32_t s1uPortNo,
+  uint32_t appPortNo)
+  : m_device (device),
+  m_application (0),
   m_cellId (cellId),
   m_infraSwIdx (infraSwIdx),
   m_infraSwS1uPortNo (infraSwS1uPortNo),
-  m_s1uAddr (s1uAddr)
+  m_s1uAddr (s1uAddr),
+  m_s1uPortNo (s1uPortNo),
+  m_appPortNo (appPortNo)
 {
   NS_LOG_FUNCTION (this);
 
@@ -58,6 +63,14 @@ EnbInfo::GetTypeId (void)
     .SetParent<Object> ()
   ;
   return tid;
+}
+
+uint64_t
+EnbInfo::GetDpId (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_device->GetDatapathId ();
 }
 
 Ptr<EnbApplication>
@@ -108,6 +121,22 @@ EnbInfo::GetS1uAddr (void) const
   return m_s1uAddr;
 }
 
+uint32_t
+EnbInfo::GetS1uPortNo (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_s1uPortNo;
+}
+
+uint32_t
+EnbInfo::GetAppPortNo (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_appPortNo;
+}
+
 Ptr<EnbInfo>
 EnbInfo::GetPointer (uint16_t cellId)
 {
@@ -145,8 +174,17 @@ EnbInfo::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
+  m_device = 0;
   m_application = 0;
   Object::DoDispose ();
+}
+
+void
+EnbInfo::SetApplication (Ptr<EnbApplication> value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_application = value;
 }
 
 void

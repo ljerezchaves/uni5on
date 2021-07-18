@@ -25,6 +25,7 @@
 #include <ns3/internet-module.h>
 #include <ns3/lte-module.h>
 #include <ns3/network-module.h>
+#include <ns3/ofswitch13-module.h>
 
 namespace ns3 {
 
@@ -36,17 +37,22 @@ class EnbApplication;
  */
 class EnbInfo : public Object
 {
+  friend class ScenarioConfig;
+
 public:
   /**
    * Complete constructor.
    * \param cellId The cell identifier for this eNB.
+   * \param device The OpenFlow switch device.
    * \param s1uAddr The eNB S1-U IP address.
    * \param infraSwIdx The OpenFlow transport switch index.
    * \param infraSwS1uPortNo The port number for S1-U interface at the switch.
-   * \param enbApp The eNB application.
+   * \param s1uPortNo The port number for S1-U interface at the eNB.
+   * \param appPortNo The port number for eNB application interface at the eNB.
    */
-  EnbInfo (uint16_t cellId, Ipv4Address s1uAddr, uint16_t infraSwIdx,
-           uint32_t infraSwS1uPortNo, Ptr<EnbApplication> enbApp);
+  EnbInfo (uint16_t cellId, Ptr<OFSwitch13Device> device, Ipv4Address s1uAddr,
+           uint16_t infraSwIdx, uint32_t infraSwS1uPortNo, uint32_t s1uPortNo,
+           uint32_t appPortNo);
   virtual ~EnbInfo (); //!< Dummy destructor, see DoDispose.
 
   /**
@@ -60,12 +66,15 @@ public:
    * \return The requested information.
    */
   //\{
-  Ptr<EnbApplication> GetApplication      (void) const;
+  uint64_t                  GetDpId             (void) const;
+  Ptr<EnbApplication>       GetApplication      (void) const;
   uint16_t                  GetCellId           (void) const;
   uint16_t                  GetInfraSwIdx       (void) const;
   uint32_t                  GetInfraSwS1uPortNo (void) const;
   EpcS1apSapEnb*            GetS1apSapEnb       (void) const;
   Ipv4Address               GetS1uAddr          (void) const;
+  uint32_t                  GetS1uPortNo        (void) const;
+  uint32_t                  GetAppPortNo        (void) const;
   //\}
 
   /**
@@ -97,17 +106,26 @@ protected:
 
 private:
   /**
+   * Set the internal application metadata.
+   * \param value The application pointer.
+   */
+  void SetApplication (Ptr<EnbApplication> value);
+
+  /**
    * Register the eNB information in global map for further usage.
    * \param enbInfo The eNB information to save.
    */
   static void RegisterEnbInfo (Ptr<EnbInfo> enbInfo);
 
   // eNB metadata.
+  Ptr<OFSwitch13Device>     m_device;             //!< eNB OpenFlow device.
   Ptr<EnbApplication>       m_application;        //!< eNB application.
   uint16_t                  m_cellId;             //!< eNB cell ID.
   uint16_t                  m_infraSwIdx;         //!< Transport switch index.
   uint32_t                  m_infraSwS1uPortNo;   //!< Transport switch port no.
   Ipv4Address               m_s1uAddr;            //!< eNB S1-U IP address.
+  uint32_t                  m_s1uPortNo;          //!< eNB S1-U port no.
+  uint32_t                  m_appPortNo;          //!< eNB app port no.
 
   /** Map saving cell ID / eNB information. */
   typedef std::map<uint16_t, Ptr<EnbInfo>> CellIdEnbInfoMap_t;

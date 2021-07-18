@@ -22,6 +22,8 @@
 #include "transport-network.h"
 #include "transport-controller.h"
 #include "switch-helper.h"
+#include "../slices/gtpu-tunnel-app.h"
+#include "../metadata/enb-info.h"
 
 namespace ns3 {
 
@@ -183,6 +185,60 @@ TransportNetwork::AttachEpcNode (Ptr<Node> epcNode, uint16_t swIdx,
   return std::make_pair (epcDev, swPort);
 }
 
+void
+TransportNetwork::CreateOpenFlowChannels (void)
+{
+  NS_LOG_FUNCTION (this);
+
+  // Let's connect the OpenFlow switches to the controller. From this point
+  // on it is not possible to change the OpenFlow network configuration.
+  m_switchHelper->CreateOpenFlowChannels ();
+
+  // Enable OpenFlow switch statistics.
+  StringValue stringValue;
+  GlobalValue::GetValueByName ("OutputPrefix", stringValue);
+  std::string prefix = stringValue.Get ();
+  m_switchHelper->EnableDatapathStats (prefix + "ofswitch-stats", true);
+}
+
+Ptr<VirtualNetDevice>
+TransportNetwork::ConfigureEnb (Ptr<Node> enbNode, uint16_t cellId)
+{
+  NS_LOG_FUNCTION (this << enbNode << cellId);
+
+  // Configure the eNB node as an OpenFlow switch.
+  Ptr<OFSwitch13Device> enbOfDev = m_switchHelper->InstallSwitch (enbNode);
+
+  // Connect the eNB to the OpenFlow transport network over S1-U interface.
+  uint16_t infraSwIdx = GetEnbSwIdx (cellId);
+  Ptr<CsmaNetDevice> enbS1uDev;
+  Ptr<OFSwitch13Port> infraSwPort;
+  std::tie (enbS1uDev, infraSwPort) = AttachEpcNode (
+      enbNode, infraSwIdx, EpsIface::S1);
+  Ipv4Address enbS1uAddr = Ipv4AddressHelper::GetAddress (enbS1uDev);
+  NS_LOG_DEBUG ("eNB cell ID " << cellId << " at switch index " << infraSwIdx);
+  NS_LOG_INFO ("eNB " << enbNode << " attached to s1u with IP " << enbS1uAddr);
+
+  // Create the logical port on the eNB S1-U interface.
+  Ptr<VirtualNetDevice> enbS1uPortDev = CreateObject<VirtualNetDevice> ();
+  enbS1uPortDev->SetAddress (Mac48Address::Allocate ());
+  Ptr<OFSwitch13Port> enbS1uPort = enbOfDev->AddSwitchPort (enbS1uPortDev);
+  enbNode->AddApplication (
+    CreateObject<GtpuTunnelApp> (enbS1uPortDev, enbS1uDev));
+
+  // Create an internal eNB logical port for communication with eNB application.
+  Ptr<VirtualNetDevice> enbAppPortDev = CreateObject<VirtualNetDevice> ();
+  enbAppPortDev->SetAddress (Mac48Address::Allocate ());
+  Ptr<OFSwitch13Port> enbAppPort = enbOfDev->AddSwitchPort (enbAppPortDev);
+
+  // Saving eNB metadata.
+  Ptr<EnbInfo> enbInfo = CreateObject<EnbInfo> (
+      cellId, enbOfDev, enbS1uAddr, infraSwIdx, infraSwPort->GetPortNo (),
+      enbS1uPort->GetPortNo (), enbAppPort->GetPortNo ());
+
+  return enbAppPortDev;
+}
+
 uint32_t
 TransportNetwork::GetNSwitches (void) const
 {
@@ -245,16 +301,6 @@ TransportNetwork::NotifyConstructionCompleted (void)
 
   // Create the OpenFlow transport network.
   CreateTopology ();
-
-  // Let's connect the OpenFlow switches to the controller. From this point
-  // on it is not possible to change the OpenFlow network configuration.
-  m_switchHelper->CreateOpenFlowChannels ();
-
-  // Enable OpenFlow switch statistics.
-  StringValue stringValue;
-  GlobalValue::GetValueByName ("OutputPrefix", stringValue);
-  std::string prefix = stringValue.Get ();
-  m_switchHelper->EnableDatapathStats (prefix + "ofswitch-stats", true);
 
   // Chain up.
   Object::NotifyConstructionCompleted ();
