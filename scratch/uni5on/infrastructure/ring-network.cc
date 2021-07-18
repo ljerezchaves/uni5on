@@ -107,7 +107,7 @@ RingNetwork::CreateTopology (void)
   m_switchHelper->InstallController (m_controllerNode, ringController);
   m_controllerApp = ringController;
 
-  // Create the switch nodes and install the OpenFlow switch devices.
+  // Create the transport switch nodes and install the OpenFlow switch devices.
   m_switchNodes.Create (m_numNodes);
   m_switchDevices = m_switchHelper->InstallSwitch (m_switchNodes);
 

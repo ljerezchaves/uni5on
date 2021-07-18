@@ -271,6 +271,8 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // Get the OpenFlow switch datapath ID.
   uint64_t swDpId = swtch->GetDpId ();
 
+  // TODO Differentiate between transport and eNB switch.
+
   // -------------------------------------------------------------------------
   // Classification table -- [from higher to lower priority]
   //

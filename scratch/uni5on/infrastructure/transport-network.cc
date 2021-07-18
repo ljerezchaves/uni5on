@@ -208,6 +208,7 @@ TransportNetwork::ConfigureEnb (Ptr<Node> enbNode, uint16_t cellId)
 
   // Configure the eNB node as an OpenFlow switch.
   Ptr<OFSwitch13Device> enbOfDev = m_switchHelper->InstallSwitch (enbNode);
+  m_enbDevices.Add (enbOfDev);
 
   // Connect the eNB to the OpenFlow transport network over S1-U interface.
   uint16_t infraSwIdx = GetEnbSwIdx (cellId);

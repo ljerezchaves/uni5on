@@ -40,9 +40,6 @@ class EnbInfo;
  */
 class TransportNetwork : public Object
 {
-  friend class TransportController;
-  friend class RingController;
-
 public:
   TransportNetwork ();          //!< Default constructor.
   virtual ~TransportNetwork (); //!< Dummy destructor, see DoDispose.
@@ -95,7 +92,7 @@ public:
                                               uint16_t cellId);
 
   /**
-   * Get the backahul switch index at which the given eNB should be connected.
+   * Get the transport switch index at which the given eNB should be connected.
    * \param cellId The eNB cell ID.
    * \return The transport switch index.
    */
@@ -112,6 +109,14 @@ public:
    * \return The OpenFlow controller.
    */
   Ptr<TransportController> GetControllerApp (void) const;
+
+  // Network addresses.
+  static const Ipv4Address      m_s1Addr;         //!< S1-U network address.
+  static const Ipv4Address      m_s5Addr;         //!< S5 network address.
+  static const Ipv4Address      m_x2Addr;         //!< X2 network address.
+  static const Ipv4Mask         m_s1Mask;         //!< S1-U network mask.
+  static const Ipv4Mask         m_s5Mask;         //!< S5 network mask.
+  static const Ipv4Mask         m_x2Mask;         //!< X2 network mask.
 
 protected:
   /** Destructor implementation. */
@@ -132,22 +137,15 @@ protected:
 
   // OpenFlow switches and helper.
   Ptr<SwitchHelper>             m_switchHelper;   //!< Switch helper.
-  NodeContainer                 m_switchNodes;    //!< Switch nodes.
-  OFSwitch13DeviceContainer     m_switchDevices;  //!< Switch devices.
+  NodeContainer                 m_switchNodes;    //!< Transport switch nodes.
+  OFSwitch13DeviceContainer     m_switchDevices;  //!< Transport switch devices.
+  OFSwitch13DeviceContainer     m_enbDevices;     //!< eNB switch devices.
 
   // CSMA helper and attributes for transport links.
   CsmaHelper                    m_csmaHelper;     //!< Connection helper.
   DataRate                      m_linkRate;       //!< Link data rate.
   Time                          m_linkDelay;      //!< Link delay.
   uint16_t                      m_linkMtu;        //!< Link MTU.
-
-  // Network addresses.
-  static const Ipv4Address      m_s1Addr;         //!< S1-U network address.
-  static const Ipv4Address      m_s5Addr;         //!< S5 network address.
-  static const Ipv4Address      m_x2Addr;         //!< X2 network address.
-  static const Ipv4Mask         m_s1Mask;         //!< S1-U network mask.
-  static const Ipv4Mask         m_s5Mask;         //!< S5 network mask.
-  static const Ipv4Mask         m_x2Mask;         //!< X2 network mask.
 
 private:
   // Switch datapath configuration.

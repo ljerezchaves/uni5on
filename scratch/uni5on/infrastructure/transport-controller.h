@@ -287,7 +287,7 @@ private:
   OpMode                    m_swBlockPolicy;  //!< Switch overload block policy.
   double                    m_swBlockThs;     //!< Switch block threshold.
   Ptr<LinkSharing>          m_sharingApp;     //!< Link sharing application.
-  OFSwitch13DeviceContainer m_switchDevices;  //!< OpenFlow switch devices.
+  OFSwitch13DeviceContainer m_switchDevices;  //!< Transport switch devices.
 
   /** Map saving Slice ID / Slice controller application. */
   typedef std::map<SliceId, Ptr<SliceController>> SliceIdCtrlAppMap_t;

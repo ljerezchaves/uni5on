@@ -316,7 +316,7 @@ TransportController::NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices)
   m_sharingApp = CreateObject<LinkSharing> (Ptr<TransportController> (this));
   GetNode ()->AggregateObject (m_sharingApp);
 
-  // Save the collection of switch devices.
+  // Save the collection of transport switch devices.
   m_switchDevices = devices;
 }
 
@@ -430,6 +430,8 @@ TransportController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 
   // Get the OpenFlow switch datapath ID.
   uint64_t swDpId = swtch->GetDpId ();
+
+  // TODO Differentiate between transport and eNB switch.
 
   // For each switch on the transport network, install the following rules:
   // -------------------------------------------------------------------------
