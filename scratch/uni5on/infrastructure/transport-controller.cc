@@ -284,6 +284,24 @@ TransportController::NotifyNewEnb (Ptr<EnbInfo> enbInfo)
 
   // Saving eNB info.
   m_enbDpIds.push_back (enbInfo->GetDpId ());
+
+  // Forwarding packets (just for testing) // FIXME
+  {
+    std::ostringstream cmd;
+    cmd << "flow-mod cmd=add,prio=0,table=0"
+        << ",flags=" << FLAGS_REMOVED_OVERLAP_RESET
+        << " in_port=1"
+        << " apply:output=2";
+    DpctlExecute (enbInfo->GetDpId (), cmd.str ());
+  }
+  {
+    std::ostringstream cmd;
+    cmd << "flow-mod cmd=add,prio=0,table=0"
+        << ",flags=" << FLAGS_REMOVED_OVERLAP_RESET
+        << " in_port=2"
+        << " apply:output=1";
+    DpctlExecute (enbInfo->GetDpId (), cmd.str ());
+  }
 }
 
 void

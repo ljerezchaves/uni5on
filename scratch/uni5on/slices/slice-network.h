@@ -173,7 +173,7 @@ private:
   Ptr<OFSwitch13Device>         m_sgwDevice;        //!< S-GW switch device.
   uint16_t                      m_sgwInfraSwIdx;    //!< Transport switch idx.
   DataRate                      m_sgwCpuCapacity;   //!< S-GW CPU capacity.
-  uint32_t                      m_sgwTableSize;      //!< S-GW flow table size.
+  uint32_t                      m_sgwTableSize;     //!< S-GW flow table size.
   uint32_t                      m_sgwMeterSize;     //!< S-GW meter table size.
 
   // Helper and attributes for CSMA interface.
