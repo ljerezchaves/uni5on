@@ -269,13 +269,10 @@ ScenarioConfig::AddEnb (Ptr<Node> enbNode, Ptr<NetDevice> lteEnbNetDevice,
       enbInfo->GetS1uAddr (), cellId);
   enbApp->SetS1apSapMme (m_mme->GetS1apSapMme ());
   enbNode->AddApplication (enbApp);
+  enbInfo->SetApplication (enbApp);
 
   Ptr<EpcX2> x2 = CreateObject<EpcX2> ();
   enbNode->AggregateObject (x2);
-
-  // Update the eNB info and notify the controllers
-  enbInfo->SetApplication (enbApp);
-  // TODO Notify the controllers
 }
 
 void
