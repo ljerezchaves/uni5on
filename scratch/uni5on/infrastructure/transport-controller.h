@@ -286,6 +286,8 @@ protected:
   virtual void SharingMeterUpdate (Ptr<LinkInfo> lInfo, LinkInfo::LinkDir dir,
                                    SliceId slice, int64_t bitRate);
 
+  std::vector<uint64_t>     m_enbDpIds;       //!< eNB switch datapath IDs.
+
 private:
   OpMode                    m_aggCheck;       //!< Check rate for agg bearers.
   DataRate                  m_meterStep;      //!< Meter adjustment step.

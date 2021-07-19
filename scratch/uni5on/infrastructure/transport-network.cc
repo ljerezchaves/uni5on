@@ -202,7 +202,8 @@ TransportNetwork::ConfigureEnb (Ptr<Node> enbNode, uint16_t cellId)
       enbNode, infraSwIdx, EpsIface::S1);
   Ipv4Address enbS1uAddr = Ipv4AddressHelper::GetAddress (enbS1uDev);
   NS_LOG_DEBUG ("eNB cell ID " << cellId << " at switch index " << infraSwIdx);
-  NS_LOG_INFO ("eNB " << enbNode << " attached to s1u with IP " << enbS1uAddr);
+  NS_LOG_INFO ("eNB switch dpId " << enbOfDev->GetDpId () <<
+               " attached to s1u interface with IP " << enbS1uAddr);
 
   // Create the logical port on the eNB S1-U interface.
   Ptr<VirtualNetDevice> enbS1uPortDev = CreateObject<VirtualNetDevice> ();

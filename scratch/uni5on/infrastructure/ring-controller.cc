@@ -271,7 +271,12 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // Get the OpenFlow switch datapath ID.
   uint64_t swDpId = swtch->GetDpId ();
 
-  // TODO Differentiate between transport and eNB switch.
+  // Ignoring handshake with eNB switches.
+  auto ret = std::find (m_enbDpIds.begin (), m_enbDpIds.end (), swDpId);
+  if (ret != m_enbDpIds.end ())
+    {
+      return;
+    }
 
   // -------------------------------------------------------------------------
   // Classification table -- [from higher to lower priority]
@@ -1126,7 +1131,6 @@ RingController::SharingMeterApply (
       DpctlExecute (swDpId, cmd.str () + mtc.str () + act.str ());
     }
 
-  // Chain up
   TransportController::SharingMeterApply (swDpId, dir, slice);
 }
 

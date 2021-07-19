@@ -22,6 +22,7 @@
 #include "transport-network.h"
 #include "../metadata/bearer-info.h"
 #include "../metadata/link-info.h"
+#include "../metadata/enb-info.h"
 #include "../mano-apps/link-sharing.h"
 
 namespace ns3 {
@@ -280,6 +281,9 @@ void
 TransportController::NotifyNewEnb (Ptr<EnbInfo> enbInfo)
 {
   NS_LOG_FUNCTION (this << enbInfo);
+
+  // Saving eNB info.
+  m_enbDpIds.push_back (enbInfo->GetDpId ());
 }
 
 void
@@ -437,7 +441,12 @@ TransportController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // Get the OpenFlow switch datapath ID.
   uint64_t swDpId = swtch->GetDpId ();
 
-  // TODO Differentiate between transport and eNB switch.
+  // Ignoring handshake with eNB switches.
+  auto ret = std::find (m_enbDpIds.begin (), m_enbDpIds.end (), swDpId);
+  if (ret != m_enbDpIds.end ())
+    {
+      return;
+    }
 
   // For each switch on the transport network, install the following rules:
   // -------------------------------------------------------------------------
