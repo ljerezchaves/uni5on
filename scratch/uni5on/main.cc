@@ -399,6 +399,7 @@ EnableVerbose (bool enable)
       LogComponentEnable ("RadioNetwork",             logLevelWarnInfo);
       LogComponentEnable ("RingController",           logLevelWarnInfo);
       LogComponentEnable ("RingNetwork",              logLevelWarnInfo);
+      LogComponentEnable ("SwitchHelper",             logLevelWarnInfo);
       LogComponentEnable ("TransportController",      logLevelWarnInfo);
       LogComponentEnable ("TransportNetwork",         logLevelWarnInfo);
 
