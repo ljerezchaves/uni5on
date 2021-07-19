@@ -236,7 +236,7 @@ ScenarioConfig::AddEnb (Ptr<Node> enbNode, Ptr<NetDevice> lteEnbNetDevice,
   enbS1uSocketAddress.SetProtocol (Ipv4L3Protocol::PROT_NUMBER);
   enbS1uSocket->Connect (enbS1uSocketAddress);
 
-  // Create the LTE IPv4 socket for the eNB node.
+  // Create the LTE IPv4 socket for the eNB node application.
   Ptr<Socket> enbLteSocket = Socket::CreateSocket (enbNode, pktSocketTid);
   PacketSocketAddress enbLteSocketBindAddress;
   enbLteSocketBindAddress.SetSingleDevice (lteEnbNetDevice->GetIfIndex ());
@@ -249,7 +249,7 @@ ScenarioConfig::AddEnb (Ptr<Node> enbNode, Ptr<NetDevice> lteEnbNetDevice,
   enbLteSocketAddress.SetProtocol (Ipv4L3Protocol::PROT_NUMBER);
   enbLteSocket->Connect (enbLteSocketAddress);
 
-  // Create the LTE IPv6 socket for the eNB node.
+  // Create the LTE IPv6 socket for the eNB node application.
   Ptr<Socket> enbLteSocket6 = Socket::CreateSocket (enbNode, pktSocketTid);
   PacketSocketAddress enbLteSocketBindAddress6;
   enbLteSocketBindAddress6.SetSingleDevice (lteEnbNetDevice->GetIfIndex ());
