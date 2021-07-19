@@ -114,7 +114,6 @@ QosQueue::DoInitialize ()
   // Initializing weights for the WRR algorithm.
   m_queueTokens = m_queueWeight;
 
-  // Chain up.
   OFSwitch13Queue::DoInitialize ();
 }
 

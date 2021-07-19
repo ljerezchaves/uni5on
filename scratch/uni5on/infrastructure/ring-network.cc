@@ -88,7 +88,6 @@ RingNetwork::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
-  // Chain up.
   TransportNetwork::DoDispose ();
 }
 

@@ -306,7 +306,6 @@ TransportNetwork::NotifyConstructionCompleted (void)
   // Create the OpenFlow transport network.
   CreateTopology ();
 
-  // Chain up.
   Object::NotifyConstructionCompleted ();
 }
 
