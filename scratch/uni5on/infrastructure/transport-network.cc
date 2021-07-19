@@ -221,6 +221,9 @@ TransportNetwork::ConfigureEnb (Ptr<Node> enbNode, uint16_t cellId)
       cellId, enbOfDev, enbS1uAddr, infraSwIdx, infraSwPort->GetPortNo (),
       enbS1uPort->GetPortNo (), enbAppPort->GetPortNo ());
 
+  // Notify the controller of the new eNB switch.
+  m_controllerApp->NotifyNewEnb (enbInfo);
+
   return enbAppPortDev;
 }
 

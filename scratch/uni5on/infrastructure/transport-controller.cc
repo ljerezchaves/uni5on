@@ -277,6 +277,12 @@ TransportController::NotifyEpcAttach (
 }
 
 void
+TransportController::NotifyNewEnb (Ptr<EnbInfo> enbInfo)
+{
+  NS_LOG_FUNCTION (this << enbInfo);
+}
+
+void
 TransportController::NotifySlicesBuilt (ApplicationContainer &controllers)
 {
   NS_LOG_FUNCTION (this);

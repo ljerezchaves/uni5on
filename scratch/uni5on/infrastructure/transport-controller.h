@@ -225,6 +225,12 @@ protected:
                                 Ptr<NetDevice> epcDev);
 
   /**
+   * Notify this controller of a new eNB OpenFlow switch.
+   * \param enbInfo The eNB metadata.
+   */
+  virtual void NotifyNewEnb (Ptr<EnbInfo> enbInfo);
+
+  /**
    * Notify this controller that all the logical slices have already been
    * configured and the slice controllers were created.
    * \param controllers The logical slice controllers.
