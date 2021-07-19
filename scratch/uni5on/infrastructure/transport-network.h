@@ -76,11 +76,6 @@ public:
                  std::string ifaceStr = std::string ());
 
   /**
-   * Interconnect OpenFlow switches and controllers.
-   */
-  void CreateOpenFlowChannels (void);
-
-  /**
    * Configure this eNB as an OpenFlow switch and connect it to the transport
    * network via S1-U interface.
    * \param enbNode The eNB node.
@@ -109,6 +104,11 @@ public:
    * \return The OpenFlow controller.
    */
   Ptr<TransportController> GetControllerApp (void) const;
+
+  /**
+   * Interconnect OpenFlow switches and controllers.
+   */
+  void CreateOpenFlowChannels (void);
 
   // Network addresses.
   static const Ipv4Address      m_s1Addr;         //!< S1-U network address.

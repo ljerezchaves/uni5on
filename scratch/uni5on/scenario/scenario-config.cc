@@ -425,6 +425,7 @@ ScenarioConfig::NotifyConstructionCompleted (void)
 
   Ptr<TransportController> transportCtrl = m_transport->GetControllerApp ();
   ApplicationContainer sliceControllers;
+  std::vector<Ptr<SliceNetwork>> sliceNetworks;
   int sumQuota = 0;
 
   // Create the MBB logical slice controller, network, and traffic helper.
@@ -447,6 +448,7 @@ ScenarioConfig::NotifyConstructionCompleted (void)
       m_mbbNetworkFac.Set ("WebAddress", Ipv4AddressValue ("8.1.0.0"));
       m_mbbNetworkFac.Set ("WebMask", Ipv4MaskValue ("255.255.0.0"));
       m_mbbNetwork = m_mbbNetworkFac.Create<SliceNetwork> ();
+      sliceNetworks.push_back (m_mbbNetwork);
 
       m_mbbTrafficFac.Set ("SliceId", EnumValue (SliceId::MBB));
       m_mbbTrafficFac.Set ("SliceCtrl", PointerValue (m_mbbController));
@@ -479,6 +481,7 @@ ScenarioConfig::NotifyConstructionCompleted (void)
       m_mtcNetworkFac.Set ("WebAddress", Ipv4AddressValue ("8.2.0.0"));
       m_mtcNetworkFac.Set ("WebMask", Ipv4MaskValue ("255.255.0.0"));
       m_mtcNetwork = m_mtcNetworkFac.Create<SliceNetwork> ();
+      sliceNetworks.push_back (m_mtcNetwork);
 
       m_mtcTrafficFac.Set ("SliceId", EnumValue (SliceId::MTC));
       m_mtcTrafficFac.Set ("SliceCtrl", PointerValue (m_mtcController));
@@ -511,6 +514,7 @@ ScenarioConfig::NotifyConstructionCompleted (void)
       m_tmpNetworkFac.Set ("WebAddress", Ipv4AddressValue ("8.3.0.0"));
       m_tmpNetworkFac.Set ("WebMask", Ipv4MaskValue ("255.255.0.0"));
       m_tmpNetwork = m_tmpNetworkFac.Create<SliceNetwork> ();
+      sliceNetworks.push_back (m_tmpNetwork);
 
       m_tmpTrafficFac.Set ("SliceId", EnumValue (SliceId::TMP));
       m_tmpTrafficFac.Set ("SliceCtrl", PointerValue (m_tmpController));
@@ -531,6 +535,10 @@ ScenarioConfig::NotifyConstructionCompleted (void)
 
   // Finish OpenFlow network configurations.
   m_transport->CreateOpenFlowChannels ();
+  for (auto &slcNet : sliceNetworks)
+    {
+      slcNet->CreateOpenFlowChannels ();
+    }
 
   // Creating the statistic calculators.
   m_admissionStats  = CreateObject<AdmissionStatsCalculator> ();

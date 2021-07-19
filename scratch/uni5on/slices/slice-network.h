@@ -73,6 +73,11 @@ public:
    */
   Ptr<Node> GetWebNode (void) const;
 
+  /**
+   * Interconnect OpenFlow switches and controllers.
+   */
+  void CreateOpenFlowChannels (void);
+
 protected:
   /** Destructor implementation. */
   virtual void DoDispose (void);

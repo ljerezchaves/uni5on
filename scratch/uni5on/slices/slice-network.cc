@@ -284,6 +284,22 @@ SliceNetwork::GetWebNode (void) const
 }
 
 void
+SliceNetwork::CreateOpenFlowChannels (void)
+{
+  NS_LOG_FUNCTION (this);
+
+// Let's connect the OpenFlow switches to the controller. From this point
+  // on it is not possible to change the OpenFlow network configuration.
+  m_switchHelper->CreateOpenFlowChannels ();
+
+  // Enable OpenFlow switch statistics.
+  StringValue stringValue;
+  GlobalValue::GetValueByName ("OutputPrefix", stringValue);
+  std::string prefix = stringValue.Get ();
+  m_switchHelper->EnableDatapathStats (prefix + "ofswitch-stats", true);
+}
+
+void
 SliceNetwork::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
@@ -342,16 +358,6 @@ SliceNetwork::NotifyConstructionCompleted (void)
   CreatePgw ();
   CreateSgw ();
   CreateUes ();
-
-  // Let's connect the OpenFlow switches to the controller. From this point
-  // on it is not possible to change the OpenFlow network configuration.
-  m_switchHelper->CreateOpenFlowChannels ();
-
-  // Enable OpenFlow switch statistics.
-  StringValue stringValue;
-  GlobalValue::GetValueByName ("OutputPrefix", stringValue);
-  std::string prefix = stringValue.Get ();
-  m_switchHelper->EnableDatapathStats (prefix + "ofswitch-stats", true);
 
   Object::NotifyConstructionCompleted ();
 }

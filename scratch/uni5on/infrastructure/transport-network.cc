@@ -185,22 +185,6 @@ TransportNetwork::AttachEpcNode (Ptr<Node> epcNode, uint16_t swIdx,
   return std::make_pair (epcDev, swPort);
 }
 
-void
-TransportNetwork::CreateOpenFlowChannels (void)
-{
-  NS_LOG_FUNCTION (this);
-
-  // Let's connect the OpenFlow switches to the controller. From this point
-  // on it is not possible to change the OpenFlow network configuration.
-  m_switchHelper->CreateOpenFlowChannels ();
-
-  // Enable OpenFlow switch statistics.
-  StringValue stringValue;
-  GlobalValue::GetValueByName ("OutputPrefix", stringValue);
-  std::string prefix = stringValue.Get ();
-  m_switchHelper->EnableDatapathStats (prefix + "ofswitch-stats", true);
-}
-
 Ptr<VirtualNetDevice>
 TransportNetwork::ConfigureEnb (Ptr<Node> enbNode, uint16_t cellId)
 {
@@ -254,6 +238,22 @@ TransportNetwork::GetControllerApp (void) const
   NS_LOG_FUNCTION (this);
 
   return m_controllerApp;
+}
+
+void
+TransportNetwork::CreateOpenFlowChannels (void)
+{
+  NS_LOG_FUNCTION (this);
+
+  // Let's connect the OpenFlow switches to the controller. From this point
+  // on it is not possible to change the OpenFlow network configuration.
+  m_switchHelper->CreateOpenFlowChannels ();
+
+  // Enable OpenFlow switch statistics.
+  StringValue stringValue;
+  GlobalValue::GetValueByName ("OutputPrefix", stringValue);
+  std::string prefix = stringValue.Get ();
+  m_switchHelper->EnableDatapathStats (prefix + "ofswitch-stats", true);
 }
 
 void
