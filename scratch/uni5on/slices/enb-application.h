@@ -21,7 +21,13 @@
 #ifndef ENB_APPLICATION_H
 #define ENB_APPLICATION_H
 
+#include <ns3/core-module.h>
+#include <ns3/network-module.h>
+#include <ns3/internet-module.h>
+#include <ns3/applications-module.h>
+#include <ns3/virtual-net-device-module.h>
 #include <ns3/lte-module.h>
+#include <ns3/csma-module.h>
 
 namespace ns3 {
 
@@ -40,13 +46,13 @@ public:
    *                  to/from the LTE radio interface.
    * \param lteSocket6 The socket to be used to send/receive IPv6 packets
    *                   to/from the LTE radio interface.
-   * \param s1uSocket The socket to be used to send/receive packets to/from the
-   *                  S1-U interface connected with the SGW.
+   * \param s1uPortDev The local switch port to be used to send/receive packets
+   *                   to/from the S1-U interface connected with the SGW.
    * \param enbS1uAddress The IPv4 address of the S1-U interface of this eNB.
    * \param cellId The identifier of the eNB.
    */
   EnbApplication (Ptr<Socket> lteSocket, Ptr<Socket> lteSocket6,
-                  Ptr<Socket> s1uSocket, Ipv4Address enbS1uAddress,
+                  Ptr<VirtualNetDevice> s1uPortDev, Ipv4Address enbS1uAddress,
                   uint16_t cellId);
   virtual ~EnbApplication (void); //!< Dummy destructor, see DoDispose.
 
@@ -57,9 +63,18 @@ public:
   static TypeId GetTypeId (void);
 
   /**
-   * Receive a packet from the S-GW via the S1-U interface.
-   * \param socket The S1-U socket.
+   * Method to be assigned to the send callback of the VirtualNetDevice
+   * implementing the OpenFlow S1-U logical port. It is called when the OpenFlow
+   * switch sends a packet out over the logical port.
+   * \param packet The packet received from the logical port.
+   * \param source Ethernet source address.
+   * \param dst Ethernet destination address.
+   * \param protocolNo The type of payload contained in this packet.
    */
+  bool RecvFromS1uLogicalPort (Ptr<Packet> packet, const Address& source,
+                               const Address& dest, uint16_t protocolNo);
+
+  // Inherited from EpcEnbApplication.
   void RecvFromS1uSocket (Ptr<Socket> socket);
 
 protected:
@@ -86,6 +101,19 @@ protected:
   void SendToS1uSocket (Ptr<Packet> packet, uint32_t teid);
 
 private:
+  /**
+   * Adds the necessary Ethernet headers and trailers to a packet of data.
+   * \param packet Packet to which header should be added.
+   * \param source MAC source address from which packet should be sent.
+   * \param dest MAC destination address to which packet should be sent.
+   * \param protocolNo The type of payload contained in this packet.
+   */
+  void AddHeader (Ptr<Packet> packet, Mac48Address source = Mac48Address (),
+                  Mac48Address dest = Mac48Address (),
+                  uint16_t protocolNo = Ipv4L3Protocol::PROT_NUMBER);
+
+  Ptr<VirtualNetDevice> m_s1uLogicalPort;    //!< OpenFlow logical port device.
+
   /**
    * Trace source fired when a packet arrives at this eNB from S1-U interface.
    */

@@ -18,6 +18,7 @@
  * Author: Luciano Jerez Chaves <luciano@lrc.ic.unicamp.br>
  */
 
+#include <ns3/tunnel-id-tag.h>
 #include "enb-application.h"
 #include "gtpu-tag.h"
 #include "../metadata/bearer-info.h"
@@ -29,13 +30,17 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("EnbApplication");
 
 EnbApplication::EnbApplication (
-  Ptr<Socket> lteSocket, Ptr<Socket> lteSocket6, Ptr<Socket> s1uSocket,
-  Ipv4Address enbS1uAddress, uint16_t cellId)
-  : EpcEnbApplication (lteSocket, lteSocket6, s1uSocket, enbS1uAddress,
+  Ptr<Socket> lteSocket, Ptr<Socket> lteSocket6,
+  Ptr<VirtualNetDevice> s1uPortDev, Ipv4Address enbS1uAddress, uint16_t cellId)
+  : EpcEnbApplication (lteSocket, lteSocket6, 0, enbS1uAddress,
                        Ipv4Address::GetZero (), cellId)
 {
-  NS_LOG_FUNCTION (this << lteSocket << lteSocket6 << s1uSocket <<
-                   enbS1uAddress << cellId);
+  NS_LOG_FUNCTION (this << lteSocket << lteSocket6 << enbS1uAddress << cellId);
+
+  // Save the pointers and set the send callback.
+  m_s1uLogicalPort = s1uPortDev;
+  m_s1uLogicalPort->SetSendCallback (
+    MakeCallback (&EnbApplication::RecvFromS1uLogicalPort, this));
 }
 
 EnbApplication::~EnbApplication (void)
@@ -60,40 +65,55 @@ EnbApplication::GetTypeId (void)
   return tid;
 }
 
-void
-EnbApplication::RecvFromS1uSocket (Ptr<Socket> socket)
+bool
+EnbApplication::RecvFromS1uLogicalPort (
+  Ptr<Packet> packet, const Address& source,
+  const Address& dest, uint16_t protocolNo)
 {
-  NS_LOG_FUNCTION (this << socket);
-  NS_ASSERT (socket == m_s1uSocket);
-  Ptr<Packet> packet = socket->Recv ();
+  NS_LOG_FUNCTION (this << packet << source << dest << protocolNo);
+
+  // Fire trace sources.
+  m_rxS1uTrace (packet);
+  m_rxS1uSocketPktTrace (packet->Copy ());
 
   // Remove the EPC GTP-U packet tag from the packet.
-  m_rxS1uTrace (packet);
   GtpuTag gtpuTag;
   packet->RemovePacketTag (gtpuTag);
 
-  // Remove the GTP-U header.
-  GtpuHeader gtpu;
-  packet->RemoveHeader (gtpu);
-  uint32_t teid = gtpu.GetTeid ();
-  m_rxS1uSocketPktTrace (packet->Copy ());
+  // We expect that the TEID will be available in the 32 LSB of tunnelId tag.
+  TunnelIdTag tunnelIdTag;
+  bool foud = packet->RemovePacketTag (tunnelIdTag);
+  NS_ASSERT_MSG (foud, "Expected TunnelId tag not found.");
+  uint64_t tagValue = tunnelIdTag.GetTunnelId ();
+  uint32_t teid = tagValue;
 
   // Check for UE context information.
   auto it = m_teidRbidMap.find (teid);
   if (it == m_teidRbidMap.end ())
     {
       NS_LOG_ERROR ("TEID not found in map. Discarding packet.");
-      return;
+      return false;
     }
 
   // Send the packet to the UE over the LTE socket.
   SendToLteSocket (packet, it->second.m_rnti, it->second.m_bid);
+  return true;
+}
+
+void
+EnbApplication::RecvFromS1uSocket (Ptr<Socket> socket)
+{
+  NS_LOG_FUNCTION (this << socket);
+
+  NS_ABORT_MSG ("Unimplemented method.");
 }
 
 void
 EnbApplication::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
+
+  m_s1uLogicalPort = 0;
   EpcEnbApplication::DoDispose ();
 }
 
@@ -169,19 +189,6 @@ EnbApplication::SendToS1uSocket (Ptr<Packet> packet, uint32_t teid)
 
   Ptr<BearerInfo> bInfo = BearerInfo::GetPointer (teid);
 
-  // Attach the GTP-U header.
-  GtpuHeader gtpu;
-  gtpu.SetTeid (teid);
-
-  // Trick for traffic aggregation: use the teid of the default bearer.
-  if (bInfo->IsAggregated ())
-    {
-      gtpu.SetTeid (bInfo->GetUeInfo ()->GetDefaultTeid ());
-    }
-
-  gtpu.SetLength (packet->GetSize () + gtpu.GetSerializedSize () - 8);
-  packet->AddHeader (gtpu);
-
   // Add the EPC GTP-U packet tag to the packet.
   GtpuTag gtpuTag (
     teid, GtpuTag::ENB, bInfo->GetQosType (), bInfo->IsAggregated ());
@@ -196,8 +203,55 @@ EnbApplication::SendToS1uSocket (Ptr<Packet> packet, uint32_t teid)
       return;
     }
 
-  // Send the packet to the S-GW over the S1-U socket.
-  m_s1uSocket->SendTo (packet, 0, InetSocketAddress (it->second, GTPU_PORT));
+  // FIXME Temporary trick (must be replaces by OpenFlow rules in the switch).
+  // Attach the TunnelId tag with TEID value.
+  uint64_t tunnelId = static_cast<uint64_t> ((it->second).Get ());
+  tunnelId <<= 32;
+  tunnelId |= static_cast<uint64_t> (teid);
+  TunnelIdTag tunnelIdTag (tunnelId);
+  packet->ReplacePacketTag (tunnelIdTag);
+
+  // Add the Ethernet header to the packet.
+  AddHeader (packet);
+
+  // Send the packet to the OpenFlow switch over the logical port.
+  // Don't worry about source and destination addresses because they are note
+  // used by the receive method.
+  m_s1uLogicalPort->Receive (
+    packet, Ipv4L3Protocol::PROT_NUMBER, Mac48Address (),
+    Mac48Address (), NetDevice::PACKET_HOST);
+}
+
+void
+EnbApplication::AddHeader (Ptr<Packet> packet, Mac48Address source,
+                           Mac48Address dest, uint16_t protocolNo)
+{
+  NS_LOG_FUNCTION (this << packet << source << dest << protocolNo);
+
+  // All Ethernet frames must carry a minimum payload of 46 bytes. We need to
+  // pad out if we don't have enough bytes. These must be real bytes since they
+  // will be written to pcap files and compared in regression trace files.
+  if (packet->GetSize () < 46)
+    {
+      uint8_t buffer[46];
+      memset (buffer, 0, 46);
+      Ptr<Packet> padd = Create<Packet> (buffer, 46 - packet->GetSize ());
+      packet->AddAtEnd (padd);
+    }
+
+  EthernetHeader header (false);
+  header.SetSource (source);
+  header.SetDestination (dest);
+  header.SetLengthType (protocolNo);
+  packet->AddHeader (header);
+
+  EthernetTrailer trailer;
+  if (Node::ChecksumEnabled ())
+    {
+      trailer.EnableFcs (true);
+    }
+  trailer.CalcFcs (packet);
+  packet->AddTrailer (trailer);
 }
 
 }  // namespace ns3

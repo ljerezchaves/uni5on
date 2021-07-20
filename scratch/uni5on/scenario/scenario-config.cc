@@ -220,23 +220,11 @@ ScenarioConfig::AddEnb (Ptr<Node> enbNode, Ptr<NetDevice> lteEnbNetDevice,
   NS_ASSERT (enbNode == lteEnbNetDevice->GetNode ());
 
   // Configure the eNB as OpenFlow switch and attach to the transport network.
-  Ptr<VirtualNetDevice> enbAppDev = m_transport->ConfigureEnb (enbNode, cellId);
-
-  // Create the S1-U socket for the eNB node application.
-  TypeId pktSocketTid = TypeId::LookupByName ("ns3::PacketSocketFactory");
-  Ptr<Socket> enbS1uSocket = Socket::CreateSocket (enbNode, pktSocketTid);
-  PacketSocketAddress enbS1uSocketBindAddress;
-  enbS1uSocketBindAddress.SetSingleDevice (enbAppDev->GetIfIndex ());
-  enbS1uSocketBindAddress.SetProtocol (Ipv4L3Protocol::PROT_NUMBER);
-  enbS1uSocket->Bind (enbS1uSocketBindAddress);
-
-  PacketSocketAddress enbS1uSocketAddress;
-  enbS1uSocketAddress.SetPhysicalAddress (Mac48Address::GetBroadcast ());
-  enbS1uSocketAddress.SetSingleDevice (enbAppDev->GetIfIndex ());
-  enbS1uSocketAddress.SetProtocol (Ipv4L3Protocol::PROT_NUMBER);
-  enbS1uSocket->Connect (enbS1uSocketAddress);
+  Ptr<VirtualNetDevice> enbAppPortDev;
+  enbAppPortDev = m_transport->ConfigureEnb (enbNode, cellId);
 
   // Create the LTE IPv4 socket for the eNB node application.
+  TypeId pktSocketTid = TypeId::LookupByName ("ns3::PacketSocketFactory");
   Ptr<Socket> enbLteSocket = Socket::CreateSocket (enbNode, pktSocketTid);
   PacketSocketAddress enbLteSocketBindAddress;
   enbLteSocketBindAddress.SetSingleDevice (lteEnbNetDevice->GetIfIndex ());
@@ -265,7 +253,7 @@ ScenarioConfig::AddEnb (Ptr<Node> enbNode, Ptr<NetDevice> lteEnbNetDevice,
   // Create the custom eNB application for the UNI5ON architecture.
   Ptr<EnbInfo> enbInfo = EnbInfo::GetPointer (cellId);
   Ptr<EnbApplication> enbApp = CreateObject<EnbApplication> (
-      enbLteSocket, enbLteSocket6, enbS1uSocket,
+      enbLteSocket, enbLteSocket6, enbAppPortDev,
       enbInfo->GetS1uAddr (), cellId);
   enbApp->SetS1apSapMme (m_mme->GetS1apSapMme ());
   enbNode->AddApplication (enbApp);
