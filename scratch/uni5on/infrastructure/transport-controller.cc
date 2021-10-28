@@ -316,6 +316,8 @@ TransportController::NotifySlicesBuilt (ApplicationContainer &controllers)
       SliceId slice = controller->GetSliceId ();
       int quota = controller->GetQuota ();
 
+      // TODO Notify this slice controller about eNB switch devices.
+
       // Saving controller application pointers.
       std::pair<SliceId, Ptr<SliceController>> entry (slice, controller);
       auto ret = m_sliceCtrlById.insert (entry);
